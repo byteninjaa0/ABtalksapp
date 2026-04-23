@@ -83,12 +83,18 @@ export function LoginClient({
   return (
     <div className="flex flex-col gap-6">
       {referralRef ? (
-        <div className="rounded-md border border-dashed bg-muted/40 px-3 py-2">
-          <p className="text-xs text-muted-foreground">
-            Referred by someone? Referral code:{" "}
+        <div className="rounded-md border border-primary/25 bg-primary/5 px-3 py-2.5">
+          <p className="text-sm text-foreground">
+            You were invited! You&apos;ll get credit for the referral after
+            completing Day 7.
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Enter referral code{" "}
             <span className="font-mono font-medium text-foreground">
               {referralRef}
-            </span>
+            </span>{" "}
+            when you complete registration (the link won&apos;t carry through
+            Google sign-in).
           </p>
         </div>
       ) : null}

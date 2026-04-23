@@ -46,18 +46,7 @@ export default async function DashboardPage() {
   };
 
   if (!data.hasEnrollment) {
-    return (
-      <div className="flex min-h-svh flex-col">
-        <AppHeader user={headerUser} />
-        <main className="mx-auto flex max-w-lg flex-1 flex-col items-center justify-center px-4 py-12 text-center">
-          <h1 className="text-lg font-semibold">Complete registration</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Please complete registration to join a challenge. Registration will
-            be available soon.
-          </p>
-        </main>
-      </div>
-    );
+    redirect("/register");
   }
 
   const [heatmapData, leaderboard, quizAvailability, quizHistory] =
