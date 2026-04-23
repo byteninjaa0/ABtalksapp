@@ -15,8 +15,9 @@ export type AvailableQuizPayload = {
 };
 
 /**
- * Week N unlocks when daysCompleted >= 7 * N (N = 1..8).
- * Offers the highest eligible week the user has not attempted, if a quiz exists in DB.
+ * Only the **current** week’s quiz is offered (based on `daysCompleted`),
+ * not older unattempted quizzes. Week W = floor(daysCompleted / 7), capped at 8,
+ * once at least 7 days are completed.
  */
 export async function getAvailableQuiz(
   userId: string,
@@ -44,9 +45,8 @@ export async function getAvailableQuiz(
   }
 
   const { challengeId, domain, daysCompleted } = enrollment;
-  const maxEligibleWeek = Math.min(8, Math.floor(daysCompleted / 7));
 
-  if (maxEligibleWeek < 1) {
+  if (daysCompleted < 7) {
     return {
       quiz: null,
       reason: "not_yet_unlocked",
@@ -54,64 +54,42 @@ export async function getAvailableQuiz(
     };
   }
 
-  const attempts = await prisma.quizAttempt.findMany({
+  const currentWeek = Math.min(Math.floor(daysCompleted / 7), 8);
+
+  const quiz = await prisma.quiz.findFirst({
     where: {
-      userId,
-      quiz: {
-        challengeId,
-        domain,
-      },
+      challengeId,
+      domain,
+      weekNumber: currentWeek,
     },
-    include: {
-      quiz: true,
-    },
-    orderBy: { attemptedAt: "desc" },
   });
 
-  const attemptedWeeks = new Set(
-    attempts.map((a) => a.quiz.weekNumber),
-  );
-
-  for (let week = maxEligibleWeek; week >= 1; week--) {
-    if (daysCompleted < 7 * week) {
-      continue;
-    }
-    if (attemptedWeeks.has(week)) {
-      continue;
-    }
-
-    const quiz = await prisma.quiz.findFirst({
-      where: {
-        challengeId,
-        domain,
-        weekNumber: week,
-      },
-    });
-
-    if (quiz) {
-      return {
-        quiz,
-        reason: "ready",
-        attempt: null,
-      };
-    }
+  if (!quiz) {
+    return {
+      quiz: null,
+      reason: "none_available",
+      attempt: null,
+    };
   }
 
-  const eligibleAttempts = attempts.filter(
-    (a) => a.quiz.weekNumber <= maxEligibleWeek,
-  );
+  const attempt = await prisma.quizAttempt.findUnique({
+    where: {
+      userId_quizId: { userId, quizId: quiz.id },
+    },
+    include: { quiz: true },
+  });
 
-  if (eligibleAttempts.length > 0) {
+  if (attempt) {
     return {
       quiz: null,
       reason: "already_attempted",
-      attempt: eligibleAttempts[0]!,
+      attempt,
     };
   }
 
   return {
-    quiz: null,
-    reason: "none_available",
+    quiz,
+    reason: "ready",
     attempt: null,
   };
 }

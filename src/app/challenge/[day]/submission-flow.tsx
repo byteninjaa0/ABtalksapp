@@ -32,7 +32,10 @@ type Props = {
 export function SubmissionFlow({ dayNumber, task, userDomain }: Props) {
   const [step, setStep] = useState<"github" | "linkedin" | "success">("github");
   const [githubUrl, setGithubUrl] = useState("");
-  const [linkedinTemplate, setLinkedinTemplate] = useState("");
+  /** Snapshot from server when entering step 2 — used for reset only. */
+  const [originalLinkedinTemplate, setOriginalLinkedinTemplate] =
+    useState("");
+  const [editableTemplate, setEditableTemplate] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +57,8 @@ export function SubmissionFlow({ dayNumber, task, userDomain }: Props) {
         return;
       }
       setGithubUrl(res.githubUrl);
-      setLinkedinTemplate(res.linkedinTemplate);
+      setOriginalLinkedinTemplate(res.linkedinTemplate);
+      setEditableTemplate(res.linkedinTemplate);
       setStep("linkedin");
     } finally {
       setIsSubmitting(false);
@@ -87,12 +91,14 @@ export function SubmissionFlow({ dayNumber, task, userDomain }: Props) {
 
   async function copyTemplate() {
     try {
-      await navigator.clipboard.writeText(linkedinTemplate);
+      await navigator.clipboard.writeText(editableTemplate);
       toast.success("Copied to clipboard");
     } catch {
       toast.error("Could not copy — select the text manually");
     }
   }
+
+  const templateTooShort = editableTemplate.length < 50;
 
   if (step === "success") {
     return (
@@ -153,21 +159,42 @@ export function SubmissionFlow({ dayNumber, task, userDomain }: Props) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-              <Textarea
-                readOnly
-                value={linkedinTemplate}
-                className="min-h-40 font-mono text-sm"
-                aria-label="LinkedIn post template"
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                className="shrink-0"
-                onClick={() => void copyTemplate()}
-              >
-                Copy to clipboard
-              </Button>
+            <div className="space-y-2">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                <Textarea
+                  value={editableTemplate}
+                  onChange={(e) => setEditableTemplate(e.target.value)}
+                  className="min-h-[200px] resize-y border-input bg-background text-sm text-foreground shadow-sm"
+                  aria-label="LinkedIn post template"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="shrink-0 sm:mt-0"
+                  onClick={() => void copyTemplate()}
+                >
+                  Copy to clipboard
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Feel free to edit before posting — add your own thoughts or
+                personal touches
+              </p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm tabular-nums text-muted-foreground">
+                  {editableTemplate.length} characters
+                </p>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto p-0 text-sm"
+                  onClick={() =>
+                    setEditableTemplate(originalLinkedinTemplate)
+                  }
+                >
+                  Reset to original
+                </Button>
+              </div>
             </div>
 
             <form onSubmit={handleLinkedinSubmit} className="space-y-4">
@@ -190,7 +217,10 @@ export function SubmissionFlow({ dayNumber, task, userDomain }: Props) {
                   {error}
                 </p>
               ) : null}
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={isSubmitting || templateTooShort}
+              >
                 {isSubmitting ? "Submitting…" : "Submit & complete day"}
               </Button>
             </form>

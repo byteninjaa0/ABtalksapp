@@ -9,6 +9,7 @@ import { getDashboardData } from "@/features/dashboard/get-dashboard-data";
 import { getHeatmapData } from "@/features/dashboard/get-heatmap-data";
 import { getLeaderboard } from "@/features/dashboard/get-leaderboard";
 import { getAvailableQuiz } from "@/features/quiz/get-available-quiz";
+import { getQuizAttemptHistory } from "@/features/quiz/get-quiz-attempt-history";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -59,11 +60,13 @@ export default async function DashboardPage() {
     );
   }
 
-  const [heatmapData, leaderboard, quizAvailability] = await Promise.all([
-    getHeatmapData(data.enrollment.id),
-    getLeaderboard(data.profile.domain as Domain, session.user.id),
-    getAvailableQuiz(session.user.id, data.enrollment.id),
-  ]);
+  const [heatmapData, leaderboard, quizAvailability, quizHistory] =
+    await Promise.all([
+      getHeatmapData(data.enrollment.id),
+      getLeaderboard(data.profile.domain as Domain, session.user.id),
+      getAvailableQuiz(session.user.id, data.enrollment.id),
+      getQuizAttemptHistory(session.user.id, data.enrollment.id),
+    ]);
 
   const { enrollment, profile, todayTask, isTodayCompleted } = data;
   const progressPct = Math.min(
@@ -321,6 +324,42 @@ export default async function DashboardPage() {
               >
                 View results
               </Link>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {quizHistory.length > 0 ? (
+          <Card className="border-dashed">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Your quiz history</CardTitle>
+              <CardDescription>
+                Past attempts — open to review results (current week&apos;s quiz is
+                above when applicable).
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                {quizHistory.map((row) => (
+                  <li
+                    key={row.attemptId}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/30 px-3 py-2"
+                  >
+                    <span className="text-muted-foreground">
+                      Week {row.weekNumber} — scored {row.score}/10
+                      <span className="ml-1 text-xs">· {row.title}</span>
+                    </span>
+                    <Link
+                      href={`/quiz/${row.quizId}`}
+                      className={cn(
+                        buttonVariants({ variant: "ghost", size: "sm" }),
+                        "shrink-0",
+                      )}
+                    >
+                      View results
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </CardContent>
           </Card>
         ) : null}

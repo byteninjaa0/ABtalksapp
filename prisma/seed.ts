@@ -1,3 +1,5 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { addDays, subDays } from "date-fns";
 import {
   Domain,
@@ -35,6 +37,184 @@ function utcNoon(daysAgo: number): Date {
   return d;
 }
 
+type ProblemJson = {
+  dayNumber: number;
+  domain: string;
+  title: string;
+  problemStatement: string;
+  learningObjectives: string[];
+  resources: string[];
+  difficulty: string;
+  estimatedMinutes: number;
+  linkedinTemplate: string;
+  solutionApproach: string;
+  tags: string[];
+};
+
+type QuizQuestionJson = {
+  questionOrder: number;
+  questionText: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctAnswer: string;
+  explanation: string;
+};
+
+type QuizJson = {
+  weekNumber: number;
+  domain: string;
+  title: string;
+  questions: QuizQuestionJson[];
+};
+
+function loadJsonFile<T>(filename: string): T | null {
+  const full = path.join(process.cwd(), "prisma", "content", filename);
+  if (!fs.existsSync(full)) {
+    console.warn(`Content file not found (skipping): ${full}`);
+    return null;
+  }
+  try {
+    return JSON.parse(fs.readFileSync(full, "utf-8")) as T;
+  } catch (e) {
+    console.warn(`Invalid JSON in ${filename}:`, e);
+    return null;
+  }
+}
+
+function buildProblemLookup(entries: ProblemJson[] | null): Map<string, ProblemJson> {
+  const map = new Map<string, ProblemJson>();
+  if (!entries) return map;
+  for (const p of entries) {
+    if (p.domain !== "SE" && p.domain !== "ML" && p.domain !== "AI") continue;
+    map.set(`${p.domain}:${p.dayNumber}`, p);
+  }
+  return map;
+}
+
+function placeholderDailyTaskData(domain: Domain, dayNumber: number) {
+  const difficulty = dayNumber <= 7 ? "Easy" : "Medium";
+  const estimatedMinutes = Math.min(60, 5 + dayNumber * 2);
+  return {
+    domain,
+    title: `Day ${dayNumber} — Placeholder`,
+    problemStatement: `Placeholder problem statement for day ${dayNumber}. Real content coming soon.`,
+    learningObjectives: ["Objective 1", "Objective 2"],
+    resources: [],
+    difficulty,
+    estimatedMinutes,
+    linkedinTemplate: `Day ${dayNumber} of my 60 Days of Code with ABtalks 🚀\n\nMade progress today. Check my work: {{github_link}}\n\n#ABtalks #60DaysOfCode`,
+    solutionApproach: null,
+    tags: ["placeholder", `day-${dayNumber}`],
+  };
+}
+
+function dailyTaskFromJson(domain: Domain, row: ProblemJson) {
+  return {
+    domain,
+    title: row.title,
+    problemStatement: row.problemStatement,
+    learningObjectives: row.learningObjectives,
+    resources: row.resources ?? [],
+    difficulty: row.difficulty,
+    estimatedMinutes: row.estimatedMinutes,
+    linkedinTemplate: row.linkedinTemplate,
+    solutionApproach: row.solutionApproach,
+    tags: row.tags,
+  };
+}
+
+async function upsertDailyTasksForChallenge(
+  challengeId: string,
+  domain: Domain,
+  problemLookup: Map<string, ProblemJson>,
+) {
+  for (let dayNumber = 1; dayNumber <= 60; dayNumber++) {
+    const key = `${domain}:${dayNumber}`;
+    const fromJson = problemLookup.get(key);
+    const body = fromJson
+      ? dailyTaskFromJson(domain, fromJson)
+      : placeholderDailyTaskData(domain, dayNumber);
+
+    await prisma.dailyTask.upsert({
+      where: {
+        challengeId_dayNumber: { challengeId, dayNumber },
+      },
+      create: {
+        challengeId,
+        dayNumber,
+        ...body,
+      },
+      update: { ...body },
+    });
+  }
+}
+
+async function replaceQuizQuestionsFromJson(
+  quizId: string,
+  questions: QuizQuestionJson[],
+) {
+  await prisma.quizQuestion.deleteMany({ where: { quizId } });
+  for (const q of questions) {
+    await prisma.quizQuestion.create({
+      data: {
+        quizId,
+        questionOrder: q.questionOrder,
+        questionText: q.questionText,
+        optionA: q.optionA,
+        optionB: q.optionB,
+        optionC: q.optionC,
+        optionD: q.optionD,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation,
+      },
+    });
+  }
+}
+
+async function seedPlaceholderWeekQuiz(
+  challengeId: string,
+  domain: Domain,
+  weekNumber: number,
+  quizWeek1IdByDomain: Map<Domain, string>,
+) {
+  const title = `Week ${weekNumber} Quiz — ${domain}`;
+  const quiz = await prisma.quiz.upsert({
+    where: {
+      challengeId_weekNumber: { challengeId, weekNumber },
+    },
+    create: {
+      challengeId,
+      domain,
+      weekNumber,
+      title,
+    },
+    update: { title },
+  });
+  if (weekNumber === 1) {
+    quizWeek1IdByDomain.set(domain, quiz.id);
+  }
+  await prisma.quizQuestion.deleteMany({ where: { quizId: quiz.id } });
+  const correctCycle = ["A", "B", "C", "D"] as const;
+  for (let qn = 1; qn <= 10; qn++) {
+    const correctAnswer = correctCycle[(qn - 1) % 4]!;
+    await prisma.quizQuestion.create({
+      data: {
+        quizId: quiz.id,
+        questionOrder: qn,
+        questionText: `Week ${weekNumber} Q${qn} placeholder for ${domain}?`,
+        optionA: "Option A placeholder",
+        optionB: "Option B placeholder",
+        optionC: "Option C placeholder",
+        optionD: "Option D placeholder",
+        correctAnswer,
+        explanation: `Placeholder explanation for Week ${weekNumber} Q${qn} — real content pending.`,
+      },
+    });
+  }
+}
+
 async function main() {
   await prisma.user.deleteMany({
     where: { email: { endsWith: TEST_EMAIL_SUFFIX } },
@@ -43,6 +223,13 @@ async function main() {
   await prisma.challenge.deleteMany({
     where: { domain: { in: [Domain.SE, Domain.ML, Domain.AI] } },
   });
+
+  const problemsRaw = loadJsonFile<ProblemJson[]>("problems.json");
+  const problemLookup = buildProblemLookup(
+    Array.isArray(problemsRaw) ? problemsRaw : null,
+  );
+  const quizzesRaw = loadJsonFile<QuizJson[]>("quizzes.json");
+  const quizEntries = Array.isArray(quizzesRaw) ? quizzesRaw : [];
 
   const challengeSpecs: { domain: Domain; title: string; description: string }[] =
     [
@@ -68,6 +255,7 @@ async function main() {
 
   const challengeByDomain = new Map<Domain, { id: string }>();
   const quizWeek1IdByDomain = new Map<Domain, string>();
+  const quizSeededFromJson = new Set<string>();
 
   for (const spec of challengeSpecs) {
     const challenge = await prisma.challenge.create({
@@ -80,54 +268,55 @@ async function main() {
       },
     });
     challengeByDomain.set(spec.domain, { id: challenge.id });
+    await upsertDailyTasksForChallenge(
+      challenge.id,
+      spec.domain,
+      problemLookup,
+    );
+  }
 
-    // 60 tasks per domain so enrollments up to day 60 have valid DailyTask FKs
-    for (let dayNumber = 1; dayNumber <= 60; dayNumber++) {
-      const difficulty = dayNumber <= 7 ? "Easy" : "Medium";
-      const estimatedMinutes = Math.min(60, 5 + dayNumber * 2);
-      await prisma.dailyTask.create({
-        data: {
-          challengeId: challenge.id,
-          dayNumber,
-          domain: spec.domain,
-          title: `Day ${dayNumber} — Placeholder`,
-          problemStatement: `Placeholder problem statement for day ${dayNumber}. Real content coming soon.`,
-          learningObjectives: ["Objective 1", "Objective 2"],
-          resources: [],
-          difficulty,
-          estimatedMinutes,
-          linkedinTemplate: `Day ${dayNumber} of my 60 Days of Code with ABtalks 🚀\n\nMade progress today. Check my work: {{github_link}}\n\n#ABtalks #60DaysOfCode`,
-          tags: ["placeholder", `day-${dayNumber}`],
-        },
-      });
+  for (const entry of quizEntries) {
+    if (entry.domain !== "SE" && entry.domain !== "ML" && entry.domain !== "AI") {
+      continue;
     }
-
-    const week1Quiz = await prisma.quiz.create({
-      data: {
-        challengeId: challenge.id,
-        domain: spec.domain,
-        weekNumber: 1,
-        title: `Week 1 Quiz — ${spec.domain}`,
-      },
-    });
-    quizWeek1IdByDomain.set(spec.domain, week1Quiz.id);
-
-    const correctCycle = ["A", "B", "C", "D"] as const;
-    for (let qn = 1; qn <= 10; qn++) {
-      const correctAnswer = correctCycle[(qn - 1) % 4]!;
-      await prisma.quizQuestion.create({
-        data: {
-          quizId: week1Quiz.id,
-          questionOrder: qn,
-          questionText: `Week 1 Q${qn} placeholder for ${spec.domain}?`,
-          optionA: "Option A placeholder",
-          optionB: "Option B placeholder",
-          optionC: "Option C placeholder",
-          optionD: "Option D placeholder",
-          correctAnswer,
-          explanation: `Placeholder explanation for Week 1 Q${qn} — real content pending.`,
+    const domain = entry.domain as Domain;
+    const challengeId = challengeByDomain.get(domain)!.id;
+    const quiz = await prisma.quiz.upsert({
+      where: {
+        challengeId_weekNumber: {
+          challengeId,
+          weekNumber: entry.weekNumber,
         },
-      });
+      },
+      create: {
+        challengeId,
+        domain,
+        weekNumber: entry.weekNumber,
+        title: entry.title,
+      },
+      update: { title: entry.title },
+    });
+    quizSeededFromJson.add(`${domain}:${entry.weekNumber}`);
+    if (entry.weekNumber === 1) {
+      quizWeek1IdByDomain.set(domain, quiz.id);
+    }
+    await replaceQuizQuestionsFromJson(quiz.id, entry.questions);
+  }
+
+  const defaultQuizWeeks = [1];
+  for (const spec of challengeSpecs) {
+    const challengeId = challengeByDomain.get(spec.domain)!.id;
+    for (const weekNumber of defaultQuizWeeks) {
+      const key = `${spec.domain}:${weekNumber}`;
+      if (quizSeededFromJson.has(key)) {
+        continue;
+      }
+      await seedPlaceholderWeekQuiz(
+        challengeId,
+        spec.domain,
+        weekNumber,
+        quizWeek1IdByDomain,
+      );
     }
   }
 

@@ -1,0 +1,54 @@
+[
+  {
+    "dayNumber": 1,
+    "domain": "SE",
+    "title": "Your First Python Program",
+    "problemStatement": "Welcome to Day 1. Today we install Python and write your first program.\n\n**Context:** Every coder started where you are. Writing your first program \u2014 even something tiny \u2014 is a real accomplishment.\n\n**What to do:**\n- Install Python 3.10+ from python.org\n- Create a file called hello.py\n- Write one line: `print(\"Hello, my name is [YOUR NAME]\")`\n- Run it from your terminal: `python hello.py`\n\n**Expected output (example):**\n```\nHello, my name is Priya\n```\n\n**Submission:** Create a new GitHub repository called `abtalks-day-1` and push hello.py to it.",
+    "learningObjectives": [
+      "Install Python on your local machine",
+      "Run a Python file from the command line",
+      "Push code to a new GitHub repository"
+    ],
+    "resources": [
+      "https://www.python.org/downloads/",
+      "https://docs.github.com/en/get-started/quickstart/create-a-repo"
+    ],
+    "difficulty": "Easy",
+    "estimatedMinutes": 5,
+    "linkedinTemplate": "Day 1 of my 60 Days of Code with ABtalks \ud83d\ude80\n\nInstalled Python and wrote my first program today. A tiny step, but the hardest part is starting. 60 days from now, I'll look back at this commit and laugh.\n\nGrateful to Anil Bajpai sir and the ABtalks community.\n\nRepo: {{github_link}}\n\n#ABtalks #60DaysOfCode #Python #LearningInPublic",
+    "solutionApproach": "Student installs Python, creates hello.py with a print statement, creates GitHub repo, pushes. Quality of code not judged on Day 1 \u2014 just verify environment works end-to-end.",
+    "tags": [
+      "python",
+      "setup",
+      "basics",
+      "git",
+      "github"
+    ]
+  },
+  {
+    "dayNumber": 1,
+    "domain": "ML",
+    "title": "Set Up Your ML Environment",
+    "problemStatement": "Welcome to Day 1 of ML. Before we do any machine learning, we need tools.\n\n**Context:** Machine Learning starts with Python and a few key libraries. Today we set up the environment.\n\n**What to do:**\n- Install Python 3.10+ if not already installed\n- Install numpy and pandas: `pip install numpy pandas`\n- Create a file called `day1.py`\n- Import both libraries and print their versions:\n```python\nimport numpy as np\nimport pandas as pd\nprint(f\"numpy version: {np.__version__}\")\nprint(f\"pandas version: {pd.__version__}\")\n```\n- Run the script\n\n**Expected output:**\n```\nnumpy version: 1.26.0\npandas version: 2.1.0\n```\n(Your versions may differ \u2014 that's fine.)\n\n**Submission:** Create a GitHub repo called `abtalks-ml-day-1` and push day1.py to it.",
+    "learningObjectives": [
+      "Install core ML Python libraries",
+      "Verify environment is working",
+      "Push a Python file to GitHub"
+    ],
+    "resources": [
+      "https://numpy.org/install/",
+      "https://pandas.pydata.org/getting_started.html"
+    ],
+    "difficulty": "Easy",
+    "estimatedMinutes": 10,
+    "linkedinTemplate": "Day 1 of my 60 Days of ML with ABtalks \ud83e\udde0\n\nSet up Python, numpy, and pandas today. Small step, but the ML journey starts here. Excited to see where this goes over the next 60 days.\n\nThanks to Anil Bajpai sir and the ABtalks community.\n\nRepo: {{github_link}}\n\n#ABtalks #60DaysOfCode #MachineLearning #Python #LearningInPublic",
+    "solutionApproach": "Student installs numpy and pandas, writes a simple import + version print script, pushes to GitHub. Verify packages are installed correctly.",
+    "tags": [
+      "python",
+      "numpy",
+      "pandas",
+      "setup",
+      "ml-basics"
+    ]
+  }
+]

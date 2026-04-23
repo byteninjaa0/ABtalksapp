@@ -1,0 +1,109 @@
+[
+  {
+    "weekNumber": 1,
+    "domain": "SE",
+    "title": "Week 1: Python & Git Basics",
+    "questions": [
+      {
+        "questionOrder": 1,
+        "questionText": "Which command creates a new Python virtual environment?",
+        "optionA": "python install venv",
+        "optionB": "python -m venv myenv",
+        "optionC": "pip create venv",
+        "optionD": "python new venv myenv",
+        "correctAnswer": "B",
+        "explanation": "The correct command is `python -m venv myenv` which creates a virtual environment directory named 'myenv'."
+      },
+      {
+        "questionOrder": 2,
+        "questionText": "What does `git status` do?",
+        "optionA": "Uploads your changes to GitHub",
+        "optionB": "Shows which files have been modified and are staged or unstaged",
+        "optionC": "Creates a new branch",
+        "optionD": "Deletes untracked files",
+        "correctAnswer": "B",
+        "explanation": "`git status` is a read-only command that shows the current state of your working directory and staging area."
+      },
+      {
+        "questionOrder": 3,
+        "questionText": "Which of these is NOT a Python data type?",
+        "optionA": "int",
+        "optionB": "str",
+        "optionC": "char",
+        "optionD": "list",
+        "correctAnswer": "C",
+        "explanation": "Python doesn't have a separate `char` type. Single characters are just strings of length 1."
+      },
+      {
+        "questionOrder": 4,
+        "questionText": "What's the output of `print(type(3.14))` in Python?",
+        "optionA": "<class 'int'>",
+        "optionB": "<class 'float'>",
+        "optionC": "<class 'decimal'>",
+        "optionD": "<class 'number'>",
+        "correctAnswer": "B",
+        "explanation": "3.14 is a floating-point number, so its type is `float`."
+      },
+      {
+        "questionOrder": 5,
+        "questionText": "Which command pushes your local commits to the remote repository?",
+        "optionA": "git commit",
+        "optionB": "git send",
+        "optionC": "git push",
+        "optionD": "git upload",
+        "correctAnswer": "C",
+        "explanation": "`git push` sends your committed changes from your local repository to the remote (e.g., GitHub)."
+      },
+      {
+        "questionOrder": 6,
+        "questionText": "What's the correct way to check Python's version from the command line?",
+        "optionA": "python -version",
+        "optionB": "python --v",
+        "optionC": "python --version",
+        "optionD": "python -ver",
+        "correctAnswer": "C",
+        "explanation": "The flag is `--version` with two hyphens. `python -V` (capital V) also works as shorthand."
+      },
+      {
+        "questionOrder": 7,
+        "questionText": "What does `pip` stand for?",
+        "optionA": "Python Install Package",
+        "optionB": "Preferred Installer Program",
+        "optionC": "Package Installer for Python",
+        "optionD": "Python Interactive Prompt",
+        "correctAnswer": "B",
+        "explanation": "pip stands for 'Preferred Installer Program' \u2014 it's the standard package manager for Python."
+      },
+      {
+        "questionOrder": 8,
+        "questionText": "Which of these commits staged changes in Git?",
+        "optionA": "git commit -m 'message'",
+        "optionB": "git save 'message'",
+        "optionC": "git push -m 'message'",
+        "optionD": "git store 'message'",
+        "correctAnswer": "A",
+        "explanation": "`git commit -m 'message'` creates a commit with the given message from your staged changes."
+      },
+      {
+        "questionOrder": 9,
+        "questionText": "What does the `#` symbol represent in Python?",
+        "optionA": "Variable declaration",
+        "optionB": "String delimiter",
+        "optionC": "Comment",
+        "optionD": "Function definition",
+        "correctAnswer": "C",
+        "explanation": "In Python, `#` starts a single-line comment. Everything after `#` on that line is ignored by the interpreter."
+      },
+      {
+        "questionOrder": 10,
+        "questionText": "Which of these is a correct way to write a for loop in Python?",
+        "optionA": "for (i = 0; i < 10; i++)",
+        "optionB": "for i in range(10):",
+        "optionC": "loop i from 0 to 10:",
+        "optionD": "foreach i in range(10):",
+        "correctAnswer": "B",
+        "explanation": "Python uses `for i in range(10):` syntax. The C-style and other syntaxes are not valid Python."
+      }
+    ]
+  }
+]
