@@ -23,6 +23,7 @@ export type DashboardDataWithEnrollment = {
     isReadyForInterview: boolean;
   };
   enrollment: {
+    id: string;
     currentDay: number;
     totalDays: number;
     daysCompleted: number;
@@ -173,6 +174,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       isReadyForInterview: user.studentProfile.isReadyForInterview,
     },
     enrollment: {
+      id: enrollment.id,
       currentDay,
       totalDays,
       daysCompleted: enrollment.daysCompleted,

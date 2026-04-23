@@ -4,7 +4,9 @@ import type { Domain } from "@prisma/client";
 import { CheckCircle2, Flame, Gift } from "lucide-react";
 import { auth } from "@/auth";
 import { DashboardHeader } from "@/features/dashboard/dashboard-header";
+import { SubmissionHeatmap } from "@/components/dashboard/submission-heatmap";
 import { getDashboardData } from "@/features/dashboard/get-dashboard-data";
+import { getHeatmapData } from "@/features/dashboard/get-heatmap-data";
 import { getLeaderboard } from "@/features/dashboard/get-leaderboard";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -57,10 +59,10 @@ export default async function DashboardPage() {
     );
   }
 
-  const leaderboard = await getLeaderboard(
-    data.profile.domain as Domain,
-    session.user.id,
-  );
+  const [heatmapData, leaderboard] = await Promise.all([
+    getHeatmapData(data.enrollment.id),
+    getLeaderboard(data.profile.domain as Domain, session.user.id),
+  ]);
 
   const { enrollment, profile, todayTask, isTodayCompleted } = data;
   const progressPct = Math.min(
@@ -275,6 +277,18 @@ export default async function DashboardPage() {
             </Card>
           </div>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Your 60-Day Journey</CardTitle>
+            <CardDescription>
+              One cell per challenge day (IST). Hover a square for details.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="min-w-0">
+            <SubmissionHeatmap data={heatmapData} />
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

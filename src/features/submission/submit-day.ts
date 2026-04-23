@@ -20,20 +20,21 @@ export type SubmitDayErr = {
 
 export type SubmitDayResult = SubmitDayOk | SubmitDayErr;
 
+/** One query inside the transaction — avoids P2028 when many per-day round-trips exceed DB tx timeout (e.g. Neon). */
 async function computeOnTimeStreakEndingAt(
   tx: Prisma.TransactionClient,
   enrollmentId: string,
   endDay: number,
 ): Promise<number> {
+  const rows = await tx.submission.findMany({
+    where: { enrollmentId, dayNumber: { gte: 1, lte: endDay } },
+    select: { dayNumber: true, status: true },
+  });
+  const statusByDay = new Map(rows.map((r) => [r.dayNumber, r.status]));
   let streak = 0;
   for (let d = endDay; d >= 1; d--) {
-    const s = await tx.submission.findUnique({
-      where: {
-        enrollmentId_dayNumber: { enrollmentId, dayNumber: d },
-      },
-      select: { status: true },
-    });
-    if (!s || s.status !== SubmissionStatus.ON_TIME) break;
+    const st = statusByDay.get(d);
+    if (!st || st !== SubmissionStatus.ON_TIME) break;
     streak++;
   }
   return streak;

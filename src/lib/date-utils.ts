@@ -1,9 +1,10 @@
-import { differenceInCalendarDays } from "date-fns";
+import { addDays, differenceInCalendarDays } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 
 const IST = "Asia/Kolkata";
 
-function parseCalendarKeyToUtcDate(key: string): Date {
+/** Parse an IST calendar key `yyyy-MM-dd` to a UTC Date at that civil date. */
+export function parseCalendarKeyToUtcDate(key: string): Date {
   const [y, m, d] = key.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d));
 }
@@ -17,6 +18,17 @@ export function getNowInIST(): string {
  * Challenge day 1 = IST calendar day of `startedAt`.
  * Each subsequent IST calendar day increments by 1. Capped at 60, minimum 1.
  */
+/** IST calendar date string for challenge day `dayNumber` (1 = first IST day of enrollment). */
+export function getIstDateKeyForChallengeDay(
+  startedAt: Date,
+  dayNumber: number,
+): string {
+  const startKey = formatInTimeZone(startedAt, IST, "yyyy-MM-dd");
+  const base = parseCalendarKeyToUtcDate(startKey);
+  const dayDate = addDays(base, dayNumber - 1);
+  return formatInTimeZone(dayDate, IST, "yyyy-MM-dd");
+}
+
 export function getCurrentDayNumber(startedAt: Date): number {
   const startKey = formatInTimeZone(startedAt, IST, "yyyy-MM-dd");
   const nowKey = formatInTimeZone(new Date(), IST, "yyyy-MM-dd");
