@@ -1,5 +1,8 @@
-import { auth } from "@/auth";
+import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
+import authConfig from "@/auth.config";
+
+const { auth } = NextAuth(authConfig);
 
 const protectedPaths = ["/dashboard", "/challenge", "/profile", "/quiz", "/register"];
 
@@ -10,19 +13,16 @@ export default auth((req) => {
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
   const isAuthPage = pathname === "/login";
 
-  // Protected route, not logged in → redirect to login
   if (isProtected && !isLoggedIn) {
     const url = new URL("/login", req.nextUrl);
     url.searchParams.set("from", pathname);
     return NextResponse.redirect(url);
   }
 
-  // Logged in, on login page → redirect to dashboard
   if (isAuthPage && isLoggedIn) {
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 
-  // Everything else proceeds normally
   return NextResponse.next();
 });
 
