@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Domain } from "@prisma/client";
 import { auth } from "@/auth";
 import { getProfile } from "@/features/profile/get-profile";
 import { getReferralStats } from "@/features/profile/get-referral-stats";
@@ -18,6 +19,19 @@ import {
 import { cn } from "@/lib/utils";
 import { ProfileForm } from "./profile-form";
 import type { ProfileFormValues } from "@/lib/validations/profile";
+
+function domainDisplayName(domain: Domain) {
+  switch (domain) {
+    case Domain.SE:
+      return "Software Engineering";
+    case Domain.DS:
+      return "Data Science";
+    case Domain.AI:
+      return "Artificial Intelligence";
+    default:
+      return domain;
+  }
+}
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/);
@@ -120,7 +134,9 @@ export default async function ProfilePage() {
                 </p>
                 <p className="text-sm text-muted-foreground">{user.email}</p>
                 <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
-                  <Badge variant="secondary">{profile.domain}</Badge>
+                  <Badge variant="secondary">
+                    {domainDisplayName(profile.domain)}
+                  </Badge>
                   {profile.isReadyForInterview ? (
                     <Badge className="bg-green-600 text-white hover:bg-green-600/90">
                       Ready for interview

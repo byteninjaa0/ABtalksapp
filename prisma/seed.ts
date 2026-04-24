@@ -87,7 +87,7 @@ function buildProblemLookup(entries: ProblemJson[] | null): Map<string, ProblemJ
   const map = new Map<string, ProblemJson>();
   if (!entries) return map;
   for (const p of entries) {
-    if (p.domain !== "SE" && p.domain !== "ML" && p.domain !== "AI") continue;
+    if (p.domain !== "SE" && p.domain !== "DS" && p.domain !== "AI") continue;
     map.set(`${p.domain}:${p.dayNumber}`, p);
   }
   return map;
@@ -221,7 +221,7 @@ async function main() {
   });
 
   await prisma.challenge.deleteMany({
-    where: { domain: { in: [Domain.SE, Domain.ML, Domain.AI] } },
+    where: { domain: { in: [Domain.SE, Domain.DS, Domain.AI] } },
   });
 
   const problemsRaw = loadJsonFile<ProblemJson[]>("problems.json");
@@ -240,10 +240,10 @@ async function main() {
           "Placeholder SE challenge. Real curriculum content coming soon.",
       },
       {
-        domain: Domain.ML,
-        title: "60 Days of Code — Machine Learning",
+        domain: Domain.DS,
+        title: "60 Days of Code — Data Science",
         description:
-          "Placeholder ML challenge. Real curriculum content coming soon.",
+          "Placeholder Data Science challenge. Real curriculum content coming soon.",
       },
       {
         domain: Domain.AI,
@@ -276,7 +276,7 @@ async function main() {
   }
 
   for (const entry of quizEntries) {
-    if (entry.domain !== "SE" && entry.domain !== "ML" && entry.domain !== "AI") {
+    if (entry.domain !== "SE" && entry.domain !== "DS" && entry.domain !== "AI") {
       continue;
     }
     const domain = entry.domain as Domain;
@@ -363,7 +363,7 @@ async function main() {
       password: "test",
       name: "Priya",
       num: 2,
-      domain: Domain.ML,
+      domain: Domain.DS,
       role: Role.STUDENT,
       enrollment: {
         daysCompleted: 0,
@@ -411,7 +411,7 @@ async function main() {
       password: "test",
       name: "Vikram",
       num: 5,
-      domain: Domain.ML,
+      domain: Domain.DS,
       role: Role.STUDENT,
       enrollment: {
         daysCompleted: 15,

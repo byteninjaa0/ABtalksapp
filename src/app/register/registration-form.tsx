@@ -45,22 +45,23 @@ const domainCards: {
   icon: typeof Code2;
 }[] = [
   {
-    value: Domain.SE,
-    title: "Software Engineering",
-    description: "Build systems, APIs, and full-stack apps over 60 days.",
-    icon: Code2,
-  },
-  {
-    value: Domain.ML,
-    title: "Machine Learning",
-    description: "Models, data, and practical ML workflows day by day.",
-    icon: Brain,
-  },
-  {
     value: Domain.AI,
     title: "Artificial Intelligence",
     description: "Foundations and applied AI alongside the community.",
     icon: Sparkles,
+  },
+  {
+    value: Domain.DS,
+    title: "Data Science",
+    description:
+      "Data, analysis, and practical workflows from exploration to modeling.",
+    icon: Brain,
+  },
+  {
+    value: Domain.SE,
+    title: "Software Engineering",
+    description: "Build systems, APIs, and full-stack apps over 60 days.",
+    icon: Code2,
   },
 ];
 
