@@ -18,6 +18,7 @@ export const updateProfileSchema = z.object({
     .default("")
     .transform((s) => trimEmptyToUndefined(s.trim()))
     .pipe(z.union([z.undefined(), z.string().url("Must be a valid URL")])),
+  resumeUrl: z.union([z.literal(""), z.string().url("Must be a valid URL")]).default(""),
   githubUsername: z
     .string()
     .default("")

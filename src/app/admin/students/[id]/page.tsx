@@ -107,11 +107,21 @@ export default async function AdminStudentDetailPage({
                 <span className="text-muted-foreground">GitHub:</span> @{data.profile.githubUsername}
               </p>
             ) : null}
-            {data.profile.resumeUrl ? (
-              <Link className="inline-flex items-center gap-1 text-primary underline" href={data.profile.resumeUrl} target="_blank" rel="noreferrer">
-                Resume <ExternalLink className="size-3" />
-              </Link>
-            ) : null}
+            <p>
+              <span className="text-muted-foreground">Resume:</span>{" "}
+              {data.profile.resumeUrl ? (
+                <Link
+                  className="inline-flex items-center gap-1 text-primary underline"
+                  href={data.profile.resumeUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View Resume <ExternalLink className="size-3" />
+                </Link>
+              ) : (
+                <span className="text-muted-foreground">No resume link</span>
+              )}
+            </p>
           </CardContent>
         </Card>
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Domain } from "@prisma/client";
+import { ExternalLink } from "lucide-react";
 import { auth } from "@/auth";
 import { getProfile } from "@/features/profile/get-profile";
 import { getReferralStats } from "@/features/profile/get-referral-stats";
@@ -114,6 +115,7 @@ export default async function ProfilePage() {
     graduationYear: profile.graduationYear,
     skills: [...profile.skills],
     linkedinUrl: profile.linkedinUrl ?? "",
+    resumeUrl: profile.resumeUrl ?? "",
     githubUsername: profile.githubUsername ?? "",
   };
 
@@ -158,12 +160,34 @@ export default async function ProfilePage() {
               <CardHeader>
                 <CardTitle>Your information</CardTitle>
                 <CardDescription>
-                  Domain and email cannot be changed here. Resume upload is coming
-                  later.
+                  Domain and email cannot be changed here.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ProfileForm initialProfile={formDefaults} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Resume</CardTitle>
+                <CardDescription>Visible to you and admins only.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {profile.resumeUrl ? (
+                  <Link
+                    href={profile.resumeUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 font-medium text-primary underline"
+                  >
+                    View Resume <ExternalLink className="size-3.5" />
+                  </Link>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No resume link added yet
+                  </p>
+                )}
               </CardContent>
             </Card>
 

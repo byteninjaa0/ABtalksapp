@@ -38,6 +38,7 @@ export async function updateProfileAction(
       ? (skillsParsed as string[])
       : [],
     linkedinUrl: String(formData.get("linkedinUrl") ?? ""),
+    resumeUrl: String(formData.get("resumeUrl") ?? ""),
     githubUsername: String(formData.get("githubUsername") ?? ""),
   });
 }

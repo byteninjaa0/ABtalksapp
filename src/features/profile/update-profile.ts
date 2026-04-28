@@ -13,6 +13,7 @@ export async function updateProfile(
     graduationYear: unknown;
     skills: unknown;
     linkedinUrl?: string;
+    resumeUrl?: string;
     githubUsername?: string;
   },
 ): Promise<UpdateProfileResult> {
@@ -26,6 +27,7 @@ export async function updateProfile(
     graduationYear: input.graduationYear,
     skills: skillsArr,
     linkedinUrl: input.linkedinUrl ?? "",
+    resumeUrl: input.resumeUrl ?? "",
     githubUsername: input.githubUsername ?? "",
   });
 
@@ -55,6 +57,7 @@ export async function updateProfile(
       graduationYear: data.graduationYear,
       skills: data.skills,
       linkedinUrl: data.linkedinUrl ?? null,
+      resumeUrl: data.resumeUrl === "" ? null : data.resumeUrl,
       githubUsername: data.githubUsername ?? null,
     },
   });

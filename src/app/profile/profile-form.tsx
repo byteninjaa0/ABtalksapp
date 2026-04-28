@@ -32,6 +32,7 @@ export function ProfileForm({ initialProfile }: Props) {
       graduationYear: initialProfile.graduationYear,
       skills: initialProfile.skills ?? [],
       linkedinUrl: initialProfile.linkedinUrl ?? "",
+      resumeUrl: initialProfile.resumeUrl ?? "",
       githubUsername: initialProfile.githubUsername ?? "",
     },
   });
@@ -79,6 +80,7 @@ export function ProfileForm({ initialProfile }: Props) {
     fd.append("graduationYear", String(values.graduationYear));
     fd.append("skills", JSON.stringify(values.skills));
     fd.append("linkedinUrl", values.linkedinUrl ?? "");
+    fd.append("resumeUrl", values.resumeUrl ?? "");
     fd.append("githubUsername", values.githubUsername ?? "");
 
     const result = await updateProfileAction(fd);
@@ -195,6 +197,23 @@ export function ProfileForm({ initialProfile }: Props) {
           <p className="text-sm text-destructive">
             {errors.githubUsername.message}
           </p>
+        ) : null}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="resumeUrl">Resume Link</Label>
+        <Input
+          id="resumeUrl"
+          type="url"
+          placeholder="https://drive.google.com/... or LinkedIn resume URL"
+          {...register("resumeUrl")}
+        />
+        <p className="text-xs text-muted-foreground">
+          Visible to admins only. Paste a Google Drive, Dropbox, or LinkedIn-hosted
+          resume link.
+        </p>
+        {errors.resumeUrl ? (
+          <p className="text-sm text-destructive">{errors.resumeUrl.message}</p>
         ) : null}
       </div>
 
