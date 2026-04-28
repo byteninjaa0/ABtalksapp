@@ -106,6 +106,19 @@ export default async function DashboardPage() {
     <div className="flex min-h-svh flex-col bg-muted/30">
       <AppHeader user={headerUser} domain={profile.domain as Domain} />
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-6 sm:px-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="font-display text-2xl">Your 60-Day Journey</CardTitle>
+            <CardDescription>
+              {enrollment.daysCompleted} days complete · Day {enrollment.currentDay} of{" "}
+              {enrollment.totalDays}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="min-w-0 px-5 pb-6">
+            <SubmissionHeatmap data={heatmapData} />
+          </CardContent>
+        </Card>
+
         <div className="grid gap-5 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4 lg:gap-6">
           <Card className="relative overflow-hidden">
             <CardContent className="p-6 pt-6">
@@ -441,19 +454,6 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
         ) : null}
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Your 60-Day Journey</CardTitle>
-            <CardDescription>
-              {enrollment.daysCompleted} of {enrollment.totalDays} days complete
-              — one cell per challenge day (IST). Hover a square for details.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="min-w-0">
-            <SubmissionHeatmap data={heatmapData} />
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>
