@@ -1,13 +1,9 @@
-import { subDays } from "date-fns";
+import { subDays, subMonths, subWeeks } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { prisma } from "@/lib/db";
+import { IST, parseCalendarKeyToUtcDate } from "@/lib/date-utils";
 
-function formatIstDay(date: Date): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Kolkata",
-    month: "short",
-    day: "numeric",
-  }).format(date);
-}
+export type TimeRange = "daily" | "weekly" | "monthly";
 
 function getIstHour(date: Date): number {
   return Number(
@@ -19,20 +15,87 @@ function getIstHour(date: Date): number {
   );
 }
 
-export async function getAnalyticsData() {
+function toIstDayKey(date: Date): string {
+  return formatInTimeZone(date, IST, "yyyy-MM-dd");
+}
+
+function toIstMonthKey(date: Date): string {
+  return formatInTimeZone(date, IST, "yyyy-MM");
+}
+
+function getIstWeekStartKey(date: Date): string {
+  const dayKey = toIstDayKey(date);
+  const day = parseCalendarKeyToUtcDate(dayKey);
+  const dayOfWeek = day.getUTCDay();
+  const diffToMonday = (dayOfWeek + 6) % 7;
+  const monday = new Date(day.getTime() - diffToMonday * 24 * 60 * 60 * 1000);
+  return formatInTimeZone(monday, IST, "yyyy-MM-dd");
+}
+
+function getRangeWindow(range: TimeRange) {
   const now = new Date();
-  const start30 = subDays(now, 29);
+  if (range === "weekly") {
+    return { now, start: subWeeks(now, 11) };
+  }
+  if (range === "monthly") {
+    return { now, start: subMonths(now, 11) };
+  }
+  return { now, start: subDays(now, 29) };
+}
+
+function buildBuckets(range: TimeRange, now: Date) {
+  if (range === "weekly") {
+    return Array.from({ length: 12 }, (_, i) => {
+      const date = subWeeks(now, 11 - i);
+      const key = getIstWeekStartKey(date);
+      const label = formatInTimeZone(parseCalendarKeyToUtcDate(key), IST, "MMM d");
+      return { key, label };
+    });
+  }
+
+  if (range === "monthly") {
+    return Array.from({ length: 12 }, (_, i) => {
+      const date = subMonths(now, 11 - i);
+      const key = toIstMonthKey(date);
+      const label = formatInTimeZone(new Date(`${key}-01T00:00:00+05:30`), IST, "MMM yyyy");
+      return { key, label };
+    });
+  }
+
+  return Array.from({ length: 30 }, (_, i) => {
+    const date = subDays(now, 29 - i);
+    const key = toIstDayKey(date);
+    const label = formatInTimeZone(parseCalendarKeyToUtcDate(key), IST, "MMM d");
+    return { key, label };
+  });
+}
+
+function timeKeyFor(date: Date, range: TimeRange) {
+  if (range === "weekly") return getIstWeekStartKey(date);
+  if (range === "monthly") return toIstMonthKey(date);
+  return toIstDayKey(date);
+}
+
+export async function getAnalyticsData(range: TimeRange = "daily") {
+  const { now, start } = getRangeWindow(range);
+  const buckets = buildBuckets(range, now);
+  const bucketSet = new Set(buckets.map((b) => b.key));
 
   const [
-    recentProfiles,
+    rangedProfiles,
+    rangedSubmissions,
     domainGrouped,
     allEnrollments,
     allSubmissions,
     topPerformersRaw,
   ] = await Promise.all([
     prisma.studentProfile.findMany({
-      where: { createdAt: { gte: start30 } },
+      where: { createdAt: { gte: start } },
       select: { createdAt: true },
+    }),
+    prisma.submission.findMany({
+      where: { submittedAt: { gte: start } },
+      select: { submittedAt: true },
     }),
     prisma.studentProfile.groupBy({
       by: ["domain"],
@@ -60,27 +123,29 @@ export async function getAnalyticsData() {
     }),
   ]);
 
-  const registrationsByDay = Array.from({ length: 30 }, (_, index) => {
-    const day = subDays(now, 29 - index);
-    const key = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Kolkata",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(day);
+  const registrationsCountByKey = new Map<string, number>();
+  for (const profile of rangedProfiles) {
+    const key = timeKeyFor(profile.createdAt, range);
+    if (!bucketSet.has(key)) continue;
+    registrationsCountByKey.set(key, (registrationsCountByKey.get(key) ?? 0) + 1);
+  }
 
-    const count = recentProfiles.filter((profile) => {
-      const profileKey = new Intl.DateTimeFormat("en-CA", {
-        timeZone: "Asia/Kolkata",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).format(profile.createdAt);
-      return profileKey === key;
-    }).length;
+  const submissionsCountByKey = new Map<string, number>();
+  for (const submission of rangedSubmissions) {
+    const key = timeKeyFor(submission.submittedAt, range);
+    if (!bucketSet.has(key)) continue;
+    submissionsCountByKey.set(key, (submissionsCountByKey.get(key) ?? 0) + 1);
+  }
 
-    return { label: formatIstDay(day), count };
-  });
+  const registrationsSeries = buckets.map((bucket) => ({
+    label: bucket.label,
+    count: registrationsCountByKey.get(bucket.key) ?? 0,
+  }));
+
+  const submissionsSeries = buckets.map((bucket) => ({
+    label: bucket.label,
+    count: submissionsCountByKey.get(bucket.key) ?? 0,
+  }));
 
   const domainDistribution = ["AI", "DS", "SE"].map((domain) => ({
     name: domain,
@@ -111,7 +176,9 @@ export async function getAnalyticsData() {
   }));
 
   return {
-    registrationsByDay,
+    range,
+    registrationsSeries,
+    submissionsSeries,
     domainDistribution,
     dropOff,
     submissionsByHour: submissionsByHourBuckets,

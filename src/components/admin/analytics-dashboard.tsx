@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { TimeRange } from "@/features/admin/get-analytics-data";
 
 const domainColors: Record<string, string> = {
   AI: "#8B5CF6",
@@ -31,7 +32,9 @@ const domainColors: Record<string, string> = {
 };
 
 type AnalyticsData = {
-  registrationsByDay: Array<{ label: string; count: number }>;
+  range: TimeRange;
+  registrationsSeries: Array<{ label: string; count: number }>;
+  submissionsSeries: Array<{ label: string; count: number }>;
   domainDistribution: Array<{ name: string; value: number }>;
   dropOff: Array<{ milestone: string; count: number }>;
   submissionsByHour: Array<{ hour: string; count: number }>;
@@ -43,16 +46,50 @@ type AnalyticsData = {
   }>;
 };
 
+function registrationsTitle(range: TimeRange) {
+  if (range === "weekly") return "Registrations — Last 12 Weeks";
+  if (range === "monthly") return "Registrations — Last 12 Months";
+  return "Registrations — Last 30 Days";
+}
+
+function submissionsTitle(range: TimeRange) {
+  if (range === "weekly") return "Submissions — Last 12 Weeks";
+  if (range === "monthly") return "Submissions — Last 12 Months";
+  return "Submissions — Last 30 Days";
+}
+
 export function AnalyticsDashboard({ data }: { data: AnalyticsData }) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>Registrations (Last 30 Days)</CardTitle>
+          <CardTitle>{registrationsTitle(data.range)}</CardTitle>
         </CardHeader>
         <CardContent className="h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data.registrationsByDay}>
+            <LineChart data={data.registrationsSeries}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="label" minTickGap={24} />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="count"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{submissionsTitle(data.range)}</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[280px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data.submissionsSeries}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="label" minTickGap={24} />
               <YAxis allowDecimals={false} />
