@@ -21,7 +21,9 @@ export type HeatmapCell = {
 
 export async function getHeatmapData(
   enrollmentId: string,
+  options?: { includeSubmissionDetails?: boolean },
 ): Promise<HeatmapCell[]> {
+  const includeSubmissionDetails = options?.includeSubmissionDetails ?? true;
   const enrollment = await prisma.enrollment.findUnique({
     where: { id: enrollmentId },
     select: { startedAt: true, challengeId: true },
@@ -37,8 +39,8 @@ export async function getHeatmapData(
       select: {
         dayNumber: true,
         status: true,
-        githubUrl: true,
-        linkedinUrl: true,
+        githubUrl: includeSubmissionDetails,
+        linkedinUrl: includeSubmissionDetails,
         submittedAt: true,
       },
     }),
@@ -55,16 +57,16 @@ export async function getHeatmapData(
     number,
     {
       status: SubmissionStatus;
-      githubUrl: string;
-      linkedinUrl: string;
+      githubUrl: string | null;
+      linkedinUrl: string | null;
       submittedAt: Date;
     }
   >();
   for (const s of submissions) {
     byDay.set(s.dayNumber, {
       status: s.status,
-      githubUrl: s.githubUrl,
-      linkedinUrl: s.linkedinUrl,
+      githubUrl: s.githubUrl ?? null,
+      linkedinUrl: s.linkedinUrl ?? null,
       submittedAt: s.submittedAt,
     });
   }
@@ -109,8 +111,10 @@ export async function getHeatmapData(
       status,
       taskTitle: task?.title ?? null,
       problemStatement: task?.problemStatement ?? null,
-      githubUrl: hasSubmission && row ? row.githubUrl : null,
-      linkedinUrl: hasSubmission && row ? row.linkedinUrl : null,
+      githubUrl:
+        includeSubmissionDetails && hasSubmission && row ? row.githubUrl : null,
+      linkedinUrl:
+        includeSubmissionDetails && hasSubmission && row ? row.linkedinUrl : null,
       submittedAt:
         hasSubmission && row ? row.submittedAt.toISOString() : null,
     });

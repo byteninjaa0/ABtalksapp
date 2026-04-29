@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import type { Domain } from "@prisma/client";
+import { Domain } from "@prisma/client";
 import {
   ArrowRight,
   Calendar,
@@ -12,12 +12,13 @@ import {
 } from "lucide-react";
 import { auth } from "@/auth";
 import { AppHeader } from "@/components/shared/app-header";
+import { CommunityLeaderboard } from "@/components/dashboard/community-leaderboard";
 import { SubmissionHeatmap } from "@/components/dashboard/submission-heatmap";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   getDashboardData,
   type DashboardDataWithEnrollment,
 } from "@/features/dashboard/get-dashboard-data";
+import { getColleges } from "@/features/dashboard/get-colleges";
 import { getHeatmapData } from "@/features/dashboard/get-heatmap-data";
 import { getLeaderboard } from "@/features/dashboard/get-leaderboard";
 import { getAvailableQuiz } from "@/features/quiz/get-available-quiz";
@@ -39,19 +40,20 @@ import {
 import { cn } from "@/lib/utils";
 import { formatDateIST } from "@/lib/date-utils";
 
-function initialsFromName(name: string) {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    return (parts[0]![0] + parts[1]![0]).toUpperCase();
-  }
-  return name.slice(0, 2).toUpperCase() || "?";
+function readQueryParam(
+  query: Record<string, string | string[] | undefined>,
+  key: string,
+): string {
+  const raw = query[key];
+  if (Array.isArray(raw)) return raw[0]?.trim() ?? "";
+  return raw?.trim() ?? "";
 }
 
-function rankDisplay(rank: number) {
-  if (rank === 1) return "🥇";
-  if (rank === 2) return "🥈";
-  if (rank === 3) return "🥉";
-  return rank;
+function parseLeaderboardDomain(
+  value: string,
+): "AI" | "DS" | "SE" | "ALL" {
+  if (value === "AI" || value === "DS" || value === "SE") return value;
+  return "ALL";
 }
 
 function difficultyPillClass(difficulty: string): string {
@@ -63,11 +65,21 @@ function difficultyPillClass(difficulty: string): string {
   return "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400";
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/login");
   }
+  const query = await searchParams;
+  const leaderboardDomain = parseLeaderboardDomain(
+    readQueryParam(query, "lb_domain"),
+  );
+  const leaderboardCollege = readQueryParam(query, "lb_college");
+  const leaderboardSearch = readQueryParam(query, "lb_search");
 
   const data = await getDashboardData(session.user.id);
 
@@ -85,10 +97,16 @@ export default async function DashboardPage() {
     isAdmin: session.user.isAdmin ?? false,
   };
 
-  const [heatmapData, leaderboard, quizAvailability, quizHistory] =
+  const [heatmapData, leaderboard, colleges, quizAvailability, quizHistory] =
     await Promise.all([
       getHeatmapData(dashboardData.enrollment.id),
-      getLeaderboard(dashboardData.profile.domain as Domain, session.user.id),
+      getLeaderboard({
+        domain: leaderboardDomain,
+        college: leaderboardCollege,
+        search: leaderboardSearch,
+        viewerUserId: session.user.id,
+      }),
+      getColleges(),
       getAvailableQuiz(session.user.id, dashboardData.enrollment.id),
       getQuizAttemptHistory(session.user.id, dashboardData.enrollment.id),
     ]);
@@ -104,7 +122,14 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex min-h-svh flex-col bg-muted/30">
-      <AppHeader user={headerUser} domain={profile.domain as Domain} />
+      <AppHeader
+        user={headerUser}
+        domain={
+          profile.domain === "AI" || profile.domain === "DS" || profile.domain === "SE"
+            ? (profile.domain as Domain)
+            : undefined
+        }
+      />
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-6 sm:px-6">
         <Card>
           <CardHeader className="pb-3">
@@ -299,76 +324,16 @@ export default async function DashboardPage() {
           </div>
 
           <div>
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle>Domain Leaderboard</CardTitle>
-                <CardDescription>
-                  {profile.domain} · active enrollments, sorted by progress
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-0">
-                <ul className="divide-y divide-border/60 rounded-xl border border-border/50">
-                  {leaderboard.topTen.map((row) => (
-                    <li
-                      key={row.userId}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-3",
-                        row.isCurrentUser &&
-                          "border-l-4 border-l-primary bg-primary/5",
-                      )}
-                    >
-                      <span className="font-display w-10 shrink-0 text-center text-2xl font-bold tabular-nums text-muted-foreground">
-                        {rankDisplay(row.rank)}
-                      </span>
-                      <Avatar
-                        className={cn(
-                          "size-8 shrink-0",
-                          row.isCurrentUser && "ring-2 ring-primary/20",
-                        )}
-                      >
-                        <AvatarFallback className="text-xs">
-                          {initialsFromName(row.fullName)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">
-                          {row.fullName}
-                          {row.isCurrentUser ? (
-                            <span className="ml-1 text-xs font-normal text-muted-foreground">
-                              (you)
-                            </span>
-                          ) : null}
-                        </p>
-                      </div>
-                      <div className="shrink-0 text-right text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground tabular-nums">
-                          {row.daysCompleted}
-                        </span>{" "}
-                        days
-                        <span className="mx-1 text-border">·</span>
-                        <span className="font-medium text-foreground tabular-nums">
-                          {row.currentStreak}
-                        </span>{" "}
-                        streak
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                {leaderboard.userRank ? (
-                  <>
-                    <div className="my-4 border-t border-border/60" />
-                    <div className="rounded-xl border border-border/50 bg-muted/40 px-4 py-3 text-sm">
-                      <span className="font-medium">Your rank: </span>#
-                      {leaderboard.userRank.rank}
-                      <span className="ml-2 text-muted-foreground">
-                        · {leaderboard.userRank.daysCompleted} days ·{" "}
-                        {leaderboard.userRank.currentStreak} streak
-                      </span>
-                    </div>
-                  </>
-                ) : null}
-              </CardContent>
-            </Card>
+            <CommunityLeaderboard
+              rows={leaderboard.rows}
+              totalCount={leaderboard.totalCount}
+              colleges={colleges}
+              filters={{
+                domain: leaderboardDomain,
+                college: leaderboardCollege,
+                search: leaderboardSearch,
+              }}
+            />
           </div>
         </div>
 

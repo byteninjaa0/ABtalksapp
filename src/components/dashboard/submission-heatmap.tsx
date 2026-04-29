@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   data: HeatmapCell[];
+  interactive?: boolean;
 };
 
 const STATUS_CLASS: Record<HeatmapCell["status"], string> = {
@@ -45,7 +46,7 @@ function isClickable(cell: HeatmapCell): boolean {
   return cell.status === "on_time" || cell.status === "late";
 }
 
-export function SubmissionHeatmap({ data }: Props) {
+export function SubmissionHeatmap({ data, interactive = true }: Props) {
   const [open, setOpen] = React.useState(false);
   const [active, setActive] = React.useState<HeatmapCell | null>(null);
 
@@ -69,7 +70,7 @@ export function SubmissionHeatmap({ data }: Props) {
           aria-label="60-day submission heatmap"
         >
           {data.map((cell, index) => {
-            const clickable = isClickable(cell);
+            const clickable = interactive && isClickable(cell);
             return (
               <button
                 key={cell.dayNumber}
@@ -84,7 +85,7 @@ export function SubmissionHeatmap({ data }: Props) {
                   STATUS_CLASS[cell.status],
                   clickable &&
                     "cursor-pointer transition-[box-shadow,transform] hover:z-10 hover:ring-2 hover:ring-primary hover:ring-offset-2 hover:ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-                  !clickable && "cursor-not-allowed",
+                  !clickable && "cursor-default",
                 )}
               />
             );
@@ -123,7 +124,7 @@ export function SubmissionHeatmap({ data }: Props) {
         </li>
       </ul>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={interactive ? open : false} onOpenChange={setOpen}>
         <DialogContent
           showCloseButton
           className="flex max-h-[min(90vh,720px)] max-w-[calc(100%-1.5rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg"
