@@ -40,5 +40,6 @@ export async function updateProfileAction(
     linkedinUrl: String(formData.get("linkedinUrl") ?? ""),
     resumeUrl: String(formData.get("resumeUrl") ?? ""),
     githubUsername: String(formData.get("githubUsername") ?? ""),
+    phone: String(formData.get("phone") ?? ""),
   });
 }

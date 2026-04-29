@@ -34,6 +34,7 @@ export async function completeRegistrationAction(formData: FormData) {
     domain: formData.get("domain"),
     skills,
     linkedinUrl: formData.get("linkedinUrl") || "",
+    phone: String(formData.get("phone") ?? ""),
     githubUsername: formData.get("githubUsername") || "",
     referralCode,
   });

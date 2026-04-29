@@ -116,6 +116,7 @@ export default async function ProfilePage() {
     skills: [...profile.skills],
     linkedinUrl: profile.linkedinUrl ?? "",
     resumeUrl: profile.resumeUrl ?? "",
+    phone: profile.phone ?? "",
     githubUsername: profile.githubUsername ?? "",
   };
 

@@ -33,6 +33,7 @@ export function ProfileForm({ initialProfile }: Props) {
       skills: initialProfile.skills ?? [],
       linkedinUrl: initialProfile.linkedinUrl ?? "",
       resumeUrl: initialProfile.resumeUrl ?? "",
+      phone: initialProfile.phone ?? "",
       githubUsername: initialProfile.githubUsername ?? "",
     },
   });
@@ -81,6 +82,7 @@ export function ProfileForm({ initialProfile }: Props) {
     fd.append("skills", JSON.stringify(values.skills));
     fd.append("linkedinUrl", values.linkedinUrl ?? "");
     fd.append("resumeUrl", values.resumeUrl ?? "");
+    fd.append("phone", values.phone ?? "");
     fd.append("githubUsername", values.githubUsername ?? "");
 
     const result = await updateProfileAction(fd);
@@ -182,6 +184,23 @@ export function ProfileForm({ initialProfile }: Props) {
           <p className="text-sm text-destructive">
             {errors.linkedinUrl.message}
           </p>
+        ) : null}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="phone">Phone Number</Label>
+        <Input
+          id="phone"
+          type="tel"
+          placeholder="+91 9876543210 or +1 555 123 4567"
+          autoComplete="tel"
+          {...register("phone")}
+        />
+        <p className="text-xs text-muted-foreground">
+          Optional. International format. Visible to admins only.
+        </p>
+        {errors.phone ? (
+          <p className="text-sm text-destructive">{errors.phone.message}</p>
         ) : null}
       </div>
 

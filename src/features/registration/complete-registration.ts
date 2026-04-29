@@ -77,6 +77,7 @@ export async function completeRegistration(
     input.linkedinUrl === "" ? null : input.linkedinUrl;
   const githubUsername =
     input.githubUsername === "" ? null : input.githubUsername;
+  const phone = input.phone === "" ? null : input.phone;
 
   try {
     const profileId = await prisma.$transaction(async (tx) => {
@@ -89,6 +90,7 @@ export async function completeRegistration(
           domain: input.domain,
           skills: input.skills ?? [],
           linkedinUrl,
+          phone,
           githubUsername,
           referralCode: newReferralCode,
         },

@@ -15,6 +15,7 @@ export async function updateProfile(
     linkedinUrl?: string;
     resumeUrl?: string;
     githubUsername?: string;
+    phone?: string;
   },
 ): Promise<UpdateProfileResult> {
   const skillsArr = Array.isArray(input.skills)
@@ -29,6 +30,7 @@ export async function updateProfile(
     linkedinUrl: input.linkedinUrl ?? "",
     resumeUrl: input.resumeUrl ?? "",
     githubUsername: input.githubUsername ?? "",
+    phone: input.phone ?? "",
   });
 
   if (!parsed.success) {
@@ -59,6 +61,7 @@ export async function updateProfile(
       linkedinUrl: data.linkedinUrl ?? null,
       resumeUrl: data.resumeUrl === "" ? null : data.resumeUrl,
       githubUsername: data.githubUsername ?? null,
+      phone: data.phone === "" ? null : data.phone,
     },
   });
 

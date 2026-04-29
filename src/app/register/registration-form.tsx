@@ -85,6 +85,7 @@ export function RegistrationForm({ initialName, initialRef }: Props) {
       domain: Domain.SE,
       skills: [],
       linkedinUrl: "",
+      phone: "",
       githubUsername: "",
       referralCode: initialRef,
     },
@@ -136,6 +137,7 @@ export function RegistrationForm({ initialName, initialRef }: Props) {
       fd.append("domain", values.domain);
       fd.append("skills", values.skills.join(","));
       fd.append("linkedinUrl", values.linkedinUrl ?? "");
+      fd.append("phone", values.phone ?? "");
       fd.append("githubUsername", values.githubUsername ?? "");
       fd.append("referralCode", values.referralCode ?? "");
 
@@ -330,6 +332,24 @@ export function RegistrationForm({ initialName, initialRef }: Props) {
           <p className="text-sm text-destructive">
             {errors.linkedinUrl.message}
           </p>
+        ) : null}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="phone">Phone Number</Label>
+        <Input
+          id="phone"
+          type="tel"
+          placeholder="+91 9876543210 or +1 555 123 4567"
+          autoComplete="tel"
+          {...register("phone")}
+          aria-invalid={!!errors.phone}
+        />
+        <p className="text-xs text-muted-foreground">
+          Optional. International format. Visible to admins only.
+        </p>
+        {errors.phone ? (
+          <p className="text-sm text-destructive">{errors.phone.message}</p>
         ) : null}
       </div>
 

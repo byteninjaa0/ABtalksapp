@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { optionalPhoneSchema } from "@/lib/validations/phone";
 
 function trimEmptyToUndefined(s: string | undefined): string | undefined {
   if (s === undefined) return undefined;
@@ -32,6 +33,7 @@ export const updateProfileSchema = z.object({
         }),
       ]),
     ),
+  phone: optionalPhoneSchema,
 });
 
 /** Parsed / validated profile update payload */

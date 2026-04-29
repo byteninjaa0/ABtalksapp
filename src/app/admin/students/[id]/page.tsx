@@ -90,6 +90,19 @@ export default async function AdminStudentDetailPage({
               <span className="text-muted-foreground">Referral Code:</span>{" "}
               {data.profile.referralCode}
             </p>
+            <p>
+              <span className="text-muted-foreground">Phone:</span>{" "}
+              {data.profile.phone ? (
+                <a
+                  className="text-primary underline"
+                  href={`tel:${encodeURIComponent(data.profile.phone)}`}
+                >
+                  {data.profile.phone}
+                </a>
+              ) : (
+                <span className="text-muted-foreground">Not provided</span>
+              )}
+            </p>
             <div className="flex flex-wrap gap-2">
               {data.profile.skills.map((skill: string) => (
                 <Badge key={skill} variant="outline">

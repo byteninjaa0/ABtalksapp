@@ -158,6 +158,7 @@ model StudentProfile {
   domain              Domain
   skills              String[] @default([])
   resumeUrl           String?
+  phone               String?
   linkedinUrl         String?
   githubUsername      String?
   referralCode        String   @unique
