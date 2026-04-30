@@ -1,4 +1,4 @@
-import type { EnrollmentStatus, Role, SubmissionStatus } from "@prisma/client";
+import type { Domain, EnrollmentStatus, Role, SubmissionStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentDayNumber, IST } from "@/lib/date-utils";
 import { formatInTimeZone } from "date-fns-tz";
@@ -48,6 +48,13 @@ export type DashboardDataWithEnrollment = {
     submittedAt: Date;
   }>;
   referralCount: number;
+  /** Week quiz available to take (highest unlocked week with a seeded quiz and no attempt yet). */
+  availableQuiz: {
+    quizId: string;
+    weekNumber: number;
+    title: string;
+    questionCount: number;
+  } | null;
 };
 
 export type DashboardData = DashboardDataNoEnrollment | DashboardDataWithEnrollment;
@@ -57,6 +64,51 @@ function sameIstCalendarDay(a: Date, b: Date): boolean {
     formatInTimeZone(a, IST, "yyyy-MM-dd") ===
     formatInTimeZone(b, IST, "yyyy-MM-dd")
   );
+}
+
+const MAX_QUIZ_WEEK = 8;
+
+/**
+ * Highest week ≤ floor(daysCompleted/7) that has a DB quiz and no attempt yet;
+ * falls back to earlier weeks if a higher week has no quiz row (e.g. only Week 1 seeded).
+ */
+async function resolveAvailableQuizForBanner(
+  userId: string,
+  challengeId: string,
+  domain: Domain,
+  daysCompleted: number,
+): Promise<DashboardDataWithEnrollment["availableQuiz"]> {
+  const unlockedWeek = Math.floor(daysCompleted / 7);
+  if (unlockedWeek < 1) return null;
+
+  const maxWeek = Math.min(unlockedWeek, MAX_QUIZ_WEEK);
+
+  for (let weekNumber = maxWeek; weekNumber >= 1; weekNumber--) {
+    const quiz = await prisma.quiz.findFirst({
+      where: { challengeId, domain, weekNumber },
+      select: { id: true, weekNumber: true, title: true },
+    });
+    if (!quiz) continue;
+
+    const attempt = await prisma.quizAttempt.findUnique({
+      where: { userId_quizId: { userId, quizId: quiz.id } },
+      select: { id: true },
+    });
+    if (attempt) continue;
+
+    const questionCount = await prisma.quizQuestion.count({
+      where: { quizId: quiz.id },
+    });
+
+    return {
+      quizId: quiz.id,
+      weekNumber: quiz.weekNumber,
+      title: quiz.title,
+      questionCount,
+    };
+  }
+
+  return null;
 }
 
 export async function getDashboardData(userId: string): Promise<DashboardData> {
@@ -82,6 +134,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
         select: {
           id: true,
           challengeId: true,
+          domain: true,
           startedAt: true,
           daysCompleted: true,
           currentStreak: true,
@@ -176,6 +229,16 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     where: { referrerId: userId },
   });
 
+  const availableQuiz =
+    enrollment.status === "ABANDONED"
+      ? null
+      : await resolveAvailableQuizForBanner(
+          userId,
+          enrollment.challengeId,
+          enrollment.domain,
+          enrollment.daysCompleted,
+        );
+
   return {
     hasEnrollment: true,
     user: {
@@ -204,5 +267,6 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     isTodayCompleted,
     recentSubmissions,
     referralCount,
+    availableQuiz,
   };
 }

@@ -13,6 +13,7 @@ import { auth } from "@/auth";
 import { AppHeader } from "@/components/shared/app-header";
 import { CommunityLeaderboard } from "@/components/dashboard/community-leaderboard";
 import { EnrollmentEndedScreen } from "@/components/dashboard/enrollment-ended-screen";
+import { QuizUnlockBanner } from "@/components/dashboard/quiz-unlock-banner";
 import { SubmissionHeatmap } from "@/components/dashboard/submission-heatmap";
 import {
   getDashboardData,
@@ -165,6 +166,17 @@ export default async function DashboardPage({
     <div className="flex min-h-svh flex-col bg-muted/30">
       <AppHeader user={headerUser} />
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-6 sm:px-6">
+        {dashboardData.availableQuiz ? (
+          <div className="mb-6">
+            <QuizUnlockBanner
+              weekNumber={dashboardData.availableQuiz.weekNumber}
+              quizId={dashboardData.availableQuiz.quizId}
+              title={dashboardData.availableQuiz.title}
+              questionCount={dashboardData.availableQuiz.questionCount}
+            />
+          </div>
+        ) : null}
+
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="font-display text-2xl">Your 60-Day Journey</CardTitle>
@@ -371,7 +383,9 @@ export default async function DashboardPage({
           </div>
         </div>
 
-        {quizAvailability.reason === "ready" && quizAvailability.quiz ? (
+        {quizAvailability.reason === "ready" &&
+        quizAvailability.quiz &&
+        !dashboardData.availableQuiz ? (
           <Card>
             <CardHeader>
               <CardTitle>
