@@ -220,10 +220,6 @@ async function main() {
     where: { email: { endsWith: TEST_EMAIL_SUFFIX } },
   });
 
-  await prisma.challenge.deleteMany({
-    where: { domain: { in: [Domain.SE, Domain.DS, Domain.AI] } },
-  });
-
   const problemsRaw = loadJsonFile<ProblemJson[]>("problems.json");
   const problemLookup = buildProblemLookup(
     Array.isArray(problemsRaw) ? problemsRaw : null,
@@ -258,9 +254,16 @@ async function main() {
   const quizSeededFromJson = new Set<string>();
 
   for (const spec of challengeSpecs) {
-    const challenge = await prisma.challenge.create({
-      data: {
+    const challenge = await prisma.challenge.upsert({
+      where: { domain: spec.domain },
+      create: {
         domain: spec.domain,
+        title: spec.title,
+        description: spec.description,
+        totalDays: 60,
+        isActive: true,
+      },
+      update: {
         title: spec.title,
         description: spec.description,
         totalDays: 60,
@@ -350,12 +353,12 @@ async function main() {
       domain: Domain.SE,
       role: Role.STUDENT,
       enrollment: {
-        daysCompleted: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        lastSubmittedDay: null,
+        daysCompleted: 7,
+        currentStreak: 7,
+        longestStreak: 7,
+        lastSubmittedDay: 7,
         status: EnrollmentStatus.ACTIVE,
-        startedDaysAgo: 0,
+        startedDaysAgo: 7,
       },
     },
     {
@@ -366,12 +369,12 @@ async function main() {
       domain: Domain.DS,
       role: Role.STUDENT,
       enrollment: {
-        daysCompleted: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        lastSubmittedDay: null,
+        daysCompleted: 7,
+        currentStreak: 7,
+        longestStreak: 7,
+        lastSubmittedDay: 7,
         status: EnrollmentStatus.ACTIVE,
-        startedDaysAgo: 0,
+        startedDaysAgo: 7,
       },
     },
     {
@@ -382,12 +385,12 @@ async function main() {
       domain: Domain.AI,
       role: Role.STUDENT,
       enrollment: {
-        daysCompleted: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        lastSubmittedDay: null,
+        daysCompleted: 7,
+        currentStreak: 7,
+        longestStreak: 7,
+        lastSubmittedDay: 7,
         status: EnrollmentStatus.ACTIVE,
-        startedDaysAgo: 0,
+        startedDaysAgo: 7,
       },
     },
     {

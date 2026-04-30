@@ -1,343 +1,469 @@
 [
   {
     "dayNumber": 1,
-    "domain": "SE",
-    "title": "Your First Python Program",
-    "problemStatement": "Welcome to Day 1. Today we install Python and write your first program.\n\n**Context:** Every coder started where you are. Writing your first program — even something tiny — is a real accomplishment.\n\n**What to do:**\n- Install Python 3.10+ from python.org\n- Create a file called hello.py\n- Write one line: `print(\"Hello, my name is [YOUR NAME]\")`\n- Run it from your terminal: `python hello.py`\n\n**Expected output (example):**\n```\nHello, my name is Priya\n```\n\n**Submission:** Create a new GitHub repository called `abtalks-se-day-1` and push hello.py to it.",
+    "domain": "AI",
+    "title": "What Does an AI System Actually Do?",
+    "problemStatement": "Welcome to Day 1 🚀\n\n**Context:** Before you can build AI systems, you need a clear mental picture of how they actually work — input flows in, processing happens, output comes out. No magic.\n\n**Real-World Impact:** Engineers who can decompose AI products into clear pipeline stages debug faster, communicate better with teams, and design more reliable systems.\n\n**What to do:**\n- Build a clear mental model of AI pipelines\n- Map out a simple AI pipeline: input → processing → output\n- Identify 3 real-world AI products (e.g. ChatGPT, Google Translate, Spotify recommendations) and sketch their components\n- Write a 5-sentence explanation of how a chatbot works\n\n**Submission:**\n- A hand-drawn or digital AI pipeline diagram\n- 5-sentence chatbot explanation in README",
     "learningObjectives": [
-      "Install Python on your local machine",
-      "Run a Python file from the command line",
-      "Push code to a new GitHub repository"
+      "Build a mental model of AI pipelines",
+      "Decompose real AI products into stages",
+      "Communicate AI concepts clearly in writing"
     ],
     "resources": [
-      "https://www.python.org/downloads/",
-      "https://docs.github.com/en/get-started/quickstart/create-a-repo"
+      "https://miro.com/",
+      "https://www.youtube.com/results?search_query=how+ai+pipelines+work"
     ],
     "difficulty": "Easy",
-    "estimatedMinutes": 5,
-    "linkedinTemplate": "Day 1 of my 60 Days of Code with ABtalks 🚀\n\nInstalled Python and wrote my first program today. A tiny step, but the hardest part is starting.\n\nGrateful to Anil Bajpai sir and the ABtalks community.\n\nRepo: {{github_link}}\n\n#ABtalks #60DaysOfCode #Python #LearningInPublic",
-    "solutionApproach": "Student installs Python, creates hello.py with a print statement, creates GitHub repo, pushes. Just verify environment works.",
-    "tags": ["python", "setup", "basics", "git", "github"]
+    "estimatedMinutes": 45,
+    "linkedinTemplate": "Day 1/10 🚀\n\nKicked off my AI Engineering Challenge by mapping out how AI systems actually work — input → processing → output.\n\nBiggest realization: AI is structure, not magic.\n\nRepo: {{github_link}}\n\n#AIEngineering #LearningInPublic #GenAI",
+    "solutionApproach": "Use pen & paper or Miro. For each AI product, identify the input, the model/processing core, and the output. Apply the same lens to a chatbot.",
+    "tags": [
+      "ai-fundamentals",
+      "system-design",
+      "mental-models"
+    ]
+  },
+  {
+    "dayNumber": 2,
+    "domain": "AI",
+    "title": "Your First Python AI Script",
+    "problemStatement": "**Context:** You don't need to master Python to build AI. You just need to run it. Comfort comes from doing.\n\n**Real-World Impact:** Every AI engineer ships code in Python. Getting comfortable with notebooks and basic text operations is the foundation for everything that comes next.\n\n**What to do:**\n- Set up a Google Colab notebook and run your first Python cell\n- Write a script that reads a sentence and counts word frequency\n- Print a cleaned, lowercase version of an input text (strip punctuation, normalize whitespace)\n\n**Submission:**\n- A working Colab notebook with 3 functional cells\n- Notebook pushed to GitHub",
+    "learningObjectives": [
+      "Set up a Python development environment in Colab",
+      "Perform basic text operations",
+      "Build comfort with running code, not just reading it"
+    ],
+    "resources": [
+      "https://colab.research.google.com/",
+      "https://docs.python.org/3/tutorial/"
+    ],
+    "difficulty": "Easy",
+    "estimatedMinutes": 60,
+    "linkedinTemplate": "Day 2/10 🐍\n\nWrote my first Python AI script — word frequency + text cleanup in a Colab notebook.\n\nLesson: comfort comes from running code, not reading it.\n\nRepo: {{github_link}}\n\n#Python #AIEngineering #LearningInPublic",
+    "solutionApproach": "Use Python's built-in `collections.Counter` for frequency counting and `str.lower()` + `re.sub()` for cleanup.",
+    "tags": [
+      "python",
+      "colab",
+      "text-processing"
+    ]
+  },
+  {
+    "dayNumber": 3,
+    "domain": "AI",
+    "title": "Text is Data — Turning Words into Numbers",
+    "problemStatement": "**Context:** Machines don't read words. They read numbers. Preprocessing is the first transformation that turns raw human language into something a model can learn from.\n\n**Real-World Impact:** Every NLP system — search, chatbots, classification — starts with tokenization and preprocessing. Get this wrong and the rest of the pipeline collapses.\n\n**What to do:**\n- Tokenize a paragraph using NLTK or spaCy\n- Remove stop words and punctuation from a sample text\n- Convert tokens to a simple bag-of-words representation\n\n**Submission:**\n- A preprocessed text dataset ready for ML input\n- Notebook showing before/after of each preprocessing step",
+    "learningObjectives": [
+      "Understand tokenization",
+      "Apply standard text preprocessing",
+      "Build a bag-of-words representation"
+    ],
+    "resources": [
+      "https://www.nltk.org/",
+      "https://spacy.io/usage/linguistic-features"
+    ],
+    "difficulty": "Easy",
+    "estimatedMinutes": 60,
+    "linkedinTemplate": "Day 3/10 🔤\n\nLearned how machines actually read text — by turning words into numbers.\n\nTokenization, stopword removal, bag-of-words. The unsung heroes of NLP.\n\nRepo: {{github_link}}\n\n#NLP #AIEngineering #LearningInPublic",
+    "solutionApproach": "Use NLTK's `word_tokenize` + `stopwords` corpus. Build a simple dict-based BoW or use sklearn's `CountVectorizer` for comparison.",
+    "tags": [
+      "nlp",
+      "tokenization",
+      "preprocessing"
+    ]
+  },
+  {
+    "dayNumber": 4,
+    "domain": "AI",
+    "title": "Vectors — Teaching Meaning to Machines",
+    "problemStatement": "**Context:** Bag-of-words counts words. Vectors capture meaning. When you embed a sentence, similar concepts end up close together in vector space — that's what lets AI \"understand.\"\n\n**Real-World Impact:** Embeddings power semantic search, recommendation systems, RAG, and clustering. They are the foundation of modern AI retrieval.\n\n**What to do:**\n- Install and import `sentence-transformers` in Colab\n- Generate embeddings for 5 sentences (mix of similar and different meanings)\n- Compare two sentences for similarity using cosine distance\n- Observe which pairs score highest — does it match your intuition?\n\n**Submission:**\n- A similarity score between sentence pairs\n- Short reflection on what surprised you",
+    "learningObjectives": [
+      "Generate sentence embeddings",
+      "Measure semantic similarity with cosine distance",
+      "Develop intuition for vector space"
+    ],
+    "resources": [
+      "https://www.sbert.net/",
+      "https://huggingface.co/sentence-transformers"
+    ],
+    "difficulty": "Medium",
+    "estimatedMinutes": 60,
+    "linkedinTemplate": "Day 4/10 🧭\n\nGenerated my first sentence embeddings today — and watched two sentences with no shared words score 0.9 cosine similarity.\n\nVectors capture meaning. That's wild.\n\nRepo: {{github_link}}\n\n#Embeddings #AIEngineering #LearningInPublic",
+    "solutionApproach": "Use `sentence-transformers` with the `all-MiniLM-L6-v2` model. Compute cosine similarity with `sklearn.metrics.pairwise.cosine_similarity` or `util.cos_sim` from the library.",
+    "tags": [
+      "embeddings",
+      "semantic-similarity",
+      "nlp"
+    ]
+  },
+  {
+    "dayNumber": 5,
+    "domain": "AI",
+    "title": "Build a Mini Search Engine",
+    "problemStatement": "**Context:** Search isn't keyword matching anymore. Modern search matches meaning. This is the same idea behind RAG, semantic recommendations, and AI-powered Q&A.\n\n**Real-World Impact:** Semantic search is the engine behind retrieval-augmented generation, modern recommendation systems, and most AI products that \"find relevant things.\"\n\n**What to do:**\n- Create a small dataset of 20 sentences on a topic of your choice\n- Embed all sentences and store them as vectors\n- Take a query input and return the top 3 most similar results\n- Compare semantic search vs keyword search on the same query\n\n**Submission:**\n- A working semantic search function in Python\n- Example queries + top-3 outputs in the notebook",
+    "learningObjectives": [
+      "Build an end-to-end semantic search system",
+      "Understand vector retrieval",
+      "Compare semantic vs keyword search"
+    ],
+    "resources": [
+      "https://github.com/facebookresearch/faiss",
+      "https://www.sbert.net/examples/applications/semantic-search/README.html"
+    ],
+    "difficulty": "Medium",
+    "estimatedMinutes": 90,
+    "linkedinTemplate": "Day 5/10 🔍\n\nBuilt my first semantic search engine — 20 sentences in, query in, top-3 most relevant results out.\n\nNo keyword matching. Just meaning.\n\nThis is the core of every RAG system.\n\nRepo: {{github_link}}\n\n#SemanticSearch #RAG #AIEngineering",
+    "solutionApproach": "Embed the corpus once with sentence-transformers, store vectors in a NumPy array (or FAISS index for speed), then on each query embed it and run cosine similarity to find top-k.",
+    "tags": [
+      "semantic-search",
+      "embeddings",
+      "retrieval",
+      "rag"
+    ]
+  },
+  {
+    "dayNumber": 6,
+    "domain": "AI",
+    "title": "What is Machine Learning? Build an Intuition",
+    "problemStatement": "**Context:** Before you train models in code, train them with your hands. Tools like Teachable Machine let you see how data quality and quantity directly shape what a model learns.\n\n**Real-World Impact:** Engineers who understand ML intuitively — not just mathematically — make better data decisions, debug failing models faster, and ship more reliable systems.\n\n**What to do:**\n- Use Google's Teachable Machine to train a classifier on 2 categories (images, sounds, or poses)\n- Observe how accuracy changes with more training data\n- Try noisy / inconsistent data and see what breaks\n- Write 3 observations about what makes a model learn better\n\n**Submission:**\n- A trained visual classifier (link or screenshots)\n- Written reflections in your repo's README",
+    "learningObjectives": [
+      "Understand what ML actually learns",
+      "Develop intuition for data quality vs quantity",
+      "Connect hands-on observation to ML theory"
+    ],
+    "resources": [
+      "https://teachablemachine.withgoogle.com/",
+      "https://scikit-learn.org/stable/tutorial/"
+    ],
+    "difficulty": "Easy",
+    "estimatedMinutes": 60,
+    "linkedinTemplate": "Day 6/10 🧠\n\nTrained a classifier with my webcam today using Teachable Machine.\n\nBiggest takeaway: ML is just pattern matching from examples. The magic is in the data, not the algorithm.\n\nRepo: {{github_link}}\n\n#MachineLearning #AIEngineering #LearningInPublic",
+    "solutionApproach": "Pick two visually distinct categories (e.g. coffee cup vs water bottle). Train with 30 samples each, then test. Repeat with noisy/mixed data and document what changes.",
+    "tags": [
+      "machine-learning",
+      "intuition",
+      "no-code"
+    ]
+  },
+  {
+    "dayNumber": 7,
+    "domain": "AI",
+    "title": "Your First Classifier",
+    "problemStatement": "**Context:** Classification is pattern matching at scale. You don't write rules — you show the model examples and it figures out the boundaries between classes.\n\n**Real-World Impact:** Sentiment analysis, spam detection, content moderation, recommendation filtering — all of these are classification problems. The pattern you build today scales to billions of decisions.\n\n**What to do:**\n- Load a simple sentiment dataset (e.g. movie reviews)\n- Train a Naive Bayes or Logistic Regression classifier with scikit-learn\n- Evaluate using accuracy score and test on new inputs you write yourself\n- Reflect: where does the model fail? Why?\n\n**Submission:**\n- A trained sentiment classification model\n- Notebook with training code, evaluation, and 5 manual test cases\n- Sprint 1 LinkedIn post wrapping up Days 1–7",
+    "learningObjectives": [
+      "Train and evaluate a classification model",
+      "Use scikit-learn pipelines",
+      "Reflect on model limitations"
+    ],
+    "resources": [
+      "https://scikit-learn.org/stable/modules/naive_bayes.html",
+      "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html",
+      "https://www.kaggle.com/datasets"
+    ],
+    "difficulty": "Medium",
+    "estimatedMinutes": 90,
+    "linkedinTemplate": "Week 1 of AI Engineering Challenge: complete ✅\n\nIn 7 days I went from \"AI is magic\" to training my own sentiment classifier.\n\nWhat I built:\n→ Mental model of AI pipelines\n→ Text preprocessing + tokenization\n→ Sentence embeddings\n→ Semantic search engine\n→ ML classifier\n\nBiggest learning: {{learning}}\n\nRepo: {{github_link}}\n\n#AIEngineering #LearningInPublic #GenAI",
+    "solutionApproach": "Use sklearn's TfidfVectorizer + LogisticRegression in a Pipeline. Split data with train_test_split, fit on train, evaluate accuracy on test, then run predict() on your own custom sentences.",
+    "tags": [
+      "classification",
+      "sklearn",
+      "sentiment-analysis",
+      "nlp"
+    ]
   },
   {
     "dayNumber": 1,
     "domain": "DS",
-    "title": "Set Up Your ML Environment",
-    "problemStatement": "Welcome to Day 1 of ML. Before we do any machine learning, we need tools.\n\n**Context:** Machine Learning starts with Python and a few key libraries. Today we set up the environment.\n\n**What to do:**\n- Install Python 3.10+ if not already installed\n- Install numpy and pandas: `pip install numpy pandas`\n- Create a file called `day1.py`\n- Import both libraries and print their versions:\n```python\nimport numpy as np\nimport pandas as pd\nprint(f\"numpy version: {np.__version__}\")\nprint(f\"pandas version: {pd.__version__}\")\n```\n- Run the script\n\n**Expected output:**\n```\nnumpy version: 1.x.x\npandas version: 2.x.x\n```\n(Your versions may differ — that's fine.)\n\n**Submission:** Create a GitHub repo called `abtalks-ml-day-1` and push day1.py to it.",
+    "title": "Python Fundamentals Bootcamp (Core Syntax)",
+    "problemStatement": "Welcome to Day 1 🚀\n\n**Context:** Strong Data Scientists are strong Python programmers.\n\n**Real-World Impact:** Clean, efficient Python code directly impacts data pipelines and ML systems.\n\n**What to do:**\n- Learn and implement:\n  - Variables, data types (int, float, str, list, dict)\n  - Input/output\n  - Basic operators\n- Write a Python script that:\n  - Takes user input (name, age, salary)\n  - Calculates yearly salary\n  - Stores data in a dictionary\n\n**Submission:**\n- day1.py\n- GitHub repo `60-days-data-science`",
     "learningObjectives": [
-      "Install core ML Python libraries",
-      "Verify environment is working",
-      "Push a Python file to GitHub"
+      "Understand Python syntax",
+      "Work with basic data types",
+      "Write simple scripts"
     ],
     "resources": [
-      "https://numpy.org/install/",
-      "https://pandas.pydata.org/getting_started.html"
+      "https://docs.python.org/3/tutorial/"
     ],
     "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 1 of my 60 Days of ML with ABtalks 🧠\n\nSet up Python, numpy, and pandas today. Every expert was once here.\n\nThanks to Anil Bajpai sir and the ABtalks community.\n\nRepo: {{github_link}}\n\n#ABtalks #MachineLearning #Python #LearningInPublic",
-    "solutionApproach": "Install numpy and pandas, write import script, print versions, push to GitHub.",
-    "tags": ["python", "numpy", "pandas", "setup", "ml-basics"]
+    "estimatedMinutes": 45,
+    "linkedinTemplate": "Day 1/60 🚀\n\nStarted my Data Science journey by strengthening Python fundamentals.\n\nRepo: {{github_link}}\n\n#Python #DataScience #LearningInPublic",
+    "solutionApproach": "Use input(), variables, and dictionary structure to store and process user data.",
+    "tags": [
+      "python",
+      "basics"
+    ]
+  },
+  {
+    "dayNumber": 2,
+    "domain": "DS",
+    "title": "Python Control Flow & Functions",
+    "problemStatement": "**Context:** Logic building is the backbone of problem-solving.\n\n**Real-World Impact:** ML pipelines rely heavily on conditional logic and reusable functions.\n\n**What to do:**\n- Learn and implement:\n  - if-else conditions\n  - loops (for, while)\n  - functions\n- Build a program that:\n  - Takes student marks\n  - Classifies grades (Pass/Fail/Distinction)\n  - Uses functions to calculate average marks\n\n**Submission:**\n- day2.py pushed to GitHub",
+    "learningObjectives": [
+      "Understand control flow",
+      "Write reusable functions",
+      "Apply logic to problems"
+    ],
+    "resources": [
+      "https://realpython.com/"
+    ],
+    "difficulty": "Easy",
+    "estimatedMinutes": 60,
+    "linkedinTemplate": "Day 2/60 🔁\n\nWorked on Python logic, loops, and functions.\n\nRepo: {{github_link}}",
+    "solutionApproach": "Use loops and functions to process marks and classify results.",
+    "tags": [
+      "python",
+      "loops",
+      "functions"
+    ]
+  },
+  {
+    "dayNumber": 3,
+    "domain": "DS",
+    "title": "Python Data Structures & File Handling",
+    "problemStatement": "**Context:** Real data comes from files and complex structures.\n\n**Real-World Impact:** Data pipelines depend on reading/writing structured data.\n\n**What to do:**\n- Learn:\n  - Lists, tuples, sets, dictionaries\n  - File handling (read/write CSV or text)\n- Build a script that:\n  - Reads a CSV file of students\n  - Counts frequency of grades\n  - Outputs summary to a new file\n\n**Submission:**\n- day3.py\n- input/output file in repo",
+    "learningObjectives": [
+      "Master Python data structures",
+      "Read/write files",
+      "Process structured data"
+    ],
+    "resources": [
+      "https://docs.python.org/3/library/csv.html"
+    ],
+    "difficulty": "Easy",
+    "estimatedMinutes": 75,
+    "linkedinTemplate": "Day 3/60 📂\n\nWorked with Python data structures and file handling.\n\nRepo: {{github_link}}",
+    "solutionApproach": "Use csv module or pandas to read file and dictionary to count frequencies.",
+    "tags": [
+      "python",
+      "file-handling"
+    ]
+  },
+  {
+    "dayNumber": 4,
+    "domain": "DS",
+    "title": "Project Setup + Dataset Selection",
+    "problemStatement": "**Context:** Now we move into real Data Science work.\n\n**Real-World Impact:** Every DS project starts with defining a problem and collecting data.\n\n**What to do:**\n- Install libraries: numpy, pandas, matplotlib, seaborn\n- Create GitHub repo: `60-days-data-science`\n- Choose domain:\n  - Sales / Healthcare / Finance\n- Find dataset (Kaggle)\n- Write problem statement in README\n\n**Submission:**\n- GitHub repo + README",
+    "learningObjectives": [
+      "Start DS project lifecycle",
+      "Define real-world problem"
+    ],
+    "resources": [
+      "https://www.kaggle.com/datasets"
+    ],
+    "difficulty": "Easy",
+    "estimatedMinutes": 45,
+    "linkedinTemplate": "Day 4/60 📊\n\nStarted my Data Science project and selected dataset.\n\nRepo: {{github_link}}",
+    "solutionApproach": "Set up repo, select dataset, define problem clearly.",
+    "tags": [
+      "project",
+      "dataset"
+    ]
+  },
+  {
+    "dayNumber": 5,
+    "domain": "DS",
+    "title": "Data Loading & Understanding",
+    "problemStatement": "**Context:** Understanding your dataset is the first analytical step.\n\n**Real-World Impact:** Misunderstanding data leads to wrong business decisions.\n\n**What to do:**\n- Load dataset using pandas\n- Print:\n  - shape\n  - columns\n  - head()\n- Identify target variable\n\n**Submission:**\n- notebook with dataset analysis",
+    "learningObjectives": [
+      "Load and inspect data",
+      "Understand structure"
+    ],
+    "resources": [
+      "https://pandas.pydata.org/"
+    ],
+    "difficulty": "Easy",
+    "estimatedMinutes": 45,
+    "linkedinTemplate": "Day 5/60 📂\n\nExplored dataset structure and defined target variable.\n\nRepo: {{github_link}}",
+    "solutionApproach": "Use pandas functions like head(), shape, info().",
+    "tags": [
+      "pandas",
+      "eda"
+    ]
+  },
+  {
+    "dayNumber": 6,
+    "domain": "DS",
+    "title": "Data Cleaning & Preprocessing",
+    "problemStatement": "**Context:** Real-world data is messy and incomplete.\n\n**Real-World Impact:** Clean data = reliable insights.\n\n**What to do:**\n- Handle missing values\n- Remove duplicates\n- Fix data types\n- Create 2 new features\n\n**Submission:**\n- cleaned dataset + notebook",
+    "learningObjectives": [
+      "Clean messy data",
+      "Prepare dataset for analysis"
+    ],
+    "resources": [
+      "https://pandas.pydata.org/docs/"
+    ],
+    "difficulty": "Medium",
+    "estimatedMinutes": 60,
+    "linkedinTemplate": "Day 6/60 🧹\n\nCleaned real-world dataset and created new features.\n\nRepo: {{github_link}}",
+    "solutionApproach": "Use pandas operations like fillna(), drop_duplicates(), astype().",
+    "tags": [
+      "data-cleaning"
+    ]
+  },
+  {
+    "dayNumber": 7,
+    "domain": "DS",
+    "title": "EDA + Sprint 1 Review",
+    "problemStatement": "**Context:** Understanding patterns is key before modeling.\n\n**Real-World Impact:** Businesses rely on insights from EDA.\n\n**What to do:**\n- Plot distributions\n- Identify patterns and outliers\n- Write 5 insights\n- Sprint Review:\n  - What you learned\n  - What challenges you faced\n\n**Submission:**\n- EDA notebook\n- LinkedIn sprint summary",
+    "learningObjectives": [
+      "Perform EDA",
+      "Communicate insights",
+      "Reflect on learning"
+    ],
+    "resources": [
+      "https://seaborn.pydata.org/"
+    ],
+    "difficulty": "Medium",
+    "estimatedMinutes": 90,
+    "linkedinTemplate": "Week 1 completed ✅\n\nFrom Python basics to EDA — built strong foundation.\n\nBiggest learning: {{learning}}\n\nRepo: {{github_link}}",
+    "solutionApproach": "Use seaborn/matplotlib to visualize and interpret data.",
+    "tags": [
+      "eda",
+      "visualization"
+    ]
   },
   {
     "dayNumber": 1,
-    "domain": "DS",
-    "title": "Your First Dataset",
-    "problemStatement": "Welcome to Day 1 of Data Science.\n\n**Context:** Data Science begins with understanding data. Today we create and view our first dataset.\n\n**What to do:**\n- Install pandas if not installed: `pip install pandas`\n- Create a file `day1_ds.py`\n- Create a simple dataset with Name and Age\n- Print the dataset\n\n**Example code:**\n```python\nimport pandas as pd\n\ndata = {\n    \"Name\": [\"Rahul\", \"Priya\", \"Aman\"],\n    \"Age\": [20, 21, 19]\n}\n\ndf = pd.DataFrame(data)\nprint(df)\n```\n\n**Expected output:**\n```\n    Name  Age\n0  Rahul   20\n1  Priya   21\n2   Aman   19\n```\n\n**Submission:** Create a GitHub repo called `abtalks-ds-day-1` and push your file.",
+    "domain": "SE",
+    "title": "Python Foundations Sprint (Syntax + Data Types)",
+    "problemStatement": "Welcome to Day 1 — Python Mastery Sprint.\n\n**Context:** Before becoming a strong Software Engineer, you must be fluent in Python basics.\n\n**What to do:**\n- Learn and practice:\n  - Variables\n  - Data types (int, float, str, bool)\n  - Type casting\n  - Input/output\n\n**Task:**\nCreate a Python script that:\n1. Takes user name and age as input\n2. Prints a formatted message\n3. Converts age into integer and prints age after 5 years\n\n**Example Output:**\nHello Aaron, you are 20 years old.\nIn 5 years, you will be 25.\n\n**Submission:** Push `day1_basics.py`",
     "learningObjectives": [
-      "Understand structured data",
-      "Create a pandas DataFrame",
-      "Print and inspect data"
+      "Understand Python syntax",
+      "Work with variables and data types",
+      "Use input/output effectively"
     ],
     "resources": [
-      "https://pandas.pydata.org/docs/"
+      "https://docs.python.org/3/tutorial/introduction.html"
     ],
     "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 1 of my Data Science journey 📊\n\nCreated my first dataset using pandas today. Feels like unlocking a new superpower.\n\nRepo: {{github_link}}\n\n#ABtalks #DataScience #Python #LearningInPublic",
-    "solutionApproach": "Create dictionary, convert to DataFrame, print output, push to GitHub.",
-    "tags": ["pandas", "dataframe", "basics", "setup"]
-  }
-  ,
+    "estimatedMinutes": 40,
+    "linkedinTemplate": "Day 1 of #60DaysOfCode 🚀\n\nFocused on Python basics — variables, data types, and input/output.\nStrong foundation starts here.\n\nRepo: {{github_link}}",
+    "solutionApproach": "Use input(), type casting, f-strings for formatted output.",
+    "tags": [
+      "python",
+      "basics",
+      "io",
+      "variables"
+    ]
+  },
   {
     "dayNumber": 2,
     "domain": "SE",
-    "title": "Variables and Input",
-    "problemStatement": "Learn how to take input from a user and store it.\n\n**What to do:**\n- Create a file `input.py`\n- Ask the user for their name and age\n- Print: \"Hello [name], you are [age] years old\"\n\n**Expected output (example):**\n```\nHello Rahul, you are 20 years old\n```\n\n**Submission:** Push to GitHub repo `abtalks-day-2`",
+    "title": "Python Control Flow Mastery",
+    "problemStatement": "Day 2 — Control Flow & Logic Building.\n\n**Context:** Decision making is core to programming.\n\n**What to do:**\n- Learn:\n  - if, elif, else\n  - comparison operators\n  - logical operators\n\n**Task:**\nBuild a program that:\n1. Takes marks as input\n2. Assigns grade based on score\n   - 90+ → A\n   - 75+ → B\n   - 50+ → C\n   - <50 → Fail\n3. Also check if student passed or failed\n\n**Bonus:** Add validation for invalid input\n\n**Submission:** Push `day2_control_flow.py`",
     "learningObjectives": [
-      "Understand variables",
-      "Take user input",
-      "Basic string formatting"
+      "Use conditional statements",
+      "Build decision-based logic",
+      "Handle edge cases"
     ],
     "resources": [
-      "https://docs.python.org/3/tutorial/inputoutput.html"
+      "https://docs.python.org/3/tutorial/controlflow.html"
     ],
     "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 2 of #60DaysOfCode 🚀\n\nLearned how to take input and use variables in Python.\n\nRepo: {{github_link}}",
-    "solutionApproach": "Use input() and print formatted string",
-    "tags": ["python", "basics", "input"]
+    "estimatedMinutes": 45,
+    "linkedinTemplate": "Day 2 🔥 Mastered control flow in Python.\n\nNow I can make programs that think and decide.\n\nRepo: {{github_link}}",
+    "solutionApproach": "Use if-elif ladder and logical conditions.",
+    "tags": [
+      "python",
+      "if-else",
+      "logic"
+    ]
   },
-  {
-    "dayNumber": 2,
-    "domain": "DS",
-    "title": "Create Your First Array",
-    "problemStatement": "Understand numpy arrays.\n\n**What to do:**\n- Create a numpy array of numbers 1 to 5\n- Print the array and its type\n\n**Expected output:**\n```\n[1 2 3 4 5]\n<class 'numpy.ndarray'>\n```",
-    "learningObjectives": [
-      "Understand numpy arrays",
-      "Basic data structures in ML"
-    ],
-    "resources": [
-      "https://numpy.org/doc/stable/user/quickstart.html"
-    ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 2 of ML 🧠\n\nCreated my first numpy array today.\n\nRepo: {{github_link}}",
-    "solutionApproach": "Use np.array()",
-    "tags": ["numpy", "ml-basics"]
-  },
-  {
-    "dayNumber": 2,
-    "domain": "DS",
-    "title": "Create a DataFrame",
-    "problemStatement": "Learn pandas basics.\n\n**What to do:**\n- Create a DataFrame with columns: Name, Age\n- Add 3 rows\n- Print the DataFrame",
-    "learningObjectives": [
-      "Understand pandas DataFrame",
-      "Create structured data"
-    ],
-    "resources": [
-      "https://pandas.pydata.org/docs/"
-    ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 2 of Data Science 📊\n\nCreated my first DataFrame.\n\nRepo: {{github_link}}",
-    "solutionApproach": "Use pd.DataFrame()",
-    "tags": ["pandas", "dataframe"]
-  },
-
   {
     "dayNumber": 3,
     "domain": "SE",
-    "title": "If-Else Basics",
-    "problemStatement": "Learn decision making.\n\n**What to do:**\n- Take a number as input\n- Print \"Even\" or \"Odd\"",
+    "title": "Loops + Data Structures (Lists, Strings, Dict)",
+    "problemStatement": "Day 3 — Iteration + Core Data Structures.\n\n**Context:** Most real-world problems involve data processing.\n\n**What to do:**\n- Learn:\n  - for loop, while loop\n  - lists\n  - strings\n  - dictionaries\n\n**Task:**\n1. Take a list of numbers\n2. Print:\n   - sum\n   - max\n   - min\n3. Count frequency of each number using dictionary\n\n**Bonus:** Reverse list without using built-in functions\n\n**Submission:** Push `day3_data_structures.py`",
     "learningObjectives": [
-      "Conditional statements",
-      "Logic building"
+      "Understand loops",
+      "Work with lists and dictionaries",
+      "Perform data processing"
     ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 3 🚀 Learned if-else logic.\nRepo: {{github_link}}",
-    "solutionApproach": "Use if number % 2 == 0",
-    "tags": ["python", "conditions"]
-  },
-  {
-    "dayNumber": 3,
-    "domain": "DS",
-    "title": "Array Operations",
-    "problemStatement": "Perform operations on arrays.\n\n**What to do:**\n- Create array [1,2,3,4,5]\n- Print square of each element",
-    "learningObjectives": [
-      "Vector operations",
-      "Element-wise computation"
+    "resources": [
+      "https://docs.python.org/3/tutorial/datastructures.html"
     ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 3 ML 🧠 Array operations done.\nRepo: {{github_link}}",
-    "solutionApproach": "Use arr**2",
-    "tags": ["numpy"]
-  },
-  {
-    "dayNumber": 3,
-    "domain": "DS",
-    "title": "Read CSV File",
-    "problemStatement": "Load data from CSV.\n\n**What to do:**\n- Create a CSV file\n- Load using pandas\n- Print first 5 rows",
-    "learningObjectives": [
-      "Data loading",
-      "Working with CSV"
-    ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 3 DS 📊 Loaded my first dataset.\nRepo: {{github_link}}",
-    "solutionApproach": "Use pd.read_csv()",
-    "tags": ["pandas", "csv"]
-  },
-
-  {
-    "dayNumber": 4,
-    "domain": "SE",
-    "title": "Loops Practice",
-    "problemStatement": "Print numbers 1 to 10 using loop",
-    "learningObjectives": [
-      "For loop",
-      "Iteration"
-    ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 4 🚀 Practiced loops.\nRepo: {{github_link}}",
-    "solutionApproach": "Use for loop",
-    "tags": ["loops"]
+    "difficulty": "Easy-Medium",
+    "estimatedMinutes": 50,
+    "linkedinTemplate": "Day 3 📊 Worked with lists, loops, and dictionaries.\n\nStarting to think like a problem solver.\n\nRepo: {{github_link}}",
+    "solutionApproach": "Use loops to iterate, dictionary for frequency count.",
+    "tags": [
+      "loops",
+      "lists",
+      "dict",
+      "python"
+    ]
   },
   {
     "dayNumber": 4,
-    "domain": "DS",
-    "title": "Mean of Array",
-    "problemStatement": "Calculate mean of array",
+    "domain": "SE",
+    "title": "Build a CLI Calculator",
+    "problemStatement": "Create a simple command-line calculator.\n\n**What to do:**\n- Take two numbers and operator\n- Perform calculation\n- Handle division by zero\n\n**Submission:** Push code",
     "learningObjectives": [
-      "Basic statistics",
-      "numpy functions"
+      "Conditionals",
+      "Input handling"
     ],
+    "resources": [],
     "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 4 ML 🧠 Learned mean.\nRepo: {{github_link}}",
-    "solutionApproach": "Use np.mean()",
-    "tags": ["numpy"]
+    "estimatedMinutes": 25,
+    "linkedinTemplate": "Day 4 💻 Built CLI calculator.\nRepo: {{github_link}}",
+    "solutionApproach": "if-else based operations",
+    "tags": [
+      "cli",
+      "calculator"
+    ]
   },
-  {
-    "dayNumber": 4,
-    "domain": "DS",
-    "title": "Data Summary",
-    "problemStatement": "Use describe() on dataset",
-    "learningObjectives": [
-      "Data understanding",
-      "Summary stats"
-    ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 4 DS 📊 Data summary done.\nRepo: {{github_link}}",
-    "solutionApproach": "Use df.describe()",
-    "tags": ["pandas"]
-  },
-
   {
     "dayNumber": 5,
     "domain": "SE",
-    "title": "Functions",
-    "problemStatement": "Create a function to add two numbers",
+    "title": "User Login Validator",
+    "problemStatement": "Create a login system with username/password validation.\n\nBonus: limit attempts to 3.",
     "learningObjectives": [
-      "Functions",
-      "Code reuse"
+      "Strings",
+      "conditions"
     ],
+    "resources": [],
     "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 5 🚀 Functions learned.\nRepo: {{github_link}}",
-    "solutionApproach": "Define function using def",
-    "tags": ["functions"]
+    "estimatedMinutes": 25,
+    "linkedinTemplate": "Day 5 🔐 Built login system.\nRepo: {{github_link}}",
+    "solutionApproach": "Compare input values",
+    "tags": [
+      "auth",
+      "logic"
+    ]
   },
-  {
-    "dayNumber": 5,
-    "domain": "DS",
-    "title": "Random Numbers",
-    "problemStatement": "Generate random numbers",
-    "learningObjectives": [
-      "Random data",
-      "numpy random"
-    ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 5 ML 🧠 Random numbers.\nRepo: {{github_link}}",
-    "solutionApproach": "Use np.random",
-    "tags": ["numpy"]
-  },
-  {
-    "dayNumber": 5,
-    "domain": "DS",
-    "title": "Filter Data",
-    "problemStatement": "Filter rows where age > 20",
-    "learningObjectives": [
-      "Filtering data",
-      "Boolean indexing"
-    ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 5 DS 📊 Filtering data.\nRepo: {{github_link}}",
-    "solutionApproach": "Use df[df['Age'] > 20]",
-    "tags": ["pandas"]
-  },
-
   {
     "dayNumber": 6,
     "domain": "SE",
-    "title": "Lists",
-    "problemStatement": "Create a list and print all elements",
+    "title": "FizzBuzz Automation",
+    "problemStatement": "Print numbers 1 to N with FizzBuzz rules and save output to file.",
     "learningObjectives": [
-      "Lists",
-      "Iteration"
+      "Loops",
+      "file handling"
     ],
+    "resources": [],
     "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 6 🚀 Lists explored.\nRepo: {{github_link}}",
-    "solutionApproach": "Use list and loop",
-    "tags": ["lists"]
+    "estimatedMinutes": 30,
+    "linkedinTemplate": "Day 6 ⚡ Automated FizzBuzz.\nRepo: {{github_link}}",
+    "solutionApproach": "Loop + condition + file write",
+    "tags": [
+      "loops"
+    ]
   },
-  {
-    "dayNumber": 6,
-    "domain": "DS",
-    "title": "Reshape Array",
-    "problemStatement": "Reshape array to 2x2",
-    "learningObjectives": [
-      "Array manipulation"
-    ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 6 ML 🧠 Reshaping arrays.\nRepo: {{github_link}}",
-    "solutionApproach": "Use reshape()",
-    "tags": ["numpy"]
-  },
-  {
-    "dayNumber": 6,
-    "domain": "DS",
-    "title": "Column Selection",
-    "problemStatement": "Select a single column",
-    "learningObjectives": [
-      "Column access"
-    ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 10,
-    "linkedinTemplate": "Day 6 DS 📊 Column selection.\nRepo: {{github_link}}",
-    "solutionApproach": "Use df['column']",
-    "tags": ["pandas"]
-  },
-
   {
     "dayNumber": 7,
     "domain": "SE",
-    "title": "Mini Project",
-    "problemStatement": "Build a simple calculator using functions",
+    "title": "Mini Project: Stock Profit Analyzer",
+    "problemStatement": "Given stock prices, find max profit.\n\nBonus: show buy/sell day.",
     "learningObjectives": [
-      "Combine concepts",
-      "Problem solving"
+      "Optimization",
+      "arrays"
     ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 20,
-    "linkedinTemplate": "Day 7 🚀 Built a mini calculator.\nRepo: {{github_link}}",
-    "solutionApproach": "Use functions and input",
-    "tags": ["project"]
-  },
-  {
-    "dayNumber": 7,
-    "domain": "DS",
-    "title": "Simple Dataset Stats",
-    "problemStatement": "Find mean, max, min of array",
-    "learningObjectives": [
-      "Statistics basics"
-    ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 15,
-    "linkedinTemplate": "Day 7 ML 🧠 Stats basics done.\nRepo: {{github_link}}",
-    "solutionApproach": "Use numpy functions",
-    "tags": ["numpy"]
-  },
-  {
-    "dayNumber": 7,
-    "domain": "DS",
-    "title": "Group By",
-    "problemStatement": "Group data by column and find average",
-    "learningObjectives": [
-      "Grouping data"
-    ],
-    "difficulty": "Easy",
-    "estimatedMinutes": 15,
-    "linkedinTemplate": "Day 7 DS 📊 GroupBy learned.\nRepo: {{github_link}}",
-    "solutionApproach": "Use groupby()",
-    "tags": ["pandas"]
+    "resources": [],
+    "difficulty": "Easy-Medium",
+    "estimatedMinutes": 40,
+    "linkedinTemplate": "Day 7 🔥 Built stock analyzer.\nRepo: {{github_link}}",
+    "solutionApproach": "Track min and max profit",
+    "tags": [
+      "arrays"
+    ]
   }
 ]

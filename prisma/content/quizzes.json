@@ -2,107 +2,321 @@
   {
     "weekNumber": 1,
     "domain": "SE",
-    "title": "Week 1: Python & Git Basics",
+    "title": "Week 1: Python Foundations & Logic Building",
     "questions": [
       {
         "questionOrder": 1,
-        "questionText": "Which command creates a new Python virtual environment?",
-        "optionA": "python install venv",
-        "optionB": "python -m venv myenv",
-        "optionC": "pip create venv",
-        "optionD": "python new venv myenv",
+        "questionText": "What will be the output of: print(type('123'))?",
+        "optionA": "<class 'int'>",
+        "optionB": "<class 'str'>",
+        "optionC": "<class 'float'>",
+        "optionD": "<class 'char'>",
         "correctAnswer": "B",
-        "explanation": "The correct command is `python -m venv myenv` which creates a virtual environment directory named 'myenv'."
+        "explanation": "'123' is a string, so its type is str."
       },
       {
         "questionOrder": 2,
-        "questionText": "What does `git status` do?",
-        "optionA": "Uploads your changes to GitHub",
-        "optionB": "Shows which files have been modified and are staged or unstaged",
-        "optionC": "Creates a new branch",
-        "optionD": "Deletes untracked files",
+        "questionText": "Which function is used to take input from the user in Python?",
+        "optionA": "get()",
+        "optionB": "input()",
+        "optionC": "scan()",
+        "optionD": "read()",
         "correctAnswer": "B",
-        "explanation": "`git status` is a read-only command that shows the current state of your working directory and staging area."
+        "explanation": "input() is used to take user input in Python."
       },
       {
         "questionOrder": 3,
-        "questionText": "Which of these is NOT a Python data type?",
-        "optionA": "int",
-        "optionB": "str",
-        "optionC": "char",
-        "optionD": "list",
-        "correctAnswer": "C",
-        "explanation": "Python doesn't have a separate `char` type. Single characters are just strings of length 1."
+        "questionText": "What is the output of: int('10') + 5?",
+        "optionA": "105",
+        "optionB": "15",
+        "optionC": "Error",
+        "optionD": "'105'",
+        "correctAnswer": "B",
+        "explanation": "The string '10' is converted to integer 10, then added to 5."
       },
       {
         "questionOrder": 4,
-        "questionText": "What's the output of `print(type(3.14))` in Python?",
-        "optionA": "<class 'int'>",
-        "optionB": "<class 'float'>",
-        "optionC": "<class 'decimal'>",
-        "optionD": "<class 'number'>",
-        "correctAnswer": "B",
-        "explanation": "3.14 is a floating-point number, so its type is `float`."
+        "questionText": "Which operator is used for logical AND in Python?",
+        "optionA": "&&",
+        "optionB": "&",
+        "optionC": "and",
+        "optionD": "AND",
+        "correctAnswer": "C",
+        "explanation": "Python uses 'and' for logical AND operations."
       },
       {
         "questionOrder": 5,
-        "questionText": "Which command pushes your local commits to the remote repository?",
-        "optionA": "git commit",
-        "optionB": "git send",
-        "optionC": "git push",
-        "optionD": "git upload",
-        "correctAnswer": "C",
-        "explanation": "`git push` sends your committed changes from your local repository to the remote (e.g., GitHub)."
+        "questionText": "What will be the output of: print(5 > 3 and 2 < 1)?",
+        "optionA": "True",
+        "optionB": "False",
+        "optionC": "Error",
+        "optionD": "None",
+        "correctAnswer": "B",
+        "explanation": "5 > 3 is True, but 2 < 1 is False. True AND False = False."
       },
       {
         "questionOrder": 6,
-        "questionText": "What's the correct way to check Python's version from the command line?",
-        "optionA": "python -version",
-        "optionB": "python --v",
-        "optionC": "python --version",
-        "optionD": "python -ver",
-        "correctAnswer": "C",
-        "explanation": "The flag is `--version` with two hyphens. `python -V` (capital V) also works as shorthand."
+        "questionText": "Which loop is best when the number of iterations is known?",
+        "optionA": "while loop",
+        "optionB": "for loop",
+        "optionC": "do-while loop",
+        "optionD": "repeat loop",
+        "correctAnswer": "B",
+        "explanation": "for loop is used when the number of iterations is predefined."
       },
       {
         "questionOrder": 7,
-        "questionText": "What does `pip` stand for?",
-        "optionA": "Python Install Package",
-        "optionB": "Preferred Installer Program",
-        "optionC": "Package Installer for Python",
-        "optionD": "Python Interactive Prompt",
+        "questionText": "What will be the output of: len([1, 2, 3, 4])?",
+        "optionA": "3",
+        "optionB": "4",
+        "optionC": "5",
+        "optionD": "Error",
         "correctAnswer": "B",
-        "explanation": "pip stands for 'Preferred Installer Program' \u2014 it's the standard package manager for Python."
+        "explanation": "len() returns the number of elements in a list."
       },
       {
         "questionOrder": 8,
-        "questionText": "Which of these commits staged changes in Git?",
-        "optionA": "git commit -m 'message'",
-        "optionB": "git save 'message'",
-        "optionC": "git push -m 'message'",
-        "optionD": "git store 'message'",
-        "correctAnswer": "A",
-        "explanation": "`git commit -m 'message'` creates a commit with the given message from your staged changes."
+        "questionText": "Which data structure stores key-value pairs?",
+        "optionA": "List",
+        "optionB": "Tuple",
+        "optionC": "Dictionary",
+        "optionD": "Set",
+        "correctAnswer": "C",
+        "explanation": "Dictionaries store data in key-value pairs."
       },
       {
         "questionOrder": 9,
-        "questionText": "What does the `#` symbol represent in Python?",
-        "optionA": "Variable declaration",
-        "optionB": "String delimiter",
-        "optionC": "Comment",
-        "optionD": "Function definition",
-        "correctAnswer": "C",
-        "explanation": "In Python, `#` starts a single-line comment. Everything after `#` on that line is ignored by the interpreter."
+        "questionText": "What does this code do?\n\nnumbers = [1,2,2,3]\nfreq = {}\nfor n in numbers:\n    freq[n] = freq.get(n,0) + 1",
+        "optionA": "Sorts the list",
+        "optionB": "Counts frequency of elements",
+        "optionC": "Removes duplicates",
+        "optionD": "Finds max value",
+        "correctAnswer": "B",
+        "explanation": "It counts how many times each element appears using a dictionary."
       },
       {
         "questionOrder": 10,
-        "questionText": "Which of these is a correct way to write a for loop in Python?",
-        "optionA": "for (i = 0; i < 10; i++)",
-        "optionB": "for i in range(10):",
-        "optionC": "loop i from 0 to 10:",
-        "optionD": "foreach i in range(10):",
+        "questionText": "What will be the output of: print([1,2,3][::-1])?",
+        "optionA": "[1,2,3]",
+        "optionB": "[3,2,1]",
+        "optionC": "Error",
+        "optionD": "[2,3,1]",
         "correctAnswer": "B",
-        "explanation": "Python uses `for i in range(10):` syntax. The C-style and other syntaxes are not valid Python."
+        "explanation": "[::-1] reverses the list."
+      }
+    ]
+  },
+  {
+    "weekNumber": 1,
+    "domain": "DS",
+    "title": "Week 1: Python Foundations + Data Science Basics",
+    "questions": [
+      {
+        "questionOrder": 1,
+        "questionText": "Which of the following is a mutable data type in Python?",
+        "optionA": "tuple",
+        "optionB": "string",
+        "optionC": "list",
+        "optionD": "int",
+        "correctAnswer": "C",
+        "explanation": "Lists are mutable, meaning their elements can be changed after creation."
+      },
+      {
+        "questionOrder": 2,
+        "questionText": "What does the `input()` function return in Python?",
+        "optionA": "int",
+        "optionB": "float",
+        "optionC": "string",
+        "optionD": "boolean",
+        "correctAnswer": "C",
+        "explanation": "The input() function always returns user input as a string."
+      },
+      {
+        "questionOrder": 3,
+        "questionText": "Which keyword is used to define a function in Python?",
+        "optionA": "function",
+        "optionB": "define",
+        "optionC": "def",
+        "optionD": "func",
+        "correctAnswer": "C",
+        "explanation": "Python uses the 'def' keyword to define functions."
+      },
+      {
+        "questionOrder": 4,
+        "questionText": "What will `len([1, 2, 3, 4])` return?",
+        "optionA": "3",
+        "optionB": "4",
+        "optionC": "5",
+        "optionD": "Error",
+        "correctAnswer": "B",
+        "explanation": "The len() function returns the number of elements in a list."
+      },
+      {
+        "questionOrder": 5,
+        "questionText": "Which file mode is used to read a file in Python?",
+        "optionA": "r",
+        "optionB": "w",
+        "optionC": "a",
+        "optionD": "x",
+        "correctAnswer": "A",
+        "explanation": "'r' stands for read mode when opening files."
+      },
+      {
+        "questionOrder": 6,
+        "questionText": "Which library is primarily used for data manipulation in Data Science?",
+        "optionA": "NumPy",
+        "optionB": "Pandas",
+        "optionC": "Matplotlib",
+        "optionD": "Seaborn",
+        "correctAnswer": "B",
+        "explanation": "Pandas provides powerful data structures like DataFrames for handling tabular data."
+      },
+      {
+        "questionOrder": 7,
+        "questionText": "What does `df.head()` do in Pandas?",
+        "optionA": "Returns last 5 rows",
+        "optionB": "Returns first 5 rows",
+        "optionC": "Deletes rows",
+        "optionD": "Sorts the dataset",
+        "correctAnswer": "B",
+        "explanation": "df.head() returns the first 5 rows by default."
+      },
+      {
+        "questionOrder": 8,
+        "questionText": "Why is data cleaning important?",
+        "optionA": "To visualize data",
+        "optionB": "To improve model accuracy",
+        "optionC": "To increase dataset size",
+        "optionD": "To remove code errors",
+        "correctAnswer": "B",
+        "explanation": "Clean data ensures models learn correct patterns and improves accuracy."
+      },
+      {
+        "questionOrder": 9,
+        "questionText": "Which of the following is used to detect missing values in Pandas?",
+        "optionA": "df.checknull()",
+        "optionB": "df.isnull()",
+        "optionC": "df.missing()",
+        "optionD": "df.null()",
+        "correctAnswer": "B",
+        "explanation": "df.isnull() identifies missing values in a DataFrame."
+      },
+      {
+        "questionOrder": 10,
+        "questionText": "What is the primary goal of Exploratory Data Analysis (EDA)?",
+        "optionA": "Train machine learning models",
+        "optionB": "Deploy applications",
+        "optionC": "Understand patterns and relationships in data",
+        "optionD": "Store data in databases",
+        "correctAnswer": "C",
+        "explanation": "EDA helps uncover patterns, anomalies, and insights before modeling."
+      }
+    ]
+  },
+  {
+    "weekNumber": 1,
+    "domain": "AI",
+    "title": "Week 1: AI Foundations — From Pipelines to Your First Classifier",
+    "questions": [
+      {
+        "questionOrder": 1,
+        "questionText": "Which of the following best describes the structure of an AI pipeline?",
+        "optionA": "A black-box system that produces output from random data",
+        "optionB": "A linear sequence of input → processing → output stages",
+        "optionC": "A hardware component inside a GPU",
+        "optionD": "A specific Python library used for AI",
+        "correctAnswer": "B",
+        "explanation": "An AI pipeline is a structured sequence of steps where input is transformed through processing stages to produce output. AI is structure, not magic."
+      },
+      {
+        "questionOrder": 2,
+        "questionText": "What is the primary purpose of tokenization in NLP?",
+        "optionA": "To encrypt text for secure transmission",
+        "optionB": "To compress text into smaller files",
+        "optionC": "To break text into smaller units (words or sub-words) that a model can process",
+        "optionD": "To translate text into another language",
+        "correctAnswer": "C",
+        "explanation": "Tokenization splits raw text into discrete units (tokens) — usually words or sub-words — which is the first step before any numerical representation."
+      },
+      {
+        "questionOrder": 3,
+        "questionText": "Why do we remove stop words during text preprocessing?",
+        "optionA": "Because stop words slow down a computer's CPU",
+        "optionB": "Because stop words (the, is, a) carry little semantic value and add noise",
+        "optionC": "Because stop words are illegal to process",
+        "optionD": "Because stop words are not real English words",
+        "correctAnswer": "B",
+        "explanation": "Stop words like 'the', 'is', 'a' appear so frequently across documents that they rarely help distinguish meaning. Removing them reduces noise."
+      },
+      {
+        "questionOrder": 4,
+        "questionText": "What does a sentence embedding represent?",
+        "optionA": "The number of words in the sentence",
+        "optionB": "An HTML tag wrapping the sentence",
+        "optionC": "A high-dimensional numerical vector capturing the sentence's meaning",
+        "optionD": "An audio recording of the sentence being read",
+        "correctAnswer": "C",
+        "explanation": "Sentence embeddings are vectors (typically hundreds of dimensions) that encode semantic meaning. Sentences with similar meanings have vectors that are close in this space."
+      },
+      {
+        "questionOrder": 5,
+        "questionText": "Which metric is most commonly used to compare two sentence embeddings for similarity?",
+        "optionA": "Mean squared error",
+        "optionB": "Cosine similarity",
+        "optionC": "Levenshtein distance",
+        "optionD": "F1 score",
+        "correctAnswer": "B",
+        "explanation": "Cosine similarity measures the angle between two vectors, ignoring magnitude. It's the standard metric for comparing semantic embeddings."
+      },
+      {
+        "questionOrder": 6,
+        "questionText": "What is the core idea behind semantic search?",
+        "optionA": "Matching results by exact keywords in the query",
+        "optionB": "Matching results by meaning, using vector similarity",
+        "optionC": "Searching only inside a SQL database",
+        "optionD": "Showing the top 10 most popular results regardless of query",
+        "correctAnswer": "B",
+        "explanation": "Semantic search retrieves results that are similar in meaning to the query — not just lexically identical. It's the foundation of modern AI retrieval and RAG."
+      },
+      {
+        "questionOrder": 7,
+        "questionText": "In machine learning, what does a model primarily learn from?",
+        "optionA": "Hand-written rules from engineers",
+        "optionB": "Random weights initialized at startup",
+        "optionC": "Patterns extracted from training examples",
+        "optionD": "Internet searches performed at runtime",
+        "correctAnswer": "C",
+        "explanation": "ML models learn statistical patterns from labeled or unlabeled training examples. You don't write rules — you provide examples and the model infers the rules."
+      },
+      {
+        "questionOrder": 8,
+        "questionText": "Which two factors most directly affect how well a machine learning model performs?",
+        "optionA": "The brand of laptop and operating system",
+        "optionB": "The data quality and the data quantity",
+        "optionC": "The colour of the IDE theme and font size",
+        "optionD": "The internet speed of the developer",
+        "correctAnswer": "B",
+        "explanation": "More data and cleaner data both improve model performance. Most real-world ML failures trace back to data issues, not algorithm choice."
+      },
+      {
+        "questionOrder": 9,
+        "questionText": "Which scikit-learn algorithm is commonly used as a first sentiment classifier for text?",
+        "optionA": "K-Means Clustering",
+        "optionB": "Logistic Regression",
+        "optionC": "Principal Component Analysis",
+        "optionD": "Apriori Algorithm",
+        "correctAnswer": "B",
+        "explanation": "Logistic Regression (and Naive Bayes) paired with TF-IDF features is a strong, simple baseline for text classification including sentiment analysis."
+      },
+      {
+        "questionOrder": 10,
+        "questionText": "What does the accuracy score of a classifier measure?",
+        "optionA": "How fast the model trains",
+        "optionB": "The proportion of predictions that match the true labels",
+        "optionC": "The size of the model in megabytes",
+        "optionD": "The number of training examples used",
+        "correctAnswer": "B",
+        "explanation": "Accuracy = (correct predictions) / (total predictions). It's the most basic evaluation metric, though it can mislead on imbalanced datasets."
       }
     ]
   }
