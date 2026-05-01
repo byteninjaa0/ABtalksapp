@@ -336,17 +336,20 @@ export function RegistrationForm({ initialName, initialRef }: Props) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone">Phone Number</Label>
+        <Label htmlFor="phone">
+          Phone Number <span className="text-destructive">*</span>
+        </Label>
         <Input
           id="phone"
           type="tel"
           placeholder="+91 9876543210 or +1 555 123 4567"
           autoComplete="tel"
+          required
           {...register("phone")}
           aria-invalid={!!errors.phone}
         />
         <p className="text-xs text-muted-foreground">
-          Optional. International format. Visible to admins only.
+          Required. Visible only to admins for support.
         </p>
         {errors.phone ? (
           <p className="text-sm text-destructive">{errors.phone.message}</p>

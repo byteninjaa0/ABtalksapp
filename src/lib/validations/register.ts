@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { optionalPhoneSchema } from "@/lib/validations/phone";
+import { requiredPhoneSchema } from "@/lib/validations/phone";
 
 const empty = z.literal("");
 
@@ -13,7 +13,7 @@ export const registerSchema = z.object({
   domain: domainSchema,
   skills: z.array(z.string().min(1).max(50)).max(10).default([]),
   linkedinUrl: z.union([empty, z.string().url()]).default(""),
-  phone: optionalPhoneSchema,
+  phone: requiredPhoneSchema,
   githubUsername: z
     .union([empty, z.string().regex(/^[a-zA-Z0-9-]+$/).max(50)])
     .default(""),
