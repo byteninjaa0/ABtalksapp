@@ -75,6 +75,16 @@ export default async function DashboardPage({
   if (!session?.user?.id) {
     redirect("/login");
   }
+
+  const userExists = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true },
+  });
+
+  if (!userExists) {
+    redirect("/api/auth/signout?callbackUrl=/login");
+  }
+
   const query = await searchParams;
   const leaderboardDomain = parseLeaderboardDomain(
     readQueryParam(query, "lb_domain"),

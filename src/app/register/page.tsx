@@ -21,6 +21,15 @@ export default async function RegisterPage({ searchParams }: PageProps) {
     redirect("/login");
   }
 
+  const userExists = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true },
+  });
+
+  if (!userExists) {
+    redirect("/api/auth/signout?callbackUrl=/login");
+  }
+
   const profile = await prisma.studentProfile.findUnique({
     where: { userId: session.user.id },
     select: { id: true },

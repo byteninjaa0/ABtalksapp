@@ -13,6 +13,19 @@ export async function completeRegistration(
   userId: string,
   input: RegisterInput,
 ): Promise<CompleteRegistrationResult> {
+  const userExists = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true },
+  });
+
+  if (!userExists) {
+    return {
+      ok: false,
+      reason: "internal_error",
+      message: "Your session has expired. Please sign out and sign in again.",
+    };
+  }
+
   const existingProfile = await prisma.studentProfile.findUnique({
     where: { userId },
     select: { id: true },

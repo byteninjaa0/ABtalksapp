@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { prisma } from "@/lib/db";
 import { SoundPreferences } from "@/components/profile/sound-preferences";
 import { ProfileForm } from "./profile-form";
 import type { ProfileFormValues } from "@/lib/validations/profile";
@@ -55,6 +56,15 @@ export default async function ProfilePage() {
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/login");
+  }
+
+  const userExists = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true },
+  });
+
+  if (!userExists) {
+    redirect("/api/auth/signout?callbackUrl=/login");
   }
 
   const userId = session.user.id;
