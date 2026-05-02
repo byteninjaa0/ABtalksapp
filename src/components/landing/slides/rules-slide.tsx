@@ -25,7 +25,7 @@ export function RulesSlide({ onNext, onPrev }: RulesSlideProps) {
       </div>
 
       <p className="mt-3 text-sm text-muted-foreground">
-        ABtalks is a place to grow with serious learners. Read these carefully.
+        ABTalks is a place to grow with serious learners. Read these carefully.
       </p>
 
       <div className="mt-6 space-y-4">
@@ -42,7 +42,7 @@ export function RulesSlide({ onNext, onPrev }: RulesSlideProps) {
               <p className="mt-1 text-sm text-muted-foreground">
                 Any abusive language, harassment, or harmful messaging will lead
                 to <strong className="text-foreground">permanent ban</strong> from
-                ABtalks.
+                ABTalks.
               </p>
             </div>
           </div>

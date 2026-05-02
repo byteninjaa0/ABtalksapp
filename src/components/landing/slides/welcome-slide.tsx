@@ -53,7 +53,7 @@ export function WelcomeSlide({ onNext }: WelcomeSlideProps) {
         transition={{ delay: 0.5, duration: 0.5 }}
         className="mt-2 text-sm text-muted-foreground"
       >
-        By Anil Bajpai's ABtalks community.
+        By Anil Bajpai's ABTalks community.
       </motion.p>
 
       <motion.div

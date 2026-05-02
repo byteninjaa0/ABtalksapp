@@ -98,7 +98,7 @@ export default async function LoginPage({ searchParams }: Props) {
           </CardContent>
         </Card>
         <p className="mt-8 max-w-md text-center text-xs text-muted-foreground">
-          Built by Anil Bajpai&apos;s ABtalks community
+          Built by Anil Bajpai&apos;s ABTalks community
         </p>
       </div>
     </div>

@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ABtalks — 60 Days Challenge",
+  title: "ABTalks — 60 Days Challenge",
   description: "Build your coding habit. Get discovered.",
 };
 

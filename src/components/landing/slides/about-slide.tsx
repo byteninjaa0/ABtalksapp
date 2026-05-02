@@ -17,9 +17,9 @@ export function AboutSlide({ onNext, onPrev }: AboutSlideProps) {
       transition={{ delay: 0.1, duration: 0.5 }}
       className="rounded-3xl border bg-card/80 p-8 shadow-lg backdrop-blur-sm md:p-10"
     >
-      <h2 className="font-display text-2xl font-bold md:text-3xl">What is ABtalks?</h2>
+      <h2 className="font-display text-2xl font-bold md:text-3xl">What is ABTalks?</h2>
       <p className="mt-3 text-sm text-muted-foreground md:text-base">
-        ABtalks is a 60-day coding challenge built around Anil Bajpai's
+        ABTalks is a 60-day coding challenge built around Anil Bajpai's
         community of recruiters and students. Pick a domain, code daily,
         post your progress, and become discoverable to recruiters.
       </p>

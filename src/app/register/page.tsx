@@ -72,7 +72,7 @@ export default async function RegisterPage({ searchParams }: PageProps) {
         <Card className="w-full max-w-2xl border-border/60 shadow-md">
           <CardHeader className="space-y-2">
             <CardTitle className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-              Welcome to ABtalks 🚀
+              Welcome to ABTalks 🚀
             </CardTitle>
             <CardDescription className="text-base">
               Complete your profile to start your 60-day journey. You&apos;re

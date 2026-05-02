@@ -61,7 +61,7 @@ export function OnboardingClient() {
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <header className="px-6 py-4">
-          <div className="font-display text-xl font-bold">ABtalks</div>
+          <div className="font-display text-xl font-bold">ABTalks</div>
         </header>
 
         <main className="flex flex-1 items-center justify-center px-6 py-8">

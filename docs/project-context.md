@@ -1,4 +1,4 @@
-# ABtalks — Project Context Document
+# ABTalks — Project Context Document
 
 > **Purpose of this file:** Single-source-of-truth context to start fresh chats. Paste this at the beginning of any new conversation so the AI has full project context.
 
@@ -6,7 +6,7 @@
 
 ---
 
-## 1. What is ABtalks
+## 1. What is ABTalks
 
 A 60-day coding challenge platform built around Anil Bajpai's community of recruiters and students. Students do daily coding tasks across three domains (AI / DS / SE), submit GitHub + LinkedIn proof of work, and become discoverable to recruiters from Anil sir's podcast network after completing the challenge.
 
@@ -353,7 +353,7 @@ Each prompts a 5-second pause before deletion. Cascades handle related rows.
 - More polish on celebration screen after day completion
 - Confetti animation
 - Heatmap cells clickable to view past day's problem
-- Logo scroll animation (ABtalks → AB collapse on scroll)
+- Logo scroll animation (ABTalks → AB collapse on scroll)
 
 ### Deferred to Phase 2 (post-launch)
 - Recruiter dashboard, registration, approval
@@ -435,7 +435,7 @@ Each prompts a 5-second pause before deletion. Cascades handle related rows.
 
 Open a new chat and paste this entire document at the start, with a message like:
 
-> "I'm working on a project called ABtalks. Read this context document carefully before we start. After reading, just say 'Context loaded' and ask me what I want to work on."
+> "I'm working on a project called ABTalks. Read this context document carefully before we start. After reading, just say 'Context loaded' and ask me what I want to work on."
 
 This onboards the AI with everything needed to continue. Update this document at major milestones to keep it current.
 

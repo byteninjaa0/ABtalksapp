@@ -8,7 +8,7 @@ export function AppFooter() {
       <div className="container mx-auto px-6 py-6">
         <div className="flex flex-col gap-3 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
           <div className="font-display font-medium">
-            ABtalks
+            ABTalks
             <span className="ml-2 font-normal text-muted-foreground/70">
               60-Day Coding Challenge
             </span>

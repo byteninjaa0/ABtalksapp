@@ -146,7 +146,7 @@ export function RegistrationForm({ initialName, initialRef }: Props) {
         toast.error(res.message);
         return;
       }
-      toast.success("Welcome to ABtalks!");
+      toast.success("Welcome to ABTalks!");
       router.push("/dashboard");
       router.refresh();
     } finally {
