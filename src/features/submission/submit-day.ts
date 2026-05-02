@@ -63,6 +63,10 @@ export async function submitDay(input: {
   githubUrl: string;
   linkedinUrl: string;
   dayNumber: number;
+  /** When set (e.g. GitHub webhook), persists this instant instead of `new Date()`. */
+  submittedAt?: Date;
+  /** When true, skips LinkedIn post URL validation (webhook submissions use empty placeholder). */
+  skipLinkedinValidation?: boolean;
 }): Promise<SubmitDayResult> {
   const { userId, linkedinUrl, dayNumber } = input;
   const githubNormalized = normalizeGithubUrl(input.githubUrl.trim());
@@ -119,10 +123,14 @@ export async function submitDay(input: {
     return { ok: false, reason: gh.reason, message: gh.message };
   }
 
-  const li = validateLinkedinUrl(linkedinUrl);
-  if (!li.ok) {
-    return { ok: false, reason: li.reason, message: li.message };
+  if (!input.skipLinkedinValidation) {
+    const li = validateLinkedinUrl(linkedinUrl);
+    if (!li.ok) {
+      return { ok: false, reason: li.reason, message: li.message };
+    }
   }
+
+  const submittedAt = input.submittedAt ?? new Date();
 
   const newStatus =
     dayNumber === currentDay ? SubmissionStatus.ON_TIME : SubmissionStatus.LATE;
@@ -144,13 +152,13 @@ export async function submitDay(input: {
           githubUrl: githubNormalized,
           linkedinUrl: linkedinUrl.trim(),
           status: newStatus,
-          submittedAt: new Date(),
+          submittedAt,
         },
         update: {
           githubUrl: githubNormalized,
           linkedinUrl: linkedinUrl.trim(),
           status: newStatus,
-          submittedAt: new Date(),
+          submittedAt,
         },
       });
 
