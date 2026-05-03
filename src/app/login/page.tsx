@@ -82,7 +82,7 @@ export default async function LoginPage({ searchParams }: Props) {
         <Card className="w-full max-w-md border-border/60 shadow-md">
           <CardHeader className="space-y-2 text-center">
             <CardTitle className="font-display text-3xl font-bold tracking-tight">
-              <span className="text-primary">A</span>Btalks
+              <span className="text-primary">A</span>BTalks
             </CardTitle>
             <CardDescription className="text-base text-muted-foreground">
               Build your coding habit. Get discovered.
