@@ -15,7 +15,7 @@
     ],
     "difficulty": "Easy",
     "estimatedMinutes": 45,
-    "linkedinTemplate": "Day 1/10 🚀\n\nKicked off my AI Engineering Challenge by mapping out how AI systems actually work — input → processing → output.\n\nBiggest realization: AI is structure, not magic.\n\nRepo: {{github_link}}\n\n#AIEngineering #LearningInPublic #GenAI",
+    "linkedinTemplate": "🚀 Day 1/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Build a mental model of AI pipelines and map how input flows into processing and output.\n\n💻 What I Worked On Today: Mapped out AI systems step-by-step to understand how data transforms through each stage.\n\nKey Learnings: AI is structure, not magic, and clarity comes from a clear pipeline.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 1/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #AIEngineering #LearningInPublic #GenAI",
     "solutionApproach": "Use pen & paper or Miro. For each AI product, identify the input, the model/processing core, and the output. Apply the same lens to a chatbot.",
     "tags": [
       "ai-fundamentals",
@@ -39,7 +39,7 @@
     ],
     "difficulty": "Easy",
     "estimatedMinutes": 60,
-    "linkedinTemplate": "Day 2/10 🐍\n\nWrote my first Python AI script — word frequency + text cleanup in a Colab notebook.\n\nLesson: comfort comes from running code, not reading it.\n\nRepo: {{github_link}}\n\n#Python #AIEngineering #LearningInPublic",
+    "linkedinTemplate": "🚀 Day 2/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Set up a Colab notebook and write a Python script for word frequency and text cleanup.\n\n💻 What I Worked On Today: Built a working Python script that counts words and normalizes text.\n\nKey Learnings: Comfort comes from running code, not only reading it.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 2/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #Python #AIEngineering #LearningInPublic",
     "solutionApproach": "Use Python's built-in `collections.Counter` for frequency counting and `str.lower()` + `re.sub()` for cleanup.",
     "tags": [
       "python",
@@ -63,7 +63,7 @@
     ],
     "difficulty": "Easy",
     "estimatedMinutes": 60,
-    "linkedinTemplate": "Day 3/10 🔤\n\nLearned how machines actually read text — by turning words into numbers.\n\nTokenization, stopword removal, bag-of-words. The unsung heroes of NLP.\n\nRepo: {{github_link}}\n\n#NLP #AIEngineering #LearningInPublic",
+    "linkedinTemplate": "🚀 Day 3/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Turn raw text into numbers using tokenization, stopword removal, and bag-of-words representation.\n\n💻 What I Worked On Today: Preprocessed language data and converted it into a numerical format for NLP.\n\nKey Learnings: Machines read numbers, so text must be transformed before learning.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 3/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #NLP #AIEngineering #LearningInPublic",
     "solutionApproach": "Use NLTK's `word_tokenize` + `stopwords` corpus. Build a simple dict-based BoW or use sklearn's `CountVectorizer` for comparison.",
     "tags": [
       "nlp",
@@ -87,7 +87,7 @@
     ],
     "difficulty": "Medium",
     "estimatedMinutes": 60,
-    "linkedinTemplate": "Day 4/10 🧭\n\nGenerated my first sentence embeddings today — and watched two sentences with no shared words score 0.9 cosine similarity.\n\nVectors capture meaning. That's wild.\n\nRepo: {{github_link}}\n\n#Embeddings #AIEngineering #LearningInPublic",
+    "linkedinTemplate": "🚀 Day 4/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Generate and compare sentence embeddings to capture meaning in vector space.\n\n💻 What I Worked On Today: Created sentence embeddings and measured similarity between example sentences.\n\nKey Learnings: Vectors capture meaning and make semantic similarity measurable.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 4/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #Embeddings #AIEngineering #LearningInPublic",
     "solutionApproach": "Use `sentence-transformers` with the `all-MiniLM-L6-v2` model. Compute cosine similarity with `sklearn.metrics.pairwise.cosine_similarity` or `util.cos_sim` from the library.",
     "tags": [
       "embeddings",
@@ -111,7 +111,7 @@
     ],
     "difficulty": "Medium",
     "estimatedMinutes": 90,
-    "linkedinTemplate": "Day 5/10 🔍\n\nBuilt my first semantic search engine — 20 sentences in, query in, top-3 most relevant results out.\n\nNo keyword matching. Just meaning.\n\nThis is the core of every RAG system.\n\nRepo: {{github_link}}\n\n#SemanticSearch #RAG #AIEngineering",
+    "linkedinTemplate": "🚀 Day 5/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Build a mini semantic search engine that returns top results based on meaning.\n\n💻 What I Worked On Today: Embedded sentences and built retrieval logic for the most relevant matches.\n\nKey Learnings: Modern search is about meaning, not keyword matching.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 5/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #SemanticSearch #RAG #AIEngineering",
     "solutionApproach": "Embed the corpus once with sentence-transformers, store vectors in a NumPy array (or FAISS index for speed), then on each query embed it and run cosine similarity to find top-k.",
     "tags": [
       "semantic-search",
@@ -136,7 +136,7 @@
     ],
     "difficulty": "Easy",
     "estimatedMinutes": 60,
-    "linkedinTemplate": "Day 6/10 🧠\n\nTrained a classifier with my webcam today using Teachable Machine.\n\nBiggest takeaway: ML is just pattern matching from examples. The magic is in the data, not the algorithm.\n\nRepo: {{github_link}}\n\n#MachineLearning #AIEngineering #LearningInPublic",
+    "linkedinTemplate": "🚀 Day 6/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Train a classifier using webcam data to build intuition for machine learning.\n\n💻 What I Worked On Today: Used Teachable Machine to train a model and observe how data affects results.\n\nKey Learnings: ML is pattern matching, and the data quality matters more than the algorithm.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 6/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #MachineLearning #AIEngineering #LearningInPublic",
     "solutionApproach": "Pick two visually distinct categories (e.g. coffee cup vs water bottle). Train with 30 samples each, then test. Repeat with noisy/mixed data and document what changes.",
     "tags": [
       "machine-learning",
@@ -161,7 +161,7 @@
     ],
     "difficulty": "Medium",
     "estimatedMinutes": 90,
-    "linkedinTemplate": "Week 1 of AI Engineering Challenge: complete ✅\n\nIn 7 days I went from \"AI is magic\" to training my own sentiment classifier.\n\nWhat I built:\n→ Mental model of AI pipelines\n→ Text preprocessing + tokenization\n→ Sentence embeddings\n→ Semantic search engine\n→ ML classifier\n\nBiggest learning: {{learning}}\n\nRepo: {{github_link}}\n\n#AIEngineering #LearningInPublic #GenAI",
+    "linkedinTemplate": "🚀 Day 7/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Review the first AI week by reflecting on classifiers, embeddings, semantic search, and pipelines.\n\n💻 What I Worked On Today: Completed the first AI sprint and built a foundational classifier and search workflow.\n\nKey Learnings: The first week turned AI fundamentals into working systems.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 7/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #AIEngineering #LearningInPublic #GenAI",
     "solutionApproach": "Use sklearn's TfidfVectorizer + LogisticRegression in a Pipeline. Split data with train_test_split, fit on train, evaluate accuracy on test, then run predict() on your own custom sentences.",
     "tags": [
       "classification",
@@ -185,7 +185,7 @@
     ],
     "difficulty": "Easy",
     "estimatedMinutes": 45,
-    "linkedinTemplate": "Day 1/60 🚀\n\nStarted my Data Science journey by strengthening Python fundamentals.\n\nRepo: {{github_link}}\n\n#Python #DataScience #LearningInPublic",
+    "linkedinTemplate": "🚀 Day 1/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Strengthen Python fundamentals as the foundation for data science.\n\n💻 What I Worked On Today: Practiced core Python syntax and examples for data science work.\n\nKey Learnings: A strong Python foundation is essential for data science.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 1/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #Python #DataScience #LearningInPublic",
     "solutionApproach": "Use input(), variables, and dictionary structure to store and process user data.",
     "tags": [
       "python",
@@ -207,7 +207,7 @@
     ],
     "difficulty": "Easy",
     "estimatedMinutes": 60,
-    "linkedinTemplate": "Day 2/60 🔁\n\nWorked on Python logic, loops, and functions.\n\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 2/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Build logic using Python control flow, loops, and functions.\n\n💻 What I Worked On Today: Solved problems with loops and wrote reusable functions.\n\nKey Learnings: Logic building is the backbone of problem-solving.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 2/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #Python #DataScience #LearningInPublic",
     "solutionApproach": "Use loops and functions to process marks and classify results.",
     "tags": [
       "python",
@@ -230,7 +230,7 @@
     ],
     "difficulty": "Easy",
     "estimatedMinutes": 75,
-    "linkedinTemplate": "Day 3/60 📂\n\nWorked with Python data structures and file handling.\n\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 3/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Work with Python data structures and file handling for real-world data.\n\n💻 What I Worked On Today: Used lists, dictionaries, and file I/O to manage data.\n\nKey Learnings: Real data comes from files and structures need to be organized.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 3/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #Python #DataScience #LearningInPublic",
     "solutionApproach": "Use csv module or pandas to read file and dictionary to count frequencies.",
     "tags": [
       "python",
@@ -251,7 +251,7 @@
     ],
     "difficulty": "Easy",
     "estimatedMinutes": 45,
-    "linkedinTemplate": "Day 4/60 📊\n\nStarted my Data Science project and selected dataset.\n\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 4/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Set up a data science project and select the right dataset.\n\n💻 What I Worked On Today: Picked a dataset and organized the project for analysis.\n\nKey Learnings: Choosing the right dataset is the first key step in data science.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 4/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #Python #DataScience #LearningInPublic",
     "solutionApproach": "Set up repo, select dataset, define problem clearly.",
     "tags": [
       "project",
@@ -272,7 +272,7 @@
     ],
     "difficulty": "Easy",
     "estimatedMinutes": 45,
-    "linkedinTemplate": "Day 5/60 📂\n\nExplored dataset structure and defined target variable.\n\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 5/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Load data and understand dataset structure and the target variable.\n\n💻 What I Worked On Today: Explored the dataset and identified the target outcome.\n\nKey Learnings: Understanding the data is the first analytical step.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 5/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #Python #DataScience #LearningInPublic",
     "solutionApproach": "Use pandas functions like head(), shape, info().",
     "tags": [
       "pandas",
@@ -293,7 +293,7 @@
     ],
     "difficulty": "Medium",
     "estimatedMinutes": 60,
-    "linkedinTemplate": "Day 6/60 🧹\n\nCleaned real-world dataset and created new features.\n\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 6/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Clean real-world data and create new features for modeling.\n\n💻 What I Worked On Today: Cleaned messy data, handled missing values, and engineered features.\n\nKey Learnings: Good data preparation is essential before building models.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 6/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #Python #DataScience #LearningInPublic",
     "solutionApproach": "Use pandas operations like fillna(), drop_duplicates(), astype().",
     "tags": [
       "data-cleaning"
@@ -314,7 +314,7 @@
     ],
     "difficulty": "Medium",
     "estimatedMinutes": 90,
-    "linkedinTemplate": "Week 1 completed ✅\n\nFrom Python basics to EDA — built strong foundation.\n\nBiggest learning: {{learning}}\n\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 7/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Summarize the first data science sprint with exploratory data analysis and review.\n\n💻 What I Worked On Today: Completed initial EDA and reflected on the dataset insights.\n\nKey Learnings: Patterns discovered in EDA guide better modeling decisions.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 7/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #Python #DataScience #LearningInPublic",
     "solutionApproach": "Use seaborn/matplotlib to visualize and interpret data.",
     "tags": [
       "eda",
@@ -336,7 +336,7 @@
     ],
     "difficulty": "Easy",
     "estimatedMinutes": 40,
-    "linkedinTemplate": "Day 1 of #60DaysOfCode 🚀\n\nFocused on Python basics — variables, data types, and input/output.\nStrong foundation starts here.\n\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 1/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Build Python foundations with variables, data types, and input/output.\n\n💻 What I Worked On Today: Practiced Python basics and wrote simple programs.\n\nKey Learnings: A strong foundation in Python is the first step in software engineering.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 1/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #60DaysOfCode",
     "solutionApproach": "Use input(), type casting, f-strings for formatted output.",
     "tags": [
       "python",
@@ -360,7 +360,7 @@
     ],
     "difficulty": "Easy",
     "estimatedMinutes": 45,
-    "linkedinTemplate": "Day 2 🔥 Mastered control flow in Python.\n\nNow I can make programs that think and decide.\n\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 2/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Master Python control flow and logic building.\n\n💻 What I Worked On Today: Implemented conditional logic and loops to solve problems.\n\nKey Learnings: Control flow enables programs to make decisions.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 2/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #60DaysOfCode",
     "solutionApproach": "Use if-elif ladder and logical conditions.",
     "tags": [
       "python",
@@ -383,7 +383,7 @@
     ],
     "difficulty": "Easy-Medium",
     "estimatedMinutes": 50,
-    "linkedinTemplate": "Day 3 📊 Worked with lists, loops, and dictionaries.\n\nStarting to think like a problem solver.\n\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 3/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Practice loops and core data structures like lists, strings, and dictionaries.\n\n💻 What I Worked On Today: Worked with collections and iteration to solve structured problems.\n\nKey Learnings: Structured thinking comes from using the right data structures.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 3/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #60DaysOfCode",
     "solutionApproach": "Use loops to iterate, dictionary for frequency count.",
     "tags": [
       "loops",
@@ -404,7 +404,7 @@
     "resources": [],
     "difficulty": "Easy",
     "estimatedMinutes": 25,
-    "linkedinTemplate": "Day 4 💻 Built CLI calculator.\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 4/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Build a command-line calculator to practice input, arithmetic, and program flow.\n\n💻 What I Worked On Today: Created a CLI calculator with working operations and user prompts.\n\nKey Learnings: Simple tools are built from clear logic and input handling.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 4/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #60DaysOfCode",
     "solutionApproach": "if-else based operations",
     "tags": [
       "cli",
@@ -423,7 +423,7 @@
     "resources": [],
     "difficulty": "Easy",
     "estimatedMinutes": 25,
-    "linkedinTemplate": "Day 5 🔐 Built login system.\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 5/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Build a user login validator with username/password checks.\n\n💻 What I Worked On Today: Implemented validation rules for login input.\n\nKey Learnings: Input validation is important for reliability and security.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 5/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #60DaysOfCode",
     "solutionApproach": "Compare input values",
     "tags": [
       "auth",
@@ -442,7 +442,7 @@
     "resources": [],
     "difficulty": "Easy",
     "estimatedMinutes": 30,
-    "linkedinTemplate": "Day 6 ⚡ Automated FizzBuzz.\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 6/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Automate FizzBuzz rules for a coding challenge.\n\n💻 What I Worked On Today: Wrote a FizzBuzz program that outputs the correct sequence.\n\nKey Learnings: Algorithmic thinking starts with simple rule-based problems.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 6/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #60DaysOfCode",
     "solutionApproach": "Loop + condition + file write",
     "tags": [
       "loops"
@@ -460,7 +460,7 @@
     "resources": [],
     "difficulty": "Easy-Medium",
     "estimatedMinutes": 40,
-    "linkedinTemplate": "Day 7 🔥 Built stock analyzer.\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 7/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Build a stock profit analyzer to find the best buy/sell strategy.\n\n💻 What I Worked On Today: Analyzed price data and wrote logic to compute maximum profit.\n\nKey Learnings: Problem solving improves when you translate real examples into code.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 7/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #60DaysOfCode",
     "solutionApproach": "Track min and max profit",
     "tags": [
       "arrays"
@@ -478,7 +478,7 @@
     "resources": [],
     "difficulty": "Easy-Medium",
     "estimatedMinutes": 40,
-    "linkedinTemplate": "Day 7 🔥 Built stock analyzer.\nRepo: {{github_link}}",
+    "linkedinTemplate": "🚀 Day 8/60 @ABTalksOnAI 60 Days Coding Challenge:\n\n🎯 The Task : Continue the stock profit challenge and refine the analysis logic.\n\n💻 What I Worked On Today: Improved profit calculation and analyzed stock price behavior.\n\nKey Learnings: Refining algorithms helps solve real-world coding problems.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://abtalks.in\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 8/60 ✅\n\n#ABTalksOnAI #60DaysCodingChallenge #60DaysOfCode",
     "solutionApproach": "Track min and max profit",
     "tags": [
       "arrays"
