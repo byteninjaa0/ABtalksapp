@@ -96,6 +96,12 @@ model Enrollment {
 
   @@unique([userId, challengeId])
   @@index([domain, daysCompleted, currentStreak])
+  @@index([userId])
+  @@index([userId, status])
+  @@index([domain])
+  @@index([domain, status])
+  @@index([startedAt])
+  @@index([status])
 }
 
 model Quiz {
@@ -152,6 +158,7 @@ model Referral {
   referrer                      User     @relation("Referral_referrerIdToUser", fields: [referrerId], references: [id], onDelete: Cascade)
 
   @@index([referrerId])
+  @@index([referredId])
 }
 
 model Session {
@@ -185,6 +192,10 @@ model StudentProfile {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([domain])
+  @@index([userType])
+  @@index([referralCode])
 }
 
 model Submission {
@@ -204,6 +215,10 @@ model Submission {
   @@unique([enrollmentId, dayNumber])
   @@index([dayNumber])
   @@index([userId])
+  @@index([enrollmentId, dayNumber])
+  @@index([submittedAt])
+  @@index([status])
+  @@index([enrollmentId, status])
 }
 
 model User {
@@ -226,6 +241,8 @@ model User {
   sessions                           Session[]
   studentProfile                     StudentProfile?
   submissions                        Submission[]
+
+  @@index([createdAt])
 }
 
 model AdminAction {
@@ -240,7 +257,9 @@ model AdminAction {
   target       User     @relation("AdminTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
 
   @@index([targetUserId])
+  @@index([adminUserId])
   @@index([createdAt])
+  @@index([targetUserId, actionType])
 }
 
 model VerificationToken {

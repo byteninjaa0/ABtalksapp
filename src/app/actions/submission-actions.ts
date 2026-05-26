@@ -1,8 +1,10 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { getCurrentDayNumber } from "@/lib/date-utils";
 import { normalizeGithubUrl } from "@/features/submission/validate-github-url";
 import { validateSubmissionUrl } from "@/lib/validations/submission";
@@ -23,6 +25,16 @@ const linkedinStepSchema = z.object({
   dayNumber: z.coerce.number().int().min(1).max(60),
 });
 
+const SUBMIT_RATE_LIMIT = { maxAttempts: 5, windowMs: 60 * 1000 } as const;
+
+function checkSubmissionRateLimit(userId: string) {
+  return checkRateLimit(
+    `submit:${userId}`,
+    SUBMIT_RATE_LIMIT.maxAttempts,
+    SUBMIT_RATE_LIMIT.windowMs,
+  );
+}
+
 export type GithubStepResult =
   | {
       ok: true;
@@ -38,6 +50,11 @@ export async function submitGithubStepAction(
   const session = await auth();
   if (!session?.user?.id) {
     return { ok: false, message: "You must be signed in." };
+  }
+
+  const { allowed } = checkSubmissionRateLimit(session.user.id);
+  if (!allowed) {
+    return { ok: false, message: "Too many attempts. Wait a minute." };
   }
 
   const parsed = githubStepSchema.safeParse({
@@ -123,6 +140,15 @@ export async function submitLinkedinStepAction(formData: FormData) {
     return { ok: false as const, reason: "auth", message: "You must be signed in." };
   }
 
+  const { allowed } = checkSubmissionRateLimit(session.user.id);
+  if (!allowed) {
+    return {
+      ok: false as const,
+      reason: "rate_limit",
+      message: "Too many attempts. Wait a minute.",
+    };
+  }
+
   const parsed = linkedinStepSchema.safeParse({
     githubUrl: formData.get("githubUrl"),
     linkedinUrl: formData.get("linkedinUrl"),
@@ -143,11 +169,17 @@ export async function submitLinkedinStepAction(formData: FormData) {
       ? enrollmentIdRaw.trim()
       : undefined;
 
-  return submitDay({
+  const result = await submitDay({
     userId: session.user.id,
     githubUrl: parsed.data.githubUrl,
     linkedinUrl: parsed.data.linkedinUrl,
     dayNumber: parsed.data.dayNumber,
     enrollmentId,
   });
+
+  if (result.ok) {
+    updateTag("leaderboard");
+  }
+
+  return result;
 }
