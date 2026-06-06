@@ -30,7 +30,7 @@ A 60-day coding challenge platform built around Anil Bajpai's community of recru
 
 ## 3. Tech stack (as deployed)
 
-- **Framework:** Next.js 15 / 16 (App Router, TypeScript strict, Turbopack)
+- **Framework:** Next.js 15 / 16 (App Router, TypeScript strict, Turbopack).
 - **Database:** PostgreSQL on Neon (single shared instance — dev and prod)
 - **ORM:** Prisma 6.19.3 (NOT Prisma 7 — pinned)
 - **Auth:** Auth.js v5 (next-auth@beta) with split config (`auth.config.ts` for edge-safe middleware, `auth.ts` for full Node usage)
