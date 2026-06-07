@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useReducedMotion } from "framer-motion";
 import {
   Flame,
   GitCommit,
@@ -26,6 +27,28 @@ import {
 export function SynergyChip() {
   const { points } = useSynergy();
   const [open, setOpen] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const prevPoints = useRef(points);
+  const [pulsing, setPulsing] = useState(false);
+
+  useEffect(() => {
+    if (reducedMotion || points == null) return;
+
+    const id = requestAnimationFrame(() => {
+      if (prevPoints.current != null && points > prevPoints.current) {
+        setPulsing(true);
+      }
+      prevPoints.current = points;
+    });
+
+    return () => cancelAnimationFrame(id);
+  }, [points, reducedMotion]);
+
+  useEffect(() => {
+    if (!pulsing) return;
+    const t = window.setTimeout(() => setPulsing(false), 320);
+    return () => window.clearTimeout(t);
+  }, [pulsing]);
 
   return (
     <>
@@ -33,10 +56,16 @@ export function SynergyChip() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="View your synergy"
-        className="group inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-gradient-to-r from-primary/15 to-violet-500/15 px-2.5 py-1 text-xs font-semibold text-primary shadow-sm transition-colors hover:from-primary/25 hover:to-violet-500/25"
+        className={cn(
+          "group inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-gradient-to-r from-primary/15 to-violet-500/15 px-2.5 py-1 text-xs font-semibold text-primary shadow-sm transition-colors hover:from-primary/25 hover:to-violet-500/25",
+          pulsing && "spark-pulse",
+        )}
       >
         <Flame
-          className="size-3.5 transition-transform group-hover:scale-110"
+          className={cn(
+            "size-3.5 transition-transform group-hover:scale-110",
+            pulsing && "spark-pulse",
+          )}
           aria-hidden
         />
         <span className="tabular-nums">{points ?? "…"}</span>
