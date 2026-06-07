@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { Briefcase, Compass, Home, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -48,14 +49,21 @@ export function BottomNav() {
               href={href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-1.5 text-xs transition-colors",
+                "focus-spark relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-1.5 text-xs transition-colors",
                 active
-                  ? "bg-primary/15 text-primary"
+                  ? "text-primary"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <Icon className="size-5" aria-hidden />
-              <span className="text-[10px] font-medium leading-none">{label}</span>
+              {active ? (
+                <motion.span
+                  layoutId="bottom-nav-indicator"
+                  className="absolute inset-0 rounded-full bg-primary/15"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              ) : null}
+              <Icon className="relative size-5" aria-hidden />
+              <span className="relative text-[10px] font-medium leading-none">{label}</span>
             </Link>
           );
         })}
