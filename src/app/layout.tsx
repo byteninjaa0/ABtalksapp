@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { MotionProvider } from "@/components/shared/motion-provider";
 import { SynergyProvider } from "@/components/shared/synergy-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { AppFooter } from "@/components/shared/app-footer";
@@ -43,7 +44,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SynergyProvider>
-            <main className="flex-1 pb-16 md:pb-0">{children}</main>
+            <MotionProvider>
+              <main className="flex-1 pb-16 md:pb-0">{children}</main>
+            </MotionProvider>
           </SynergyProvider>
           <AppFooter />
           <BottomNavGate />
