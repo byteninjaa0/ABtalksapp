@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
+  Activity,
   ArrowRight,
   Calendar,
   CheckCircle,
@@ -50,6 +51,10 @@ import { shouldShowClaudeBanner } from "@/features/user/check-claude-enrollment"
 import { ClaudeEnrollmentBanner } from "@/components/shared/claude-enrollment-banner";
 import { CampusAmbassadorBanner } from "@/components/dashboard/campus-ambassador-banner";
 import { ClaudeFAQ } from "@/components/shared/claude-faq";
+import { Stagger, StaggerItem } from "@/components/shared/stagger";
+import { StatNumber } from "@/components/dashboard/stat-number";
+import { Spark } from "@/components/shared/spark";
+import { EmptyState } from "@/components/shared/empty-state";
 
 function readQueryParam(
   query: Record<string, string | string[] | undefined>,
@@ -333,9 +338,11 @@ export default async function DashboardPage({
           </div>
         ) : null}
 
-        <Card>
+        <Card className="shadow-primary">
           <CardHeader className="pb-3">
-            <CardTitle className="font-display text-2xl">Your 60-Day Journey</CardTitle>
+            <CardTitle className="font-display text-2xl text-balance tracking-tight">
+              Your 60-Day Journey
+            </CardTitle>
             <CardDescription>
               {enrollment.daysCompleted} days complete · Day {enrollment.currentDay} of{" "}
               {enrollment.totalDays}
@@ -345,13 +352,14 @@ export default async function DashboardPage({
             <SubmissionHeatmap
               data={heatmapData}
               challengeEnrollmentId={enrollment.id}
+              currentDayNumber={enrollment.currentDay}
             />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-primary">
           <CardHeader>
-            <CardTitle>Today&apos;s Task</CardTitle>
+            <CardTitle className="text-balance tracking-tight">Today&apos;s Task</CardTitle>
             <CardDescription>
               {enrollment.domain} challenge · IST day {enrollment.currentDay}
             </CardDescription>
@@ -453,15 +461,16 @@ export default async function DashboardPage({
           </CardContent>
         </Card>
 
-        <div className="grid gap-5 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4 lg:gap-6">
-          <Card className="relative overflow-hidden">
+        <Stagger className="grid gap-5 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+          <StaggerItem>
+          <Card className="relative overflow-hidden shadow-card transition-shadow hover:shadow-card-hover">
             <CardContent className="p-6 pt-6">
               <Calendar
                 className="absolute top-5 right-5 size-5 text-muted-foreground/70"
                 aria-hidden
               />
               <p className="font-display text-4xl font-bold tabular-nums">
-                {enrollment.currentDay}
+                <StatNumber value={enrollment.currentDay} />
               </p>
               <p className="mt-2 text-sm font-medium tracking-wide text-muted-foreground uppercase">
                 Day {enrollment.currentDay} of {enrollment.totalDays}
@@ -478,15 +487,19 @@ export default async function DashboardPage({
               </div>
             </CardContent>
           </Card>
+          </StaggerItem>
 
-          <Card className="relative overflow-hidden">
+          <StaggerItem>
+          <Card className="relative overflow-hidden shadow-card transition-shadow hover:shadow-card-hover">
             <CardContent className="p-6 pt-6">
-              <Flame
-                className="absolute top-5 right-5 size-5 text-orange-500"
-                aria-hidden
-              />
+              <Spark trigger={enrollment.currentStreak} pulseOnMount className="absolute top-5 right-5">
+                <Flame
+                  className="size-5 text-orange-500"
+                  aria-hidden
+                />
+              </Spark>
               <p className="font-display text-4xl font-bold tabular-nums">
-                {enrollment.currentStreak}
+                <StatNumber value={enrollment.currentStreak} />
               </p>
               <p className="mt-2 text-sm font-medium tracking-wide text-muted-foreground uppercase">
                 Current streak
@@ -496,30 +509,34 @@ export default async function DashboardPage({
               </p>
             </CardContent>
           </Card>
+          </StaggerItem>
 
-          <Card className="relative overflow-hidden">
+          <StaggerItem>
+          <Card className="relative overflow-hidden shadow-card transition-shadow hover:shadow-card-hover">
             <CardContent className="p-6 pt-6">
               <CheckCircle
                 className="absolute top-5 right-5 size-5 text-emerald-500"
                 aria-hidden
               />
               <p className="font-display text-4xl font-bold tabular-nums">
-                {enrollment.daysCompleted}
+                <StatNumber value={enrollment.daysCompleted} />
               </p>
               <p className="mt-2 text-sm font-medium tracking-wide text-muted-foreground uppercase">
                 Days completed
               </p>
             </CardContent>
           </Card>
+          </StaggerItem>
 
-          <Card className="relative overflow-hidden">
+          <StaggerItem>
+          <Card className="relative overflow-hidden shadow-card transition-shadow hover:shadow-card-hover">
             <CardContent className="p-6 pt-6">
               <Users
                 className="absolute top-5 right-5 size-5 text-domains-ai"
                 aria-hidden
               />
               <p className="font-display text-4xl font-bold tabular-nums">
-                {dashboardData.referralCount}
+                <StatNumber value={dashboardData.referralCount} />
               </p>
               <p className="mt-2 text-sm font-medium tracking-wide text-muted-foreground uppercase">
                 Referrals
@@ -529,7 +546,8 @@ export default async function DashboardPage({
               </p>
             </CardContent>
           </Card>
-        </div>
+          </StaggerItem>
+        </Stagger>
 
         {/* Leaderboard hidden temporarily — to be optimized and re-enabled post-launch
         <CommunityLeaderboard
@@ -635,13 +653,15 @@ export default async function DashboardPage({
           </CardHeader>
           <CardContent>
             {dashboardData.recentSubmissions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No submissions yet. Complete Day 1 to get started.
-              </p>
+              <EmptyState icon={Activity}>
+                <p className="text-sm text-muted-foreground">
+                  No submissions yet. Complete Day 1 to get started.
+                </p>
+              </EmptyState>
             ) : (
-              <ul className="space-y-2 text-sm">
+              <Stagger className="space-y-2 text-sm">
                 {dashboardData.recentSubmissions.map((s) => (
-                  <li key={s.id}>
+                  <StaggerItem key={s.id} className="block">
                     <span className="font-medium">Day {s.dayNumber}</span>
                     <span className="text-muted-foreground">
                       {" "}
@@ -652,9 +672,9 @@ export default async function DashboardPage({
                         ? "on time"
                         : "late"}
                     </span>
-                  </li>
+                  </StaggerItem>
                 ))}
-              </ul>
+              </Stagger>
             )}
           </CardContent>
         </Card>
