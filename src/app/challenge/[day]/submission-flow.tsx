@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { DailyTask, Domain } from "@prisma/client";
 import confetti from "canvas-confetti";
+import { motion, useReducedMotion } from "framer-motion";
+import { DUR, EASE_SPARK, fadeInUp, popIn, staggerContainer } from "@/lib/motion";
 import {
   Calendar,
   CheckCircle,
@@ -66,9 +68,11 @@ export function SubmissionFlow({
   const [successStreak, setSuccessStreak] = useState(0);
   const [successDaysCompleted, setSuccessDaysCompleted] = useState(0);
 
+  const reducedMotion = useReducedMotion();
+
   useEffect(() => {
     if (step !== "success") return;
-    const colors = ["#6366f1", "#818cf8", "#34d399", "#fbbf24", "#f472b6"];
+    const colors = ["#4F46E5", "#6366f1", "#818cf8", "#8B5CF6", "#a78bfa"];
     void confetti({
       particleCount: 72,
       spread: 70,
@@ -142,18 +146,27 @@ export function SubmissionFlow({
   const journeyPct = Math.min(100, Math.round((successDaysCompleted / 60) * 100));
   const completedDay60 = dayNumber === 60;
 
+  const motionInitial = reducedMotion ? "show" : "hidden";
+  const motionAnimate = "show";
+
   if (step === "success") {
     if (completedDay60) {
       return (
-        <div className="w-full space-y-10 py-4">
+        <motion.div
+          className="w-full space-y-10 py-4"
+          initial={motionInitial}
+          animate={motionAnimate}
+          variants={staggerContainer(0.1, 0)}
+        >
           <div className="flex flex-col items-center space-y-6 text-center">
-            <div
+            <motion.div
+              variants={popIn}
               className="flex size-28 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/50"
               aria-hidden
             >
               <span className="text-6xl leading-none">🏆</span>
-            </div>
-            <div className="space-y-3">
+            </motion.div>
+            <motion.div variants={fadeInUp} className="space-y-3">
               <h2 className="font-display text-4xl font-bold tracking-tight md:text-5xl">
                 60 Day Challenge Complete!
               </h2>
@@ -163,10 +176,10 @@ export function SubmissionFlow({
               <p className="text-base text-muted-foreground">
                 Recruiters can now find your profile
               </p>
-            </div>
+            </motion.div>
           </div>
 
-          <div className="flex justify-center">
+          <motion.div variants={fadeInUp} className="flex justify-center">
             <Link
               href="/profile"
               className={cn(
@@ -176,95 +189,115 @@ export function SubmissionFlow({
             >
               View Your Profile
             </Link>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       );
     }
 
     return (
-      <div className="w-full space-y-10 py-2">
+      <motion.div
+        className="w-full space-y-10 py-2"
+        initial={motionInitial}
+        animate={motionAnimate}
+        variants={staggerContainer(0.08, 0)}
+      >
         <div className="flex flex-col items-center space-y-6 text-center">
-          <div
+          <motion.div
+            variants={popIn}
             className="flex size-28 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/50"
             aria-hidden
           >
             <CheckCircle2 className="size-20 text-emerald-500" strokeWidth={1.75} />
-          </div>
-          <div className="space-y-3">
+          </motion.div>
+          <motion.div variants={fadeInUp} className="space-y-3">
             <h2 className="font-display text-4xl font-bold tracking-tight md:text-5xl">
               Day {dayNumber} Complete! 🎉
             </h2>
             <p className="text-lg text-muted-foreground">
               You showed up. That&apos;s what counts.
             </p>
-          </div>
+          </motion.div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Card className="border-border/50 p-0 shadow-sm">
-            <CardContent className="space-y-3 p-8">
-              <Flame
-                className="size-8 text-orange-500"
-                strokeWidth={2}
-                aria-hidden
-              />
-              <p className="font-display text-4xl font-bold tabular-nums">
-                {successStreak}
-              </p>
-              <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
-                Day streak
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50 p-0 shadow-sm">
-            <CardContent className="space-y-3 p-8">
-              <CheckCircle
-                className="size-8 text-emerald-500"
-                strokeWidth={2}
-                aria-hidden
-              />
-              <p className="font-display text-4xl font-bold tabular-nums">
-                {successDaysCompleted}
-                <span className="text-2xl font-semibold text-muted-foreground">
-                  {" "}
-                  / 60
-                </span>
-              </p>
-              <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
-                Days completed
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50 p-0 shadow-sm">
-            <CardContent className="space-y-3 p-8">
-              <Calendar
-                className="size-8 text-blue-500"
-                strokeWidth={2}
-                aria-hidden
-              />
-              <p className="font-display text-4xl font-bold tabular-nums">
-                {daysRemaining}
-              </p>
-              <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
-                Days to go
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <motion.div
+          className="grid gap-4 sm:grid-cols-3"
+          variants={staggerContainer(0.06, 0)}
+        >
+          <motion.div variants={fadeInUp}>
+            <Card className="border-border/50 p-0 shadow-sm">
+              <CardContent className="space-y-3 p-8">
+                <Flame
+                  className="size-8 text-orange-500"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+                <p className="font-display text-4xl font-bold tabular-nums">
+                  {successStreak}
+                </p>
+                <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
+                  Day streak
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+          <motion.div variants={fadeInUp}>
+            <Card className="border-border/50 p-0 shadow-sm">
+              <CardContent className="space-y-3 p-8">
+                <CheckCircle
+                  className="size-8 text-emerald-500"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+                <p className="font-display text-4xl font-bold tabular-nums">
+                  {successDaysCompleted}
+                  <span className="text-2xl font-semibold text-muted-foreground">
+                    {" "}
+                    / 60
+                  </span>
+                </p>
+                <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
+                  Days completed
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+          <motion.div variants={fadeInUp}>
+            <Card className="border-border/50 p-0 shadow-sm">
+              <CardContent className="space-y-3 p-8">
+                <Calendar
+                  className="size-8 text-blue-500"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+                <p className="font-display text-4xl font-bold tabular-nums">
+                  {daysRemaining}
+                </p>
+                <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
+                  Days to go
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </motion.div>
 
-        <div className="space-y-2">
+        <motion.div variants={fadeInUp} className="space-y-2">
           <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-primary-foreground transition-all duration-500"
-              style={{ width: `${journeyPct}%` }}
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-primary to-primary-foreground"
+              initial={{ width: reducedMotion ? `${journeyPct}%` : "0%" }}
+              animate={{ width: `${journeyPct}%` }}
+              transition={{ duration: DUR.celebrate, ease: EASE_SPARK }}
             />
           </div>
           <p className="text-center text-sm text-muted-foreground">
             {journeyPct}% of your 60-day journey
           </p>
-        </div>
+        </motion.div>
 
-        <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+        <motion.div
+          variants={fadeInUp}
+          className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4"
+        >
           <Link
             href={`/dashboard${challengeQs}`}
             className={cn(
@@ -285,8 +318,8 @@ export function SubmissionFlow({
               View Day {dayNumber + 1}
             </Link>
           ) : null}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     );
   }
 
