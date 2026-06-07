@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { DUR, EASE_SPARK } from "@/lib/motion";
 import {
   Calendar,
   Rocket,
@@ -164,7 +165,7 @@ export function ClaudeChallengeModal({
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: DUR.slow, ease: EASE_SPARK }}
             className="relative my-4 max-h-[calc(100vh-2rem)] w-full max-w-xl overflow-y-auto rounded-2xl border bg-card p-5 shadow-2xl md:my-8 md:p-6"
           >
             <button

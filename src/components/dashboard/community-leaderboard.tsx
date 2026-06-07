@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Search, X } from "lucide-react";
+import { Search, Users, X } from "lucide-react";
+import { Stagger, StaggerItem } from "@/components/shared/stagger";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -164,7 +166,7 @@ export function CommunityLeaderboard({
       <CardContent>
         <div className="h-[400px] overflow-y-auto rounded-xl border border-border/60 md:h-[500px]">
           {rows.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 px-4 text-center">
+            <EmptyState icon={Users} className="h-full">
               <p className="text-sm text-muted-foreground">
                 No students match your search. Try different filters or clear them.
               </p>
@@ -179,43 +181,48 @@ export function CommunityLeaderboard({
               >
                 Clear filters
               </Button>
-            </div>
+            </EmptyState>
           ) : (
-            <ul className="divide-y divide-border/60">
-              {rows.map((row) => {
-                const href = row.isViewer ? "/profile" : `/students/${row.userId}`;
-                return (
-                  <li key={row.enrollmentId ?? `${row.userId}-${row.domain}`}>
-                    <Link
-                      href={href}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-3 transition-colors hover:bg-muted/50",
-                        row.isViewer && "bg-primary/5",
-                      )}
+            <Stagger>
+              <ul className="divide-y divide-border/60">
+                {rows.map((row) => {
+                  const href = row.isViewer ? "/profile" : `/students/${row.userId}`;
+                  return (
+                    <StaggerItem
+                      key={row.enrollmentId ?? `${row.userId}-${row.domain}`}
+                      as="li"
                     >
-                      <span className="w-10 shrink-0 text-center font-display text-2xl font-bold text-muted-foreground">
-                        {rankDisplay(row.rank)}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium sm:text-base">
-                          {row.fullName}
-                          {row.isViewer ? (
-                            <span className="ml-1 text-xs font-normal text-muted-foreground">
-                              (you)
-                            </span>
-                          ) : null}
-                        </p>
-                      </div>
-                      <div className="w-16 shrink-0 text-right">
-                        <Badge variant="outline" className={domainBadgeClass(row.domain)}>
-                          {row.domain}
-                        </Badge>
-                      </div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+                      <Link
+                        href={href}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-3 transition-colors hover:bg-muted/50",
+                          row.isViewer && "bg-primary/5",
+                        )}
+                      >
+                        <span className="w-10 shrink-0 text-center font-display text-2xl font-bold text-muted-foreground">
+                          {rankDisplay(row.rank)}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium sm:text-base">
+                            {row.fullName}
+                            {row.isViewer ? (
+                              <span className="ml-1 text-xs font-normal text-muted-foreground">
+                                (you)
+                              </span>
+                            ) : null}
+                          </p>
+                        </div>
+                        <div className="w-16 shrink-0 text-right">
+                          <Badge variant="outline" className={domainBadgeClass(row.domain)}>
+                            {row.domain}
+                          </Badge>
+                        </div>
+                      </Link>
+                    </StaggerItem>
+                  );
+                })}
+              </ul>
+            </Stagger>
           )}
         </div>
         {isPending ? (

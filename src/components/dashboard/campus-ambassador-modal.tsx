@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { DUR, EASE_SPARK } from "@/lib/motion";
 import { X, Users, Network, Trophy, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -85,7 +86,7 @@ export function CampusAmbassadorModal({ isOpen, onClose }: Props) {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: DUR.base, ease: EASE_SPARK }}
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-xl my-4 md:my-8 rounded-2xl border bg-card p-5 md:p-6 shadow-2xl max-h-[calc(100vh-2rem)] overflow-y-auto"
           >
