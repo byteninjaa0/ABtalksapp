@@ -20,6 +20,8 @@ type Props = {
   interactive?: boolean;
   /** Current dashboard enrollment: preserves ?challenge= when opening /challenge/[day] */
   challengeEnrollmentId?: string;
+  /** IST current day — used to highlight today's cell */
+  currentDayNumber?: number;
 };
 
 const STATUS_CLASS: Record<HeatmapCell["status"], string> = {
@@ -146,10 +148,70 @@ function dialogTitle(cell: HeatmapCell): string {
   }
 }
 
+function HeatmapCellButton({
+  cell,
+  index,
+  interactive,
+  currentDayNumber,
+  onOpen,
+}: {
+  cell: HeatmapCell;
+  index: number;
+  interactive: boolean;
+  currentDayNumber?: number;
+  onOpen: (cell: HeatmapCell) => void;
+}) {
+  const [showTooltip, setShowTooltip] = React.useState(false);
+  const clickable = interactive && isClickable(cell);
+  const isFuture = cell.status === "future";
+  const isToday = currentDayNumber != null && cell.dayNumber === currentDayNumber;
+  const delay = Math.min(index * 12, 600);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        role="gridcell"
+        aria-label={tooltipLabel(cell)}
+        disabled={!clickable}
+        onClick={() => onOpen(cell)}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        onFocus={() => setShowTooltip(true)}
+        onBlur={() => setShowTooltip(false)}
+        style={{ animationDelay: `${delay}ms` }}
+        className={cn(
+          "size-7 shrink-0 rounded-md sm:size-9",
+          "[animation:var(--animate-heatmap-cell)]",
+          STATUS_CLASS[cell.status],
+          cell.status === "missed" &&
+            cell.isRelaxable &&
+            "ring-2 ring-amber-400 ring-offset-1 ring-offset-background dark:ring-amber-500",
+          isToday && "ring-2 ring-primary/60 ring-offset-1 ring-offset-background spark-pulse",
+          clickable &&
+            "focus-spark cursor-pointer transition-[box-shadow,transform] hover:z-10 hover:ring-2 hover:ring-primary hover:ring-offset-2 hover:ring-offset-background",
+          isFuture && "cursor-not-allowed",
+          !clickable && !isFuture && "cursor-default",
+        )}
+      />
+      {showTooltip ? (
+        <div
+          role="tooltip"
+          className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-max max-w-[200px] -translate-x-1/2 rounded-md border border-border/60 bg-popover px-2.5 py-1.5 text-xs text-popover-foreground shadow-pop animate-in fade-in duration-200"
+          style={{ animationTimingFunction: "var(--ease-spark)" }}
+        >
+          {tooltipLabel(cell)}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function SubmissionHeatmap({
   data,
   interactive = true,
   challengeEnrollmentId,
+  currentDayNumber,
 }: Props) {
   const [open, setOpen] = React.useState(false);
   const [active, setActive] = React.useState<HeatmapCell | null>(null);
@@ -173,31 +235,16 @@ export function SubmissionHeatmap({
           role="grid"
           aria-label="60-day submission heatmap"
         >
-          {data.map((cell) => {
-            const clickable = interactive && isClickable(cell);
-            const isFuture = cell.status === "future";
-            return (
-              <button
-                key={cell.dayNumber}
-                type="button"
-                role="gridcell"
-                title={tooltipLabel(cell)}
-                disabled={!clickable}
-                onClick={() => openCell(cell)}
-                className={cn(
-                  "size-7 shrink-0 rounded-md sm:size-9",
-                  STATUS_CLASS[cell.status],
-                  cell.status === "missed" &&
-                    cell.isRelaxable &&
-                    "ring-2 ring-amber-400 ring-offset-1 ring-offset-background dark:ring-amber-500",
-                  clickable &&
-                    "cursor-pointer transition-[box-shadow,transform] hover:z-10 hover:ring-2 hover:ring-primary hover:ring-offset-2 hover:ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-                  isFuture && "cursor-not-allowed",
-                  !clickable && !isFuture && "cursor-default",
-                )}
-              />
-            );
-          })}
+          {data.map((cell, index) => (
+            <HeatmapCellButton
+              key={cell.dayNumber}
+              cell={cell}
+              index={index}
+              interactive={interactive}
+              currentDayNumber={currentDayNumber}
+              onOpen={openCell}
+            />
+          ))}
         </div>
       </div>
 
