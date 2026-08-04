@@ -33,11 +33,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Progress,
-  ProgressIndicator,
-  ProgressTrack,
-} from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { formatDateIST, isEnrollmentPreStart } from "@/lib/date-utils";
 import { PreStartDashboard } from "@/components/dashboard/pre-start-dashboard";
@@ -516,11 +511,19 @@ export default async function DashboardPage({
                 Day {enrollment.currentDay} of {enrollment.totalDays}
               </p>
               <div className="mt-4">
-                <Progress value={progressPct}>
-                  <ProgressTrack>
-                    <ProgressIndicator />
-                  </ProgressTrack>
-                </Progress>
+                <div
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={progressPct}
+                  aria-label="Calendar progress"
+                  className="relative h-1 w-full overflow-hidden rounded-full bg-muted"
+                >
+                  <div
+                    className="h-full bg-primary transition-all"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
                 <p className="mt-2 text-xs text-muted-foreground">
                   Calendar progress (IST) from your start date
                 </p>
