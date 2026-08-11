@@ -13,6 +13,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import {
+  candidateAvailabilitySchema,
   jobSpecSchema,
   runMatchSchema,
   sendScoutMessageSchema,
@@ -20,7 +21,7 @@ import {
 } from "@/lib/validations/hire";
 import { runScoutTurn } from "@/features/hire/scout-conversation";
 import { searchCandidates } from "@/features/hire/search-candidates";
-import { explainMatchesDeterministic } from "@/features/hire/explain-matches";
+import { explainMatches } from "@/features/hire/explain-matches";
 
 type ActionOk<T> = { ok: true; data: T };
 type ActionErr = { ok: false; message: string };
@@ -296,7 +297,7 @@ export async function runMatchAction(
     const search = await searchCandidates(spec, { limit: 20 });
     if (!search.ok) return search;
 
-    const explained = explainMatchesDeterministic(
+    const explained = await explainMatches(
       search.data.matches,
       search.data.nearMisses,
       spec,
@@ -358,6 +359,72 @@ export async function runMatchAction(
     return {
       ok: false,
       message: "Match failed. Check migration and try again.",
+    };
+  }
+}
+
+export async function saveCandidateAvailabilityAction(
+  input: unknown,
+): Promise<ActionResult<{ openToWork: boolean }>> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { ok: false, message: "Please sign in." };
+  }
+  const parsed = candidateAvailabilitySchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: "Please check availability fields." };
+  }
+  const v = parsed.data;
+  try {
+    await prisma.candidateAvailability.upsert({
+      where: { userId: session.user.id },
+      create: {
+        userId: session.user.id,
+        openToWork: v.openToWork,
+        expectedSalaryMin: v.expectedSalaryMin ?? null,
+        expectedSalaryMax: v.expectedSalaryMax ?? null,
+        salaryCurrency: v.salaryCurrency ?? "INR",
+        noticePeriodDays: v.noticePeriodDays ?? null,
+        preferredWorkMode: (v.preferredWorkMode ?? null) as TalentWorkMode | null,
+        preferredCities: (v.preferredCities ?? [])
+          .map((c) =>
+            c
+              .trim()
+              .replace(/\s+/g, " ")
+              .replace(/\b\w/g, (ch) => ch.toUpperCase()),
+          )
+          .slice(0, 5),
+        openToRelocate: v.openToRelocate ?? false,
+      },
+      update: {
+        openToWork: v.openToWork,
+        expectedSalaryMin: v.expectedSalaryMin ?? null,
+        expectedSalaryMax: v.expectedSalaryMax ?? null,
+        salaryCurrency: v.salaryCurrency ?? "INR",
+        noticePeriodDays: v.noticePeriodDays ?? null,
+        preferredWorkMode: (v.preferredWorkMode ?? null) as TalentWorkMode | null,
+        preferredCities: (v.preferredCities ?? [])
+          .map((c) =>
+            c
+              .trim()
+              .replace(/\s+/g, " ")
+              .replace(/\b\w/g, (ch) => ch.toUpperCase()),
+          )
+          .slice(0, 5),
+        openToRelocate: v.openToRelocate ?? false,
+      },
+    });
+    revalidatePath("/profile");
+    revalidatePath("/program/dashboard");
+    return { ok: true, data: { openToWork: v.openToWork } };
+  } catch (error) {
+    logger.error("[hire] saveCandidateAvailabilityAction", {
+      error: String(error),
+    });
+    return {
+      ok: false,
+      message:
+        "Could not save availability. Apply the hire migration if tables are missing.",
     };
   }
 }

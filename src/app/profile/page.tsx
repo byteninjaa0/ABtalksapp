@@ -28,6 +28,7 @@ import { isClaudeEnabled, isOtpVerificationRequired } from "@/lib/feature-flags"
 import { shouldShowClaudeBanner } from "@/features/user/check-claude-enrollment";
 import { getMyRedemptions } from "@/features/marketplace/get-my-redemptions";
 import { ClaudeEnrollmentBanner } from "@/components/shared/claude-enrollment-banner";
+import { AvailabilityForm } from "@/components/hire/availability-form";
 
 function domainDisplayName(domain: Domain) {
   switch (domain) {
@@ -67,13 +68,32 @@ export default async function ProfilePage() {
 
   const userId = session.user.id;
   const claudeEnabled = isClaudeEnabled();
-  const [bundle, claudeBanner, myRedemptions] = await Promise.all([
-    getProfile(userId),
-    claudeEnabled
-      ? shouldShowClaudeBanner(userId)
-      : Promise.resolve({ show: false, startsAt: null as Date | null }),
-    getMyRedemptions(userId),
-  ]);
+  const [bundle, claudeBanner, myRedemptions, certCount, availability] =
+    await Promise.all([
+      getProfile(userId),
+      claudeEnabled
+        ? shouldShowClaudeBanner(userId)
+        : Promise.resolve({ show: false, startsAt: null as Date | null }),
+      getMyRedemptions(userId),
+      prisma.certificate.count({
+        where: { userId, status: "ISSUED" },
+      }),
+      prisma.candidateAvailability
+        .findUnique({
+          where: { userId },
+          select: {
+            openToWork: true,
+            expectedSalaryMin: true,
+            expectedSalaryMax: true,
+            salaryCurrency: true,
+            noticePeriodDays: true,
+            preferredWorkMode: true,
+            preferredCities: true,
+            openToRelocate: true,
+          },
+        })
+        .catch(() => null),
+    ]);
 
   const headerUser = {
     name: session.user.name ?? null,
@@ -152,6 +172,25 @@ export default async function ProfilePage() {
         <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl">Profile</h1>
 
         <SoundPreferences />
+
+        {profile.isReadyForInterview || certCount > 0 ? (
+          <AvailabilityForm
+            initial={
+              availability
+                ? {
+                    openToWork: availability.openToWork,
+                    expectedSalaryMin: availability.expectedSalaryMin,
+                    expectedSalaryMax: availability.expectedSalaryMax,
+                    salaryCurrency: availability.salaryCurrency,
+                    noticePeriodDays: availability.noticePeriodDays,
+                    preferredWorkMode: availability.preferredWorkMode,
+                    preferredCities: availability.preferredCities,
+                    openToRelocate: availability.openToRelocate,
+                  }
+                : null
+            }
+          />
+        ) : null}
 
         <div className="grid min-w-0 gap-5 sm:gap-8 lg:grid-cols-2 lg:items-start">
           <Card className="min-w-0">

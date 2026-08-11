@@ -68,6 +68,11 @@ export default async function HireRequestPage({ params }: Props) {
                 fullName: true,
                 jobRole: true,
                 company: true,
+                shortlistedBy: {
+                  where: { recruiterUserId: userId },
+                  select: { id: true },
+                  take: 1,
+                },
               },
             },
           },
@@ -159,6 +164,7 @@ export default async function HireRequestPage({ params }: Props) {
                       rationale: m.rationale,
                       gaps: m.gaps,
                       availabilityUnknown: m.availabilityUnknown,
+                      shortlisted: (m.programMember?.shortlistedBy?.length ?? 0) > 0,
                       evidence,
                     }}
                   />

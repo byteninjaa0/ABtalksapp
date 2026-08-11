@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { ShortlistButton } from "@/components/talent/shortlist-button";
 import { cn } from "@/lib/utils";
 
 export type MatchCardData = {
@@ -12,6 +13,7 @@ export type MatchCardData = {
   rationale: string | null;
   gaps: string[];
   availabilityUnknown: boolean;
+  shortlisted?: boolean;
   evidence: {
     skills?: string[];
     missionPoints?: number;
@@ -33,11 +35,19 @@ export function MatchCard({ match }: { match: MatchCardData }) {
             {match.jobRole} · {match.company}
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-semibold tabular-nums">{match.score}</p>
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            {match.tier}
-          </p>
+        <div className="flex items-start gap-2">
+          {match.programMemberId ? (
+            <ShortlistButton
+              memberId={match.programMemberId}
+              initialShortlisted={match.shortlisted ?? false}
+            />
+          ) : null}
+          <div className="text-right">
+            <p className="text-2xl font-semibold tabular-nums">{match.score}</p>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              {match.tier}
+            </p>
+          </div>
         </div>
       </header>
 

@@ -13,8 +13,8 @@ export type ExplainResult = {
 };
 
 /**
- * Phase C without LLM: grounded rationales from scoreBreakdown + evidence only.
- * Claude can replace prose later; numbers always come from Phase B rows.
+ * Phase C: grounded rationales from scoreBreakdown + evidence only.
+ * Optional Claude polish — never invents numbers (prompt + post-check).
  */
 export function explainMatchesDeterministic(
   matches: ScoredCandidate[],
@@ -28,6 +28,66 @@ export function explainMatchesDeterministic(
 
   const overallGap = buildOverallGap(matches, nearMisses, spec);
   return { matches: explained, overallGap };
+}
+
+export async function explainMatches(
+  matches: ScoredCandidate[],
+  nearMisses: ScoredCandidate[],
+  spec: JobSpec,
+): Promise<ExplainResult> {
+  const base = explainMatchesDeterministic(matches, nearMisses, spec);
+  if (!process.env.ANTHROPIC_API_KEY || matches.length === 0) return base;
+
+  try {
+    const { askClaudeAgentJson } = await import("@/lib/claude-agent");
+    const payload = {
+      role: spec.title,
+      mustHaveStack: spec.mustHaveStack,
+      matches: matches.map((m) => ({
+        id: m.programMemberId,
+        fullName: m.fullName,
+        score: m.score,
+        tier: m.tier,
+        evidence: m.evidence,
+        gaps: m.gaps,
+        availabilityUnknown: m.availabilityUnknown,
+      })),
+      nearMissCount: nearMisses.length,
+    };
+    const ai = await askClaudeAgentJson<{
+      rationales?: { id: string; rationale: string }[];
+      overallGap?: string;
+    }>({
+      system: `You write recruiter-facing match rationales for ABTalks Scout.
+Rules: ONLY cite fields present in the JSON you are given. Never invent scores, projects, or skills.
+If you cannot support a claim from the payload, omit it. Return JSON:
+{ "rationales": [{"id": string, "rationale": string}], "overallGap": string }`,
+      messages: [
+        {
+          role: "user",
+          content: JSON.stringify(payload),
+        },
+      ],
+      maxTokens: 1200,
+    });
+    if (!ai.ok || !ai.data.rationales) return base;
+
+    const byId = new Map(
+      ai.data.rationales.map((r) => [r.id, r.rationale] as const),
+    );
+    return {
+      matches: base.matches.map((m) => ({
+        ...m,
+        rationale: byId.get(m.programMemberId) ?? m.rationale,
+      })),
+      overallGap:
+        typeof ai.data.overallGap === "string" && ai.data.overallGap.length > 20
+          ? ai.data.overallGap
+          : base.overallGap,
+    };
+  } catch {
+    return base;
+  }
 }
 
 function buildRationale(m: ScoredCandidate, spec: JobSpec): string {

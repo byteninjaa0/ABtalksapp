@@ -249,9 +249,47 @@ function mergeSpecFromMessage(prior: JobSpec, raw: string): JobSpec {
   return parsed.success ? parsed.data : prior;
 }
 
+const SCOUT_SYSTEM = `You are Scout, ABTalks' evidence-based hiring assistant for recruiters.
+You gather a job requirement conversationally, then the product searches verified platform evidence (missions, commits, projects, interviews) — never resumes.
+
+Rules:
+- Ask ONE question per turn.
+- At most 6 questions before setting readyToSearch true.
+- Always offer option chips (2–6) plus allow free text.
+- Merge the recruiter's last message into "spec".
+- Prefer stack, evidence priority, role/seniority, compensation, work mode.
+- Never invent candidates, names, scores, or evidence.
+- education defaults to none (evidence only).
+- Respond with ONLY a JSON object matching this schema:
+{
+  "spec": {
+    "title"?: string,
+    "seniority"?: "INTERN"|"JUNIOR"|"MID"|"SENIOR"|"LEAD"|null,
+    "openings"?: number,
+    "mustHaveStack"?: string[],
+    "niceToHaveStack"?: string[],
+    "evidencePriority"?: string[],
+    "salaryMin"?: number|null,
+    "salaryMax"?: number|null,
+    "salaryCurrency"?: string,
+    "salaryPeriod"?: "ANNUAL"|"MONTHLY",
+    "workMode"?: "ONSITE"|"HYBRID"|"REMOTE"|"FLEXIBLE"|null,
+    "locationCity"?: string|null,
+    "employmentType"?: "FULL_TIME"|"CONTRACT"|"INTERNSHIP"|"PART_TIME"|null,
+    "noticePeriodDays"?: number|null,
+    "minExperience"?: number|null,
+    "maxExperience"?: number|null,
+    "requiresDegree"?: boolean
+  },
+  "nextQuestion": string|null,
+  "options": [{"label": string, "value": string}],
+  "allowFreeText": boolean,
+  "readyToSearch": boolean,
+  "summary": string
+}`;
+
 /**
- * Phase A entry. Uses deterministic path today; Claude multi-turn can wrap this
- * later via claude-agent without changing action contracts.
+ * Phase A: try Claude multi-turn; fall back to deterministic chips if AI fails.
  */
 export async function runScoutTurn(args: {
   priorSpec: JobSpec;
@@ -259,23 +297,71 @@ export async function runScoutTurn(args: {
   userMessage: string;
 }): Promise<ScoutTurn> {
   const turnIndex = args.history.filter((m) => m.role === "user").length + 1;
+  const fallback = () =>
+    scoutTurnDeterministic(args.priorSpec, args.userMessage, turnIndex);
+
   try {
-    const turn = scoutTurnDeterministic(
-      args.priorSpec,
-      args.userMessage,
-      turnIndex,
-    );
-    const checked = scoutTurnSchema.safeParse(turn);
-    if (!checked.success) {
-      logger.error("[hire] scout turn schema fail", {
-        err: checked.error.message,
+    if (process.env.ANTHROPIC_API_KEY) {
+      const { askClaudeAgentJson } = await import("@/lib/claude-agent");
+      const messages = [
+        ...args.history.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+        {
+          role: "user" as const,
+          content: JSON.stringify({
+            priorSpec: args.priorSpec,
+            latestMessage: args.userMessage,
+            turnIndex,
+          }),
+        },
+      ];
+      const ai = await askClaudeAgentJson<unknown>({
+        system: SCOUT_SYSTEM,
+        messages,
+        maxTokens: 900,
       });
-      return scoutTurnDeterministic(args.priorSpec, args.userMessage, turnIndex);
+      if (ai.ok) {
+        // Merge AI spec with deterministic merge so chip values still apply
+        const baseMerged = mergeSpecFromMessage(
+          args.priorSpec,
+          args.userMessage,
+        );
+        const raw = ai.data as Record<string, unknown>;
+        const aiSpec =
+          raw.spec && typeof raw.spec === "object"
+            ? jobSpecSchema.safeParse({ ...baseMerged, ...raw.spec })
+            : jobSpecSchema.safeParse(baseMerged);
+        const candidate = {
+          spec: aiSpec.success ? aiSpec.data : baseMerged,
+          nextQuestion:
+            typeof raw.nextQuestion === "string" || raw.nextQuestion === null
+              ? (raw.nextQuestion as string | null)
+              : null,
+          options: Array.isArray(raw.options) ? raw.options : [],
+          allowFreeText: raw.allowFreeText !== false,
+          readyToSearch: raw.readyToSearch === true,
+          summary:
+            typeof raw.summary === "string"
+              ? raw.summary
+              : summarize(baseMerged),
+        };
+        const checked = scoutTurnSchema.safeParse(candidate);
+        if (checked.success) return checked.data;
+        logger.error("[hire] scout AI schema fail", {
+          err: checked.success ? "" : checked.error.message,
+        });
+      }
     }
+
+    const turn = fallback();
+    const checked = scoutTurnSchema.safeParse(turn);
+    if (!checked.success) return fallback();
     return checked.data;
   } catch (error) {
     logger.error("[hire] runScoutTurn failed", { error: String(error) });
-    return scoutTurnDeterministic(args.priorSpec, args.userMessage, turnIndex);
+    return fallback();
   }
 }
 

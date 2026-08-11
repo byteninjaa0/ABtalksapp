@@ -64,6 +64,7 @@ export async function toggleShortlistAction(
   revalidatePath("/talent");
   revalidatePath("/talent/shortlist");
   revalidatePath(`/talent/members/${parsed.data.memberId}`);
+  revalidatePath("/hire");
   return { ok: true, data: { shortlisted: result.shortlisted } };
 }
 
