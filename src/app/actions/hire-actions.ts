@@ -46,7 +46,10 @@ async function requireApprovedRecruiter(): Promise<
 
 function specToDb(spec: JobSpec) {
   return {
-    title: spec.title?.trim() || "Untitled role",
+    // Empty means "not asked yet" — never a placeholder. A non-empty default
+    // here made the title slot look answered, so Scout skipped the role
+    // question and mis-filed the recruiter's first reply as the stack.
+    title: spec.title?.trim() ?? "",
     seniority: (spec.seniority ?? null) as TalentSeniority | null,
     openings: spec.openings ?? 1,
     mustHaveStack: spec.mustHaveStack ?? [],
@@ -88,7 +91,8 @@ function dbToSpec(row: {
   extra: unknown;
 }): JobSpec {
   return jobSpecSchema.parse({
-    title: row.title,
+    // Empty stays empty so the role slot reads as unanswered (see specToDb).
+    title: row.title.trim() || undefined,
     seniority: row.seniority,
     openings: row.openings,
     mustHaveStack: row.mustHaveStack,
@@ -171,7 +175,8 @@ export async function sendScoutMessageAction(
         data: {
           recruiterUserId: userId,
           status: TalentRequestStatus.DRAFT,
-          title: "Untitled role",
+          // Unset until the recruiter answers the role question.
+          title: "",
         },
         select: { id: true },
       });
@@ -229,9 +234,11 @@ export async function sendScoutMessageAction(
       ok: true,
       data: {
         requestId,
-        assistantMessage: turn.nextQuestion
-          ? `${turn.summary}\n\n${turn.nextQuestion}`
-          : turn.summary,
+        // Just the question — the running summary has its own header slot, and
+        // repeating it in every bubble made the transcript unreadable.
+        assistantMessage:
+          turn.nextQuestion ??
+          "That's everything I need. Ready to search verified talent.",
         options: turn.options,
         allowFreeText: turn.allowFreeText,
         readyToSearch: turn.readyToSearch,

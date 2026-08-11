@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { Loader2, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   requestCohortTrainAction,
@@ -11,13 +12,14 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import type { JobSpec } from "@/lib/validations/hire";
-import { SpecSummary } from "@/components/hire/spec-summary";
+import { hireProgress, type JobSpec } from "@/lib/validations/hire";
 
+type Option = { label: string; value: string };
+/** `options` is null for stored turns that offered no chips. */
 type Msg = {
   role: "user" | "assistant";
   content: string;
-  options?: { label: string; value: string }[] | null;
+  options?: Option[] | null;
 };
 
 type Props = {
@@ -25,6 +27,18 @@ type Props = {
   initialMessages: Msg[];
   initialSpec: JobSpec;
   initialSummary: string;
+};
+
+const OPENING: Msg = {
+  role: "assistant",
+  content: "What role are you hiring for?",
+  options: [
+    { label: "Backend engineer", value: "Backend engineer" },
+    { label: "Full-stack engineer", value: "Full-stack engineer" },
+    { label: "Data / ML engineer", value: "Data / ML engineer" },
+    { label: "AI engineer", value: "AI engineer" },
+    { label: "Frontend engineer", value: "Frontend engineer" },
+  ],
 };
 
 export function ScoutChat({
@@ -36,34 +50,34 @@ export function ScoutChat({
   const router = useRouter();
   const [requestId, setRequestId] = useState<string | null>(initialRequestId);
   const [messages, setMessages] = useState<Msg[]>(
-    initialMessages.length
-      ? initialMessages
-      : [
-          {
-            role: "assistant",
-            content:
-              "I'm Scout. Tell me the role you're filling — I'll match people by verified work on ABTalks, not resumes.",
-            options: [
-              { label: "Backend engineer", value: "Backend engineer" },
-              { label: "Full-stack engineer", value: "Full-stack engineer" },
-              { label: "Data / ML engineer", value: "Data / ML engineer" },
-              { label: "AI engineer", value: "AI engineer" },
-            ],
-          },
-        ],
+    initialMessages.length ? initialMessages : [OPENING],
   );
   const [spec, setSpec] = useState<JobSpec>(initialSpec);
   const [summary, setSummary] = useState(initialSummary);
   const [readyToSearch, setReadyToSearch] = useState(false);
+  const [allowFreeText, setAllowFreeText] = useState(true);
   const [text, setText] = useState("");
   const [pending, startTransition] = useTransition();
-  const [gap, setGap] = useState<string | null>(null);
+  const [searched, setSearched] = useState(false);
   const [matchCount, setMatchCount] = useState<number | null>(null);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const progress = hireProgress(spec);
+  const pct = progress.total
+    ? Math.round((progress.done / progress.total) * 100)
+    : 0;
+
+  // Keep the newest turn in view as the transcript grows.
+  useEffect(() => {
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages, pending]);
 
   function send(value: string) {
     const message = value.trim();
     if (!message || pending) return;
-
     if (message === "action:search") {
       runSearch();
       return;
@@ -84,6 +98,7 @@ export function ScoutChat({
       setSpec(res.data.spec);
       setSummary(res.data.summary);
       setReadyToSearch(res.data.readyToSearch);
+      setAllowFreeText(res.data.allowFreeText);
       setMessages((m) => [
         ...m,
         {
@@ -92,18 +107,13 @@ export function ScoutChat({
           options: res.data.options,
         },
       ]);
-      if (!requestId) {
-        router.replace(`/hire/${res.data.requestId}`);
-      }
-      if (res.data.readyToSearch) {
-        // auto-offer already in options
-      }
+      if (!requestId) router.replace(`/hire/${res.data.requestId}`);
     });
   }
 
   function runSearch() {
     if (!requestId) {
-      toast.error("Send at least one message first.");
+      toast.error("Answer at least one question first.");
       return;
     }
     startTransition(async () => {
@@ -112,18 +122,13 @@ export function ScoutChat({
         toast.error(res.message);
         return;
       }
-      setGap(res.data.overallGap);
+      setSearched(true);
       setMatchCount(res.data.matchCount);
       setMessages((m) => [
         ...m,
         { role: "assistant", content: res.data.overallGap },
       ]);
       router.refresh();
-      toast.success(
-        res.data.matchCount > 0
-          ? `Found ${res.data.matchCount} match(es)`
-          : "Requirement saved — no matches yet",
-      );
     });
   }
 
@@ -135,7 +140,7 @@ export function ScoutChat({
         toast.error(res.message);
         return;
       }
-      toast.success("We'll train toward this stack and alert you when ready.");
+      toast.success("Saved — we'll train toward this stack and alert you.");
       router.refresh();
     });
   }
@@ -143,85 +148,175 @@ export function ScoutChat({
   const lastOptions =
     [...messages].reverse().find((m) => m.role === "assistant" && m.options)
       ?.options ?? [];
+  const chips = readyToSearch
+    ? lastOptions.filter((o) => o.value !== "action:search")
+    : lastOptions;
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-      <SpecSummary summary={summary} spec={spec} />
+    <div className="flex flex-col gap-4">
+      {/* Progress + running spec */}
+      <div className="rounded-xl border bg-card p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-medium">
+            {readyToSearch
+              ? "Requirement complete"
+              : `Question ${Math.min(progress.done + 1, progress.total)} of ${progress.total}`}
+          </p>
+          <p className="text-xs text-muted-foreground">{pct}%</p>
+        </div>
+        <div
+          className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted"
+          role="progressbar"
+          aria-valuenow={pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Requirement completeness"
+        >
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-500"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {summary || "Tell me the role and I'll take it from there."}
+        </p>
+      </div>
 
-      <div className="flex max-h-[50vh] flex-col gap-3 overflow-y-auto rounded-xl border bg-card p-4">
+      {/* Transcript */}
+      <div
+        ref={scrollRef}
+        className="flex h-[46vh] min-h-70 flex-col gap-4 overflow-y-auto rounded-xl border bg-card p-4"
+      >
         {messages.map((m, i) => (
           <div
             key={`${m.role}-${i}`}
             className={cn(
-              "max-w-[90%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap",
-              m.role === "user"
-                ? "ml-auto bg-primary text-primary-foreground"
-                : "bg-muted text-foreground",
+              "flex gap-2.5",
+              m.role === "user" ? "justify-end" : "justify-start",
             )}
           >
-            {m.content}
+            {m.role === "assistant" && (
+              <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Sparkles className="size-3.5" aria-hidden="true" />
+              </span>
+            )}
+            <div
+              className={cn(
+                "max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap",
+                m.role === "user"
+                  ? "rounded-br-sm bg-primary text-primary-foreground"
+                  : "rounded-bl-sm bg-muted text-foreground",
+              )}
+            >
+              {m.content}
+            </div>
           </div>
         ))}
+
+        {pending && (
+          <div className="flex gap-2.5">
+            <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Sparkles className="size-3.5" aria-hidden="true" />
+            </span>
+            <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-sm bg-muted px-3.5 py-3">
+              {[0, 150, 300].map((d) => (
+                <span
+                  key={d}
+                  className="size-1.5 animate-bounce rounded-full bg-muted-foreground/50"
+                  style={{ animationDelay: `${d}ms` }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {lastOptions && lastOptions.length > 0 ? (
+      {/* Answer chips */}
+      {chips.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {lastOptions.map((o) => (
+          {chips.map((o) => (
             <button
               key={o.value}
               type="button"
               disabled={pending}
               onClick={() => send(o.value)}
               className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "disabled:opacity-50",
+                "rounded-full border px-3.5 py-2 text-sm font-medium transition-colors",
+                "hover:border-primary hover:bg-primary/5 hover:text-primary",
+                "focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none",
+                "disabled:cursor-not-allowed disabled:opacity-50",
+                o.value.startsWith("skip:")
+                  ? "border-dashed text-muted-foreground"
+                  : "border-border",
               )}
             >
               {o.label}
             </button>
           ))}
         </div>
-      ) : null}
+      )}
 
-      <form
-        className="flex gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          send(text);
-        }}
-      >
-        <Input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Type a reply…"
-          disabled={pending}
-          maxLength={2000}
-        />
-        <button
-          type="submit"
-          disabled={pending || !text.trim()}
-          className={cn(buttonVariants(), "shrink-0 disabled:opacity-50")}
+      {/* Free text — hidden when the question only accepts fixed choices */}
+      {allowFreeText && (
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            send(text);
+          }}
         >
-          {pending ? "…" : "Send"}
-        </button>
-      </form>
+          <Input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={
+              readyToSearch ? "Change anything?" : "Or type your answer…"
+            }
+            disabled={pending}
+            maxLength={2000}
+          />
+          <button
+            type="submit"
+            disabled={pending || !text.trim()}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "shrink-0 disabled:opacity-50",
+            )}
+          >
+            Send
+          </button>
+        </form>
+      )}
 
-      <div className="flex flex-wrap gap-2">
+      {/* Primary action */}
+      <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           disabled={pending || !requestId}
           onClick={runSearch}
           className={cn(
-            buttonVariants({ variant: readyToSearch ? "default" : "secondary" }),
-            "disabled:opacity-50",
+            buttonVariants({ size: "lg" }),
+            "gap-2 disabled:opacity-50",
+            !readyToSearch && "opacity-90",
           )}
         >
-          Search verified talent
+          {pending ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Search className="size-4" aria-hidden="true" />
+          )}
+          {readyToSearch ? "Search verified talent" : "Search now"}
         </button>
-        {(matchCount === 0 || gap) && (
+
+        {!readyToSearch && (
+          <p className="text-xs text-muted-foreground">
+            You can search any time — more answers mean a sharper ranking.
+          </p>
+        )}
+
+        {searched && matchCount === 0 && (
           <button
             type="button"
-            disabled={pending || !requestId}
+            disabled={pending}
             onClick={trainCohort}
             className={cn(
               buttonVariants({ variant: "outline" }),

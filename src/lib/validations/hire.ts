@@ -78,6 +78,72 @@ export const scoutTurnSchema = z.object({
 
 export type ScoutTurn = z.infer<typeof scoutTurnSchema>;
 
+/**
+ * Ordered question slots, highest information gain first.
+ *
+ * Shared by the server (which picks the next question and merges the reply into
+ * exactly that slot) and the client (which renders progress). One list means an
+ * answer can never land in the wrong field — the previous free-text parser
+ * guessed, and filed job titles as required skills.
+ */
+export const HIRE_SLOTS = [
+  "title",
+  "seniority",
+  "mustHaveStack",
+  "evidencePriority",
+  "salary",
+  "employmentType",
+  "workMode",
+  "locationCity",
+  "noticePeriodDays",
+  "experience",
+] as const;
+
+export type HireSlot = (typeof HIRE_SLOTS)[number];
+
+/** Slots that don't apply to this spec, so progress stays honest. */
+export function inapplicableSlots(spec: JobSpec): Set<HireSlot> {
+  const skip = new Set<HireSlot>();
+  // A remote role has no office city to ask about.
+  if (spec.workMode === "REMOTE") skip.add("locationCity");
+  return skip;
+}
+
+export function isSlotFilled(spec: JobSpec, slot: HireSlot): boolean {
+  switch (slot) {
+    case "title":
+      return Boolean(spec.title?.trim());
+    case "seniority":
+      return spec.seniority != null;
+    case "mustHaveStack":
+      return (spec.mustHaveStack?.length ?? 0) > 0;
+    case "evidencePriority":
+      return (spec.evidencePriority?.length ?? 0) > 0;
+    case "salary":
+      return spec.salaryMin != null || spec.salaryMax != null;
+    case "employmentType":
+      return spec.employmentType != null;
+    case "workMode":
+      return spec.workMode != null;
+    case "locationCity":
+      return Boolean(spec.locationCity?.trim());
+    case "noticePeriodDays":
+      return spec.noticePeriodDays != null;
+    case "experience":
+      return spec.minExperience != null || spec.maxExperience != null;
+  }
+}
+
+/** Progress for the UI: how many applicable slots are answered. */
+export function hireProgress(spec: JobSpec): { done: number; total: number } {
+  const skip = inapplicableSlots(spec);
+  const applicable = HIRE_SLOTS.filter((s) => !skip.has(s));
+  return {
+    done: applicable.filter((s) => isSlotFilled(spec, s)).length,
+    total: applicable.length,
+  };
+}
+
 export const candidateAvailabilitySchema = z
   .object({
     openToWork: z.boolean(),

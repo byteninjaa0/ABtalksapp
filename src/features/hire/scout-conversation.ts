@@ -2,8 +2,12 @@ import "server-only";
 
 import { logger } from "@/lib/logger";
 import {
+  HIRE_SLOTS,
+  inapplicableSlots,
+  isSlotFilled,
   jobSpecSchema,
   scoutTurnSchema,
+  type HireSlot,
   type JobSpec,
   type ScoutTurn,
 } from "@/lib/validations/hire";
@@ -13,240 +17,356 @@ export type ChatMessage = {
   content: string;
 };
 
+const SENIORITY_YEARS: Record<string, { min: number; max: number }> = {
+  INTERN: { min: 0, max: 1 },
+  JUNIOR: { min: 0, max: 2 },
+  MID: { min: 2, max: 5 },
+  SENIOR: { min: 5, max: 12 },
+  LEAD: { min: 8, max: 25 },
+};
+
+/** First applicable slot with no answer yet. `null` = every question answered. */
+function nextSlot(spec: JobSpec): HireSlot | null {
+  const skip = inapplicableSlots(spec);
+  return HIRE_SLOTS.find((s) => !skip.has(s) && !isSlotFilled(spec, s)) ?? null;
+}
+
 /**
- * Deterministic Scout turn when Claude is unavailable or as the first-pass
- * implementation. Asks high-signal questions with chips; never invents candidates.
+ * Merge the recruiter's answer into ONE named slot.
+ *
+ * Deliberately slot-scoped. The previous implementation guessed which field a
+ * free-text reply belonged to, so the answer to "what role?" was filed as a
+ * required skill and the real stack answer was then discarded. Answering a
+ * question can no longer write to a field that question didn't ask about — the
+ * one exception is `seniority`, which back-fills an experience band the
+ * recruiter can still override.
+ */
+function mergeIntoSlot(spec: JobSpec, slot: HireSlot, raw: string): JobSpec {
+  const msg = raw.trim();
+  const lower = msg.toLowerCase();
+  const next: JobSpec = { ...spec };
+
+  // "skip:*" marks a slot answered-as-unspecified so it is not asked again.
+  if (lower.startsWith("skip:")) {
+    switch (slot) {
+      case "salary":
+        return { ...next, salaryMin: 0, salaryMax: 0 };
+      case "employmentType":
+        return { ...next, employmentType: "FULL_TIME" };
+      case "workMode":
+        return { ...next, workMode: "FLEXIBLE" };
+      case "locationCity":
+        return { ...next, locationCity: "Any" };
+      case "noticePeriodDays":
+        return { ...next, noticePeriodDays: 180 };
+      case "experience":
+        return { ...next, minExperience: 0, maxExperience: 50 };
+      default:
+        return next;
+    }
+  }
+
+  switch (slot) {
+    case "title":
+      return { ...next, title: msg.slice(0, 200) };
+
+    case "seniority": {
+      const hit = (["INTERN", "JUNIOR", "MID", "SENIOR", "LEAD"] as const).find(
+        (s) => lower === s.toLowerCase(),
+      );
+      if (!hit) return next;
+      const band = SENIORITY_YEARS[hit]!;
+      return {
+        ...next,
+        seniority: hit,
+        minExperience: next.minExperience ?? band.min,
+        maxExperience: next.maxExperience ?? band.max,
+      };
+    }
+
+    case "mustHaveStack": {
+      const stack = msg
+        .split(/[,/|]/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, 12);
+      return stack.length ? { ...next, mustHaveStack: stack } : next;
+    }
+
+    case "evidencePriority": {
+      const keys = msg
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean)
+        .slice(0, 5);
+      return keys.length ? { ...next, evidencePriority: keys } : next;
+    }
+
+    case "salary": {
+      const chip = /salary:(\d+)-(\d+)/.exec(lower);
+      if (chip) {
+        return {
+          ...next,
+          salaryMin: Number(chip[1]),
+          salaryMax: Number(chip[2]),
+          salaryCurrency: "INR",
+          salaryPeriod: "ANNUAL",
+        };
+      }
+      // Free text such as "12-18 LPA" or "1200000 to 1800000".
+      const nums = msg.match(/\d+(?:\.\d+)?/g);
+      if (!nums?.length) return next;
+      const isLpa = /lpa|lakh/i.test(msg);
+      const toRupees = (n: string) =>
+        Math.round(Number(n) * (isLpa ? 100_000 : 1));
+      const a = toRupees(nums[0]!);
+      const b = nums[1] ? toRupees(nums[1]) : a;
+      return {
+        ...next,
+        salaryMin: Math.min(a, b),
+        salaryMax: Math.max(a, b),
+        salaryCurrency: "INR",
+        salaryPeriod: "ANNUAL",
+      };
+    }
+
+    case "employmentType": {
+      const hit = (
+        ["FULL_TIME", "CONTRACT", "INTERNSHIP", "PART_TIME"] as const
+      ).find((s) => lower === s.toLowerCase());
+      return hit ? { ...next, employmentType: hit } : next;
+    }
+
+    case "workMode": {
+      const hit = (["ONSITE", "HYBRID", "REMOTE", "FLEXIBLE"] as const).find(
+        (s) => lower === s.toLowerCase(),
+      );
+      return hit ? { ...next, workMode: hit } : next;
+    }
+
+    case "locationCity":
+      return { ...next, locationCity: msg.slice(0, 80) };
+
+    case "noticePeriodDays": {
+      const n = /\d+/.exec(msg);
+      return n
+        ? { ...next, noticePeriodDays: Math.min(180, Number(n[0])) }
+        : next;
+    }
+
+    case "experience": {
+      const nums = msg.match(/\d+/g);
+      if (!nums?.length) return next;
+      const a = Number(nums[0]);
+      const b = nums[1] ? Number(nums[1]) : a;
+      return {
+        ...next,
+        minExperience: Math.min(a, b),
+        maxExperience: Math.max(a, b),
+      };
+    }
+  }
+}
+
+type SlotQuestion = {
+  question: string;
+  options: { label: string; value: string }[];
+  allowFreeText: boolean;
+};
+
+function questionFor(slot: HireSlot, spec: JobSpec): SlotQuestion {
+  const role = spec.title?.trim() || "this role";
+  switch (slot) {
+    case "title":
+      return {
+        question: "What role are you hiring for?",
+        options: [
+          { label: "Backend engineer", value: "Backend engineer" },
+          { label: "Full-stack engineer", value: "Full-stack engineer" },
+          { label: "Data / ML engineer", value: "Data / ML engineer" },
+          { label: "AI engineer", value: "AI engineer" },
+          { label: "Frontend engineer", value: "Frontend engineer" },
+        ],
+        allowFreeText: true,
+      };
+    case "seniority":
+      return {
+        question: `What seniority for the ${role}?`,
+        options: [
+          { label: "Intern", value: "INTERN" },
+          { label: "Junior · 0–2y", value: "JUNIOR" },
+          { label: "Mid · 2–5y", value: "MID" },
+          { label: "Senior · 5y+", value: "SENIOR" },
+          { label: "Lead", value: "LEAD" },
+        ],
+        allowFreeText: false,
+      };
+    case "mustHaveStack":
+      return {
+        question: "Which skills are non-negotiable? Pick one or type your own.",
+        options: [
+          { label: "Python + SQL", value: "Python, SQL" },
+          { label: "TypeScript + React", value: "TypeScript, React" },
+          { label: "Python + PyTorch", value: "Python, PyTorch" },
+          { label: "Java + Spring", value: "Java, Spring" },
+          { label: "Node + Postgres", value: "Node, PostgreSQL" },
+        ],
+        allowFreeText: true,
+      };
+    case "evidencePriority":
+      return {
+        question:
+          "What should I weigh most heavily? This reorders the ranking against real platform evidence.",
+        options: [
+          { label: "Code correctness", value: "missions" },
+          { label: "First-attempt quality", value: "clean_pass" },
+          { label: "Project quality", value: "projects" },
+          { label: "Consistency", value: "consistency" },
+          { label: "Communication", value: "interview" },
+        ],
+        allowFreeText: false,
+      };
+    case "salary":
+      return {
+        question: "What's the budget for this role?",
+        options: [
+          { label: "8–12 LPA", value: "salary:800000-1200000" },
+          { label: "12–18 LPA", value: "salary:1200000-1800000" },
+          { label: "18–28 LPA", value: "salary:1800000-2800000" },
+          { label: "28 LPA+", value: "salary:2800000-6000000" },
+          { label: "Skip", value: "skip:salary" },
+        ],
+        allowFreeText: true,
+      };
+    case "employmentType":
+      return {
+        question: "What kind of engagement is this?",
+        options: [
+          { label: "Full-time", value: "FULL_TIME" },
+          { label: "Contract", value: "CONTRACT" },
+          { label: "Internship", value: "INTERNSHIP" },
+          { label: "Part-time", value: "PART_TIME" },
+        ],
+        allowFreeText: false,
+      };
+    case "workMode":
+      return {
+        question: "Where will they work from?",
+        options: [
+          { label: "Remote", value: "REMOTE" },
+          { label: "Hybrid", value: "HYBRID" },
+          { label: "Onsite", value: "ONSITE" },
+          { label: "Flexible", value: "FLEXIBLE" },
+        ],
+        allowFreeText: false,
+      };
+    case "locationCity":
+      return {
+        question: "Which city is the office in?",
+        options: [
+          { label: "Bengaluru", value: "Bengaluru" },
+          { label: "Hyderabad", value: "Hyderabad" },
+          { label: "Pune", value: "Pune" },
+          { label: "Delhi NCR", value: "Delhi NCR" },
+          { label: "Mumbai", value: "Mumbai" },
+          { label: "Skip", value: "skip:city" },
+        ],
+        allowFreeText: true,
+      };
+    case "noticePeriodDays":
+      return {
+        question: "How soon do you need them to start?",
+        options: [
+          { label: "Immediate", value: "0" },
+          { label: "Within 15 days", value: "15" },
+          { label: "Within 30 days", value: "30" },
+          { label: "Within 60 days", value: "60" },
+          { label: "Flexible", value: "skip:notice" },
+        ],
+        allowFreeText: false,
+      };
+    case "experience":
+      return {
+        question: "Any hard experience band, or should I go by evidence alone?",
+        options: [
+          { label: "Evidence only", value: "skip:experience" },
+          { label: "0–2 years", value: "0-2" },
+          { label: "2–5 years", value: "2-5" },
+          { label: "5–8 years", value: "5-8" },
+          { label: "8+ years", value: "8-25" },
+        ],
+        allowFreeText: true,
+      };
+  }
+}
+
+/**
+ * Deterministic Scout turn — used when Claude is unavailable, and as the
+ * schema-safe fallback. Asks every applicable slot before offering the search;
+ * never invents candidates.
  */
 export function scoutTurnDeterministic(
   priorSpec: JobSpec,
   userMessage: string,
-  turnIndex: number,
+  _turnIndex: number,
 ): ScoutTurn {
-  const merged = mergeSpecFromMessage(priorSpec, userMessage);
+  // The slot being answered is the one unanswered *before* this reply.
+  const answering = nextSlot(priorSpec);
+  const merged = answering
+    ? mergeIntoSlot(priorSpec, answering, userMessage)
+    : priorSpec;
 
-  // Order of information gain
-  if (!merged.title?.trim()) {
+  const validated = jobSpecSchema.safeParse(merged);
+  const spec = validated.success ? validated.data : priorSpec;
+  const upcoming = nextSlot(spec);
+
+  if (!upcoming) {
     return {
-      spec: merged,
-      nextQuestion: "What role are you hiring for?",
+      spec,
+      nextQuestion: null,
       options: [
-        { label: "Backend engineer", value: "Backend engineer" },
-        { label: "Full-stack engineer", value: "Full-stack engineer" },
-        { label: "Data / ML engineer", value: "Data / ML engineer" },
-        { label: "AI engineer", value: "AI engineer" },
+        { label: "Search verified talent", value: "action:search" },
+        { label: "Change the stack", value: "edit:stack" },
       ],
       allowFreeText: true,
-      readyToSearch: false,
-      summary: "Starting a new requirement.",
+      readyToSearch: true,
+      summary: summarize(spec),
     };
   }
 
-  if (!merged.seniority) {
-    return {
-      spec: { ...merged },
-      nextQuestion: `Seniority for ${merged.title}?`,
-      options: [
-        { label: "Intern", value: "INTERN" },
-        { label: "Junior (0–2y)", value: "JUNIOR" },
-        { label: "Mid (2–5y)", value: "MID" },
-        { label: "Senior (5+)", value: "SENIOR" },
-        { label: "Lead", value: "LEAD" },
-      ],
-      allowFreeText: false,
-      readyToSearch: false,
-      summary: summarize(merged),
-    };
-  }
-
-  if (!merged.mustHaveStack?.length) {
-    return {
-      spec: merged,
-      nextQuestion: "Must-have stack? Pick or type comma-separated skills.",
-      options: [
-        { label: "Python + SQL", value: "Python, SQL" },
-        { label: "TypeScript + React", value: "TypeScript, React" },
-        { label: "Python + ML", value: "Python, PyTorch, ML" },
-        { label: "Java + Spring", value: "Java, Spring" },
-      ],
-      allowFreeText: true,
-      readyToSearch: false,
-      summary: summarize(merged),
-    };
-  }
-
-  if (!merged.evidencePriority?.length) {
-    return {
-      spec: merged,
-      nextQuestion:
-        "What should we optimise for? (ABTalks evidence — this reorders the ranking.)",
-      options: [
-        { label: "Code correctness", value: "missions" },
-        { label: "Consistency (commits)", value: "consistency" },
-        { label: "Project quality", value: "projects" },
-        { label: "Communication", value: "interview" },
-        { label: "First-attempt quality", value: "clean_pass" },
-      ],
-      allowFreeText: false,
-      readyToSearch: false,
-      summary: summarize(merged),
-    };
-  }
-
-  if (merged.salaryMin == null && merged.salaryMax == null && turnIndex < 6) {
-    return {
-      spec: merged,
-      nextQuestion: "Compensation band (annual INR)? Or skip.",
-      options: [
-        { label: "8–12 LPA", value: "salary:800000-1200000" },
-        { label: "12–18 LPA", value: "salary:1200000-1800000" },
-        { label: "18–28 LPA", value: "salary:1800000-2800000" },
-        { label: "Skip for now", value: "skip:salary" },
-      ],
-      allowFreeText: true,
-      readyToSearch: false,
-      summary: summarize(merged),
-    };
-  }
-
-  if (!merged.workMode && turnIndex < 7) {
-    return {
-      spec: merged,
-      nextQuestion: "Work mode?",
-      options: [
-        { label: "Remote", value: "REMOTE" },
-        { label: "Hybrid", value: "HYBRID" },
-        { label: "Onsite", value: "ONSITE" },
-        { label: "Flexible", value: "FLEXIBLE" },
-        { label: "Skip", value: "skip:mode" },
-      ],
-      allowFreeText: false,
-      readyToSearch: false,
-      summary: summarize(merged),
-    };
-  }
-
-  // Ready — offer search
+  const q = questionFor(upcoming, spec);
   return {
-    spec: merged,
-    nextQuestion: null,
-    options: [
-      { label: "Search verified talent", value: "action:search" },
-      { label: "Add more stack", value: "edit:stack" },
-    ],
-    allowFreeText: true,
-    readyToSearch: true,
-    summary: summarize(merged),
+    spec,
+    nextQuestion: q.question,
+    options: q.options,
+    allowFreeText: q.allowFreeText,
+    readyToSearch: false,
+    summary: summarize(spec),
   };
+}
+
+/** Used by the Claude path, which applies chip values before AI output. */
+function mergeSpecFromMessage(prior: JobSpec, raw: string): JobSpec {
+  const slot = nextSlot(prior);
+  if (!slot) return prior;
+  const parsed = jobSpecSchema.safeParse(mergeIntoSlot(prior, slot, raw));
+  return parsed.success ? parsed.data : prior;
 }
 
 function summarize(spec: JobSpec): string {
   const parts: string[] = [];
   if (spec.title) parts.push(spec.title);
   if (spec.seniority) parts.push(spec.seniority.toLowerCase());
-  if (spec.mustHaveStack?.length) {
-    parts.push(`must: ${spec.mustHaveStack.join(", ")}`);
-  }
-  if (spec.evidencePriority?.length) {
-    parts.push(`priority: ${spec.evidencePriority.join(", ")}`);
-  }
-  if (spec.salaryMin != null || spec.salaryMax != null) {
+  if (spec.mustHaveStack?.length)
+    parts.push(spec.mustHaveStack.slice(0, 4).join(" · "));
+  if (spec.salaryMin && spec.salaryMax)
     parts.push(
-      `₹${spec.salaryMin ?? "?"}–${spec.salaryMax ?? "?"} ${spec.salaryCurrency ?? "INR"}`,
+      `₹${Math.round(spec.salaryMin / 100000)}–${Math.round(spec.salaryMax / 100000)} LPA`,
     );
-  }
   if (spec.workMode) parts.push(spec.workMode.toLowerCase());
-  if (spec.locationCity) parts.push(spec.locationCity);
-  return parts.length ? parts.join(" · ") : "Requirement in progress";
-}
-
-function mergeSpecFromMessage(prior: JobSpec, raw: string): JobSpec {
-  const msg = raw.trim();
-  const lower = msg.toLowerCase();
-  let next: JobSpec = { ...prior };
-
-  if (lower === "skip:salary") {
-    return next;
-  }
-  if (lower === "skip:mode") {
-    return { ...next, workMode: next.workMode ?? "FLEXIBLE" };
-  }
-  if (lower.startsWith("salary:")) {
-    const m = /salary:(\d+)-(\d+)/.exec(lower);
-    if (m) {
-      next = {
-        ...next,
-        salaryMin: Number(m[1]),
-        salaryMax: Number(m[2]),
-        salaryCurrency: "INR",
-        salaryPeriod: "ANNUAL",
-      };
-    }
-    return next;
-  }
-
-  const seniorityHit = (
-    ["INTERN", "JUNIOR", "MID", "SENIOR", "LEAD"] as const
-  ).find((s) => lower === s.toLowerCase() || msg === s);
-  if (seniorityHit) {
-    return { ...next, seniority: seniorityHit };
-  }
-
-  const modeHit = (
-    ["ONSITE", "HYBRID", "REMOTE", "FLEXIBLE"] as const
-  ).find((s) => lower === s.toLowerCase() || msg === s);
-  if (modeHit) {
-    return { ...next, workMode: modeHit };
-  }
-
-  const evidenceKeys = [
-    "missions",
-    "consistency",
-    "projects",
-    "interview",
-    "clean_pass",
-  ];
-  if (evidenceKeys.includes(lower) || evidenceKeys.includes(msg)) {
-    const key = evidenceKeys.includes(lower) ? lower : msg;
-    return {
-      ...next,
-      evidencePriority: [key, ...(next.evidencePriority ?? [])].slice(0, 5),
-    };
-  }
-
-  // Stack chips often "Python, SQL"
-  if (msg.includes(",") && !next.mustHaveStack?.length) {
-    const stack = msg
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .slice(0, 12);
-    if (stack.length) return { ...next, mustHaveStack: stack };
-  }
-
-  // Role titles when title missing
-  if (!next.title?.trim() && msg.length >= 2 && msg.length <= 80) {
-    return { ...next, title: msg };
-  }
-
-  // Free-text stack when title already set
-  if (next.title && !next.mustHaveStack?.length && msg.length >= 2) {
-    const stack = msg
-      .split(/[,/|]/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .slice(0, 12);
-    if (stack.length) return { ...next, mustHaveStack: stack };
-  }
-
-  // Location free text after mode
-  if (next.workMode && next.workMode !== "REMOTE" && !next.locationCity) {
-    if (msg.length >= 2 && msg.length <= 60 && !msg.includes(":")) {
-      return { ...next, locationCity: msg };
-    }
-  }
-
-  const parsed = jobSpecSchema.safeParse(next);
-  return parsed.success ? parsed.data : prior;
+  if (spec.locationCity && spec.locationCity !== "Any")
+    parts.push(spec.locationCity);
+  return parts.length ? parts.join(" • ") : "Starting a new requirement.";
 }
 
 const SCOUT_SYSTEM = `You are Scout, ABTalks' evidence-based hiring assistant for recruiters.
