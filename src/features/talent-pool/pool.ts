@@ -1,6 +1,7 @@
 import "server-only";
 import type { ProgramMissionType } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { recruiterDevBypassEnabled } from "@/lib/program-auth";
 import { getMissionHeatmap, type MissionHeatmapCell } from "@/features/program/progression";
 
 const PAGE_SIZE = 30;
@@ -110,7 +111,10 @@ async function assertPoolAccess(recruiterUserId: string) {
     where: { userId: recruiterUserId },
     select: { approved: true },
   });
-  if (!profile?.approved) {
+  // Same rule as the page and Server Action gates — see
+  // recruiterDevBypassEnabled(). Three gates guarded this flow and only two
+  // honoured the bypass, so /hire rendered but the pool still refused.
+  if (!profile?.approved && !recruiterDevBypassEnabled()) {
     return { ok: false as const, message: "Recruiter access not approved." };
   }
 
