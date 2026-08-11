@@ -55,7 +55,6 @@ export function ScoutChat({
   const [spec, setSpec] = useState<JobSpec>(initialSpec);
   const [summary, setSummary] = useState(initialSummary);
   const [readyToSearch, setReadyToSearch] = useState(false);
-  const [allowFreeText, setAllowFreeText] = useState(true);
   const [text, setText] = useState("");
   const [pending, startTransition] = useTransition();
   const [searched, setSearched] = useState(false);
@@ -98,7 +97,6 @@ export function ScoutChat({
       setSpec(res.data.spec);
       setSummary(res.data.summary);
       setReadyToSearch(res.data.readyToSearch);
-      setAllowFreeText(res.data.allowFreeText);
       setMessages((m) => [
         ...m,
         {
@@ -256,36 +254,38 @@ export function ScoutChat({
         </div>
       )}
 
-      {/* Free text — hidden when the question only accepts fixed choices */}
-      {allowFreeText && (
-        <form
-          className="flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            send(text);
-          }}
+      {/* Always present. The chips are shortcuts; typing is never taken away,
+          so a recruiter can answer off-script, correct an earlier answer, or
+          ask Scout a question at any point in the conversation. */}
+      <form
+        className="flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          send(text);
+        }}
+      >
+        <Input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={
+            readyToSearch
+              ? "Change anything, or ask me something…"
+              : "Type your answer, or ask me anything…"
+          }
+          disabled={pending}
+          maxLength={2000}
+        />
+        <button
+          type="submit"
+          disabled={pending || !text.trim()}
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "shrink-0 disabled:opacity-50",
+          )}
         >
-          <Input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={
-              readyToSearch ? "Change anything?" : "Or type your answer…"
-            }
-            disabled={pending}
-            maxLength={2000}
-          />
-          <button
-            type="submit"
-            disabled={pending || !text.trim()}
-            className={cn(
-              buttonVariants({ variant: "outline" }),
-              "shrink-0 disabled:opacity-50",
-            )}
-          >
-            Send
-          </button>
-        </form>
-      )}
+          Send
+        </button>
+      </form>
 
       {/* Primary action */}
       <div className="flex flex-wrap items-center gap-2">
