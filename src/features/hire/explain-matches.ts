@@ -30,16 +30,70 @@ export function explainMatchesDeterministic(
   return { matches: explained, overallGap };
 }
 
+const EXPLAIN_SCHEMA: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  required: ["rationales", "overallGap"],
+  properties: {
+    rationales: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["id", "rationale"],
+        properties: {
+          id: { type: "string" },
+          rationale: { type: "string" },
+        },
+      },
+    },
+    overallGap: { type: "string" },
+  },
+};
+
+/**
+ * Every figure the model quotes must be one the platform actually gave it for
+ * that candidate.
+ *
+ * This text names a real student and a recruiter acts on it, so "the prompt
+ * said not to invent numbers" is not a control. An invented score, mission
+ * count or interview rating is the failure that matters, and each one has to
+ * surface as a digit — so a rationale introducing a digit the platform never
+ * produced is discarded in favour of the deterministic one.
+ *
+ * Grounding is checked against the evidence payload rather than the
+ * deterministic sentence: the sentence quotes only part of the payload, so
+ * checking against it rejected honest rationales for citing a real figure the
+ * template happened to leave out.
+ */
+function groundedFigures(m: ScoredCandidate): Set<string> {
+  // Deliberately excludes id and fullName — a cuid carries arbitrary digits
+  // and would whitelist almost anything.
+  const source = JSON.stringify({
+    score: m.score,
+    tier: m.tier,
+    evidence: m.evidence,
+    gaps: m.gaps,
+  });
+  return new Set(source.match(/\d+/g) ?? []);
+}
+
+function inventsFigures(candidate: string, allowed: Set<string>): boolean {
+  return (candidate.match(/\d+/g) ?? []).some((n) => !allowed.has(n));
+}
+
 export async function explainMatches(
   matches: ScoredCandidate[],
   nearMisses: ScoredCandidate[],
   spec: JobSpec,
 ): Promise<ExplainResult> {
   const base = explainMatchesDeterministic(matches, nearMisses, spec);
-  if (!process.env.ANTHROPIC_API_KEY || matches.length === 0) return base;
+  if (matches.length === 0) return base;
+
+  const { askGroqJson, groqConfigured } = await import("@/lib/groq");
+  if (!groqConfigured()) return base;
 
   try {
-    const { askClaudeAgentJson } = await import("@/lib/claude-agent");
     const payload = {
       role: spec.title,
       mustHaveStack: spec.mustHaveStack,
@@ -54,36 +108,39 @@ export async function explainMatches(
       })),
       nearMissCount: nearMisses.length,
     };
-    const ai = await askClaudeAgentJson<{
-      rationales?: { id: string; rationale: string }[];
-      overallGap?: string;
-    }>({
-      system: `You write recruiter-facing match rationales for ABTalks Scout.
-Rules: ONLY cite fields present in the JSON you are given. Never invent scores, projects, or skills.
-If you cannot support a claim from the payload, omit it. Return JSON:
-{ "rationales": [{"id": string, "rationale": string}], "overallGap": string }`,
-      messages: [
-        {
-          role: "user",
-          content: JSON.stringify(payload),
-        },
-      ],
-      maxTokens: 1200,
-    });
-    if (!ai.ok || !ai.data.rationales) return base;
 
-    const byId = new Map(
-      ai.data.rationales.map((r) => [r.id, r.rationale] as const),
-    );
+    const ai = await askGroqJson<{
+      rationales: { id: string; rationale: string }[];
+      overallGap: string;
+    }>({
+      system: `You write recruiter-facing match rationales for ABTalks Scout, which ranks candidates on verified platform evidence — missions completed, first-attempt passes, commit days, graded projects, recorded interviews — never resumes or self-reported claims.
+
+Rules:
+- Cite ONLY fields present in the JSON you are given. Never invent a score, a number, a project, a skill or an employer.
+- Every figure you write must appear verbatim in the payload. If you cannot support a claim, leave it out.
+- Two or three sentences per candidate. Say what the evidence shows, then what is missing.
+- Where availabilityUnknown is true, say salary, notice and location are unconfirmed.
+- Never promise a hire, predict performance, or compare candidates as people.
+- "overallGap" is one short paragraph on what this shortlist does and does not cover.`,
+      messages: [{ role: "user", content: JSON.stringify(payload) }],
+      schemaName: "match_rationales",
+      schema: EXPLAIN_SCHEMA,
+      maxTokens: 2000,
+      temperature: 0.3,
+    });
+    if (!ai.ok) return base;
+
+    const byId = new Map(ai.data.rationales.map((r) => [r.id, r.rationale]));
     return {
-      matches: base.matches.map((m) => ({
-        ...m,
-        rationale: byId.get(m.programMemberId) ?? m.rationale,
-      })),
+      matches: base.matches.map((m) => {
+        const candidate = byId.get(m.programMemberId);
+        if (!candidate || inventsFigures(candidate, groundedFigures(m))) {
+          return m;
+        }
+        return { ...m, rationale: candidate };
+      }),
       overallGap:
-        typeof ai.data.overallGap === "string" && ai.data.overallGap.length > 20
-          ? ai.data.overallGap
-          : base.overallGap,
+        ai.data.overallGap.length > 20 ? ai.data.overallGap : base.overallGap,
     };
   } catch {
     return base;
