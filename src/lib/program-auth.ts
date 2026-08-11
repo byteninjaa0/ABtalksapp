@@ -128,12 +128,35 @@ export async function requireProgramMember() {
  */
 export async function requireRecruiter() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/talent/pending");
+  if (!session?.user?.id) redirect("/login?from=/hire");
 
   const profile = await prisma.recruiterProfile.findUnique({
     where: { userId: session.user.id },
     select: { id: true, approved: true, company: true, fullName: true },
   });
+
+  // Local testing only: lets any signed-in user reach /hire and /talent without
+  // an admin approving a RecruiterProfile first.
+  //
+  // The NODE_ENV guard is load-bearing, not belt-and-braces. Without it a stray
+  // ENABLE_DEV_AUTH=true in the Vercel env would turn every signed-in user into
+  // an approved recruiter and expose the talent pool — members consented to
+  // being seen by *approved recruiters*, so that is a consent boundary, not
+  // just an auth convenience.
+  if (
+    process.env.NODE_ENV !== "production" &&
+    process.env.ENABLE_DEV_AUTH === "true"
+  ) {
+    return {
+      profile: profile ?? {
+        id: "dev-bypass",
+        approved: true,
+        company: "Dev",
+        fullName: session.user.name ?? "Dev user",
+      },
+      userId: session.user.id,
+    };
+  }
 
   if (!profile || !profile.approved) redirect("/talent/pending");
 
