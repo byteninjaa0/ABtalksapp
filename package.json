@@ -18,6 +18,8 @@
     "db:seed:claude-test": "tsx prisma/seed-claude-test-users.ts",
     "db:seed:hackathon-links": "tsx prisma/seed-hackathon-links.ts",
     "db:seed:hackathon-problems": "tsx prisma/seed-hackathon-problems.ts",
+    "db:seed:hire": "tsx prisma/seed-hire-fixtures.ts",
+    "test:hire-score": "tsx src/features/hire/score-candidate.test.ts",
     "db:cleanup": "tsx prisma/cleanup.ts test",
     "db:cleanup:test": "tsx prisma/cleanup.ts test",
     "db:cleanup:real": "tsx prisma/cleanup.ts real",

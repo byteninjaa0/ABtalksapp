@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/talent", label: "Talent pool" },
+  { href: "/hire", label: "Scout" },
   { href: "/talent/shortlist", label: "Shortlist" },
 ];
 

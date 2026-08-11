@@ -30,6 +30,7 @@ const protectedPaths = [
   "/program/leaderboard",
   "/program/interview",
   "/talent",
+  "/hire",
   "/hackathon/register",
   "/hackathon/dashboard",
   "/hackathon/submission",

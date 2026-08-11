@@ -286,6 +286,8 @@ model User {
   hackathonRemovals     HackathonRemoval[]
   certificates          Certificate[]
   workshopRegistrations WorkshopRegistration[]
+  talentRequests        TalentRequest[]
+  candidateAvailability CandidateAvailability?
 
   @@index([createdAt(sort: Desc)])
 }
@@ -605,6 +607,8 @@ model ProgramMember {
   phone               String? // admin-only, NEVER shown to recruiters
   githubUsername      String
   githubRepoUrl       String // dedicated public repo for the program
+  /// Set when the member opts in to recruiter visibility (/talent, /hire).
+  recruiterVisibilityConsentAt DateTime?
   // progression + denormalized scores
   highestUnlockedDay  Int                         @default(1)
   skipTokensUsed      Int                         @default(0) // max 2 per member
@@ -629,6 +633,7 @@ model ProgramMember {
   projects            ProgramProject[]
   interview           ProgramInterview?
   shortlistedBy       RecruiterShortlistItem[]
+  requestMatches      TalentRequestMatch[]
 
   @@unique([userId, cohortId])
   @@index([cohortId, totalScore(sort: Desc)])
@@ -850,6 +855,131 @@ model RecruiterShortlistItem {
   member          ProgramMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@unique([recruiterUserId, memberId])
+}
+
+// ─── Hire / Scout (evidence-based matching) ─────────────────────────────────
+
+enum TalentRequestStatus {
+  DRAFT
+  ACTIVE
+  MATCHED
+  FULFILLED
+  CLOSED
+}
+
+enum TalentWorkMode {
+  ONSITE
+  HYBRID
+  REMOTE
+  FLEXIBLE
+}
+
+enum TalentEmploymentType {
+  FULL_TIME
+  CONTRACT
+  INTERNSHIP
+  PART_TIME
+}
+
+enum TalentSeniority {
+  INTERN
+  JUNIOR
+  MID
+  SENIOR
+  LEAD
+}
+
+enum TalentMatchTier {
+  STRONG
+  PARTIAL
+  NONE
+}
+
+/// Recruiter requirement gathered by Scout. Survives zero matches (demand signal).
+model TalentRequest {
+  id                 String               @id @default(cuid())
+  recruiterUserId    String
+  status             TalentRequestStatus  @default(DRAFT)
+  title              String
+  seniority          TalentSeniority?
+  openings           Int                  @default(1)
+  mustHaveStack      String[]             @default([])
+  niceToHaveStack    String[]             @default([])
+  /// Ordered evidence dimensions; reweights scoring (e.g. consistency, projects).
+  evidencePriority   String[]             @default([])
+  salaryMin          Int?
+  salaryMax          Int?
+  salaryCurrency     String               @default("INR")
+  salaryPeriod       String               @default("ANNUAL")
+  workMode           TalentWorkMode?
+  locationCity       String?
+  employmentType     TalentEmploymentType?
+  noticePeriodDays   Int?
+  minExperience      Int?
+  maxExperience      Int?
+  requiresDegree     Boolean              @default(false)
+  /// Free-form extras Scout captured; never used for matching.
+  extra              Json?
+  alertWhenAvailable Boolean              @default(false)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  recruiter          User                 @relation(fields: [recruiterUserId], references: [id], onDelete: Cascade)
+  messages           TalentRequestMessage[]
+  matches            TalentRequestMatch[]
+
+  @@index([recruiterUserId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+}
+
+model TalentRequestMessage {
+  id        String        @id @default(cuid())
+  requestId String
+  role      String // "user" | "assistant"
+  content   String
+  options   Json?
+  createdAt DateTime      @default(now())
+  request   TalentRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, createdAt])
+}
+
+/// Scored candidate snapshot frozen at match time for auditability.
+model TalentRequestMatch {
+  id                  String          @id @default(cuid())
+  requestId           String
+  programMemberId     String?
+  studentUserId       String?
+  score               Int
+  tier                TalentMatchTier
+  scoreBreakdown      Json
+  evidence            Json
+  rationale           String?
+  gaps                String[]        @default([])
+  availabilityUnknown Boolean         @default(true)
+  createdAt           DateTime        @default(now())
+  request             TalentRequest   @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  programMember       ProgramMember?  @relation(fields: [programMemberId], references: [id], onDelete: SetNull)
+
+  @@index([requestId, score(sort: Desc)])
+  @@index([programMemberId])
+}
+
+/// Opt-in candidate logistics. AND with recruiterVisibilityConsentAt for hire filters.
+model CandidateAvailability {
+  id                String          @id @default(cuid())
+  userId            String          @unique
+  openToWork        Boolean         @default(false)
+  expectedSalaryMin Int?
+  expectedSalaryMax Int?
+  salaryCurrency    String          @default("INR")
+  noticePeriodDays  Int?
+  preferredWorkMode TalentWorkMode?
+  preferredCities   String[]        @default([])
+  openToRelocate    Boolean         @default(false)
+  updatedAt         DateTime        @updatedAt
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([openToWork, updatedAt(sort: Desc)])
 }
 
 enum HackathonEntryType {
