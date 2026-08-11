@@ -126,6 +126,28 @@ export async function requireProgramMember() {
  * Require an approved recruiter. DB-checked (approval flips aren't in the JWT).
  * Redirects to the pending page otherwise.
  */
+/**
+ * Local testing only: lets any signed-in user act as an approved recruiter, so
+ * /hire and /talent can be exercised without an admin approving a
+ * RecruiterProfile first.
+ *
+ * The NODE_ENV guard is load-bearing, not belt-and-braces. Without it a stray
+ * ENABLE_DEV_AUTH=true in a deployed environment would turn every signed-in
+ * user into an approved recruiter and expose the talent pool — members consent
+ * to being seen by *approved recruiters*, so that is a consent boundary, not
+ * merely an auth convenience.
+ *
+ * Exported so every recruiter gate shares one rule. The page gate and the
+ * Server Action gate used to check approval separately, which let the layout
+ * render while every action still answered "Recruiter access not approved yet."
+ */
+export function recruiterDevBypassEnabled(): boolean {
+  return (
+    process.env.NODE_ENV !== "production" &&
+    process.env.ENABLE_DEV_AUTH === "true"
+  );
+}
+
 export async function requireRecruiter() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?from=/hire");
@@ -135,18 +157,7 @@ export async function requireRecruiter() {
     select: { id: true, approved: true, company: true, fullName: true },
   });
 
-  // Local testing only: lets any signed-in user reach /hire and /talent without
-  // an admin approving a RecruiterProfile first.
-  //
-  // The NODE_ENV guard is load-bearing, not belt-and-braces. Without it a stray
-  // ENABLE_DEV_AUTH=true in the Vercel env would turn every signed-in user into
-  // an approved recruiter and expose the talent pool — members consented to
-  // being seen by *approved recruiters*, so that is a consent boundary, not
-  // just an auth convenience.
-  if (
-    process.env.NODE_ENV !== "production" &&
-    process.env.ENABLE_DEV_AUTH === "true"
-  ) {
+  if (recruiterDevBypassEnabled()) {
     return {
       profile: profile ?? {
         id: "dev-bypass",

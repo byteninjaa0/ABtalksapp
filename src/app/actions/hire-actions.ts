@@ -11,6 +11,7 @@ import {
 } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { recruiterDevBypassEnabled } from "@/lib/program-auth";
 import { logger } from "@/lib/logger";
 import {
   candidateAvailabilitySchema,
@@ -38,7 +39,8 @@ async function requireApprovedRecruiter(): Promise<
     where: { userId: session.user.id },
     select: { approved: true },
   });
-  if (!profile?.approved) {
+  // Same rule as the page gate — see recruiterDevBypassEnabled().
+  if (!profile?.approved && !recruiterDevBypassEnabled()) {
     return { ok: false, message: "Recruiter access not approved yet." };
   }
   return { ok: true, data: { userId: session.user.id } };
