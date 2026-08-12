@@ -239,6 +239,129 @@ function mergeIntoSlot(spec: JobSpec, slot: HireSlot, raw: string): JobSpec {
   }
 }
 
+
+/**
+ * Suggested must-haves, chosen from the role the recruiter already told us.
+ *
+ * The chips were a fixed list of engineering stacks, so a UI/UX designer was
+ * asked to pick between "Python + SQL" and "Java + Spring". The title is in the
+ * spec by then and was simply not read.
+ *
+ * This is a keyword map, not intelligence: it covers the roles this platform
+ * actually trains for, falls back to the engineering set, and every slot still
+ * accepts typed input and can be skipped outright.
+ */
+const STACK_SUGGESTIONS: { match: RegExp; chips: [string, string][] }[] = [
+  {
+    match: /\b(ui|ux|product design|designer|design|graphic|visual)\b/i,
+    chips: [
+      ["Figma + prototyping", "Figma, Prototyping"],
+      ["Design systems", "Figma, Design systems"],
+      ["User research", "User research, Usability testing"],
+      ["Interaction / motion", "Figma, Interaction design"],
+    ],
+  },
+  {
+    match: /\b(data analyst|analytics|business intelligence|bi)\b/i,
+    chips: [
+      ["SQL + Excel", "SQL, Excel"],
+      ["SQL + Python", "SQL, Python"],
+      ["Power BI / Tableau", "Power BI, Tableau"],
+      ["dbt + warehouse", "dbt, SQL"],
+    ],
+  },
+  {
+    match: /\b(ml|machine learning|ai engineer|data scientist|deep learning)\b/i,
+    chips: [
+      ["Python + PyTorch", "Python, PyTorch"],
+      ["Python + scikit-learn", "Python, scikit-learn"],
+      ["LLMs + RAG", "Python, LLMs, RAG"],
+      ["MLOps", "Python, MLOps, Docker"],
+    ],
+  },
+  {
+    match: /\bfront[\s-]?end\b/i,
+    chips: [
+      ["TypeScript + React", "TypeScript, React"],
+      ["Next.js", "TypeScript, React, Next.js"],
+      ["Vue", "JavaScript, Vue"],
+      ["CSS + accessibility", "CSS, Accessibility"],
+    ],
+  },
+  {
+    match: /\bback[\s-]?end\b/i,
+    chips: [
+      ["Python + SQL", "Python, SQL"],
+      ["Node + Postgres", "Node, PostgreSQL"],
+      ["Java + Spring", "Java, Spring"],
+      ["Go", "Go, PostgreSQL"],
+    ],
+  },
+  {
+    match: /\b(mobile|android|ios|flutter|react native)\b/i,
+    chips: [
+      ["React Native", "React Native, TypeScript"],
+      ["Flutter", "Flutter, Dart"],
+      ["Android / Kotlin", "Kotlin, Android"],
+      ["iOS / Swift", "Swift, iOS"],
+    ],
+  },
+  {
+    match: /\b(devops|sre|infra|platform|cloud)\b/i,
+    chips: [
+      ["AWS + Docker", "AWS, Docker"],
+      ["Kubernetes", "Kubernetes, Docker"],
+      ["CI/CD", "CI/CD, GitHub Actions"],
+      ["Terraform", "Terraform, AWS"],
+    ],
+  },
+  {
+    match: /\b(qa|test|quality|sdet)\b/i,
+    chips: [
+      ["Manual + test cases", "Manual testing, Test design"],
+      ["Selenium / Playwright", "Playwright, Selenium"],
+      ["API testing", "Postman, API testing"],
+      ["Automation + CI", "Automation, CI/CD"],
+    ],
+  },
+  {
+    match: /\b(product manager|product owner|\bpm\b|program manager)\b/i,
+    chips: [
+      ["Discovery + research", "User research, Discovery"],
+      ["Analytics", "SQL, Analytics"],
+      ["Roadmapping", "Roadmapping, Prioritisation"],
+      ["Specs + delivery", "Specs, Agile delivery"],
+    ],
+  },
+  {
+    match: /\bcontent|writer|marketing|growth\b/i,
+    chips: [
+      ["Content + SEO", "Content writing, SEO"],
+      ["Copywriting", "Copywriting"],
+      ["Analytics", "Analytics, GA4"],
+      ["Social + campaigns", "Social media, Campaigns"],
+    ],
+  },
+];
+
+function stackChipsFor(title: string | undefined): { label: string; value: string }[] {
+  const hit = title
+    ? STACK_SUGGESTIONS.find((s) => s.match.test(title))
+    : undefined;
+  const chips = hit?.chips ?? [
+    ["Python + SQL", "Python, SQL"],
+    ["TypeScript + React", "TypeScript, React"],
+    ["Java + Spring", "Java, Spring"],
+    ["Node + Postgres", "Node, PostgreSQL"],
+  ];
+  return [
+    ...chips.map(([label, value]) => ({ label, value })),
+    // Every other slot has a way past. This one did not, so a recruiter whose
+    // answer was "none of those" had nowhere to go but repeat themselves.
+    { label: "No hard requirement", value: "skip:stack" },
+  ];
+}
+
 type SlotQuestion = {
   question: string;
   options: { label: string; value: string }[];
@@ -272,14 +395,9 @@ function questionFor(slot: HireSlot, spec: JobSpec): SlotQuestion {
       };
     case "mustHaveStack":
       return {
-        question: "Which skills are non-negotiable? Pick one or type your own.",
-        options: [
-          { label: "Python + SQL", value: "Python, SQL" },
-          { label: "TypeScript + React", value: "TypeScript, React" },
-          { label: "Python + PyTorch", value: "Python, PyTorch" },
-          { label: "Java + Spring", value: "Java, Spring" },
-          { label: "Node + Postgres", value: "Node, PostgreSQL" },
-        ],
+        // "Skills" rather than a stack, because not every role has one.
+        question: `Which skills or tools are non-negotiable for the ${role}?`,
+        options: stackChipsFor(spec.title),
       };
     case "evidencePriority":
       return {
@@ -455,6 +573,7 @@ Choosing "intent":
 - "answer" — they responded to what was asked.
 - "revise" — they are changing something already agreed ("actually make it remote", "no, mid-level"). Use this whenever they contradict an earlier answer.
 - "question" — they asked YOU something ("what else do you need?", "why does that matter?"). Answer it in "ack", using the "still needed" list you were given.
+- "objection" — they are telling you the question itself is wrong for this role, or that the options do not fit. Say plainly that you got it wrong and what you are doing about it. Do NOT say "got it, noted" and move on; agreeing while changing nothing is what makes this feel rigid.
 - "unclear" — you genuinely cannot tell what they meant. Say briefly what you did not follow.
 
 Field notes:
@@ -474,7 +593,7 @@ const SCOUT_SCHEMA: Record<string, unknown> = {
   properties: {
     intent: {
       type: "string",
-      enum: ["answer", "revise", "question", "unclear"],
+      enum: ["answer", "revise", "question", "objection", "unclear"],
     },
     ack: { type: "string" },
     understood: {
@@ -552,7 +671,7 @@ type ScoutUnderstood = {
 };
 
 type ScoutRead = {
-  intent: "answer" | "revise" | "question" | "unclear";
+  intent: "answer" | "revise" | "question" | "objection" | "unclear";
   ack: string;
   understood: ScoutUnderstood;
 };
@@ -896,19 +1015,45 @@ export async function runScoutTurn(args: {
       const seed = answeringSalary
         ? mergedBySlot(args.priorSpec, "salary", msg)
         : args.priorSpec;
-      const spec = applyUnderstood(
+      let spec = applyUnderstood(
         seed,
         ai.data.understood,
         ai.data.intent === "revise",
         answeringSalary ? new Set<HireSlot>(["salary"]) : undefined,
       );
+
+      // A plain answer the model did not recognise is still an answer. Without
+      // this, typing something the model does not read as a skill left the slot
+      // empty and re-asked the same question — and it makes "say it in your own
+      // words and I'll take it as-is" true rather than a promise we break.
+      if (
+        asking &&
+        ai.data.intent === "answer" &&
+        !isSlotFilled(spec, asking) &&
+        !looksLikeQuestion(msg)
+      ) {
+        spec = mergedBySlot(spec, asking, msg);
+      }
       // nextQuestion is capped at 500 chars and the canonical question must
       // always survive, so the acknowledgement is what gets trimmed.
       const modelAck = ai.data.ack.trim().slice(0, 200);
       // The read-back leads, so an interpreted figure is confirmed even when
       // the model's own sentence says nothing useful about it.
       const confirm = asking ? slotConfirmation(spec, asking) : null;
-      const ack = confirm ? `${confirm} ${modelAck}`.trim() : modelAck;
+      let ack = confirm ? `${confirm} ${modelAck}`.trim() : modelAck;
+
+      // An objection that leaves the slot empty means the same question is
+      // about to be asked again. Saying the options changed — they do, because
+      // the chips are drawn from the role — is the difference between a retry
+      // and a loop.
+      const stillStuck = asking != null && nextSlot(spec) === asking;
+      if (ai.data.intent === "objection" && stillStuck) {
+        // The model's own sentence is dropped here on purpose. Told it got the
+        // question wrong it still answers "Got it — noted", which agrees and
+        // changes nothing; that is the exact behaviour being complained about.
+        // A recruiter pushing back needs a way forward, not agreement.
+        ack = "Fair enough — say it in your own words and I'll take it as-is, or skip this one.";
+      }
       return checked(turnFor(spec, ack), unchanged);
     }
   }
