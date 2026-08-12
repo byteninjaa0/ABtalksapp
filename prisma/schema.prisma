@@ -293,6 +293,9 @@ model User {
   candidateAvailability CandidateAvailability?
 
   @@index([createdAt(sort: Desc)])
+  engagementsAsRecruiter TalentEngagementRequest[] @relation("RecruiterEngagements")
+  engagementsAsCandidate TalentEngagementRequest[] @relation("CandidateEngagements")
+  engagementMessages     TalentEngagementMessage[]
 }
 
 enum LegalDocument {
@@ -719,6 +722,7 @@ model ProgramMember {
   @@unique([userId, cohortId])
   @@index([cohortId, totalScore(sort: Desc)])
   @@index([cohortId, status])
+  engagements TalentEngagementRequest[]
 }
 
 model ProgramModule {
@@ -1010,6 +1014,7 @@ model TalentRequest {
 
   @@index([recruiterUserId, createdAt(sort: Desc)])
   @@index([status, createdAt(sort: Desc)])
+  engagements TalentEngagementRequest[]
 }
 
 model TalentRequestMessage {
@@ -1037,6 +1042,7 @@ model TalentRequestMatch {
   rationale           String?
   gaps                String[]        @default([])
   availabilityUnknown Boolean         @default(true)
+  source              TalentCandidateSource @default(PROGRAM)
   createdAt           DateTime        @default(now())
   request             TalentRequest   @relation(fields: [requestId], references: [id], onDelete: Cascade)
   programMember       ProgramMember?  @relation(fields: [programMemberId], references: [id], onDelete: SetNull)
@@ -1235,3 +1241,96 @@ model WorkshopRegistration {
 
 // NOTE: `workshop_config` deliberately stays in Supabase — only registrations
 // migrated. See src/lib/workshop-supabase.ts for the config reader.
+
+enum TalentEngagementStatus {
+  DRAFT          // sitting in the recruiter's shortlist, not sent
+  SUBMITTED      // request placed, waiting on the ABTalks team
+  IN_REVIEW      // team working it
+  CONTACT_SHARED // contact released to this recruiter for this candidate
+  DECLINED
+  CLOSED
+}
+
+/// Which track a candidate came from. Defaults to PROGRAM so existing rows
+/// describe themselves correctly without a backfill.
+enum TalentCandidateSource {
+  PROGRAM
+  CHALLENGE_60
+  CLAUDE
+  HACKATHON
+}
+
+/// One recruiter's ask about one candidate.
+///
+/// Carries the note the recruiter wrote, and once it reaches CONTACT_SHARED it
+/// is what releases that candidate's details to that recruiter. Access is
+/// derived from this status and never stored as a separate flag, so there is
+/// no second field a bug can leave switched on.
+model TalentEngagementRequest {
+  id               String                 @id @default(cuid())
+  recruiterUserId  String
+  requestId        String?
+  source           TalentCandidateSource  @default(PROGRAM)
+  programMemberId  String?
+  candidateUserId  String?
+  /// Denormalised AB-#### as shown to the recruiter, so admin and the
+  /// recruiter are demonstrably talking about the same candidate.
+  candidatePublicId String
+  note             String?
+  status           TalentEngagementStatus @default(DRAFT)
+  submittedAt      DateTime?
+  decidedAt        DateTime?
+  decidedByAdminId String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  recruiter     User                      @relation("RecruiterEngagements", fields: [recruiterUserId], references: [id], onDelete: Cascade)
+  candidate     User?                     @relation("CandidateEngagements", fields: [candidateUserId], references: [id], onDelete: SetNull)
+  request       TalentRequest?            @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  programMember ProgramMember?            @relation(fields: [programMemberId], references: [id], onDelete: SetNull)
+  messages      TalentEngagementMessage[]
+
+  @@index([recruiterUserId, status])
+  @@index([status, submittedAt])
+  @@index([programMemberId])
+  @@index([candidateUserId])
+}
+
+/// The thread on an engagement request — the recruiter's ticket.
+model TalentEngagementMessage {
+  id           String   @id @default(cuid())
+  engagementId String
+  authorUserId String?
+  authorRole   String
+  body         String
+  createdAt    DateTime @default(now())
+
+  engagement TalentEngagementRequest @relation(fields: [engagementId], references: [id], onDelete: Cascade)
+  author     User?                   @relation(fields: [authorUserId], references: [id], onDelete: SetNull)
+
+  @@index([engagementId, createdAt])
+}
+
+/// Companies and seats ABTalks has verified out of band.
+///
+/// A recruiter account is only created with recruiter access when its email
+/// matches a live seat here. Role is decided by this lookup, never by anything
+/// the person signing up submits — which is what stops a candidate from
+/// registering their way into the recruiter portal.
+model VerifiedRecruiterSeat {
+  id                String    @id @default(cuid())
+  /// Lowercased at write time; matching is exact.
+  email             String    @unique
+  company           String
+  contactName       String?
+  active            Boolean   @default(true)
+  notes             String?
+  verifiedAt        DateTime  @default(now())
+  verifiedByAdminId String?
+  revokedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([active])
+  @@index([company])
+}
