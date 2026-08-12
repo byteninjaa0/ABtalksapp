@@ -1,30 +1,16 @@
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import authConfig from "@/auth.config";
-
-const REF_COOKIE_NAME = "abtalks_ref";
-const REF_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
-
-const SRC_COOKIE_NAME = "abtalks_src";
-const SRC_COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
-
-// Kept in sync by hand with `src/lib/legal.ts` (COOKIE_POLICY_VERSION) and
-// `src/lib/cookies.ts`. Middleware must not import from `@/lib/*` — doing so
-// blows the 1 MB Edge bundle limit. This duplication is deliberate.
-const CONSENT_COOKIE_NAME = "abtalks_consent";
-const CONSENT_POLICY_VERSION = "2026-08-10";
-
-/** Returns the stored choice, or null if absent or from an older policy version. */
-function readConsentChoice(value: string | undefined): string | null {
-  if (!value) return null;
-  const dot = value.lastIndexOf(".");
-  if (dot === -1) return null;
-  if (value.slice(dot + 1) !== CONSENT_POLICY_VERSION) return null;
-  const choice = value.slice(0, dot);
-  return choice === "all" || choice === "limited" || choice === "essential"
-    ? choice
-    : null;
-}
+import {
+  CONSENT_COOKIE_NAME,
+  REF_COOKIE_MAX_AGE,
+  REF_COOKIE_NAME,
+  SRC_COOKIE_MAX_AGE,
+  SRC_COOKIE_NAME,
+  isValidTrackingToken,
+  planAttribution,
+  readConsentChoice,
+} from "@/middleware-attribution";
 
 const { auth } = NextAuth(authConfig);
 
@@ -54,11 +40,11 @@ const protectedPaths = [
 ];
 
 function applyRefCookie(response: NextResponse, ref: string | null) {
-  if (!ref || ref.length > 32 || !/^[a-zA-Z0-9_-]+$/.test(ref)) {
+  if (!isValidTrackingToken(ref)) {
     return response;
   }
 
-  response.cookies.set(REF_COOKIE_NAME, ref, {
+  response.cookies.set(REF_COOKIE_NAME, ref!, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -76,11 +62,11 @@ function applySourceCookie(
 ) {
   // First touch wins: never overwrite an existing attribution.
   if (alreadyAttributed) return response;
-  if (!src || src.length > 32 || !/^[a-zA-Z0-9_-]+$/.test(src)) {
+  if (!isValidTrackingToken(src)) {
     return response;
   }
 
-  response.cookies.set(SRC_COOKIE_NAME, src.toLowerCase(), {
+  response.cookies.set(SRC_COOKIE_NAME, src!.toLowerCase(), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -99,20 +85,27 @@ function withTracking(
   consent: string | null,
   hasAttributionCookies: boolean,
 ) {
-  // No decision yet: set nothing. The consent modal captures `?ref=` / `?s=`
-  // from the URL and replays them through setCookieConsentAction on accept.
-  if (consent === null) return response;
+  const plan = planAttribution({
+    consent,
+    ref,
+    src,
+    alreadyAttributed,
+    hasAttributionCookies,
+  });
 
-  // Declined: never set attribution, and expire anything already present.
-  if (consent === "essential") {
-    if (hasAttributionCookies) {
-      response.cookies.delete(REF_COOKIE_NAME);
-      response.cookies.delete(SRC_COOKIE_NAME);
-    }
+  if (plan.kind === "noop") return response;
+
+  if (plan.kind === "clear") {
+    response.cookies.delete(REF_COOKIE_NAME);
+    response.cookies.delete(SRC_COOKIE_NAME);
     return response;
   }
 
-  return applySourceCookie(applyRefCookie(response, ref), src, alreadyAttributed);
+  return applySourceCookie(
+    applyRefCookie(response, plan.ref),
+    plan.src,
+    plan.alreadyAttributed,
+  );
 }
 
 export default auth((req) => {
