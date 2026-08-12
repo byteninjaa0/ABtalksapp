@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { fromZonedTime } from "date-fns-tz";
 import { requireAdmin } from "@/lib/admin-auth";
+import { PROGRAM_TZ } from "@/features/program/constants";
 import {
   adminUnlockDay,
   createOrUpdateCohort,
@@ -39,8 +41,8 @@ export async function createOrUpdateCohortAction(
   const result = await createOrUpdateCohort(admin.userId, {
     cohortId: parsed.data.cohortId,
     name: parsed.data.name,
-    startsAt: new Date(parsed.data.startsAt),
-    endsAt: new Date(parsed.data.endsAt),
+    startsAt: fromZonedTime(parsed.data.startsAt, PROGRAM_TZ),
+    endsAt: fromZonedTime(parsed.data.endsAt, PROGRAM_TZ),
     capacity: parsed.data.capacity,
     requiresJoinCode: parsed.data.requiresJoinCode,
   });

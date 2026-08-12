@@ -40,8 +40,9 @@ export function isSkippedPayload(payload: unknown): boolean {
 }
 
 /**
- * Calendar unlock ceiling from cohort pace (Texas) + start-day offset.
+ * Calendar unlock ceiling from cohort pace + start-day offset.
  * Cohort calendar day 1 → content day PROGRAM_MEMBER_START_DAY.
+ * Used for unlock only — not for behind-pace (see getBehindByDays).
  */
 export function getCalendarDerivedMaxContentDay(
   cohortCalendarDay: number,
@@ -88,7 +89,7 @@ export function deriveDayState(
   return "AVAILABLE";
 }
 
-/** America/Chicago calendar days since cohort `startsAt`, clamped 1..PROGRAM_TOTAL_DAYS. */
+/** PROGRAM_TZ calendar days since cohort `startsAt`, clamped 1..PROGRAM_TOTAL_DAYS. */
 export function getCohortCalendarDay(cohort: { startsAt: Date }): number {
   const startKey = formatInTimeZone(cohort.startsAt, PROGRAM_TZ, "yyyy-MM-dd");
   const nowKey = formatInTimeZone(new Date(), PROGRAM_TZ, "yyyy-MM-dd");
@@ -121,14 +122,15 @@ export async function getMissionHeatmap(
   }));
 }
 
-/** How many content days behind the Texas calendar unlock pace. */
+/**
+ * How many days behind cohort calendar pace (Mission Control “Cohort day”).
+ * Does not use the Day-4 unlock ceiling — that only gates availability.
+ */
 export function getBehindByDays(
   cohort: { startsAt: Date },
   progressDay: number,
 ): number {
-  const expected = getCalendarDerivedMaxContentDay(
-    getCohortCalendarDay(cohort),
-  );
+  const expected = getCohortCalendarDay(cohort);
   return Math.max(0, expected - progressDay);
 }
 

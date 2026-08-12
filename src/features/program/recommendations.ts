@@ -2,10 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { askClaudeJson } from "@/lib/anthropic";
 import { PROGRAM_TOTAL_DAYS } from "@/features/program/constants";
-import {
-  getCalendarDerivedMaxContentDay,
-  getCohortCalendarDay,
-} from "@/features/program/progression";
+import { getCohortCalendarDay } from "@/features/program/progression";
 import { getMemberAtRiskStatus } from "@/features/program/commits";
 
 const RECOMMENDATION_TTL_DAYS = 7;
@@ -67,7 +64,7 @@ export async function generateRecommendations(cohortId: string): Promise<{
     }
 
     const calendarDay = getCohortCalendarDay(member.cohort);
-    const expectedDay = getCalendarDerivedMaxContentDay(calendarDay);
+    const expectedDay = calendarDay;
     const atRisk = await getMemberAtRiskStatus(member.id, cohortId);
     const behindBy = atRisk.behindBy;
     const missionsPassed = Math.floor(member.missionPoints / 12);

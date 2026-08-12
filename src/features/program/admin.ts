@@ -6,8 +6,8 @@ import type {
 } from "@prisma/client";
 import { formatInTimeZone } from "date-fns-tz";
 import { prisma } from "@/lib/db";
-import { IST, formatDateTimeIST } from "@/lib/date-utils";
-import { PROGRAM_TOTAL_DAYS } from "@/features/program/constants";
+import { formatDateTimeIST } from "@/lib/date-utils";
+import { PROGRAM_TOTAL_DAYS, PROGRAM_TZ } from "@/features/program/constants";
 import { bootstrapMemberStartDay } from "@/features/program/bootstrap-start-day";
 import { getAtRiskMembers, getMemberAtRiskStatus } from "@/features/program/commits";
 import {
@@ -451,8 +451,8 @@ export async function getCohortOverview(
   const dailyEngagement: CohortOverview["dailyEngagement"] = [];
   for (let d = 1; d <= Math.min(PROGRAM_TOTAL_DAYS, calendarDay); d++) {
     const missionRuns = submissions.filter((s) => {
-      const key = formatInTimeZone(s.createdAt, IST, "yyyy-MM-dd");
-      const startKey = formatInTimeZone(cohort.startsAt, IST, "yyyy-MM-dd");
+      const key = formatInTimeZone(s.createdAt, PROGRAM_TZ, "yyyy-MM-dd");
+      const startKey = formatInTimeZone(cohort.startsAt, PROGRAM_TZ, "yyyy-MM-dd");
       const dayOffset =
         Math.floor(
           (new Date(key).getTime() - new Date(startKey).getTime()) /
@@ -467,8 +467,8 @@ export async function getCohortOverview(
     });
   }
   for (const row of commitRows) {
-    const key = formatInTimeZone(row.date, IST, "yyyy-MM-dd");
-    const startKey = formatInTimeZone(cohort.startsAt, IST, "yyyy-MM-dd");
+    const key = formatInTimeZone(row.date, PROGRAM_TZ, "yyyy-MM-dd");
+    const startKey = formatInTimeZone(cohort.startsAt, PROGRAM_TZ, "yyyy-MM-dd");
     const dayOffset =
       Math.floor(
         (new Date(key).getTime() - new Date(startKey).getTime()) / 86_400_000,

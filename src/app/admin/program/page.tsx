@@ -3,13 +3,13 @@ import {
   getCohortOverview,
   resolveAdminProgramCohort,
 } from "@/features/program/admin";
-import { IST } from "@/lib/date-utils";
+import { PROGRAM_TZ } from "@/features/program/constants";
 import { ProgramCohortPanel } from "@/components/program/program-cohort-panel";
 import { ProgramAnalyticsCharts } from "@/components/program/program-analytics-charts";
 import { ProgramExportButtons } from "@/components/program/program-export-buttons";
 
 function toDatetimeLocal(d: Date) {
-  return formatInTimeZone(d, IST, "yyyy-MM-dd'T'HH:mm");
+  return formatInTimeZone(d, PROGRAM_TZ, "yyyy-MM-dd'T'HH:mm");
 }
 
 type Props = {
