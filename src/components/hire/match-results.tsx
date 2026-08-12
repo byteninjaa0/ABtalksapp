@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ShoppingCart } from "lucide-react";
+import { ArrowRight, ShoppingCart } from "lucide-react";
 import { MatchCard, type MatchCardData } from "@/components/hire/match-card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ const INITIAL_VISIBLE = 1;
 export function MatchResults({
   matches,
   cartCount,
+  viewAllHref,
 }: {
   matches: MatchCardData[];
   /**
@@ -27,13 +28,17 @@ export function MatchResults({
    * each change twice once that revalidation started working.
    */
   cartCount: number;
+  /**
+   * When set, only the leading card is shown and the rest live on that page.
+   * Omit it to render the whole list — which is what that page then does.
+   */
+  viewAllHref?: string;
 }) {
-  const [showAll, setShowAll] = useState(false);
   // Seeded from the server once, then owned here. Reading it from the prop on
   // every render double-counted: the toggle moved it, and the refresh that
   // followed moved it again.
   const [count, setCount] = useState(cartCount);
-  const visible = showAll ? matches : matches.slice(0, INITIAL_VISIBLE);
+  const visible = viewAllHref ? matches.slice(0, INITIAL_VISIBLE) : matches;
   const hidden = matches.length - visible.length;
 
   return (
@@ -52,29 +57,18 @@ export function MatchResults({
         ))}
       </ul>
 
-      {hidden > 0 && (
-        <button
-          type="button"
-          onClick={() => setShowAll(true)}
+      {viewAllHref && hidden > 0 && (
+        <Link
+          href={viewAllHref}
           className={cn(
             "flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed",
             "bg-card/50 py-3 text-sm font-medium shadow-card transition-all duration-300",
             "hover:border-primary/45 hover:bg-card hover:shadow-card-hover",
           )}
         >
-          View {hidden} more {hidden === 1 ? "candidate" : "candidates"}
-          <ChevronDown className="size-4" aria-hidden="true" />
-        </button>
-      )}
-
-      {showAll && matches.length > INITIAL_VISIBLE && (
-        <button
-          type="button"
-          onClick={() => setShowAll(false)}
-          className="mx-auto block text-xs font-medium text-muted-foreground hover:text-foreground"
-        >
-          Show fewer
-        </button>
+          View all {matches.length} candidates
+          <ArrowRight className="size-4" aria-hidden="true" />
+        </Link>
       )}
 
       {/* The cart is only worth pointing at once something is in it. */}

@@ -6,7 +6,7 @@ import { ScoutChat } from "@/components/hire/scout-chat";
 import { MatchResults } from "@/components/hire/match-results";
 import type { MatchCardData } from "@/components/hire/match-card";
 import { GapReport } from "@/components/hire/gap-report";
-import { existingEngagements } from "@/features/hire/contact-access";
+import { loadRequestMatches } from "@/features/hire/load-request-matches";
 import { jobSpecSchema, type JobSpec } from "@/lib/validations/hire";
 
 type Props = { params: Promise<{ requestId: string }> };
@@ -55,32 +55,6 @@ export default async function HireRequestPage({ params }: Props) {
           },
           take: 50,
         },
-        matches: {
-          orderBy: { score: "desc" },
-          select: {
-            programMemberId: true,
-            score: true,
-            tier: true,
-            rationale: true,
-            gaps: true,
-            availabilityUnknown: true,
-            evidence: true,
-            programMember: {
-              select: {
-                // fullName and company are deliberately NOT selected. The
-                // safest place to stop a name reaching a recruiter is the
-                // query — a field that was never fetched cannot be rendered
-                // by a later change to the card.
-                jobRole: true,
-                shortlistedBy: {
-                  where: { recruiterUserId: userId },
-                  select: { id: true },
-                  take: 1,
-                },
-              },
-            },
-          },
-        },
       },
     });
   } catch {
@@ -111,16 +85,10 @@ export default async function HireRequestPage({ params }: Props) {
 
   // What this recruiter has already asked about, so a card never offers to
   // request the same introduction twice.
-  const cartCount = await prisma.recruiterShortlistItem.count({
-    where: { recruiterUserId: userId },
-  });
-
-  const engagements = await existingEngagements(
-    userId,
-    request.matches
-      .map((m) => m.programMemberId)
-      .filter((id): id is string => id !== null),
-  );
+  // Cards, cart count and engagement statuses all come from one scoped loader
+  // shared with /hire/[requestId]/candidates.
+  const matchData = await loadRequestMatches(requestId, userId);
+  const matches = matchData?.matches ?? [];
 
   const messages = request.messages.map((m) => ({
     role: (m.role === "assistant" ? "assistant" : "user") as
@@ -154,11 +122,11 @@ export default async function HireRequestPage({ params }: Props) {
           Step 2 · Matched profiles
         </p>
         <h2 className="font-display text-2xl font-bold tracking-tight">
-          {request.matches.length > 0
-            ? `${request.matches.length} matched candidate${request.matches.length === 1 ? "" : "s"}`
+          {matches.length > 0
+            ? `${matches.length} matched candidate${matches.length === 1 ? "" : "s"}`
             : "No matches yet"}
         </h2>
-        {request.matches.length === 0 ? (
+        {matches.length === 0 ? (
           <GapReport
             requestId={request.id}
             overallGap={
@@ -177,24 +145,9 @@ export default async function HireRequestPage({ params }: Props) {
               engagement.
             </p>
             <MatchResults
-              cartCount={cartCount}
-              matches={request.matches.map((m): MatchCardData => ({
-                programMemberId: m.programMemberId,
-                jobRole: m.programMember?.jobRole ?? "Candidate",
-                score: m.score,
-                tier: m.tier,
-                rationale: m.rationale,
-                gaps: m.gaps,
-                availabilityUnknown: m.availabilityUnknown,
-                shortlisted: (m.programMember?.shortlistedBy?.length ?? 0) > 0,
-                engagementStatus: m.programMemberId
-                  ? (engagements.get(m.programMemberId)?.status ?? null)
-                  : null,
-                evidence:
-                  m.evidence && typeof m.evidence === "object"
-                    ? (m.evidence as MatchCardData["evidence"])
-                    : {},
-              }))}
+              matches={matches}
+              cartCount={matchData?.cartCount ?? 0}
+              viewAllHref={`/hire/${requestId}/candidates`}
             />
           </>
         )}
