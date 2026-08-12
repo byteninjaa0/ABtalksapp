@@ -46,6 +46,11 @@ export default async function AdminLayout({
       label: "Hire Demand",
       icon: "jobs" as const,
     },
+    {
+      href: "/admin/hire-requests",
+      label: "Hire Requests",
+      icon: "dataRequests" as const,
+    },
   ];
 
   return (

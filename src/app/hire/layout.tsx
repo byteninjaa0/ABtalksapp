@@ -44,6 +44,12 @@ export default async function HireLayout({ children }: { children: ReactNode }) 
               New search
             </Link>
             <Link
+              href="/hire/requests"
+              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+            >
+              Requests
+            </Link>
+            <Link
               href="/talent"
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >

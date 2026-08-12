@@ -1,0 +1,134 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2, Lock, MessageSquarePlus } from "lucide-react";
+import { toast } from "sonner";
+import { placeEngagementRequestAction } from "@/app/actions/hire-request-actions";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const STATUS_COPY: Record<string, string> = {
+  SUBMITTED: "Request sent",
+  IN_REVIEW: "With our team",
+  CONTACT_SHARED: "Contact shared",
+  DECLINED: "Declined",
+  CLOSED: "Closed",
+};
+
+type Props = {
+  programMemberId: string;
+  requestId?: string;
+  /** Status of the recruiter's existing live request, if there is one. */
+  existingStatus?: string | null;
+  publicId: string;
+};
+
+export function RequestIntroButton({
+  programMemberId,
+  requestId,
+  existingStatus,
+  publicId,
+}: Props) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [status, setStatus] = useState<string | null>(existingStatus ?? null);
+  const [pending, startTransition] = useTransition();
+
+  if (status) {
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium",
+          status === "CONTACT_SHARED"
+            ? "bg-primary/10 text-primary"
+            : status === "DECLINED"
+              ? "bg-muted text-muted-foreground"
+              : "bg-amber-500/10 text-amber-900 dark:text-amber-100",
+        )}
+      >
+        <Lock className="size-3" aria-hidden="true" />
+        {STATUS_COPY[status] ?? status}
+      </span>
+    );
+  }
+
+  function submit() {
+    startTransition(async () => {
+      const res = await placeEngagementRequestAction({
+        programMemberId,
+        requestId,
+        note: note.trim() || undefined,
+      });
+      if (!res.ok) {
+        toast.error(res.message);
+        return;
+      }
+      setStatus(res.data.status);
+      setOpen(false);
+      toast.success(`Request sent for ${publicId}. Our team will pick it up.`);
+      router.refresh();
+    });
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={cn(
+          buttonVariants({ variant: "outline", size: "sm" }),
+          "gap-1.5",
+        )}
+      >
+        <MessageSquarePlus className="size-3.5" aria-hidden="true" />
+        Request an intro
+      </button>
+    );
+  }
+
+  return (
+    <div className="w-full space-y-2 rounded-lg border bg-muted/40 p-3">
+      <label
+        htmlFor={`note-${programMemberId}`}
+        className="text-xs font-medium"
+      >
+        Anything our team should know? <span className="text-muted-foreground">(optional)</span>
+      </label>
+      <textarea
+        id={`note-${programMemberId}`}
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        rows={3}
+        maxLength={2000}
+        placeholder="e.g. we'd interview this week, budget is flexible for the right person"
+        className="w-full rounded-md border bg-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={pending}
+          onClick={submit}
+          className={cn(buttonVariants({ size: "sm" }), "gap-1.5")}
+        >
+          {pending && (
+            <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+          )}
+          Send request
+        </button>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => setOpen(false)}
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+        >
+          Cancel
+        </button>
+        <p className="text-xs text-muted-foreground">
+          {publicId} stays anonymous until our team confirms.
+        </p>
+      </div>
+    </div>
+  );
+}

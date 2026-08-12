@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { ScoutChat } from "@/components/hire/scout-chat";
 import { MatchCard } from "@/components/hire/match-card";
 import { GapReport } from "@/components/hire/gap-report";
+import { existingEngagements } from "@/features/hire/contact-access";
 import { jobSpecSchema, type JobSpec } from "@/lib/validations/hire";
 
 type Props = { params: Promise<{ requestId: string }> };
@@ -107,6 +108,15 @@ export default async function HireRequestPage({ params }: Props) {
     requiresDegree: request.requiresDegree,
   });
 
+  // What this recruiter has already asked about, so a card never offers to
+  // request the same introduction twice.
+  const engagements = await existingEngagements(
+    userId,
+    request.matches
+      .map((m) => m.programMemberId)
+      .filter((id): id is string => id !== null),
+  );
+
   const messages = request.messages.map((m) => ({
     role: (m.role === "assistant" ? "assistant" : "user") as
       | "user"
@@ -173,6 +183,9 @@ export default async function HireRequestPage({ params }: Props) {
                         availabilityUnknown: m.availabilityUnknown,
                         shortlisted:
                           (m.programMember?.shortlistedBy?.length ?? 0) > 0,
+                        engagementStatus: m.programMemberId
+                          ? (engagements.get(m.programMemberId)?.status ?? null)
+                          : null,
                         evidence,
                       }}
                     />

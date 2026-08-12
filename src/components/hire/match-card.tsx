@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { candidatePublicId } from "@/features/hire/public-id";
 import { buttonVariants } from "@/components/ui/button";
+import { RequestIntroButton } from "@/components/hire/request-intro-button";
 import { ShortlistButton } from "@/components/talent/shortlist-button";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,8 @@ export type MatchCardData = {
   gaps: string[];
   availabilityUnknown: boolean;
   shortlisted?: boolean;
+  /** Status of this recruiter's live engagement request, if any. */
+  engagementStatus?: string | null;
   evidence: {
     skills?: string[];
     missionPoints?: number;
@@ -113,12 +116,19 @@ export function MatchCard({ match }: { match: MatchCardData }) {
       ) : null}
 
       {match.programMemberId ? (
-        <Link
-          href={`/talent/members/${match.programMemberId}`}
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-        >
-          See the evidence
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/talent/members/${match.programMemberId}`}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            See the evidence
+          </Link>
+          <RequestIntroButton
+            programMemberId={match.programMemberId}
+            existingStatus={match.engagementStatus ?? null}
+            publicId={publicId}
+          />
+        </div>
       ) : null}
     </article>
   );
