@@ -611,8 +611,10 @@ function chipAck(slot: HireSlot, spec: JobSpec): string {
   switch (slot) {
     case "title":
       return `${spec.title} — good brief.`;
-    case "seniority":
-      return `${(spec.seniority ?? "").toLowerCase()} it is.`;
+    case "seniority": {
+      const s = spec.seniority ?? "";
+      return `${s.charAt(0)}${s.slice(1).toLowerCase()} it is.`;
+    }
     case "mustHaveStack":
       return `Noted: ${(spec.mustHaveStack ?? []).join(", ")}.`;
     case "evidencePriority":

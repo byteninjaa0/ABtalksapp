@@ -176,6 +176,12 @@ export type CandidateAvailabilityInput = z.infer<
 export const sendScoutMessageSchema = z.object({
   requestId: z.string().cuid().optional(),
   message: z.string().trim().min(1).max(2000),
+  /**
+   * What the recruiter actually saw, when they tapped a chip whose machine
+   * value differs from its label ("Within 30 days" → "30"). Display only —
+   * the engine always parses `message`.
+   */
+  display: z.string().trim().min(1).max(200).optional(),
 });
 
 export const runMatchSchema = z.object({

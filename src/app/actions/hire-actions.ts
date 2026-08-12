@@ -138,7 +138,7 @@ export async function sendScoutMessageAction(
     return { ok: false, message: "Invalid message." };
   }
 
-  const { message, requestId: existingId } = parsed.data;
+  const { message, display, requestId: existingId } = parsed.data;
   const userId = gate.data.userId;
 
   try {
@@ -196,7 +196,10 @@ export async function sendScoutMessageAction(
       data: {
         requestId,
         role: "user",
-        content: message,
+        // What the recruiter saw on the chip, not the machine value behind it.
+        // A bubble reading "30" under a button labelled "Within 30 days" is not
+        // the conversation they had. The engine still parses `message`.
+        content: display ?? message,
       },
     });
 
@@ -218,13 +221,18 @@ export async function sendScoutMessageAction(
       },
     });
 
+    // What the recruiter sees live and what is replayed on reload must be the
+    // same string. They were not: the stored copy prefixed the running summary,
+    // so every reloaded bubble repeated it above the actual question.
+    const assistantMessage =
+      turn.nextQuestion ??
+      "That's everything I need. Ready to search verified talent.";
+
     await prisma.talentRequestMessage.create({
       data: {
         requestId,
         role: "assistant",
-        content: turn.nextQuestion
-          ? `${turn.summary}\n\n${turn.nextQuestion}`
-          : turn.summary,
+        content: assistantMessage,
         options: turn.options,
       },
     });
@@ -236,11 +244,7 @@ export async function sendScoutMessageAction(
       ok: true,
       data: {
         requestId,
-        // Just the question — the running summary has its own header slot, and
-        // repeating it in every bubble made the transcript unreadable.
-        assistantMessage:
-          turn.nextQuestion ??
-          "That's everything I need. Ready to search verified talent.",
+        assistantMessage,
         options: turn.options,
         allowFreeText: turn.allowFreeText,
         readyToSearch: turn.readyToSearch,
