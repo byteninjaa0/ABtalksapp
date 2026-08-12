@@ -20,7 +20,7 @@ export default async function HireLayout({ children }: { children: ReactNode }) 
   return (
     <div className="min-h-svh bg-muted/30">
       <header className="border-b bg-background">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-6">
           {/* The recruiter portal has its own header rather than AppHeader —
               which is why the theme control and the mark were missing here.
               Both are the same components the rest of the app uses. */}
@@ -39,17 +39,18 @@ export default async function HireLayout({ children }: { children: ReactNode }) 
                 className="logo-image"
               />
             </Link>
-            <span className="hidden rounded-full border px-2 py-0.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase sm:inline">
+            <span className="rounded-full border px-2 py-0.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
               Hire
             </span>
           </div>
 
-          <nav className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <nav className="flex shrink-0 items-center gap-0.5 sm:gap-2">
             <Link
               href="/hire"
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
             >
-              New search
+              <span className="hidden sm:inline">New search</span>
+              <span className="sm:hidden">New</span>
             </Link>
             <Link
               href="/hire/requests"
