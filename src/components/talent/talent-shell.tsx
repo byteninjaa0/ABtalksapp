@@ -8,7 +8,9 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/talent", label: "Talent pool" },
   { href: "/hire", label: "Scout" },
-  { href: "/talent/shortlist", label: "Shortlist" },
+  // One name for one thing: "Shortlist" here and "cart" everywhere else
+  // read as two features, which is why the cart was never found.
+  { href: "/talent/shortlist", label: "Cart" },
 ];
 
 const HIDE_NAV = ["/talent/register", "/talent/pending"];

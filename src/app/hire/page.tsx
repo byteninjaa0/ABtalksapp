@@ -32,15 +32,19 @@ export default async function HirePage() {
 
   return (
     <div className="space-y-8">
-      <div className="space-y-2 text-center sm:text-left">
-        <h2 className="font-display text-2xl font-bold tracking-tight">
-          Find people by what they shipped
+      <div className="space-y-2">
+        {/* The step label says where this sits in a four-step flow — define,
+            review matches, request, track — so the page is not a dead end. */}
+        <p className="text-xs font-medium tracking-wide text-primary uppercase">
+          Step 1 · Define your requirement
+        </p>
+        <h2 className="font-display text-3xl font-bold tracking-tight">
+          Tell us who you&apos;re looking for
         </h2>
         <p className="max-w-xl text-sm text-muted-foreground">
-          Scout asks a few high-signal questions, then ranks consenting cohort
-          members by missions, projects, commits, and interviews. If nobody
-          matches yet, your requirement is saved as demand so we can train for
-          it.
+          Describe the role in plain language. Scout asks a few follow-ups, then
+          ranks candidates on work the platform actually verified — missions,
+          commits, projects and interviews. Never resumes.
         </p>
       </div>
 
@@ -54,7 +58,7 @@ export default async function HirePage() {
       {recent.length > 0 ? (
         <section className="space-y-3">
           <h3 className="text-sm font-medium text-muted-foreground">
-            Your recent requirements
+            Pick up where you left off
           </h3>
           <ul className="divide-y rounded-xl border bg-card">
             {recent.map((r) => (

@@ -112,9 +112,7 @@ function specRows(spec: JobSpec): { label: string; value: string }[] {
     const hi = spec.salaryMax ?? 0;
     push(
       "Budget",
-      lo === 0 && hi === 0
-        ? "Not specified"
-        : `₹${toLpa(lo)}–${toLpa(hi)} LPA`,
+      lo === 0 && hi === 0 ? "Not specified" : `₹${toLpa(lo)}–${toLpa(hi)} LPA`,
     );
   }
 
@@ -329,7 +327,9 @@ export function ScoutChat({
           <button
             type="button"
             onClick={() => setExpanded((e) => !e)}
-            aria-label={expanded ? "Shrink conversation" : "Expand conversation"}
+            aria-label={
+              expanded ? "Shrink conversation" : "Expand conversation"
+            }
             title={expanded ? "Shrink" : "Expand"}
             className={cn(
               "flex size-8 shrink-0 items-center justify-center rounded-full border",
@@ -473,13 +473,12 @@ export function ScoutChat({
               disabled={pending}
               maxLength={2000}
             />
+            {/* Primary, not outline: once something is typed this is the action
+                  on the screen, and it should look like it. */}
             <button
               type="submit"
               disabled={pending || !text.trim()}
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "shrink-0 disabled:opacity-50",
-              )}
+              className={cn(buttonVariants(), "shrink-0 disabled:opacity-50")}
             >
               Send
             </button>

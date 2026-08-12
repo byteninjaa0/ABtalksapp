@@ -67,8 +67,8 @@ export default async function HireRequestsPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Step 3 · Track your requests
+        <p className="text-xs font-medium tracking-wide text-primary uppercase">
+          Step 4 · Track your requests
         </p>
         <h2 className="font-display text-2xl font-bold tracking-tight">
           Your requests

@@ -9,6 +9,7 @@ import {
   Trophy,
   UsersRound,
 } from "lucide-react";
+import { SignInMenu } from "@/components/landing/sign-in-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import type { LandingState } from "@/features/landing/get-landing-state";
@@ -127,12 +128,7 @@ export function LandingHub({ claudeEnabled, state }: LandingHubProps) {
             {state.user ? (
               <LandingUserMenu user={state.user} />
             ) : (
-              <Link
-                href="/login"
-                className={cn(buttonVariants({ variant: "ghost" }), "h-10")}
-              >
-                Sign in
-              </Link>
+              <SignInMenu />
             )}
           </div>
         </div>

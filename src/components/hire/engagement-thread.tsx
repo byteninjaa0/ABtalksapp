@@ -86,7 +86,7 @@ export function EngagementThread({
             disabled={pending || !body.trim()}
             onClick={post}
             className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
+              buttonVariants({ size: "sm" }),
               "shrink-0 gap-1.5 disabled:opacity-50",
             )}
           >

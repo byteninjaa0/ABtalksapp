@@ -28,6 +28,18 @@ export const placeEngagementRequestSchema = z.object({
   note: z.string().trim().max(2000).optional(),
 });
 
+/**
+ * One submission covering several shortlisted candidates.
+ *
+ * Capped at 25 because this is a hiring shortlist, not a mailing list — and
+ * every row here becomes work for a human on the ABTalks side.
+ */
+export const placeBulkEngagementRequestSchema = z.object({
+  programMemberIds: z.array(z.string().cuid()).min(1).max(25),
+  requestId: z.string().cuid().optional(),
+  note: z.string().trim().max(2000).optional(),
+});
+
 export const engagementMessageSchema = z.object({
   engagementId: z.string().cuid(),
   body: z.string().trim().min(1).max(2000),

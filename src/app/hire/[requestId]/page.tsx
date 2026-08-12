@@ -145,7 +145,14 @@ export default async function HireRequestPage({ params }: Props) {
       />
 
       <section id="hire-results" className="scroll-mt-20 space-y-4">
-        <h2 className="font-display text-xl font-semibold">Results</h2>
+        <p className="text-xs font-medium tracking-wide text-primary uppercase">
+          Step 2 · Matched profiles
+        </p>
+        <h2 className="font-display text-2xl font-bold tracking-tight">
+          {request.matches.length > 0
+            ? `${request.matches.length} matched candidate${request.matches.length === 1 ? "" : "s"}`
+            : "No matches yet"}
+        </h2>
         {request.matches.length === 0 ? (
           <GapReport
             requestId={request.id}

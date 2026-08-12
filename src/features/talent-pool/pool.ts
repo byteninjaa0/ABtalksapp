@@ -103,12 +103,17 @@ export type TalentProfile = {
 
 export type ShortlistRow = {
   memberId: string;
-  fullName: string;
   jobRole: string;
-  company: string;
   totalScore: number;
   note: string | null;
   shortlistedAt: string;
+  /**
+   * The real name, and only once an engagement request for this recruiter and
+   * this candidate has reached CONTACT_SHARED. Null everywhere else — the
+   * shortlist page was rendering names outright, which the rest of the portal
+   * had already stopped doing.
+   */
+  revealedName: string | null;
 };
 
 async function assertPoolAccess(recruiterUserId: string) {
@@ -573,7 +578,6 @@ export async function getShortlist(
           id: true,
           fullName: true,
           jobRole: true,
-          company: true,
           totalScore: true,
           cohortId: true,
           status: true,
@@ -582,21 +586,37 @@ export async function getShortlist(
     },
   });
 
+  const visible = items.filter(
+    (i) =>
+      i.member.cohortId === access.cohort.id &&
+      (i.member.status === "ENROLLED" || i.member.status === "COMPLETED"),
+  );
+
+  // One query for the whole page rather than a lookup per row.
+  const released = new Set(
+    (
+      await prisma.talentEngagementRequest.findMany({
+        where: {
+          recruiterUserId,
+          status: "CONTACT_SHARED",
+          programMemberId: { in: visible.map((i) => i.member.id) },
+        },
+        select: { programMemberId: true },
+      })
+    )
+      .map((r) => r.programMemberId)
+      .filter((id): id is string => id !== null),
+  );
+
   return {
     ok: true,
-    data: items
-      .filter(
-        (i) =>
-          i.member.cohortId === access.cohort.id &&
-          (i.member.status === "ENROLLED" || i.member.status === "COMPLETED"),
-      )
+    data: visible
       .map((i) => ({
         memberId: i.member.id,
-        fullName: i.member.fullName,
         jobRole: i.member.jobRole,
-        company: i.member.company,
         totalScore: i.member.totalScore,
         note: i.note,
+        revealedName: released.has(i.member.id) ? i.member.fullName : null,
         shortlistedAt: i.createdAt.toISOString(),
       })),
   };

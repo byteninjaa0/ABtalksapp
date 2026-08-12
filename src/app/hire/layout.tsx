@@ -1,13 +1,21 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
+import { ShoppingCart } from "lucide-react";
 import Link from "next/link";
+import { prisma } from "@/lib/db";
 import { requireRecruiter } from "@/lib/program-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default async function HireLayout({ children }: { children: ReactNode }) {
-  await requireRecruiter();
+  const { userId } = await requireRecruiter();
+
+  // The cart is the whole point of shortlisting, so its size belongs in the
+  // chrome. Without it there was no sign a cart existed at all.
+  const cartCount = await prisma.recruiterShortlistItem.count({
+    where: { recruiterUserId: userId },
+  });
 
   return (
     <div className="min-h-svh bg-muted/30">
@@ -51,10 +59,25 @@ export default async function HireLayout({ children }: { children: ReactNode }) 
             </Link>
             <Link
               href="/talent"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
             >
               <span className="hidden sm:inline">Browse pool</span>
               <span className="sm:hidden">Pool</span>
+            </Link>
+            <Link
+              href="/talent/shortlist"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "gap-1.5",
+              )}
+            >
+              <ShoppingCart className="size-3.5" aria-hidden="true" />
+              Cart
+              {cartCount > 0 && (
+                <span className="rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+                  {cartCount}
+                </span>
+              )}
             </Link>
             <ThemeToggle />
           </nav>

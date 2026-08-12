@@ -49,6 +49,7 @@ export function MemberCard({ member }: { member: TalentPoolRow }) {
           )}
         </div>
         <ShortlistButton
+          compact
           memberId={member.memberId}
           initialShortlisted={member.shortlisted}
         />

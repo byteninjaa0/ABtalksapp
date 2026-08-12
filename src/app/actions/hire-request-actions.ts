@@ -10,6 +10,7 @@ import { candidatePublicId } from "@/features/hire/public-id";
 import {
   decideEngagementSchema,
   engagementMessageSchema,
+  placeBulkEngagementRequestSchema,
   placeEngagementRequestSchema,
 } from "@/lib/validations/hire-request";
 
@@ -116,6 +117,104 @@ export async function placeEngagementRequestAction(
       error: String(error),
     });
     return { ok: false, message: "Could not place the request." };
+  }
+}
+
+/**
+ * Place one request per shortlisted candidate, from a single submission.
+ *
+ * Deliberately one row per candidate rather than one row for the batch: the
+ * team decides each introduction separately, and contact release is per pair.
+ * Batching the decision would mean sharing everyone or no one.
+ */
+export async function placeBulkEngagementRequestAction(
+  input: unknown,
+): Promise<ActionResult<{ placed: number; skipped: number }>> {
+  const gate = await requireApprovedRecruiter();
+  if (!gate.ok) return gate;
+
+  const parsed = placeBulkEngagementRequestSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: "Select at least one candidate." };
+  }
+  const { programMemberIds, requestId, note } = parsed.data;
+  const userId = gate.data.userId;
+
+  try {
+    const eligible = await prisma.programMember.findMany({
+      where: {
+        id: { in: programMemberIds },
+        status: { in: ["ENROLLED", "COMPLETED"] },
+        recruiterVisibilityConsentAt: { not: null },
+      },
+      select: { id: true, userId: true },
+    });
+
+    const alreadyOpen = new Set(
+      (
+        await prisma.talentEngagementRequest.findMany({
+          where: {
+            recruiterUserId: userId,
+            programMemberId: { in: eligible.map((m) => m.id) },
+            status: { notIn: ["CLOSED", "DECLINED"] },
+          },
+          select: { programMemberId: true },
+        })
+      ).map((r) => r.programMemberId),
+    );
+
+    const toPlace = eligible.filter((m) => !alreadyOpen.has(m.id));
+    if (toPlace.length === 0) {
+      return {
+        ok: true,
+        data: { placed: 0, skipped: programMemberIds.length },
+      };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const member of toPlace) {
+        const engagement = await tx.talentEngagementRequest.create({
+          data: {
+            recruiterUserId: userId,
+            requestId: requestId ?? null,
+            source: "PROGRAM",
+            programMemberId: member.id,
+            candidateUserId: member.userId,
+            candidatePublicId: candidatePublicId(member.id),
+            note: note ?? null,
+            status: "SUBMITTED",
+            submittedAt: new Date(),
+          },
+          select: { id: true },
+        });
+        if (note) {
+          await tx.talentEngagementMessage.create({
+            data: {
+              engagementId: engagement.id,
+              authorUserId: userId,
+              authorRole: "recruiter",
+              body: note,
+            },
+          });
+        }
+      }
+    });
+
+    revalidatePath("/hire/requests");
+    revalidatePath("/talent/shortlist");
+    revalidatePath("/admin/hire-requests");
+    return {
+      ok: true,
+      data: {
+        placed: toPlace.length,
+        skipped: programMemberIds.length - toPlace.length,
+      },
+    };
+  } catch (error) {
+    logger.error("[hire] placeBulkEngagementRequestAction", {
+      error: String(error),
+    });
+    return { ok: false, message: "Could not place the requests." };
   }
 }
 
