@@ -29,7 +29,8 @@
     "db:backfill:certificates": "tsx prisma/scripts/backfill-certificates.ts",
     "hackathon:migrate": "tsx scripts/migrate-hackathon-to-neon.ts",
     "hackathon:verify": "tsx scripts/migrate-hackathon-to-neon.ts --verify",
-    "hackathon:preflight": "tsx scripts/migrate-hackathon-to-neon.ts --preflight"
+    "hackathon:preflight": "tsx scripts/migrate-hackathon-to-neon.ts --preflight",
+    "verify:hire-pool": "tsx scripts/verify-hire-pool.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

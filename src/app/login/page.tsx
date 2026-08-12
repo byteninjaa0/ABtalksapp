@@ -10,10 +10,12 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { hackathonRedirectForProfilelessUser } from "@/features/hackathon/registration-status";
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { LoginClient } from "./login-client";
 
 type Props = {
-  searchParams: Promise<{ from?: string; ref?: string }>;
+  searchParams: Promise<{ from?: string; ref?: string; as?: string }>;
 };
 
 /** Valid same-origin `from`, or null. */
@@ -41,7 +43,11 @@ function registerHrefWithRef(refRaw: string | undefined): string {
 export default async function LoginPage({ searchParams }: Props) {
   const params = await searchParams;
   const from = safeFrom(params.from);
-  const redirectTo = from ?? "/dashboard";
+  // `as` changes the copy and where a successful sign-in lands. It must never
+  // influence role or permissions — those are read from the database after the
+  // verified-seat lookup. A recruiter who is not seated still gets nowhere.
+  const asRecruiter = params.as === "recruiter";
+  const redirectTo = from ?? (asRecruiter ? "/hire" : "/dashboard");
 
   const session = await auth();
   if (session?.user?.id) {
@@ -95,13 +101,60 @@ export default async function LoginPage({ searchParams }: Props) {
     <div className="flex min-h-svh flex-col bg-gradient-to-br from-primary/5 via-background to-background">
       <div className="flex flex-1 flex-col items-center justify-center p-6">
         <Card className="w-full max-w-md border-border/60 shadow-md">
-          <CardHeader className="space-y-2 text-center">
+          <CardHeader className="space-y-3 text-center">
             <CardTitle className="font-display text-3xl font-bold tracking-tight">
               <span className="text-primary">A</span>BTalks
             </CardTitle>
             <CardDescription className="text-base text-muted-foreground">
-              Build your coding habit. Get discovered.
+              {asRecruiter
+                ? "Hire on verified work, not resumes."
+                : "Build your coding habit. Get discovered."}
             </CardDescription>
+            <div
+              className="mx-auto flex w-full max-w-xs rounded-full border p-1"
+              role="tablist"
+              aria-label="Who are you signing in as"
+            >
+              <Link
+                href="/login"
+                role="tab"
+                aria-selected={!asRecruiter}
+                className={cn(
+                  "flex-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                  !asRecruiter
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                For candidates
+              </Link>
+              <Link
+                href="/login?as=recruiter"
+                role="tab"
+                aria-selected={asRecruiter}
+                className={cn(
+                  "flex-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                  asRecruiter
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                For recruiters
+              </Link>
+            </div>
+            {asRecruiter && (
+              <p className="text-xs text-muted-foreground">
+                Recruiter access is granted to verified companies only. Not
+                verified yet? Write to{" "}
+                <a
+                  href="mailto:team@abtalks.in"
+                  className="text-primary hover:underline"
+                >
+                  team@abtalks.in
+                </a>{" "}
+                from your work address.
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             <LoginClient

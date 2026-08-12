@@ -1,5 +1,38 @@
 # Plan 063 — Recruiter portal: anonymised candidates, requests, and verified access
 
+> **Status — 2026-08-12.** Phases 1–5 and 7 are built, tested and on
+> `fix/hire-scout-conversation`. The migration was applied to the shared
+> database after review (additive only: 3 new tables, 2 enums, one defaulted
+> column; existing row counts unchanged afterwards).
+>
+> | Phase | State |
+> |---|---|
+> | 1 · Recruiter chrome | **done** — logo, wordmark, theme toggle, inline pills |
+> | 2 · Anonymity | **done** — AB-#### everywhere, contact removed from the query |
+> | 3 · Request → ticket | **done** — `/hire/requests`, thread, recruiter comments |
+> | 4 · Verified seats | **done** — gates registration, `/admin/recruiter-seats` |
+> | 5 · Split entry | **done** — `/login?as=recruiter` |
+> | 6 · Cross-track sources | **blocked on consent — see below** |
+> | 7 · Admin queue | **done** — `/admin/hire-requests` |
+> | 8 · Pool script | **done** — `npm run verify:hire-pool` |
+>
+> **Why Phase 6 is not built.** `recruiterVisibilityConsentAt` exists only on
+> `ProgramMember`. The 60-day, Claude and hackathon tracks have no equivalent,
+> so shipping those sources would show recruiters people who never agreed to be
+> shown. `npm run verify:hire-pool` run against the shared database returns:
+>
+> ```
+>   track                       total   eligible   consented
+>   AI cohort (ProgramMember)       7          7           3
+>   60-day · SE                    39          1           0
+>   60-day · DS / AI / CLAUDE      53          0           0
+>   Hackathon                       1          1           0
+>   CandidateAvailability openToWork = true: 0
+> ```
+>
+> Enabling the other sources today would add **zero** candidates while creating
+> the exposure. The candidate-side availability form (062 §5.1) is the unblock.
+
 Successor to `062-hire-evidence-based-matching-agent.md`. 062 built the Scout
 conversation and the evidence ranker; this plan turns `/hire` into an actual
 employer portal: candidates stay anonymous until a request is placed, the
