@@ -33,7 +33,7 @@ export async function registerRecruiter(
   const [user, studentProfile, existing] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true },
+      select: { role: true, email: true },
     }),
     prisma.studentProfile.findUnique({
       where: { userId },
@@ -65,14 +65,36 @@ export async function registerRecruiter(
     };
   }
 
+  // Recruiter access is decided here, by a seat ABTalks verified out of band —
+  // never by anything the person signing up submits. This is what stops a
+  // candidate from filling in the form and becoming a recruiter: previously any
+  // account that posted this form was switched to role RECRUITER (unapproved,
+  // but a recruiter nonetheless).
+  const email = user.email?.trim().toLowerCase();
+  const seat = email
+    ? await prisma.verifiedRecruiterSeat.findFirst({
+        where: { email, active: true, revokedAt: null },
+        select: { id: true, company: true },
+      })
+    : null;
+
+  if (!seat) {
+    return {
+      ok: false,
+      message:
+        "This email isn't on our verified recruiter list. Write to team@abtalks.in from your work address and we'll verify your company.",
+    };
+  }
+
   await prisma.$transaction(async (tx) => {
     await tx.recruiterProfile.create({
       data: {
         userId,
         fullName: input.fullName,
-        company: input.company,
+        // The verified company wins over whatever was typed in the form.
+        company: seat.company || input.company,
         phone: input.phone || null,
-        approved: false,
+        approved: true,
       },
     });
     await tx.user.update({

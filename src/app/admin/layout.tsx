@@ -51,6 +51,11 @@ export default async function AdminLayout({
       label: "Hire Requests",
       icon: "dataRequests" as const,
     },
+    {
+      href: "/admin/recruiter-seats",
+      label: "Recruiter Seats",
+      icon: "ambassadors" as const,
+    },
   ];
 
   return (
