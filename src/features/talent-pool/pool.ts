@@ -60,11 +60,16 @@ export type TalentProfile = {
   university: string | null;
   graduationYear: number | null;
   skills: string[];
-  email: string;
-  linkedinUrl: string | null;
-  resumeUrl: string | null;
-  githubUsername: string;
-  githubRepoUrl: string;
+  /**
+   * Contact vectors are no longer part of this profile.
+   *
+   * They were: email as a mailto link, LinkedIn, GitHub and resume. Any
+   * approved recruiter could reach the member directly and never place a
+   * request — bypassing both the business and the member's consent, which was
+   * to be *discoverable*, not to be cold-contacted. Release happens through an
+   * accepted engagement request, handled by the ABTalks team.
+   */
+  contactReleased: false;
   rank: number;
   scoreBreakdown: {
     missionPoints: number;
@@ -367,10 +372,7 @@ export async function getTalentProfile(
       university: true,
       graduationYear: true,
       skills: true,
-      linkedinUrl: true,
-      resumeUrl: true,
-      githubUsername: true,
-      githubRepoUrl: true,
+
       missionPoints: true,
       conceptPoints: true,
       commitPoints: true,
@@ -380,7 +382,7 @@ export async function getTalentProfile(
       highestUnlockedDay: true,
       aiRecommendation: true,
       enrolledAt: true,
-      user: { select: { email: true } },
+
       projects: {
         select: {
           moduleNumber: true,
@@ -449,11 +451,7 @@ export async function getTalentProfile(
       university: member.university,
       graduationYear: member.graduationYear,
       skills: member.skills,
-      email: member.user.email,
-      linkedinUrl: member.linkedinUrl,
-      resumeUrl: member.resumeUrl,
-      githubUsername: member.githubUsername,
-      githubRepoUrl: member.githubRepoUrl,
+      contactReleased: false as const,
       rank,
       scoreBreakdown: {
         missionPoints: member.missionPoints,

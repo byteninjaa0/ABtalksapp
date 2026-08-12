@@ -1,13 +1,19 @@
 import Link from "next/link";
+import { candidatePublicId } from "@/features/hire/public-id";
 import { buttonVariants } from "@/components/ui/button";
 import { ShortlistButton } from "@/components/talent/shortlist-button";
 import { cn } from "@/lib/utils";
 
 export type MatchCardData = {
   programMemberId: string | null;
-  fullName: string;
+  /**
+   * Deliberately no name and no employer. A recruiter who can identify a
+   * candidate from this card has no reason to place a request, and the request
+   * is how ABTalks stays in the loop — and how the candidate keeps a say in
+   * being contacted at all.
+   */
   jobRole: string;
-  company: string;
+  locationLabel?: string | null;
   score: number;
   tier: string;
   rationale: string | null;
@@ -26,13 +32,16 @@ export type MatchCardData = {
 
 export function MatchCard({ match }: { match: MatchCardData }) {
   const e = match.evidence ?? {};
+  const publicId = match.programMemberId
+    ? candidatePublicId(match.programMemberId)
+    : "AB-????";
   return (
     <article className="space-y-3 rounded-xl border bg-card p-4 shadow-sm">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h3 className="font-display text-lg font-semibold">{match.fullName}</h3>
+          <h3 className="font-display text-lg font-semibold">{match.jobRole}</h3>
           <p className="text-sm text-muted-foreground">
-            {match.jobRole} · {match.company}
+            {[match.locationLabel, publicId].filter(Boolean).join(" · ")}
           </p>
         </div>
         <div className="flex items-start gap-2">
@@ -108,7 +117,7 @@ export function MatchCard({ match }: { match: MatchCardData }) {
           href={`/talent/members/${match.programMemberId}`}
           className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
         >
-          Open full evidence profile
+          See the evidence
         </Link>
       ) : null}
     </article>

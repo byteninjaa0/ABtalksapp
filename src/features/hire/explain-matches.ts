@@ -1,5 +1,6 @@
 import "server-only";
 
+import { candidatePublicId } from "@/features/hire/public-id";
 import type { ScoredCandidate } from "@/features/hire/types";
 import type { JobSpec } from "@/lib/validations/hire";
 
@@ -74,6 +75,9 @@ function groundedFigures(m: ScoredCandidate): Set<string> {
     tier: m.tier,
     evidence: m.evidence,
     gaps: m.gaps,
+    // The public id is digits the model is *told* to quote. Without it here the
+    // guard rejects every rationale for citing the label we asked it to use.
+    publicId: candidatePublicId(m.programMemberId),
   });
   return new Set(source.match(/\d+/g) ?? []);
 }
@@ -97,9 +101,11 @@ export async function explainMatches(
     const payload = {
       role: spec.title,
       mustHaveStack: spec.mustHaveStack,
+      // No name goes to the model, so no name can come back in a rationale
+      // that a recruiter then reads. It refers to candidates by public id.
       matches: matches.map((m) => ({
         id: m.programMemberId,
-        fullName: m.fullName,
+        publicId: candidatePublicId(m.programMemberId),
         score: m.score,
         tier: m.tier,
         evidence: m.evidence,
@@ -116,6 +122,7 @@ export async function explainMatches(
       system: `You write recruiter-facing match rationales for ABTalks Scout, which ranks candidates on verified platform evidence — missions completed, first-attempt passes, commit days, graded projects, recorded interviews — never resumes or self-reported claims.
 
 Rules:
+- Refer to each candidate by their publicId (e.g. AB-1234). You are not given names and must never invent one.
 - Cite ONLY fields present in the JSON you are given. Never invent a score, a number, a project, a skill or an employer.
 - Every figure you write must appear verbatim in the payload. If you cannot support a claim, leave it out.
 - Two or three sentences per candidate. Say what the evidence shows, then what is missing.
@@ -150,8 +157,10 @@ Rules:
 function buildRationale(m: ScoredCandidate, spec: JobSpec): string {
   const e = m.evidence;
   const parts: string[] = [];
+  // Public id, not the name: this string is rendered to recruiters and stored
+  // on the match row, so it must not carry identity.
   parts.push(
-    `${m.fullName} scores ${m.score}/100 (${m.tier}) for ${spec.title ?? "this role"}.`,
+    `${candidatePublicId(m.programMemberId)} scores ${m.score}/100 (${m.tier}) for ${spec.title ?? "this role"}.`,
   );
   if (e.skills.length) {
     parts.push(`Skills on file: ${e.skills.slice(0, 8).join(", ")}.`);
@@ -198,7 +207,7 @@ function buildOverallGap(
   if (matches.length === 0 && nearMisses.length > 0) {
     const sample = nearMisses[0]!;
     return (
-      `No strong matches for ${stack}. Closest profile: ${sample.fullName} ` +
+      `No strong matches for ${stack}. Closest profile: ${candidatePublicId(sample.programMemberId)} ` +
       `(score ${sample.score}) — ${sample.gaps.slice(0, 3).join("; ") || "see gaps"}. ` +
       `Save this demand and we can train a cohort toward this stack.`
     );

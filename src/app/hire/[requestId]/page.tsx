@@ -65,9 +65,11 @@ export default async function HireRequestPage({ params }: Props) {
             evidence: true,
             programMember: {
               select: {
-                fullName: true,
+                // fullName and company are deliberately NOT selected. The
+                // safest place to stop a name reaching a recruiter is the
+                // query — a field that was never fetched cannot be rendered
+                // by a later change to the card.
                 jobRole: true,
-                company: true,
                 shortlistedBy: {
                   where: { recruiterUserId: userId },
                   select: { id: true },
@@ -145,33 +147,40 @@ export default async function HireRequestPage({ params }: Props) {
             alertWhenAvailable={request.alertWhenAvailable}
           />
         ) : (
-          <ul className="space-y-4">
-            {request.matches.map((m, i) => {
-              const evidence =
-                m.evidence && typeof m.evidence === "object"
-                  ? (m.evidence as MatchCardDataEvidence)
-                  : {};
-              return (
-                <li key={`${m.programMemberId}-${i}`}>
-                  <MatchCard
-                    match={{
-                      programMemberId: m.programMemberId,
-                      fullName: m.programMember?.fullName ?? "Candidate",
-                      jobRole: m.programMember?.jobRole ?? "—",
-                      company: m.programMember?.company ?? "—",
-                      score: m.score,
-                      tier: m.tier,
-                      rationale: m.rationale,
-                      gaps: m.gaps,
-                      availabilityUnknown: m.availabilityUnknown,
-                      shortlisted: (m.programMember?.shortlistedBy?.length ?? 0) > 0,
-                      evidence,
-                    }}
-                  />
-                </li>
-              );
-            })}
-          </ul>
+          <>
+            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-xs leading-relaxed text-amber-900 dark:text-amber-100">
+              <strong className="font-semibold">Privacy protected.</strong>{" "}
+              Candidates are shown by reference ID. Names and contact details
+              stay hidden until you place a request and our team confirms the
+              engagement.
+            </p>
+            <ul className="space-y-4">
+                {request.matches.map((m, i) => {
+                const evidence =
+                  m.evidence && typeof m.evidence === "object"
+                    ? (m.evidence as MatchCardDataEvidence)
+                    : {};
+                return (
+                  <li key={`${m.programMemberId}-${i}`}>
+                    <MatchCard
+                      match={{
+                        programMemberId: m.programMemberId,
+                        jobRole: m.programMember?.jobRole ?? "Candidate",
+                        score: m.score,
+                        tier: m.tier,
+                        rationale: m.rationale,
+                        gaps: m.gaps,
+                        availabilityUnknown: m.availabilityUnknown,
+                        shortlisted:
+                          (m.programMember?.shortlistedBy?.length ?? 0) > 0,
+                        evidence,
+                      }}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
       </section>
     </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { candidatePublicId } from "@/features/hire/public-id";
 import { Mic } from "lucide-react";
 import type { TalentPoolRow } from "@/features/talent-pool/pool";
 import { ShortlistButton } from "@/components/talent/shortlist-button";
@@ -13,11 +14,16 @@ export function MemberCard({ member }: { member: TalentPoolRow }) {
             <span className="font-display text-sm font-bold text-muted-foreground">
               #{member.rank}
             </span>
+            {/* Reference id, not the name. A recruiter who can identify the
+                candidate here can contact them directly and never place a
+                request — which is both the business bypass and a consent one,
+                since the member agreed to be discoverable, not to be cold
+                -contacted. */}
             <Link
               href={`/talent/members/${member.memberId}`}
               className="font-semibold hover:underline"
             >
-              {member.fullName}
+              {candidatePublicId(member.memberId)}
             </Link>
             {member.interviewOverall !== null && (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
@@ -27,7 +33,7 @@ export function MemberCard({ member }: { member: TalentPoolRow }) {
             )}
           </div>
           <p className="text-sm text-muted-foreground">
-            {member.jobRole} · {member.company} · {member.yearsExperience} yrs
+            {member.jobRole} · {member.yearsExperience} yrs
           </p>
           {member.skills.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
