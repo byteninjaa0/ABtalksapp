@@ -101,9 +101,26 @@ export const HIRE_SLOTS = [
 
 export type HireSlot = (typeof HIRE_SLOTS)[number];
 
+/**
+ * Slots the recruiter explicitly declined to answer.
+ *
+ * Most slots have a sentinel that reads as a real answer — "any city",
+ * "flexible", "evidence only". Seniority and evidence priority have none, so
+ * the refusal itself is the record. Without this, a chip-only question the
+ * recruiter could not answer had no exit at all and the conversation could
+ * never reach the end.
+ */
+export function skippedSlots(spec: JobSpec): Set<HireSlot> {
+  const raw = (spec.extra as { skipped?: unknown } | null | undefined)?.skipped;
+  if (!Array.isArray(raw)) return new Set<HireSlot>();
+  return new Set(
+    raw.filter((s): s is HireSlot => HIRE_SLOTS.includes(s as HireSlot)),
+  );
+}
+
 /** Slots that don't apply to this spec, so progress stays honest. */
 export function inapplicableSlots(spec: JobSpec): Set<HireSlot> {
-  const skip = new Set<HireSlot>();
+  const skip = skippedSlots(spec);
   // A remote role has no office city to ask about.
   if (spec.workMode === "REMOTE") skip.add("locationCity");
   return skip;

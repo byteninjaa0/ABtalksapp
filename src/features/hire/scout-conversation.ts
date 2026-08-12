@@ -63,8 +63,20 @@ function mergeIntoSlot(spec: JobSpec, slot: HireSlot, raw: string): JobSpec {
         return { ...next, noticePeriodDays: 180 };
       case "experience":
         return { ...next, minExperience: 0, maxExperience: 50 };
-      default:
-        return next;
+      default: {
+        // Seniority and evidence priority have no sentinel that reads as an
+        // answer, so record the refusal itself. Returning `next` unchanged
+        // here left the slot unanswered, and Scout re-asked the same
+        // chip-only question forever.
+        const prior = (next.extra ?? {}) as Record<string, unknown>;
+        const already = Array.isArray(prior.skipped)
+          ? (prior.skipped as string[])
+          : [];
+        return {
+          ...next,
+          extra: { ...prior, skipped: [...new Set([...already, slot])] },
+        };
+      }
     }
   }
 
@@ -197,6 +209,7 @@ function questionFor(slot: HireSlot, spec: JobSpec): SlotQuestion {
           { label: "Mid · 2–5y", value: "MID" },
           { label: "Senior · 5y+", value: "SENIOR" },
           { label: "Lead", value: "LEAD" },
+          { label: "Not fixed", value: "skip:seniority" },
         ],
       };
     case "mustHaveStack":
@@ -220,6 +233,7 @@ function questionFor(slot: HireSlot, spec: JobSpec): SlotQuestion {
           { label: "Project quality", value: "projects" },
           { label: "Consistency", value: "consistency" },
           { label: "Communication", value: "interview" },
+          { label: "No preference", value: "skip:evidence" },
         ],
       };
     case "salary":
@@ -241,6 +255,7 @@ function questionFor(slot: HireSlot, spec: JobSpec): SlotQuestion {
           { label: "Contract", value: "CONTRACT" },
           { label: "Internship", value: "INTERNSHIP" },
           { label: "Part-time", value: "PART_TIME" },
+          { label: "Open to any", value: "skip:employment" },
         ],
       };
     case "workMode":
@@ -251,6 +266,7 @@ function questionFor(slot: HireSlot, spec: JobSpec): SlotQuestion {
           { label: "Hybrid", value: "HYBRID" },
           { label: "Onsite", value: "ONSITE" },
           { label: "Flexible", value: "FLEXIBLE" },
+          { label: "Not decided", value: "skip:mode" },
         ],
       };
     case "locationCity":

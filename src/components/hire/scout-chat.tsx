@@ -169,6 +169,7 @@ export function ScoutChat({
   const [expanded, setExpanded] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const autoSearchedRef = useRef(false);
   const rows = specRows(spec);
 
   // Keep the newest turn in view as the transcript grows, and after the panel
@@ -179,6 +180,18 @@ export function ScoutChat({
       behavior: "smooth",
     });
   }, [messages, pending, expanded, detailsOpen]);
+
+  // Finishing the questions IS the trigger. Leaving the recruiter to notice a
+  // button after the last answer is what made the conversation feel like it
+  // never ended — there was no point at which anything happened.
+  useEffect(() => {
+    if (!readyToSearch || !requestId || pending) return;
+    if (autoSearchedRef.current) return;
+    autoSearchedRef.current = true;
+    runSearch();
+    // runSearch is stable for this component's lifetime and guarded by the ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readyToSearch, requestId, pending]);
 
   /**
    * `label` is what the recruiter read on the chip, when that differs from the
@@ -474,29 +487,52 @@ export function ScoutChat({
         </div>
       </section>
 
-      {/* Primary action */}
+      {/* Primary action. Once the questions are done the search has already
+          run, so this stops being the way forward and becomes a way back. */}
       <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          disabled={pending || !requestId}
-          onClick={runSearch}
-          className={cn(
-            buttonVariants({ size: "lg" }),
-            "gap-2 disabled:opacity-50",
-            !readyToSearch && "opacity-90",
-          )}
-        >
-          {pending ? (
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          ) : (
+        {searched ? (
+          <button
+            type="button"
+            onClick={() =>
+              document
+                .getElementById("hire-results")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }
+            className={cn(buttonVariants({ size: "lg" }), "gap-2")}
+          >
             <Search className="size-4" aria-hidden="true" />
-          )}
-          {readyToSearch ? "Search verified talent" : "Search now"}
-        </button>
+            {matchCount === 0
+              ? "See the gap report"
+              : `View ${matchCount} matched ${matchCount === 1 ? "profile" : "profiles"}`}
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={pending || !requestId}
+            onClick={runSearch}
+            className={cn(
+              buttonVariants({
+                size: "lg",
+                variant: readyToSearch ? "default" : "outline",
+              }),
+              "gap-2 disabled:opacity-50",
+            )}
+          >
+            {pending ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Search className="size-4" aria-hidden="true" />
+            )}
+            {readyToSearch
+              ? "Search verified talent"
+              : "Search with what I have"}
+          </button>
+        )}
 
-        {!readyToSearch && (
+        {!readyToSearch && !searched && (
           <p className="text-xs text-muted-foreground">
-            You can search any time — more answers mean a sharper ranking.
+            Answer the rest for a sharper ranking — I&apos;ll search
+            automatically when we&apos;re done.
           </p>
         )}
 

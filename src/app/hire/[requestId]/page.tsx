@@ -132,7 +132,7 @@ export default async function HireRequestPage({ params }: Props) {
         initialSummary={summary || request.title}
       />
 
-      <section className="space-y-4">
+      <section id="hire-results" className="scroll-mt-20 space-y-4">
         <h2 className="font-display text-xl font-semibold">Results</h2>
         {request.matches.length === 0 ? (
           <GapReport
