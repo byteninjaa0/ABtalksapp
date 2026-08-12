@@ -39,6 +39,13 @@ export default async function AdminLayout({
       label: "Data Requests",
       icon: "dataRequests" as const,
     },
+    // The demand board existed but was linked from nowhere — the only
+    // references to it in the codebase were two revalidatePath calls.
+    {
+      href: "/admin/hire-demand",
+      label: "Hire Demand",
+      icon: "jobs" as const,
+    },
   ];
 
   return (

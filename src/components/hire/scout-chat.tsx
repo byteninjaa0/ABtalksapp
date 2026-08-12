@@ -256,12 +256,17 @@ export function ScoutChat({
     });
   }
 
-  const lastOptions =
-    [...messages].reverse().find((m) => m.role === "assistant" && m.options)
-      ?.options ?? [];
+  // Only the newest turn offers chips, and they hang off that message rather
+  // than off the composer — an answer belongs to the question that asked it.
+  // Searching backwards for the last turn *with* options kept stale chips on
+  // screen after a search, which have nothing left to answer.
+  const lastIndex = messages.length - 1;
+  const lastMsg = messages[lastIndex];
+  const activeOptions =
+    lastMsg?.role === "assistant" ? (lastMsg.options ?? []) : [];
   const chips = readyToSearch
-    ? lastOptions.filter((o) => o.value !== "action:search")
-    : lastOptions;
+    ? activeOptions.filter((o) => o.value !== "action:search")
+    : activeOptions;
 
   return (
     <div className="flex flex-col gap-3">
@@ -376,15 +381,41 @@ export function ScoutChat({
                   <Sparkles className="size-3.5" aria-hidden="true" />
                 </span>
               )}
-              <div
-                className={cn(
-                  "max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap",
-                  m.role === "user"
-                    ? "rounded-br-sm bg-primary text-primary-foreground"
-                    : "rounded-bl-sm bg-muted text-foreground",
+              <div className="flex min-w-0 max-w-[85%] flex-col items-start gap-2">
+                <div
+                  className={cn(
+                    "max-w-full rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap",
+                    m.role === "user"
+                      ? "rounded-br-sm bg-primary text-primary-foreground"
+                      : "rounded-bl-sm bg-muted text-foreground",
+                  )}
+                >
+                  {m.content}
+                </div>
+
+                {i === lastIndex && !pending && chips.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {chips.map((o) => (
+                      <button
+                        key={o.value}
+                        type="button"
+                        disabled={pending}
+                        onClick={() => send(o.value, o.label)}
+                        className={cn(
+                          "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+                          "hover:border-primary hover:bg-primary/5 hover:text-primary",
+                          "focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none",
+                          "disabled:cursor-not-allowed disabled:opacity-50",
+                          o.value.startsWith("skip:")
+                            ? "border-dashed text-muted-foreground"
+                            : "border-border",
+                        )}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
                 )}
-              >
-                {m.content}
               </div>
             </div>
           ))}
@@ -410,31 +441,7 @@ export function ScoutChat({
         {/* Composer — chips are shortcuts, typing is never taken away, so a
             recruiter can answer off-script, correct an earlier answer, or ask
             Scout a question at any point. */}
-        <div className="space-y-2.5 border-t bg-background/60 p-3">
-          {chips.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {chips.map((o) => (
-                <button
-                  key={o.value}
-                  type="button"
-                  disabled={pending}
-                  onClick={() => send(o.value, o.label)}
-                  className={cn(
-                    "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-                    "hover:border-primary hover:bg-primary/5 hover:text-primary",
-                    "focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none",
-                    "disabled:cursor-not-allowed disabled:opacity-50",
-                    o.value.startsWith("skip:")
-                      ? "border-dashed text-muted-foreground"
-                      : "border-border",
-                  )}
-                >
-                  {o.label}
-                </button>
-              ))}
-            </div>
-          )}
-
+        <div className="border-t bg-background/60 p-3">
           <form
             className="flex gap-2"
             onSubmit={(e) => {
