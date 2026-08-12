@@ -26,6 +26,67 @@ const SENIORITY_YEARS: Record<string, { min: number; max: number }> = {
   LEAD: { min: 8, max: 25 },
 };
 
+
+/**
+ * Is this a role paid by the month rather than the year?
+ *
+ * An intern saying "20k" means twenty thousand a month. Read as an annual
+ * figure it became ₹20,000 a year — a twelfth of the intent, and silent,
+ * because nothing echoed the number back.
+ */
+function isMonthlyContext(spec: JobSpec): boolean {
+  return spec.seniority === "INTERN" || spec.employmentType === "INTERNSHIP";
+}
+
+/**
+ * Free-text money → annual rupees, plus the period it was written in.
+ *
+ * Annual rupees is the canonical unit everywhere: CandidateAvailability stores
+ * expectations with no period of its own, so the budget has to be comparable to
+ * them. `period` is kept only so the requirement can be read back in the units
+ * the recruiter used.
+ */
+function parseMoney(
+  msg: string,
+  monthlyDefault: boolean,
+): { min: number; max: number; period: "ANNUAL" | "MONTHLY" } | null {
+  const lower = msg.toLowerCase();
+
+  // "20k" / "1.5k" — the k was previously dropped, so 20k parsed as 20.
+  const matches = [...lower.matchAll(/(\d+(?:\.\d+)?)\s*(k|l|lac|lakh|lakhs|lpa)?/g)]
+    .filter((m) => m[1] !== undefined && m[0].trim() !== "");
+  if (matches.length === 0) return null;
+
+  const saysAnnual = /lpa|per annum|annual|\/\s*(yr|year)|a year/.test(lower);
+  const saysMonthly = /month|\/\s*mo\b|\bpm\b|stipend/.test(lower);
+  const period: "ANNUAL" | "MONTHLY" = saysAnnual
+    ? "ANNUAL"
+    : saysMonthly || monthlyDefault
+      ? "MONTHLY"
+      : "ANNUAL";
+
+  const values = matches.map((m) => {
+    const n = Number(m[1]);
+    const unit = m[2];
+    if (unit === "k") return n * 1_000;
+    if (unit && unit !== "k") return n * 100_000; // l / lac / lakh / lpa
+    // A bare number in an annual context is already rupees unless it is small
+    // enough that nobody means it literally ("12" in "12-18" means lakhs).
+    if (period === "ANNUAL" && n < 100) return n * 100_000;
+    return n;
+  });
+
+  const annual = values.map((v) => (period === "MONTHLY" ? v * 12 : v));
+  const min = Math.min(...annual);
+  const max = Math.max(...annual);
+  if (!Number.isFinite(min) || min < 0) return null;
+  return {
+    min: Math.round(min),
+    max: Math.round(Math.min(max, 100_000_000)),
+    period,
+  };
+}
+
 /** First applicable slot with no answer yet. `null` = every question answered. */
 function nextSlot(spec: JobSpec): HireSlot | null {
   const skip = inapplicableSlots(spec);
@@ -116,6 +177,9 @@ function mergeIntoSlot(spec: JobSpec, slot: HireSlot, raw: string): JobSpec {
     }
 
     case "salary": {
+      const monthly = isMonthlyContext(next);
+      // Chip values are always annual rupees; the period is read from the role,
+      // not from the chip, so one set of values serves both.
       const chip = /salary:(\d+)-(\d+)/.exec(lower);
       if (chip) {
         return {
@@ -123,23 +187,17 @@ function mergeIntoSlot(spec: JobSpec, slot: HireSlot, raw: string): JobSpec {
           salaryMin: Number(chip[1]),
           salaryMax: Number(chip[2]),
           salaryCurrency: "INR",
-          salaryPeriod: "ANNUAL",
+          salaryPeriod: monthly ? "MONTHLY" : "ANNUAL",
         };
       }
-      // Free text such as "12-18 LPA" or "1200000 to 1800000".
-      const nums = msg.match(/\d+(?:\.\d+)?/g);
-      if (!nums?.length) return next;
-      const isLpa = /lpa|lakh/i.test(msg);
-      const toRupees = (n: string) =>
-        Math.round(Number(n) * (isLpa ? 100_000 : 1));
-      const a = toRupees(nums[0]!);
-      const b = nums[1] ? toRupees(nums[1]) : a;
+      const parsed = parseMoney(msg, monthly);
+      if (!parsed) return next;
       return {
         ...next,
-        salaryMin: Math.min(a, b),
-        salaryMax: Math.max(a, b),
+        salaryMin: parsed.min,
+        salaryMax: parsed.max,
         salaryCurrency: "INR",
-        salaryPeriod: "ANNUAL",
+        salaryPeriod: parsed.period,
       };
     }
 
@@ -236,7 +294,23 @@ function questionFor(slot: HireSlot, spec: JobSpec): SlotQuestion {
           { label: "No preference", value: "skip:evidence" },
         ],
       };
-    case "salary":
+    case "salary": {
+      // An internship is paid monthly, and LPA bands are unusable for one —
+      // which is exactly why a recruiter typed "20k" into a slot that read it
+      // as a yearly figure. Chip values stay annual rupees; only the bands and
+      // the labels change.
+      if (isMonthlyContext(spec)) {
+        return {
+          question: "What's the monthly stipend for this internship?",
+          options: [
+            { label: "₹10–20k / month", value: "salary:120000-240000" },
+            { label: "₹20–30k / month", value: "salary:240000-360000" },
+            { label: "₹30–50k / month", value: "salary:360000-600000" },
+            { label: "₹50k+ / month", value: "salary:600000-1200000" },
+            { label: "Skip", value: "skip:salary" },
+          ],
+        };
+      }
       return {
         question: "What's the budget for this role?",
         options: [
@@ -247,6 +321,7 @@ function questionFor(slot: HireSlot, spec: JobSpec): SlotQuestion {
           { label: "Skip", value: "skip:salary" },
         ],
       };
+    }
     case "employmentType":
       return {
         question: "What kind of engagement is this?",
@@ -516,9 +591,11 @@ function applyUnderstood(
   base: JobSpec,
   understood: ScoutUnderstood,
   revising: boolean,
+  locked: Set<HireSlot> = new Set(),
 ): JobSpec {
   const next: JobSpec = { ...base };
-  const open = (slot: HireSlot) => revising || !isSlotFilled(base, slot);
+  const open = (slot: HireSlot) =>
+    !locked.has(slot) && (revising || !isSlotFilled(base, slot));
 
   if (understood.title?.trim() && open("title")) {
     next.title = understood.title.trim().slice(0, 200);
@@ -622,6 +699,41 @@ function looksLikeQuestion(msg: string): boolean {
   );
 }
 
+
+/** Money as the recruiter wrote it, for reading back. */
+export function formatSpecSalary(spec: JobSpec): string | null {
+  const lo = spec.salaryMin;
+  const hi = spec.salaryMax;
+  if (lo == null && hi == null) return null;
+  if (lo === 0 && hi === 0) return "not specified";
+
+  const monthly = spec.salaryPeriod === "MONTHLY";
+  const fmt = (annual: number) => {
+    const v = monthly ? Math.round(annual / 12) : annual;
+    return monthly
+      ? `₹${v.toLocaleString("en-IN")}`
+      : `₹${(v / 100_000) % 1 === 0 ? v / 100_000 : (v / 100_000).toFixed(1)} LPA`;
+  };
+  const suffix = monthly ? " a month" : "";
+  const a = lo ?? hi!;
+  const b = hi ?? lo!;
+  return a === b ? `${fmt(a)}${suffix}` : `${fmt(a)}–${fmt(b)}${suffix}`;
+}
+
+/**
+ * A deterministic read-back for slots where the answer had to be interpreted.
+ *
+ * The model was told not to restate the spec, which is right for most answers
+ * and wrong for a figure it just inferred: "Got it — budget noted." hid a
+ * twelve-fold misreading of "20k". This does not depend on the model, so the
+ * confirmation survives the AI being wrong, slow, or absent.
+ */
+function slotConfirmation(spec: JobSpec, slot: HireSlot): string | null {
+  if (slot !== "salary") return null;
+  const money = formatSpecSalary(spec);
+  return money && money !== "not specified" ? `Noted: ${money}.` : null;
+}
+
 /** Short, zero-token acknowledgement for a tapped chip. */
 function chipAck(slot: HireSlot, spec: JobSpec): string {
   switch (slot) {
@@ -635,8 +747,12 @@ function chipAck(slot: HireSlot, spec: JobSpec): string {
       return `Noted: ${(spec.mustHaveStack ?? []).join(", ")}.`;
     case "evidencePriority":
       return "Got it — I'll weight the ranking that way.";
-    case "salary":
-      return spec.salaryMin ? "Budget noted." : "No problem, skipping budget.";
+    case "salary": {
+      const money = formatSpecSalary(spec);
+      return money && money !== "not specified"
+        ? `Noted: ${money}.`
+        : "No problem, skipping budget.";
+    }
     case "employmentType":
       return "Noted.";
     case "workMode":
@@ -772,14 +888,27 @@ export async function runScoutTurn(args: {
     });
 
     if (ai.ok) {
+      // Money never comes from the model. It is asked for lakhs per annum,
+      // which is the wrong unit for an internship, and its attempts to convert
+      // "20k" produced a twelvefold error. parseMoney is exact and testable, so
+      // the engine decides the figure and the slot is locked against the model.
+      const answeringSalary = asking === "salary";
+      const seed = answeringSalary
+        ? mergedBySlot(args.priorSpec, "salary", msg)
+        : args.priorSpec;
       const spec = applyUnderstood(
-        args.priorSpec,
+        seed,
         ai.data.understood,
         ai.data.intent === "revise",
+        answeringSalary ? new Set<HireSlot>(["salary"]) : undefined,
       );
       // nextQuestion is capped at 500 chars and the canonical question must
       // always survive, so the acknowledgement is what gets trimmed.
-      const ack = ai.data.ack.trim().slice(0, 280);
+      const modelAck = ai.data.ack.trim().slice(0, 200);
+      // The read-back leads, so an interpreted figure is confirmed even when
+      // the model's own sentence says nothing useful about it.
+      const confirm = asking ? slotConfirmation(spec, asking) : null;
+      const ack = confirm ? `${confirm} ${modelAck}`.trim() : modelAck;
       return checked(turnFor(spec, ack), unchanged);
     }
   }

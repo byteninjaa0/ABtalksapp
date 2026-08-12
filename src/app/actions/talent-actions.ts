@@ -82,7 +82,10 @@ export async function toggleShortlistAction(
   revalidatePath("/talent");
   revalidatePath("/talent/shortlist");
   revalidatePath(`/talent/members/${parsed.data.memberId}`);
-  revalidatePath("/hire");
+  // "layout" scope, not the bare path: the cart count lives in the /hire layout
+  // and the results live at /hire/[requestId]. Revalidating "/hire" alone left
+  // both stale, so adding to the cart appeared to do nothing.
+  revalidatePath("/hire", "layout");
   return { ok: true, data: { shortlisted: result.shortlisted } };
 }
 

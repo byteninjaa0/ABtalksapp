@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { ScoutChat } from "@/components/hire/scout-chat";
-import { MatchCard } from "@/components/hire/match-card";
+import { MatchResults } from "@/components/hire/match-results";
+import type { MatchCardData } from "@/components/hire/match-card";
 import { GapReport } from "@/components/hire/gap-report";
 import { existingEngagements } from "@/features/hire/contact-access";
 import { jobSpecSchema, type JobSpec } from "@/lib/validations/hire";
@@ -110,6 +111,10 @@ export default async function HireRequestPage({ params }: Props) {
 
   // What this recruiter has already asked about, so a card never offers to
   // request the same introduction twice.
+  const cartCount = await prisma.recruiterShortlistItem.count({
+    where: { recruiterUserId: userId },
+  });
+
   const engagements = await existingEngagements(
     userId,
     request.matches
@@ -171,47 +176,29 @@ export default async function HireRequestPage({ params }: Props) {
               stay hidden until you place a request and our team confirms the
               engagement.
             </p>
-            <ul className="space-y-4">
-                {request.matches.map((m, i) => {
-                const evidence =
+            <MatchResults
+              cartCount={cartCount}
+              matches={request.matches.map((m): MatchCardData => ({
+                programMemberId: m.programMemberId,
+                jobRole: m.programMember?.jobRole ?? "Candidate",
+                score: m.score,
+                tier: m.tier,
+                rationale: m.rationale,
+                gaps: m.gaps,
+                availabilityUnknown: m.availabilityUnknown,
+                shortlisted: (m.programMember?.shortlistedBy?.length ?? 0) > 0,
+                engagementStatus: m.programMemberId
+                  ? (engagements.get(m.programMemberId)?.status ?? null)
+                  : null,
+                evidence:
                   m.evidence && typeof m.evidence === "object"
-                    ? (m.evidence as MatchCardDataEvidence)
-                    : {};
-                return (
-                  <li key={`${m.programMemberId}-${i}`}>
-                    <MatchCard
-                      match={{
-                        programMemberId: m.programMemberId,
-                        jobRole: m.programMember?.jobRole ?? "Candidate",
-                        score: m.score,
-                        tier: m.tier,
-                        rationale: m.rationale,
-                        gaps: m.gaps,
-                        availabilityUnknown: m.availabilityUnknown,
-                        shortlisted:
-                          (m.programMember?.shortlistedBy?.length ?? 0) > 0,
-                        engagementStatus: m.programMemberId
-                          ? (engagements.get(m.programMemberId)?.status ?? null)
-                          : null,
-                        evidence,
-                      }}
-                    />
-                  </li>
-                );
-              })}
-            </ul>
+                    ? (m.evidence as MatchCardData["evidence"])
+                    : {},
+              }))}
+            />
           </>
         )}
       </section>
     </div>
   );
 }
-
-type MatchCardDataEvidence = {
-  skills?: string[];
-  missionPoints?: number;
-  cleanPassCount?: number;
-  commitDayCount?: number;
-  projectScores?: number[];
-  yearsExperience?: number;
-};

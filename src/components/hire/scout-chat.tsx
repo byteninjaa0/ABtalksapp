@@ -110,10 +110,14 @@ function specRows(spec: JobSpec): { label: string; value: string }[] {
   if (spec.salaryMin != null || spec.salaryMax != null) {
     const lo = spec.salaryMin ?? 0;
     const hi = spec.salaryMax ?? 0;
-    push(
-      "Budget",
-      lo === 0 && hi === 0 ? "Not specified" : `₹${toLpa(lo)}–${toLpa(hi)} LPA`,
-    );
+    // Stored annually so it stays comparable to candidate expectations, but
+    // read back in the units the recruiter used — a stipend shown as "₹2.4 LPA"
+    // is technically true and useless.
+    const money =
+      spec.salaryPeriod === "MONTHLY"
+        ? `₹${Math.round(lo / 12).toLocaleString("en-IN")}–₹${Math.round(hi / 12).toLocaleString("en-IN")} / month`
+        : `₹${toLpa(lo)}–${toLpa(hi)} LPA`;
+    push("Budget", lo === 0 && hi === 0 ? "Not specified" : money);
   }
 
   push(

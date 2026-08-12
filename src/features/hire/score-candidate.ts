@@ -224,6 +224,46 @@ export function evaluateHardFilters(
 /**
  * Deterministic 0–100 score. No LLM. Pure function of member + spec.
  */
+
+/**
+ * Years a seniority label implies, used only when the recruiter gave no band.
+ *
+ * `seniority` was asked, stored, shown in the requirement panel — and read by
+ * nothing. An "Intern" requirement scored identically to a "Lead" one. It is a
+ * soft signal rather than a filter: the label is the recruiter's shorthand, and
+ * the evidence still decides the ranking.
+ */
+const SENIORITY_BAND: Record<string, { min: number; max: number }> = {
+  INTERN: { min: 0, max: 1 },
+  JUNIOR: { min: 0, max: 2 },
+  MID: { min: 2, max: 5 },
+  SENIOR: { min: 5, max: 12 },
+  LEAD: { min: 8, max: 25 },
+};
+
+/**
+ * The experience band to score against.
+ *
+ * An explicit band always wins. "Evidence only" stores 0–50, which is the
+ * recruiter saying they do not want an experience filter — so seniority must
+ * not quietly reimpose one.
+ */
+function effectiveExperienceBand(spec: {
+  seniority?: string | null;
+  minExperience?: number | null;
+  maxExperience?: number | null;
+}): { min: number | null | undefined; max: number | null | undefined } {
+  const explicit =
+    spec.minExperience != null &&
+    spec.maxExperience != null &&
+    !(spec.minExperience === 0 && spec.maxExperience >= 50);
+  if (explicit || !spec.seniority) {
+    return { min: spec.minExperience, max: spec.maxExperience };
+  }
+  const band = SENIORITY_BAND[spec.seniority];
+  return band ? { min: band.min, max: band.max } : { min: null, max: null };
+}
+
 export function scoreCandidate(
   member: ScoreableMember,
   spec: JobSpec,
@@ -243,11 +283,10 @@ export function scoreCandidate(
     projects: projectScore(member.projectScores),
     consistency: consistencyScore(member.commitDayCount),
     interview: interviewScore(member.interview),
-    experience: experienceScore(
-      member.yearsExperience,
-      spec.minExperience,
-      spec.maxExperience,
-    ),
+    experience: (() => {
+      const band = effectiveExperienceBand(spec);
+      return experienceScore(member.yearsExperience, band.min, band.max);
+    })(),
   };
 
   let total = 0;
