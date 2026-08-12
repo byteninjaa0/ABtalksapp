@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { ChevronDown, ExternalLink, Info } from "lucide-react";
 import { candidatePublicId } from "@/features/hire/public-id";
 import { buttonVariants } from "@/components/ui/button";
 import { RequestIntroButton } from "@/components/hire/request-intro-button";
@@ -50,33 +50,87 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 export function MatchCard({
   match,
+  rank,
   onCartToggle,
 }: {
   match: MatchCardData;
+  /** 1-based position in the ranking; 1 gets the standing glow. */
+  rank?: number;
   onCartToggle?: (inCart: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
   const e = match.evidence ?? {};
+  const isTop = rank === 1;
+  const strong = match.tier === "STRONG";
   const publicId = match.programMemberId
     ? candidatePublicId(match.programMemberId)
     : "AB-????";
 
   return (
-    <article className="rounded-xl border bg-card p-4 shadow-sm">
+    <article
+      className={cn(
+        "group relative overflow-hidden rounded-2xl border bg-card p-5",
+        "shadow-card transition-all duration-300 ease-out",
+        "hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-card-hover",
+        // The best match keeps the glow instead of waiting for a hover.
+        isTop && "border-primary/40 shadow-primary",
+      )}
+    >
+      {/* A one-pixel sheen along the top edge — the "lit" feel, without
+          painting a second background that would fight the theme. */}
+      <span
+        aria-hidden="true"
+        className={cn(
+          "pointer-events-none absolute inset-x-0 top-0 h-px",
+          "bg-gradient-to-r from-transparent via-primary/50 to-transparent",
+          isTop ? "opacity-100" : "opacity-0 transition-opacity group-hover:opacity-100",
+        )}
+      />
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="font-display text-lg font-semibold">
-            {match.jobRole}
-          </h3>
-          <p className="text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2">
+            {rank != null && (
+              <span className="font-display text-sm font-bold text-muted-foreground">
+                #{rank}
+              </span>
+            )}
+            <h3 className="font-display text-lg font-semibold">
+              {match.jobRole}
+            </h3>
+            {isTop && (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                Top match
+              </span>
+            )}
+          </div>
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {[match.locationLabel, publicId].filter(Boolean).join(" · ")}
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-semibold tabular-nums">{match.score}</p>
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+        <div className="flex shrink-0 items-center gap-3">
+          <div className="text-right">
+            <p
+              className={cn(
+                "font-display text-3xl leading-none font-bold tabular-nums",
+                strong ? "text-primary" : "text-foreground",
+              )}
+            >
+              {match.score}
+            </p>
+            <p className="mt-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+              out of 100
+            </p>
+          </div>
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide uppercase",
+              strong
+                ? "bg-primary/10 text-primary"
+                : "bg-muted text-muted-foreground",
+            )}
+          >
             {match.tier}
-          </p>
+          </span>
         </div>
       </header>
 
@@ -102,13 +156,17 @@ export function MatchCard({
             +{e.skills!.length - 4}
           </li>
         )}
+        {match.availabilityUnknown && (
+          <li
+            className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-amber-900 dark:text-amber-100"
+            title="Salary, notice period and location are unconfirmed until the candidate shares them."
+          >
+            <Info className="size-3" aria-hidden="true" />
+            Availability unconfirmed
+          </li>
+        )}
       </ul>
 
-      {match.availabilityUnknown && (
-        <p className="mt-3 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
-          Availability not shared — salary, notice and location are unconfirmed.
-        </p>
-      )}
 
       {/* Two actions, always both: put it in the cart, or look closer. */}
       <div className="mt-4 flex flex-wrap items-center gap-2">

@@ -43,7 +43,10 @@ export function MatchResults({
           <li key={`${m.programMemberId ?? "unknown"}-${i}`}>
             <MatchCard
               match={m}
-              onCartToggle={(inCart) => setCount((c) => Math.max(0, c + (inCart ? 1 : -1)))}
+              rank={i + 1}
+              onCartToggle={(inCart) =>
+                setCount((c) => Math.max(0, c + (inCart ? 1 : -1)))
+              }
             />
           </li>
         ))}
@@ -54,8 +57,9 @@ export function MatchResults({
           type="button"
           onClick={() => setShowAll(true)}
           className={cn(
-            buttonVariants({ variant: "outline" }),
-            "w-full gap-1.5",
+            "flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed",
+            "bg-card/50 py-3 text-sm font-medium shadow-card transition-all duration-300",
+            "hover:border-primary/45 hover:bg-card hover:shadow-card-hover",
           )}
         >
           View {hidden} more {hidden === 1 ? "candidate" : "candidates"}

@@ -6,7 +6,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/talent", label: "Talent pool" },
+  // The pool browser is not linked anywhere while it has nothing useful to
+  // show. The route stays — the cart and the member profiles live under it.
   { href: "/hire", label: "Scout" },
   // One name for one thing: "Shortlist" here and "cart" everywhere else
   // read as two features, which is why the cart was never found.
