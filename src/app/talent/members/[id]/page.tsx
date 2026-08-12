@@ -39,11 +39,11 @@ export default async function TalentMemberPage({ params }: Props) {
     <div className="mx-auto max-w-3xl space-y-8">
       <div className="flex items-center gap-3">
         <Link
-          href="/talent"
+          href="/talent/shortlist"
           className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-1")}
         >
           <ArrowLeft className="size-4" />
-          Pool
+          Cart
         </Link>
         <ShortlistButton
           memberId={profile.memberId}

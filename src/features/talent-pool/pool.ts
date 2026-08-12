@@ -4,42 +4,6 @@ import { prisma } from "@/lib/db";
 import { recruiterDevBypassEnabled } from "@/lib/program-auth";
 import { getMissionHeatmap, type MissionHeatmapCell } from "@/features/program/progression";
 
-const PAGE_SIZE = 30;
-
-export type TalentPoolFilters = {
-  q?: string;
-  skills?: string[];
-  minYears?: number;
-  minScore?: number;
-  page?: number;
-};
-
-export type TalentPoolRow = {
-  rank: number;
-  memberId: string;
-  fullName: string;
-  jobRole: string;
-  company: string;
-  yearsExperience: number;
-  skills: string[];
-  totalScore: number;
-  missionPoints: number;
-  conceptPoints: number;
-  commitPoints: number;
-  projectPoints: number;
-  cleanPassPct: number;
-  interviewOverall: number | null;
-  shortlisted: boolean;
-};
-
-export type TalentPoolResult = {
-  cohortName: string;
-  members: TalentPoolRow[];
-  total: number;
-  page: number;
-  pageSize: number;
-};
-
 export type MissionPortfolioDay = {
   dayNumber: number;
   title: string;
@@ -177,110 +141,6 @@ export async function getPublishedCohort() {
       endsAt: true,
     },
   });
-}
-
-export async function getTalentPool(
-  recruiterUserId: string,
-  filters: TalentPoolFilters,
-): Promise<
-  | { ok: true; data: TalentPoolResult }
-  | { ok: false; message: string }
-> {
-  const access = await assertPoolAccess(recruiterUserId);
-  if (!access.ok) return access;
-
-  const page = filters.page ?? 1;
-  const skills = filters.skills?.filter(Boolean) ?? [];
-
-  const where = {
-    cohortId: access.cohort.id,
-    status: { in: ["ENROLLED", "COMPLETED"] as ("ENROLLED" | "COMPLETED")[] },
-    recruiterVisibilityConsentAt: { not: null },
-    ...(filters.minYears !== undefined
-      ? { yearsExperience: { gte: filters.minYears } }
-      : {}),
-    ...(filters.minScore !== undefined
-      ? { totalScore: { gte: filters.minScore } }
-      : {}),
-    ...(skills.length > 0 ? { skills: { hasSome: skills } } : {}),
-    ...(filters.q
-      ? {
-          OR: [
-            { fullName: { contains: filters.q, mode: "insensitive" as const } },
-            { company: { contains: filters.q, mode: "insensitive" as const } },
-            { jobRole: { contains: filters.q, mode: "insensitive" as const } },
-          ],
-        }
-      : {}),
-  };
-
-  const [allMembers, shortlistIds] = await Promise.all([
-    prisma.programMember.findMany({
-      where,
-      orderBy: [
-        { totalScore: "desc" },
-        { projectPoints: "desc" },
-        { missionPoints: "desc" },
-        { enrolledAt: "asc" },
-      ],
-      select: {
-        id: true,
-        fullName: true,
-        jobRole: true,
-        company: true,
-        yearsExperience: true,
-        skills: true,
-        missionPoints: true,
-        conceptPoints: true,
-        commitPoints: true,
-        projectPoints: true,
-        totalScore: true,
-        cleanPassCount: true,
-        interview: {
-          select: { overallScore: true, status: true },
-        },
-      },
-    }),
-    prisma.recruiterShortlistItem.findMany({
-      where: { recruiterUserId },
-      select: { memberId: true },
-    }),
-  ]);
-
-  const shortlistSet = new Set(shortlistIds.map((s) => s.memberId));
-  const total = allMembers.length;
-  const offset = (page - 1) * PAGE_SIZE;
-  const pageMembers = allMembers.slice(offset, offset + PAGE_SIZE);
-
-  const members: TalentPoolRow[] = pageMembers.map((m, i) => ({
-    rank: offset + i + 1,
-    memberId: m.id,
-    fullName: m.fullName,
-    jobRole: m.jobRole,
-    company: m.company,
-    yearsExperience: m.yearsExperience,
-    skills: m.skills,
-    totalScore: m.totalScore,
-    missionPoints: m.missionPoints,
-    conceptPoints: m.conceptPoints,
-    commitPoints: m.commitPoints,
-    projectPoints: m.projectPoints,
-    cleanPassPct: computeCleanPassPct(m.missionPoints, m.cleanPassCount),
-    interviewOverall:
-      m.interview?.status === "COMPLETED" ? m.interview.overallScore : null,
-    shortlisted: shortlistSet.has(m.id),
-  }));
-
-  return {
-    ok: true,
-    data: {
-      cohortName: access.cohort.name,
-      members,
-      total,
-      page,
-      pageSize: PAGE_SIZE,
-    },
-  };
 }
 
 async function buildMissionPortfolio(
@@ -622,12 +482,3 @@ export async function getShortlist(
   };
 }
 
-export async function getShortlistedMemberIds(
-  recruiterUserId: string,
-): Promise<Set<string>> {
-  const items = await prisma.recruiterShortlistItem.findMany({
-    where: { recruiterUserId },
-    select: { memberId: true },
-  });
-  return new Set(items.map((i) => i.memberId));
-}

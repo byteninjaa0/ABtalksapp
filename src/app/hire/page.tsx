@@ -83,14 +83,6 @@ export default async function HirePage() {
         </p>
       )}
 
-      <p className="text-center">
-        <Link
-          href="/talent"
-          className={cn(buttonVariants({ variant: "link", size: "sm" }))}
-        >
-          Prefer browsing the full pool?
-        </Link>
-      </p>
     </div>
   );
 }
