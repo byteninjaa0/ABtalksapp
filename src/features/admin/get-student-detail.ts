@@ -50,6 +50,20 @@ export type ChallengeStudentDetail = {
     score: number;
     attemptedAt: Date;
   }>;
+  practiceAttempts: Array<{
+    id: string;
+    problemId: string;
+    status: string;
+    testsPassed: number;
+    testsTotal: number;
+    flagged: boolean;
+    flagReason: string | null;
+    sourceCode: string;
+    createdAt: Date;
+    problemTitle: string;
+    problemSlug: string;
+  }>;
+  practiceSolveCount: number;
   adminActions: Array<{
     id: string;
     actionType: string;
@@ -166,7 +180,8 @@ export async function getStudentDetail(
     };
   }
 
-  const [submissions, quizAttempts, adminActions, remarks] = await Promise.all([
+  const [submissions, quizAttempts, adminActions, remarks, practiceAttempts, practiceSolveCount] =
+    await Promise.all([
     prisma.submission.findMany({
       where: { userId },
       orderBy: [{ dayNumber: "asc" }, { submittedAt: "desc" }],
@@ -214,6 +229,24 @@ export async function getStudentDetail(
         },
       },
     }),
+    prisma.practiceAttempt.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 25,
+      select: {
+        id: true,
+        problemId: true,
+        status: true,
+        testsPassed: true,
+        testsTotal: true,
+        flagged: true,
+        flagReason: true,
+        sourceCode: true,
+        createdAt: true,
+        problem: { select: { title: true, slug: true } },
+      },
+    }),
+    prisma.practiceSolve.count({ where: { userId } }),
   ]);
 
   const enrollment = user.enrollments[0] ?? null;
@@ -256,6 +289,20 @@ export async function getStudentDetail(
       score: attempt.score,
       attemptedAt: attempt.attemptedAt,
     })),
+    practiceAttempts: practiceAttempts.map((attempt) => ({
+      id: attempt.id,
+      problemId: attempt.problemId,
+      status: attempt.status,
+      testsPassed: attempt.testsPassed,
+      testsTotal: attempt.testsTotal,
+      flagged: attempt.flagged,
+      flagReason: attempt.flagReason,
+      sourceCode: attempt.sourceCode,
+      createdAt: attempt.createdAt,
+      problemTitle: attempt.problem.title,
+      problemSlug: attempt.problem.slug,
+    })),
+    practiceSolveCount,
     adminActions: adminActions.map((action) => ({
       id: action.id,
       actionType: action.actionType,

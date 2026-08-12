@@ -52,6 +52,7 @@ import { ClaudeFAQ } from "@/components/shared/claude-faq";
 import { DashboardWalkthrough } from "@/components/dashboard/dashboard-walkthrough";
 import { ClaudeDay0SharePrompt } from "@/components/claude/claude-day0-share-prompt";
 import { HackathonPromoModal } from "@/components/dashboard/hackathon-promo-modal";
+import { DashboardTabs } from "@/components/practice/dashboard-tabs";
 
 function readQueryParam(
   query: Record<string, string | string[] | undefined>,
@@ -292,6 +293,7 @@ export default async function DashboardPage({
         ) : null}
         <HackathonPromoModal />
         <div className="relative z-10 flex-1">
+        <DashboardTabs enrollmentId={dashboardData.enrollment.id} />
         <PreStartDashboard
           enrollment={{
             id: dashboardData.enrollment.id,
@@ -370,6 +372,7 @@ export default async function DashboardPage({
         />
       ) : null}
       <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-6 sm:px-6">
+        <DashboardTabs enrollmentId={dashboardData.enrollment.id} />
         <ConsentRefreshBanner needsReconsent={mustReconsent} />
         {quizAvailability.banner ? (
           <div className="mb-6">

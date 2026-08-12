@@ -310,6 +310,7 @@ export default async function AdminStudentDetailPage({
         <TabsList>
           <TabsTrigger value="submissions">Submissions</TabsTrigger>
           <TabsTrigger value="quizzes">Quiz Attempts</TabsTrigger>
+          <TabsTrigger value="practice">Practice</TabsTrigger>
           <TabsTrigger value="admin-actions">Admin Actions</TabsTrigger>
           <TabsTrigger value="recruiter">Recruiter Profile</TabsTrigger>
           <TabsTrigger value="remarks">Remarks</TabsTrigger>
@@ -390,6 +391,52 @@ export default async function AdminStudentDetailPage({
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="practice">
+          <p className="mb-3 text-sm text-muted-foreground">
+            Solves: {data.practiceSolveCount} · Showing latest{" "}
+            {data.practiceAttempts.length} attempts
+          </p>
+          {data.practiceAttempts.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No practice attempts yet</p>
+          ) : (
+            <div className="space-y-2">
+              {data.practiceAttempts.map((row) => (
+                <Card
+                  key={row.id}
+                  className={row.flagged ? "border-destructive/50" : undefined}
+                >
+                  <CardContent className="space-y-2 pt-4 text-sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium">
+                        {row.problemTitle}{" "}
+                        <span className="text-muted-foreground">({row.problemSlug})</span>
+                      </p>
+                      {row.flagged ? (
+                        <Badge variant="destructive">Flagged</Badge>
+                      ) : null}
+                    </div>
+                    <p>
+                      {row.status} · {row.testsPassed}/{row.testsTotal} ·{" "}
+                      {formatDateTimeIST(row.createdAt)}
+                    </p>
+                    {row.flagged && row.flagReason ? (
+                      <p className="text-destructive">{row.flagReason}</p>
+                    ) : null}
+                    <details>
+                      <summary className="cursor-pointer text-muted-foreground">
+                        Source code
+                      </summary>
+                      <pre className="mt-2 max-h-64 overflow-auto rounded bg-muted p-2 text-xs">
+                        {row.sourceCode}
+                      </pre>
+                    </details>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           )}
         </TabsContent>

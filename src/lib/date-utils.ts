@@ -27,6 +27,11 @@ export function getNowInIST(): string {
   return formatInTimeZone(new Date(), IST, "EEEE, d MMM yyyy, h:mm a zzz");
 }
 
+/** Today's IST calendar key (`yyyy-MM-dd`). */
+export function getTodayIstDateKey(): string {
+  return formatInTimeZone(new Date(), IST, "yyyy-MM-dd");
+}
+
 type EnrollmentDayAnchor = { startedAt: Date };
 type ChallengeSyncStart = { startsAt?: Date | null };
 

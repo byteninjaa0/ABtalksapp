@@ -289,6 +289,8 @@ model User {
   workshopRegistrations WorkshopRegistration[]
   legalConsents         LegalConsent[]
   dataRightsRequests    DataRightsRequest[]
+  practiceAttempts      PracticeAttempt[]
+  practiceSolves        PracticeSolve[]
 
   @@index([createdAt(sort: Desc)])
 }
@@ -1107,3 +1109,119 @@ model WorkshopRegistration {
 
 // NOTE: `workshop_config` deliberately stays in Supabase — only registrations
 // migrated. See src/lib/workshop-supabase.ts for the config reader.
+
+enum PracticeDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum PracticeAttemptStatus {
+  ACCEPTED
+  WRONG_ANSWER
+  RUNTIME_ERROR
+}
+
+model PracticeTrack {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  title       String
+  description String
+  sortOrder   Int
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  topics      PracticeTopic[]
+}
+
+model PracticeTopic {
+  id          String            @id @default(cuid())
+  trackId     String
+  slug        String
+  title       String
+  description String
+  sortOrder   Int
+  track       PracticeTrack     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  problems    PracticeProblem[]
+
+  @@unique([trackId, slug])
+  @@index([trackId, sortOrder])
+}
+
+model PracticeProblem {
+  /// Statement fields are markdown. `slug` is globally unique — it is the URL segment.
+  id            String             @id @default(cuid())
+  topicId       String
+  slug          String             @unique
+  title         String
+  statement     String
+  inputFormat   String
+  outputFormat  String
+  constraintsMd String
+  starterCode   String
+  difficulty    PracticeDifficulty
+  maxScore      Int
+  sortOrder     Int
+  isActive      Boolean            @default(true)
+  createdAt     DateTime           @default(now())
+  topic         PracticeTopic      @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  testCases     PracticeTestCase[]
+  attempts      PracticeAttempt[]
+  solves        PracticeSolve[]
+
+  @@index([topicId, sortOrder])
+}
+
+model PracticeTestCase {
+  /// `isSample` controls display only — every case is shipped to the browser to be run.
+  id          String          @id @default(cuid())
+  problemId   String
+  ordinal     Int
+  isSample    Boolean         @default(false)
+  input       String
+  expected    String
+  explanation String?
+  problem     PracticeProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([problemId, ordinal])
+}
+
+model PracticeAttempt {
+  /// One row per Submit. Source code is retained for integrity review.
+  id          String                @id @default(cuid())
+  userId      String
+  problemId   String
+  status      PracticeAttemptStatus
+  language    String                @default("python")
+  sourceCode  String
+  testsPassed Int
+  testsTotal  Int
+  runtimeMs   Int?
+  flagged     Boolean               @default(false)
+  flagReason  String?
+  createdAt   DateTime              @default(now())
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem     PracticeProblem       @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  solve       PracticeSolve?
+
+  @@index([userId, createdAt])
+  @@index([problemId])
+  @@index([flagged, createdAt])
+}
+
+model PracticeSolve {
+  /// First accepted attempt per (user, problem). `score` always counts toward practice
+  /// progress; `synergyAwarded` is 0 when the IST daily synergy cap was already hit.
+  id             String          @id @default(cuid())
+  userId         String
+  problemId      String
+  attemptId      String          @unique
+  score          Int
+  synergyAwarded Int             @default(0)
+  solvedAt       DateTime        @default(now())
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem        PracticeProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  attempt        PracticeAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+  @@index([userId, solvedAt])
+}

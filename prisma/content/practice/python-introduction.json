@@ -1,0 +1,224 @@
+{
+  "track": {
+    "slug": "python",
+    "title": "Python",
+    "description": "Core language drills: input, arithmetic, loops, and calendar rules.",
+    "sortOrder": 1
+  },
+  "topic": {
+    "slug": "introduction",
+    "title": "Introduction",
+    "description": "Warm-up problems that read stdin and print exact stdout.",
+    "sortOrder": 1
+  },
+  "problems": [
+    {
+      "slug": "py-intro-greeting",
+      "title": "Greeting Line",
+      "difficulty": "EASY",
+      "maxScore": 10,
+      "sortOrder": 1,
+      "statement": "Read a single name from standard input and print a greeting on one line.\n\nThe greeting must be exactly `Hello, <name>!` with a space after the comma and an exclamation mark at the end.",
+      "inputFormat": "One line containing a name (letters, spaces allowed).",
+      "outputFormat": "One line: `Hello, <name>!`",
+      "constraints": "- Name length is between 1 and 40 characters\n- Do not add extra spaces",
+      "starterCode": "name = input()\n# print the greeting\n",
+      "testCases": [
+        {
+          "ordinal": 1,
+          "isSample": true,
+          "input": "Asha",
+          "expected": "Hello, Asha!",
+          "explanation": "Name is Asha."
+        },
+        {
+          "ordinal": 2,
+          "isSample": true,
+          "input": "Dev",
+          "expected": "Hello, Dev!"
+        },
+        {
+          "ordinal": 3,
+          "isSample": false,
+          "input": "Riya Kapoor",
+          "expected": "Hello, Riya Kapoor!"
+        },
+        {
+          "ordinal": 4,
+          "isSample": false,
+          "input": "Z",
+          "expected": "Hello, Z!"
+        },
+        {
+          "ordinal": 5,
+          "isSample": false,
+          "input": "Campus Ambassador",
+          "expected": "Hello, Campus Ambassador!"
+        }
+      ]
+    },
+    {
+      "slug": "py-intro-arithmetic",
+      "title": "Two Number Sum",
+      "difficulty": "EASY",
+      "maxScore": 10,
+      "sortOrder": 2,
+      "statement": "Read two integers and print their sum.",
+      "inputFormat": "Two lines, each with one integer.",
+      "outputFormat": "A single integer — the sum.",
+      "constraints": "- Each integer is between -10^6 and 10^6",
+      "starterCode": "a = int(input())\nb = int(input())\n# print a + b\n",
+      "testCases": [
+        {
+          "ordinal": 1,
+          "isSample": true,
+          "input": "3\n5",
+          "expected": "8",
+          "explanation": "3 + 5 = 8"
+        },
+        {
+          "ordinal": 2,
+          "isSample": true,
+          "input": "0\n0",
+          "expected": "0"
+        },
+        {
+          "ordinal": 3,
+          "isSample": false,
+          "input": "-4\n10",
+          "expected": "6"
+        },
+        {
+          "ordinal": 4,
+          "isSample": false,
+          "input": "1000000\n-999999",
+          "expected": "1"
+        }
+      ]
+    },
+    {
+      "slug": "py-intro-division",
+      "title": "Floor and Exact Division",
+      "difficulty": "EASY",
+      "maxScore": 10,
+      "sortOrder": 3,
+      "statement": "Read two positive integers `a` and `b`. Print two lines:\n\n1. integer floor division `a // b`\n2. exact floating division `a / b`\n\nDo not round the floating result.",
+      "inputFormat": "Two lines with integers `a` and `b` (`b` is never zero).",
+      "outputFormat": "Two lines: floor result, then float result.",
+      "constraints": "- 1 ≤ a, b ≤ 10^6",
+      "starterCode": "a = int(input())\nb = int(input())\n# print floor then float division\n",
+      "testCases": [
+        {
+          "ordinal": 1,
+          "isSample": true,
+          "input": "7\n2",
+          "expected": "3\n3.5",
+          "explanation": "7//2 is 3 and 7/2 is 3.5"
+        },
+        {
+          "ordinal": 2,
+          "isSample": true,
+          "input": "9\n3",
+          "expected": "3\n3.0"
+        },
+        {
+          "ordinal": 3,
+          "isSample": false,
+          "input": "1\n4",
+          "expected": "0\n0.25"
+        },
+        {
+          "ordinal": 4,
+          "isSample": false,
+          "input": "100\n8",
+          "expected": "12\n12.5"
+        }
+      ]
+    },
+    {
+      "slug": "py-intro-loops",
+      "title": "Squares Up To N",
+      "difficulty": "EASY",
+      "maxScore": 10,
+      "sortOrder": 4,
+      "statement": "Read a non-negative integer `n`. Print the squares of `0, 1, 2, …, n-1`, each on its own line.\n\nIf `n` is 0, print nothing.",
+      "inputFormat": "One integer `n`.",
+      "outputFormat": "`n` lines (possibly zero), each an integer square.",
+      "constraints": "- 0 ≤ n ≤ 20",
+      "starterCode": "n = int(input())\n# print i*i for i in range(n)\n",
+      "testCases": [
+        {
+          "ordinal": 1,
+          "isSample": true,
+          "input": "3",
+          "expected": "0\n1\n4",
+          "explanation": "0^2, 1^2, 2^2"
+        },
+        {
+          "ordinal": 2,
+          "isSample": true,
+          "input": "1",
+          "expected": "0"
+        },
+        {
+          "ordinal": 3,
+          "isSample": false,
+          "input": "0",
+          "expected": ""
+        },
+        {
+          "ordinal": 4,
+          "isSample": false,
+          "input": "5",
+          "expected": "0\n1\n4\n9\n16"
+        }
+      ]
+    },
+    {
+      "slug": "py-intro-leap-year",
+      "title": "Leap Year Check",
+      "difficulty": "EASY",
+      "maxScore": 15,
+      "sortOrder": 5,
+      "statement": "Read a year and decide whether it is a leap year under the Gregorian rule:\n\n- divisible by 400 → leap\n- else divisible by 100 → not leap\n- else divisible by 4 → leap\n- otherwise → not leap\n\nPrint `True` or `False` (capital T/F).",
+      "inputFormat": "One integer year.",
+      "outputFormat": "One line: `True` or `False`.",
+      "constraints": "- 1600 ≤ year ≤ 2400",
+      "starterCode": "year = int(input())\n# print True or False\n",
+      "testCases": [
+        {
+          "ordinal": 1,
+          "isSample": true,
+          "input": "2000",
+          "expected": "True",
+          "explanation": "Divisible by 400"
+        },
+        {
+          "ordinal": 2,
+          "isSample": true,
+          "input": "1900",
+          "expected": "False",
+          "explanation": "Century not divisible by 400"
+        },
+        {
+          "ordinal": 3,
+          "isSample": false,
+          "input": "2024",
+          "expected": "True"
+        },
+        {
+          "ordinal": 4,
+          "isSample": false,
+          "input": "2023",
+          "expected": "False"
+        },
+        {
+          "ordinal": 5,
+          "isSample": false,
+          "input": "1600",
+          "expected": "True"
+        }
+      ]
+    }
+  ]
+}
