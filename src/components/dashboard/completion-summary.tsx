@@ -27,7 +27,7 @@ export function CompletionSummary({
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <CheckCircle2
-            className="size-6 shrink-0 text-emerald-600"
+            className="size-6 shrink-0 text-emerald-600 dark:text-emerald-400"
             aria-hidden
           />
           <CardTitle className="font-display text-2xl">

@@ -35,6 +35,38 @@ const archivo = localFont({
   display: "swap",
 });
 
+const inter = localFont({
+  src: [
+    {
+      path: "../fonts/inter/inter-latin-400-normal.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../fonts/inter/inter-latin-500-normal.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../fonts/inter/inter-latin-600-normal.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../fonts/inter/inter-latin-700-normal.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../fonts/inter/inter-latin-800-normal.woff2",
+      weight: "800",
+      style: "normal",
+    },
+  ],
+  variable: "--font-inter",
+  display: "swap",
+});
+
 const hubSans = localFont({
   src: [
     {
@@ -120,6 +152,7 @@ export const metadata: Metadata = {
 
 const fontVars = [
   archivo.variable,
+  inter.variable,
   hubSans.variable,
   hubSerif.variable,
   hubDisplay.variable,
@@ -136,7 +169,8 @@ export default function RootLayout({
       <body className={`${fontVars} min-h-full flex flex-col font-sans`}>
         <ThemeProvider
           attribute="class"
-          forcedTheme="light"
+          defaultTheme="system"
+          enableSystem
           disableTransitionOnChange
         >
           <CookieConsentProvider>

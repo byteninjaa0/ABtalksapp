@@ -93,26 +93,26 @@ function challengeHref(enrollmentId: string, path: string): string {
 }
 
 // function parseLeaderboardDomain(
-// value: string,
+//   value: string,
 // ): "AI" | "DS" | "SE" | "CLAUDE" | "ALL" {
-// if (
-// value === "AI" ||
-// value === "DS" ||
-// value === "SE" ||
-// value === "CLAUDE"
-// ) {
-// return value;
-// }
-// return "ALL";
+//   if (
+//     value === "AI" ||
+//     value === "DS" ||
+//     value === "SE" ||
+//     value === "CLAUDE"
+//   ) {
+//     return value;
+//   }
+//   return "ALL";
 // }
 
 function difficultyPillClass(difficulty: string): string {
   const d = difficulty.toLowerCase();
   if (d.includes("easy"))
-    return "bg-emerald-100 text-emerald-700";
+    return "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400";
   if (d.includes("hard"))
-    return "bg-red-100 text-red-700";
-  return "bg-amber-100 text-amber-700";
+    return "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400";
+  return "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400";
 }
 
 export default async function DashboardPage({
@@ -439,7 +439,7 @@ export default async function DashboardPage({
             ) : isTodayCompleted ? (
               <div className="flex flex-col gap-4 rounded-xl border border-border/60 bg-muted/25 p-6">
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center gap-2 text-emerald-600">
+                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                     <CheckCircle2 className="size-6 shrink-0" aria-hidden />
                     <span className="font-display text-lg font-semibold">
                       Completed
@@ -447,7 +447,7 @@ export default async function DashboardPage({
                   </div>
                   <Badge
                     variant="secondary"
-                    className="bg-emerald-100 text-emerald-800"
+                    className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
                   >
                     Done for today
                   </Badge>
@@ -483,7 +483,7 @@ export default async function DashboardPage({
                   <div className="flex flex-wrap items-center gap-2">
                     <span
                       className={cn(
-                        "rounded-none px-3 py-1 text-xs font-semibold tracking-wide",
+                        "rounded-full px-3 py-1 text-xs font-semibold tracking-wide",
                         difficultyPillClass(todayTask.difficulty),
                       )}
                     >

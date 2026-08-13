@@ -264,7 +264,7 @@ export default function RegistrationForm({
                 href={whatsappLink || FALLBACK_WHATSAPP}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="register-btn inline-block w-full cursor-pointer rounded-none py-3.5 text-base font-semibold text-white"
+                className="register-btn inline-block w-full cursor-pointer rounded-full py-3.5 text-base font-semibold text-white"
               >
                 Join the WhatsApp group
               </a>
@@ -286,7 +286,7 @@ export default function RegistrationForm({
             <div className="text-center">
               <a
                 href="/login?from=%2Fai-workshop%23register"
-                className="register-btn inline-block w-full cursor-pointer rounded-none py-3.5 text-base font-semibold text-white"
+                className="register-btn inline-block w-full cursor-pointer rounded-full py-3.5 text-base font-semibold text-white"
               >
                 Continue with Google to reserve your seat
               </a>
@@ -535,14 +535,14 @@ disabled={isPending || !legalConsentAccepted(legalConsent)}
             {/* animated check */}
             <div className="relative mx-auto mb-6 h-20 w-20">
               <span
-                className="absolute inset-0 rounded-none"
+                className="absolute inset-0 rounded-full"
                 style={{
                   border: "2px solid rgba(74,222,128,0.5)",
                   animation: "ring-pulse 1.4s ease-out 0.4s infinite",
                 }}
               />
               <div
-                className="check-wrap absolute inset-0 flex items-center justify-center rounded-none"
+                className="check-wrap absolute inset-0 flex items-center justify-center rounded-full"
                 style={{
                   background: "rgba(74,222,128,0.12)",
                   border: "1px solid rgba(74,222,128,0.35)",
@@ -579,7 +579,7 @@ disabled={isPending || !legalConsentAccepted(legalConsent)}
               We&apos;ve sent your webinar details to your email. (Please check your Spam or Promotions folders if you don&apos;t see it).
             </p>
             <div className="inline-flex select-none items-center gap-2 rounded-xl border border-green-400/25 bg-green-400/10 px-4 py-2.5">
-              <span className="h-2 w-2 animate-ping rounded-none bg-green-400" />
+              <span className="h-2 w-2 animate-ping rounded-full bg-green-400" />
               <span className="text-xs font-semibold tracking-wide text-green-300">
                 Redirecting to WhatsApp in{" "}
                 <strong className="text-sm font-bold text-green-200">{redirectCountdown}s</strong>...

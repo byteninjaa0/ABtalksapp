@@ -532,6 +532,8 @@
   opacity: 0;
   transform: translateY(18px);
   pointer-events: none;
+  /* Match Interview margin-left / Evidence padding so copy shares that edge */
+  margin-left: 10px;
 }
 
 .landing-hub .hub-hero-below.on {
