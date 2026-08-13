@@ -183,17 +183,23 @@ export async function previewMatch(spec: JobSpec): Promise<MatchPreview | null> 
 }
 
 /**
- * The opening line, built from what is actually in the pool.
+ * The opening line — only when there is something true and useful to say.
  *
- * The old greeting promised a search across verified talent regardless of
- * whether there was any, which set the recruiter up for a gap report four
- * questions later. Saying the size of the pool up front costs one honest
- * sentence and buys the rest of the conversation.
+ * Returns null on a thin or unreadable pool, and the chat falls back to simply
+ * asking for the role. Two reasons it must not announce an empty pool:
+ *
+ * 1. It is bad business copy. Opening with "no one has cleared the bar" ends
+ *    the conversation before the requirement is captured, and capturing the
+ *    requirement is the part that has value on day one.
+ * 2. It is not even reliably true. `poolSnapshot` returns the empty snapshot on
+ *    a query failure, so a missing table would have had Scout telling every
+ *    recruiter the platform has no talent.
+ *
+ * Honesty about a thin pool belongs after the search, where the gap report can
+ * give the actual numbers and the reason — see `buildOverallGap`.
  */
-export function describePool(snap: PoolSnapshot): string {
-  if (!snap.hasPool) {
-    return "I'm Scout. No one has cleared the verified-evidence bar in an open cohort yet, so I can't promise matches today — but tell me the role and I'll save the requirement and tell you honestly where the gap is.";
-  }
+export function describePool(snap: PoolSnapshot): string | null {
+  if (!snap.hasPool || snap.eligibleCount === 0) return null;
 
   const skills = snap.topSkills
     .slice(0, 3)
