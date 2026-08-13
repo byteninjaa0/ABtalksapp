@@ -126,48 +126,21 @@ export async function requireProgramMember() {
  * Require an approved recruiter. DB-checked (approval flips aren't in the JWT).
  * Redirects to the pending page otherwise.
  */
-/**
- * Local testing only: lets any signed-in user act as an approved recruiter, so
- * /hire and /talent can be exercised without an admin approving a
- * RecruiterProfile first.
- *
- * The NODE_ENV guard is load-bearing, not belt-and-braces. Without it a stray
- * ENABLE_DEV_AUTH=true in a deployed environment would turn every signed-in
- * user into an approved recruiter and expose the talent pool — members consent
- * to being seen by *approved recruiters*, so that is a consent boundary, not
- * merely an auth convenience.
- *
- * Exported so every recruiter gate shares one rule. The page gate and the
- * Server Action gate used to check approval separately, which let the layout
- * render while every action still answered "Recruiter access not approved yet."
- */
-export function recruiterDevBypassEnabled(): boolean {
-  return (
-    process.env.NODE_ENV !== "production" &&
-    process.env.ENABLE_DEV_AUTH === "true"
-  );
-}
 
 export async function requireRecruiter() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login?from=/hire");
+  // Recruiter door, not the candidate one. No `from` here on purpose: this is
+  // a backstop — middleware catches unauthenticated recruiter routes first and
+  // carries the real path — and the old hardcoded "?from=/hire" sent someone
+  // who asked for the cart back to the search instead.
+  if (!session?.user?.id) redirect("/talent/login");
 
   const profile = await prisma.recruiterProfile.findUnique({
     where: { userId: session.user.id },
     select: { id: true, approved: true, company: true, fullName: true },
   });
 
-  if (recruiterDevBypassEnabled()) {
-    return {
-      profile: profile ?? {
-        id: "dev-bypass",
-        approved: true,
-        company: "Dev",
-        fullName: session.user.name ?? "Dev user",
-      },
-      userId: session.user.id,
-    };
-  }
+
 
   if (!profile || !profile.approved) redirect("/talent/pending");
 

@@ -14,7 +14,7 @@ const NAV = [
   { href: "/talent/shortlist", label: "Cart" },
 ];
 
-const HIDE_NAV = ["/talent/register", "/talent/pending"];
+const HIDE_NAV = ["/talent/login", "/talent/register", "/talent/pending"];
 
 export function TalentShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

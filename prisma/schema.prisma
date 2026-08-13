@@ -1334,3 +1334,25 @@ model VerifiedRecruiterSeat {
   @@index([active])
   @@index([company])
 }
+
+/// Short-lived email codes for recruiter sign-in.
+///
+/// The table already existed in the database when this model was written — it
+/// was created by migration 20260810100124_recruiter_email_otp, whose code was
+/// never merged to any branch. The fields below are the live DDL read back from
+/// information_schema, so Prisma describes what is actually there rather than
+/// something close to it.
+model RecruiterEmailOtp {
+  id        String   @id @default(cuid())
+  email     String
+  /// sha256(code + AUTH_SECRET). The plaintext code is never stored.
+  codeHash  String
+  /// "login" | "register" — kept as text to match the existing column.
+  purpose   String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+}

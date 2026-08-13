@@ -46,8 +46,14 @@ export default async function LoginPage({ searchParams }: Props) {
   // `as` changes the copy and where a successful sign-in lands. It must never
   // influence role or permissions — those are read from the database after the
   // verified-seat lookup. A recruiter who is not seated still gets nowhere.
-  const asRecruiter = params.as === "recruiter";
-  const redirectTo = from ?? (asRecruiter ? "/hire" : "/dashboard");
+  // Recruiters have their own door now — work email and a code, no Google.
+  // This parameter used to only change the copy on this page, which is what
+  // made "sign in as a recruiter" land on the candidate's Google button.
+  if (params.as === "recruiter") {
+    redirect(from ? `/talent/login?from=${encodeURIComponent(from)}` : "/talent/login");
+  }
+
+  const redirectTo = from ?? "/dashboard";
 
   const session = await auth();
   if (session?.user?.id) {
@@ -106,9 +112,7 @@ export default async function LoginPage({ searchParams }: Props) {
               <span className="text-primary">A</span>BTalks
             </CardTitle>
             <CardDescription className="text-base text-muted-foreground">
-              {asRecruiter
-                ? "Hire on verified work, not resumes."
-                : "Build your coding habit. Get discovered."}
+              Build your coding habit. Get discovered.
             </CardDescription>
             <div
               className="mx-auto flex w-full max-w-xs rounded-full border p-1"
@@ -118,43 +122,26 @@ export default async function LoginPage({ searchParams }: Props) {
               <Link
                 href="/login"
                 role="tab"
-                aria-selected={!asRecruiter}
+                aria-selected={true}
                 className={cn(
                   "flex-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                  !asRecruiter
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground",
+                  "bg-primary text-primary-foreground",
                 )}
               >
                 For candidates
               </Link>
               <Link
-                href="/login?as=recruiter"
+                href="/talent/login"
                 role="tab"
-                aria-selected={asRecruiter}
+                aria-selected={false}
                 className={cn(
                   "flex-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                  asRecruiter
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground",
+                  "text-muted-foreground hover:text-foreground",
                 )}
               >
                 For recruiters
               </Link>
             </div>
-            {asRecruiter && (
-              <p className="text-xs text-muted-foreground">
-                Recruiter access is granted to verified companies only. Not
-                verified yet? Write to{" "}
-                <a
-                  href="mailto:team@abtalks.in"
-                  className="text-primary hover:underline"
-                >
-                  team@abtalks.in
-                </a>{" "}
-                from your work address.
-              </p>
-            )}
           </CardHeader>
           <CardContent>
             <LoginClient

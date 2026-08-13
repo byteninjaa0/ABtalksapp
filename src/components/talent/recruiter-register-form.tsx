@@ -28,7 +28,14 @@ function FieldError({ message }: { message?: string }) {
   return <p className="text-[0.8rem] font-medium text-destructive">{message}</p>;
 }
 
-export function RecruiterRegisterForm() {
+export function RecruiterRegisterForm({
+  company,
+  defaultFullName = "",
+}: {
+  /** From the verified seat. Shown, never edited — it is what was verified. */
+  company: string;
+  defaultFullName?: string;
+}) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [legalConsent, setLegalConsent] = useState<LegalConsentValues>({ acceptLegal: false, newsletterOptIn: true });
@@ -41,8 +48,8 @@ export function RecruiterRegisterForm() {
   } = useForm<FormInput, unknown, RecruiterRegisterInput>({
     resolver: zodResolver(recruiterRegisterSchema),
     defaultValues: {
-      fullName: "",
-      company: "",
+      fullName: defaultFullName,
+      company,
       phone: "",
       acceptLegal: false,
       newsletterOptIn: true,
@@ -82,7 +89,15 @@ export function RecruiterRegisterForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="company">Company</Label>
-        <Input id="company" {...register("company")} />
+        {/* Read-only on purpose: this is the company ABTalks verified. Letting
+            it be typed would mean the seat says one thing and the profile
+            another. It is still registered so the value is submitted. */}
+        <Input
+          id="company"
+          readOnly
+          className="bg-muted text-muted-foreground"
+          {...register("company")}
+        />
         <FieldError message={errors.company?.message} />
       </div>
       <div className="space-y-2">

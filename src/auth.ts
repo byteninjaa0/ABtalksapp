@@ -7,11 +7,85 @@ import { cookies } from "next/headers";
 import { recordLegalConsents } from "@/features/legal/record-consent";
 import { recordNewsletterOptIn } from "@/features/legal/record-newsletter-optin";
 import { logger } from "@/lib/logger";
+import {
+  findLiveSeat,
+  verifyRecruiterOtp,
+} from "@/features/recruiter-auth/otp";
 //auth is the full config with PrismaAdapter and real Credentials authorize. Used everywhere else.
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
   providers: [
+    /**
+     * Recruiter sign-in by emailed code.
+     *
+     * Credentials providers bypass the adapter, so `events.createUser` below
+     * never fires for this path — the User row and its consent record have to
+     * be written here. Without that we would hold a recruiter's data with no
+     * record of them agreeing to anything, which is the exact case that hook
+     * was added to prevent.
+     */
+    Credentials({
+      id: "recruiter-otp",
+      name: "Recruiter email code",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        code: { label: "Code", type: "text" },
+      },
+      async authorize(credentials) {
+        const email = String(credentials?.email ?? "").trim().toLowerCase();
+        const code = String(credentials?.code ?? "").trim();
+        if (!email || !/^\d{6}$/.test(code)) return null;
+
+        const verified = await verifyRecruiterOtp(email, code);
+        if (!verified.ok) return null;
+
+        // The seat is re-checked here, not just when the code was issued: it
+        // can be revoked in the ten minutes a code is alive, and the session
+        // outlives the code.
+        const seat = await findLiveSeat(email);
+        if (!seat) return null;
+
+        const existing = await prisma.user.findFirst({
+          where: { email },
+          select: { id: true, email: true, name: true, role: true },
+        });
+        if (existing) {
+          return {
+            id: existing.id,
+            email: existing.email,
+            name: existing.name,
+            role: existing.role,
+          };
+        }
+
+        const created = await prisma.user.create({
+          data: {
+            email,
+            name: seat.contactName ?? null,
+            role: "RECRUITER",
+            // The code proved the address. Nothing else here does.
+            emailVerified: new Date(),
+          },
+          select: { id: true, email: true, name: true, role: true },
+        });
+
+        try {
+          await recordLegalConsents({
+            userId: created.id,
+            email: created.email,
+            source: "recruiter_otp_signup",
+          });
+        } catch (error) {
+          // Never break sign-in over this, but it must be visible.
+          logger.error("[recruiter-auth] consent record failed", {
+            error: String(error),
+          });
+        }
+
+        return created;
+      },
+    }),
     ...(process.env.ENABLE_DEV_AUTH === "true"
       ? [
           Credentials({
@@ -40,7 +114,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }),
         ]
       : []),
-    ...(authConfig.providers.filter((p) => p.id !== "credentials") ?? []),
+    ...(authConfig.providers.filter(
+      (p) => p.id !== "credentials" && p.id !== "recruiter-otp",
+    ) ?? []),
   ],
   events: {
     /**

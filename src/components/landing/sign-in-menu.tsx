@@ -60,7 +60,7 @@ export function SignInMenu() {
         </DropdownMenuItem>
 
         <DropdownMenuItem
-          render={<Link href="/login?as=recruiter" />}
+          render={<Link href="/talent/login" />}
           className="cursor-pointer gap-2.5 py-2.5"
         >
           <Briefcase
@@ -70,7 +70,7 @@ export function SignInMenu() {
           <span className="flex flex-col">
             <span className="font-medium">For recruiters</span>
             <span className="text-xs text-muted-foreground">
-              Hire on verified work — verified companies only
+              Work email, no Google — verified companies only
             </span>
           </span>
         </DropdownMenuItem>

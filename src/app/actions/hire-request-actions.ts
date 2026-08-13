@@ -5,7 +5,6 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { requireAdmin } from "@/lib/admin-auth";
-import { recruiterDevBypassEnabled } from "@/lib/program-auth";
 import { candidatePublicId } from "@/features/hire/public-id";
 import {
   decideEngagementSchema,
@@ -27,7 +26,7 @@ async function requireApprovedRecruiter(): Promise<
     where: { userId: session.user.id },
     select: { approved: true },
   });
-  if (!profile?.approved && !recruiterDevBypassEnabled()) {
+  if (!profile?.approved) {
     return { ok: false, message: "Recruiter access not approved yet." };
   }
   return { ok: true, data: { userId: session.user.id } };

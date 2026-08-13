@@ -128,11 +128,30 @@ export default auth((req) => {
   const hasAttributionCookies =
     req.cookies.has(REF_COOKIE_NAME) || alreadyAttributed;
 
-  const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
+  // The recruiter's own door. /talent is protected by prefix, which would send
+  // a signed-out recruiter to the candidate login — the exact thing this page
+  // exists to avoid. Exact match, never a prefix: /talent/login must not open
+  // anything else under it.
+  const isPublicRecruiterEntry = pathname === "/talent/login";
+
+  const isProtected =
+    !isPublicRecruiterEntry &&
+    protectedPaths.some((p) => pathname.startsWith(p));
   const isAuthPage = pathname === "/login";
 
   if (isProtected && !isLoggedIn) {
-    const url = new URL("/login", req.nextUrl);
+    // Send people to their own door. A signed-out recruiter opening a
+    // bookmarked /hire used to land on the candidate's Google button, which is
+    // the whole complaint this change exists to fix.
+    const isRecruiterArea =
+      pathname === "/hire" ||
+      pathname.startsWith("/hire/") ||
+      pathname === "/talent" ||
+      pathname.startsWith("/talent/");
+    const url = new URL(
+      isRecruiterArea ? "/talent/login" : "/login",
+      req.nextUrl,
+    );
     url.searchParams.set("from", pathname + req.nextUrl.search);
     return withTracking(
       NextResponse.redirect(url),
