@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/db";
 import { EngagementDecision } from "@/components/admin/engagement-decision";
@@ -95,6 +96,27 @@ export default async function AdminHireRequestsPage() {
                     {e.request?.title ? ` · for ${e.request.title}` : ""} ·{" "}
                     {e.source}
                   </p>
+                  {/* The email was selected and then never rendered, so the
+                      person deciding whether to release a candidate's contact
+                      could not see the contact they were releasing. */}
+                  {e.programMember?.user?.email && (
+                    <p className="mt-1 text-sm">
+                      <a
+                        href={`mailto:${e.programMember.user.email}`}
+                        className="underline underline-offset-4"
+                      >
+                        {e.programMember.user.email}
+                      </a>
+                    </p>
+                  )}
+                  {e.programMember?.id && (
+                    <Link
+                      href={`/admin/program/members/${e.programMember.id}`}
+                      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary underline underline-offset-4"
+                    >
+                      Open full member profile
+                    </Link>
+                  )}
                   <p className="mt-1 text-xs text-muted-foreground">
                     Asked by {e.recruiter?.name ?? e.recruiter?.email ?? "—"}
                     {e.recruiter?.recruiterProfile?.company

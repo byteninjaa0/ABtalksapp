@@ -234,8 +234,10 @@ export function MatchCard({
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
           className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
-            "gap-1.5",
+            buttonVariants({ variant: "outline", size: "lg" }),
+            // The quiet third action, but still a real border rather than one
+            // that dissolves into the card on a dark background.
+            "gap-1.5 border-foreground/20 hover:border-foreground/35",
           )}
         >
           {open ? "Hide details" : "View"}

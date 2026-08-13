@@ -83,10 +83,15 @@ export function ShortlistButton({
       title={label}
       className={cn(
         buttonVariants({
-          variant: inCart ? "secondary" : "outline",
-          size: compact ? "icon" : "sm",
+          variant: "secondary",
+          size: compact ? "icon" : "lg",
         }),
         "shrink-0 gap-1.5 disabled:opacity-50",
+        // Solid in both states so it is legible on a dark card, but once the
+        // candidate is in the cart it turns primary-tinted — the state is
+        // readable at a glance instead of only from the icon.
+        inCart &&
+          "bg-primary/15 text-primary hover:bg-primary/25 dark:bg-primary/20 dark:hover:bg-primary/30",
       )}
     >
       {pending ? (

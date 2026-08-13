@@ -104,8 +104,11 @@ export function RequestIntroButton({
           setOpen(true);
         }}
         className={cn(
-          buttonVariants({ variant: "outline", size: "sm" }),
-          "gap-1.5",
+          // The one action that moves the business. It sat in the same
+          // outline treatment as "View", so on a dark card all three read as
+          // the same disabled-looking grey and nothing invited a click.
+          buttonVariants({ variant: "default", size: "lg" }),
+          "gap-1.5 shadow-sm",
         )}
       >
         <MessageSquarePlus className="size-3.5" aria-hidden="true" />
