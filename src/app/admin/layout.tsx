@@ -43,17 +43,12 @@ export default async function AdminLayout({
       label: "Data Requests",
       icon: "dataRequests" as const,
     },
-    // The demand board existed but was linked from nowhere — the only
-    // references to it in the codebase were two revalidatePath calls.
+    // Introduction requests and the demand they add up to are one page: the
+    // requests need a decision, the demand board is the context for it.
     {
-      href: "/admin/hire-demand",
-      label: "Hire Demand",
+      href: "/admin/hire",
+      label: "Hire",
       icon: "jobs" as const,
-    },
-    {
-      href: "/admin/hire-requests",
-      label: "Hire Requests",
-      icon: "dataRequests" as const,
     },
     {
       href: "/admin/recruiters",

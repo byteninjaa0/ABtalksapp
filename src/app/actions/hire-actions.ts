@@ -361,7 +361,7 @@ export async function runMatchAction(
     });
 
     revalidatePath(`/hire/${req.id}`);
-    revalidatePath("/admin/hire-demand");
+    revalidatePath("/admin/hire");
 
     return {
       ok: true,
@@ -465,7 +465,7 @@ export async function requestCohortTrainAction(
       return { ok: false, message: "Request not found." };
     }
     revalidatePath(`/hire/${requestId}`);
-    revalidatePath("/admin/hire-demand");
+    revalidatePath("/admin/hire");
     return { ok: true, data: { requestId } };
   } catch (error) {
     logger.error("[hire] requestCohortTrainAction", { error: String(error) });

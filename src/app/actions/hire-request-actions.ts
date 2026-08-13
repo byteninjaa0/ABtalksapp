@@ -139,7 +139,7 @@ export async function placeEngagementRequestAction(
     });
 
     revalidatePath("/hire/requests");
-    revalidatePath("/admin/hire-requests");
+    revalidatePath("/admin/hire");
     return {
       ok: true,
       data: { engagementId: created.id, status: created.status },
@@ -236,7 +236,7 @@ export async function placeBulkEngagementRequestAction(
 
     revalidatePath("/hire/requests");
     revalidatePath("/talent/shortlist");
-    revalidatePath("/admin/hire-requests");
+    revalidatePath("/admin/hire");
     return {
       ok: true,
       data: {
@@ -284,7 +284,7 @@ export async function addEngagementCommentAction(
     });
 
     revalidatePath("/hire/requests");
-    revalidatePath("/admin/hire-requests");
+    revalidatePath("/admin/hire");
     return { ok: true, data: { engagementId: owned.id } };
   } catch (error) {
     logger.error("[hire] addEngagementCommentAction", { error: String(error) });
@@ -328,7 +328,7 @@ export async function decideEngagementAction(
       return row;
     });
 
-    revalidatePath("/admin/hire-requests");
+    revalidatePath("/admin/hire");
     revalidatePath("/hire/requests");
     return {
       ok: true,
