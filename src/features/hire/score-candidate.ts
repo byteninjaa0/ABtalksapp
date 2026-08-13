@@ -192,11 +192,22 @@ function experienceScore(
   return clamp01(1 - (years - hi) / Math.max(hi, 3));
 }
 
-function tierFor(score: number, missingMust: string[]): MatchTier {
+function tierFor(
+  score: number,
+  missingMust: string[],
+  missionsPassed = 1,
+): MatchTier {
   if (missingMust.length > 0) {
     return score >= 40 ? "PARTIAL" : "NONE";
   }
-  if (score >= 70) return "STRONG";
+  // STRONG is a claim about proven work, so it cannot be reached without any.
+  //
+  // Dropping the uncovered dimensions leaves declared skills carrying most of
+  // the weight, and a member who has passed nothing was scoring 69 on a typed
+  // skill list alone. The score is a fair reading of the evidence available;
+  // the tier is what a recruiter acts on, and it must not promise a track
+  // record that does not exist.
+  if (score >= 70) return missionsPassed > 0 ? "STRONG" : "PARTIAL";
   if (score >= 40) return "PARTIAL";
   return "NONE";
 }
@@ -395,6 +406,15 @@ export function scoreCandidate(
 
   const gaps: string[] = [];
   for (const m of missing) gaps.push(`Missing stack: ${m}`);
+  // Shown, but never quietly. A candidate three missions in is a real person
+  // with a real profile and almost no track record, and the card has to say so.
+  if (member.missionsPassed < 3) {
+    gaps.push(
+      member.missionsPassed === 0
+        ? "Just started — no verified missions completed yet"
+        : `Early in the cohort — only ${member.missionsPassed} verified mission(s) so far`,
+    );
+  }
   // Only report a gap the cohort could actually have filled. "No graded
   // projects" against a cohort whose project days have not arrived reads as a
   // fault of the candidate, and it is not one.
@@ -411,7 +431,7 @@ export function scoreCandidate(
     gaps.push("Availability not shared — confirm salary/notice/location at outreach");
   }
 
-  const tier = tierFor(total, missing);
+  const tier = tierFor(total, missing, member.missionsPassed);
 
   return {
     programMemberId: member.id,

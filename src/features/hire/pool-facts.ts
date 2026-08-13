@@ -74,7 +74,11 @@ export async function poolSnapshot(): Promise<PoolSnapshot> {
 
     const cohortIds = gate.cohorts.map((c) => c.id);
     const set = await buildDossierSet(memberEligibilityWhere(cohortIds));
-    const eligible = set.dossiers.filter((d) =>
+    // Everyone the search will actually consider — the floor demotes, it does
+    // not exclude (see searchCandidates). A snapshot counting fewer people than
+    // the shortlist shows is the kind of small lie that costs trust.
+    const eligible = set.dossiers;
+    const withEvidence = set.dossiers.filter((d) =>
       clearsEvidenceFloor(d.evidence.missionsPassed.value),
     );
 
@@ -110,7 +114,7 @@ export async function poolSnapshot(): Promise<PoolSnapshot> {
         : null,
       ofDays: eligible[0]?.evidence.cohortProgress.value.ofDays ?? 31,
       eligibleCount: eligible.length,
-      belowFloorCount: set.dossiers.length - eligible.length,
+      belowFloorCount: eligible.length - withEvidence.length,
       topSkills: byCountDesc(skillCounts)
         .slice(0, 12)
         .map(([skill, count]) => ({ skill, count })),
@@ -126,9 +130,10 @@ export async function poolSnapshot(): Promise<PoolSnapshot> {
         band,
         count,
       })),
-      coverageNote: eligible.length > 0
-        ? set.coverage.note
-        : "No candidate has cleared the evidence bar yet.",
+      coverageNote:
+        withEvidence.length > 0
+          ? set.coverage.note
+          : "No candidate has cleared the evidence bar yet.",
     };
 
     snapshotCache = { at: Date.now(), value };
@@ -210,9 +215,15 @@ export function describePool(snap: PoolSnapshot): string | null {
       ? ` (cohort day ${snap.cohortDay} of ${snap.ofDays}, so I rank on evidence so far)`
       : "";
 
+  // Only claim verified work when somebody has some. With a pool that has
+  // opted in but not yet started, "N people who opted in" is the true version
+  // and still worth saying.
+  const everyoneIsNew = snap.belowFloorCount >= snap.eligibleCount;
+  const what = everyoneIsNew ? "who've opted in" : "who opted in and have verified work";
+
   return `I'm Scout. Right now I can search ${snap.eligibleCount} ${
     snap.eligibleCount === 1 ? "person" : "people"
-  } who opted in and have verified work${where}${
+  } ${what}${where}${
     skills ? `, strongest in ${skills}` : ""
   }. Tell me the role you're filling — I match on what people did here, not on résumés.`;
 }

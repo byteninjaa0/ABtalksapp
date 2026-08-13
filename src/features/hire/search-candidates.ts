@@ -35,6 +35,13 @@ export type SearchCandidatesResult =
     }
   | { ok: false; message: string };
 
+/**
+ * Below this, a shortlist is padded out with the next best people rather than
+ * left short. Five is enough to read a pool from; a strict list of one tells
+ * the recruiter nothing about who else is here.
+ */
+const MIN_RESULTS = 5;
+
 const EMPTY_COVERAGE: EvidenceCoverage = {
   dimensions: {
     stack: false,
@@ -76,13 +83,19 @@ export async function searchCandidates(
     const cohortIds = gate.cohorts.map((c) => c.id);
     const set = await buildDossierSet(memberEligibilityWhere(cohortIds));
 
-    // The floor is applied on earned passes, which only exist once the dossier
-    // has separated them from the days waived at enrolment — so it cannot be a
-    // Prisma where-clause.
-    const eligible = set.dossiers.filter((d) =>
+    // The floor is a preference, not a wall.
+    //
+    // As a hard exclusion it emptied the board: on a cohort two weeks in, the
+    // members who have opted into recruiter visibility are mostly the ones who
+    // have not finished three missions yet, so every search returned nothing
+    // and the recruiter learned nothing at all. A thin, honestly-labelled list
+    // beats a blank one — they can see the shape of the pool and decide.
+    // Below-floor candidates rank below the rest and say why on the card.
+    const aboveFloor = set.dossiers.filter((d) =>
       clearsEvidenceFloor(d.evidence.missionsPassed.value),
     );
-    const belowEvidenceFloor = set.dossiers.length - eligible.length;
+    const belowEvidenceFloor = set.dossiers.length - aboveFloor.length;
+    const eligible = set.dossiers;
 
     if (eligible.length === 0) {
       return {
@@ -99,9 +112,11 @@ export async function searchCandidates(
       };
     }
 
-    // Coverage is measured over the ranked pool, not everyone who consented —
-    // members held back by the floor cannot vouch for a dimension existing.
-    const coverage = computeCoverage(eligible);
+    // Coverage is read from the members who cleared the floor when there are
+    // any: someone who has not started cannot tell us whether this cohort
+    // produces project scores. With none above the floor, the whole pool is the
+    // only evidence there is.
+    const coverage = computeCoverage(aboveFloor.length > 0 ? aboveFloor : eligible);
 
     const scoreable: ScoreableMember[] = eligible.map((d) => {
       const id = d.programMemberId!;
@@ -154,16 +169,26 @@ export async function searchCandidates(
       });
     }
 
-    const matches = ranked
-      .filter((r) => !r.hardFiltered && r.tier !== "NONE")
-      .slice(0, limit);
+    // A recruiter with nobody on screen cannot judge the pool, the role or us.
+    // So the shortlist is the ranked STRONG/PARTIAL list, and when that comes
+    // back thin it is topped up with the next best people the pool has — still
+    // carrying their real tier and their real gaps, never dressed up.
+    const shown = ranked.filter((r) => !r.hardFiltered);
+    const primary = shown.filter((r) => r.tier !== "NONE");
+    const matches = (
+      primary.length >= MIN_RESULTS
+        ? primary
+        : [...primary, ...shown.filter((r) => r.tier === "NONE")]
+    ).slice(0, limit);
 
+    const shownIds = new Set(matches.map((m) => m.programMemberId));
     const nearMisses = ranked
       .filter(
         (r) =>
-          r.hardFiltered ||
-          r.tier === "NONE" ||
-          (r.tier === "PARTIAL" && r.gaps.length > 0),
+          !shownIds.has(r.programMemberId) &&
+          (r.hardFiltered ||
+            r.tier === "NONE" ||
+            (r.tier === "PARTIAL" && r.gaps.length > 0)),
       )
       .slice(0, 10);
 

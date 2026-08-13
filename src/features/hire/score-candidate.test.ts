@@ -278,4 +278,28 @@ console.log("score-candidate tests");
   ok("T8 waived enrolment days are not evidence");
 }
 
+{
+  // T9 — with the uncovered dimensions dropped, declared skills carry most of
+  // the weight. Somebody who has passed nothing must not ride that to STRONG.
+  const r = scoreCandidate(
+    baseMember({
+      missionsPassed: 0,
+      missionsAttempted: 0,
+      cleanPassCount: 0,
+      commitDayCount: 3,
+      projectScores: [],
+      interview: null,
+      cohortDay: 14,
+    }),
+    baseSpec,
+    coverage({ missions: false, cleanPass: false, projects: false, interview: false }),
+  );
+  assert(r.tier !== "STRONG", `zero-evidence tier=${r.tier} at score ${r.score}`);
+  assert(
+    r.gaps.some((g) => /just started/i.test(g)),
+    "zero-evidence candidate says so on the card",
+  );
+  ok("T9 declared skills alone never reach STRONG");
+}
+
 console.log(`\n${passed} passed`);
