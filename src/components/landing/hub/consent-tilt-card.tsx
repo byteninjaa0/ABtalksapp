@@ -1,14 +1,8 @@
 "use client";
 
-import { useRef, type PointerEvent } from "react";
-import {
-  motion,
-  useMotionTemplate,
-  useMotionValue,
-  useReducedMotion,
-  useSpring,
-  useTransform,
-} from "framer-motion";
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { EASE_SPARK, useSafeReducedMotion } from "@/lib/motion";
 
 const ROWS = [
   { label: "Submitted work — 3 projects", status: "visible" },
@@ -21,80 +15,48 @@ const ROWS = [
   },
 ];
 
-const MAX_TILT = 50;
-const PARALLAX = 30;
-const SPRING = { stiffness: 160, damping: 18, mass: 0.55 };
+const HINGE_DEG = -30;
 
 export function ConsentTiltCard() {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
+  const stageRef = useRef<HTMLDivElement>(null);
+  const reduce = useSafeReducedMotion();
+  /* Enter section → tilt & hold; leave → flatten; re-enter → tilt again */
+  const inView = useInView(stageRef, { once: false, amount: 0.4 });
 
-  const rawX = useMotionValue(0);
-  const rawY = useMotionValue(0);
-  const rawGlare = useMotionValue(0);
-
-  const x = useSpring(rawX, SPRING);
-  const y = useSpring(rawY, SPRING);
-  const glareOpacity = useSpring(rawGlare, SPRING);
-
-  const rotateX = useTransform(y, [-0.5, 0.5], [MAX_TILT, -MAX_TILT]);
-  const rotateY = useTransform(x, [-0.5, 0.5], [-MAX_TILT, MAX_TILT]);
-  const parallaxX = useTransform(x, [-0.5, 0.5], [-PARALLAX, PARALLAX]);
-  const parallaxY = useTransform(y, [-0.5, 0.5], [-PARALLAX, PARALLAX]);
-
-  const glareX = useTransform(x, [-0.5, 0.5], [0, 100]);
-  const glareY = useTransform(y, [-0.5, 0.5], [0, 100]);
-  const glareBackground = useMotionTemplate`radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.12) 35%, transparent 65%)`;
-
-  function handlePointerMove(e: PointerEvent<HTMLDivElement>) {
-    if (reduce) return;
-    const el = cardRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / Math.max(1, rect.width);
-    const py = (e.clientY - rect.top) / Math.max(1, rect.height);
-    rawX.set(px - 0.5);
-    rawY.set(py - 0.5);
-    rawGlare.set(0.55);
-  }
-
-  function handlePointerLeave() {
-    if (reduce) return;
-    rawX.set(0);
-    rawY.set(0);
-    rawGlare.set(0);
-  }
+  const hinged = reduce || inView;
 
   return (
-    <div className="hub-consent-stage">
+    <div ref={stageRef} className="hub-consent-stage">
       <motion.div
-        ref={cardRef}
         className="hub-consent-card"
-        style={{
-          rotateX: reduce ? 0 : rotateX,
-          rotateY: reduce ? 0 : rotateY,
-          transformStyle: "preserve-3d",
+        initial={false}
+        animate={{
+          rotateY: hinged ? HINGE_DEG : 0,
         }}
-        onPointerMove={handlePointerMove}
-        onPointerLeave={handlePointerLeave}
-        onPointerCancel={handlePointerLeave}
+        transition={
+          reduce
+            ? { duration: 0 }
+            : { duration: 0.85, ease: EASE_SPARK }
+        }
+        style={{ transformStyle: "preserve-3d" }}
       >
         <motion.div
           className="hub-consent-glare"
           aria-hidden
+          initial={false}
+          animate={{ opacity: hinged ? 0.28 : 0 }}
+          transition={
+            reduce
+              ? { duration: 0 }
+              : { duration: 0.85, ease: EASE_SPARK }
+          }
           style={{
-            opacity: reduce ? 0 : glareOpacity,
-            background: glareBackground,
+            background:
+              "linear-gradient(105deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.08) 42%, transparent 70%)",
           }}
         />
 
-        <motion.div
-          className="hub-consent-parallax"
-          style={{
-            x: reduce ? 0 : parallaxX,
-            y: reduce ? 0 : parallaxY,
-          }}
-        >
+        <div className="hub-consent-parallax">
           <div
             style={{
               display: "flex",
@@ -208,7 +170,7 @@ export function ConsentTiltCard() {
               The request goes to the candidate, not to us.
             </span>
           </div>
-        </motion.div>
+        </div>
       </motion.div>
     </div>
   );

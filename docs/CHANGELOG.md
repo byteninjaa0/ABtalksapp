@@ -2,6 +2,9 @@
 
 <!-- Reconciled through 2026-08-05 (commit 519cc34) into docs/project-context.md. -->
 
+- 2026-08-13 [convention] Landing How it works flattens 3D cube on phone (≤800px); active face only + auto height; desktop cube unchanged
+- 2026-08-13 [convention] Landing hub phone UI: how-face type/clamp fit, equal hero CTAs + purple ghost border, stats strip single row
+- 2026-08-13 [convention] Landing Consent First card: enter-view rotateY −30° hold, leave flatten (re-enter tilts again); stage scale(0.9); reduced-motion static −30°
 - 2026-08-13 [convention] Landing hub polish 068: white frosted nav blur, L→R evidence highlight draw, center-band How-it-works lock, 1→3→2→4 program reveals, FAQ grid roll-open, community film-reel enter
 - 2026-08-13 [convention] Landing How it works cube uses discrete wheel/touch steps + temporary page scroll lock (not scrub); reduced-motion flat fade
 - 2026-08-13 [convention] Landing How it works uses scroll-pinned 3-face CSS 3D cube (rotateX scrub); reduced-motion keeps flat fade

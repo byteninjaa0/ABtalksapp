@@ -167,14 +167,7 @@ export function LandingHub({
                   and never sharing a profile without the candidate saying yes
                   first.
                 </p>
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 16,
-                    marginTop: 40,
-                  }}
-                >
+                <div className="hub-hero-ctas">
                   <Link
                     href="/program"
                     className="hub-btn hub-btn-primary hub-btn-hero"
@@ -274,7 +267,7 @@ export function LandingHub({
                 them.
               </p>
             </div>
-            <BridgeArrow />
+            <BridgeArrow direction="left" />
             <BridgeSideCard
               tag="Companies"
               title="Hire from proof, or commission it."
@@ -629,10 +622,6 @@ export function LandingHub({
           .landing-hub .hub-footer-grid {
             grid-template-columns: 1fr 1fr !important;
           }
-          .landing-hub .hub-stats-grid {
-            grid-template-columns: 1fr !important;
-            gap: 20px !important;
-          }
         }
         @media (max-width: 700px) {
           .landing-hub .hub-programs-grid {
@@ -718,7 +707,7 @@ function BridgeSideCard({
   );
 }
 
-function BridgeArrow() {
+function BridgeArrow({ direction = "right" }: { direction?: "left" | "right" }) {
   return (
     <div
       className="hub-bridge-arrow"
@@ -732,7 +721,7 @@ function BridgeArrow() {
         fontWeight: 700,
       }}
     >
-      →
+      {direction === "left" ? "←" : "→"}
     </div>
   );
 }

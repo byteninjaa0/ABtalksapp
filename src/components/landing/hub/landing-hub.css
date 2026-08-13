@@ -755,42 +755,124 @@ html.hub-how-scroll-lock {
   box-shadow: none;
 }
 
+/* Phone: flatten 3D cube — fixed translateZ was clipping copy horizontally */
 @media (max-width: 800px) {
-  .landing-hub .hub-how {
-    --hub-how-face-h: min(520px, 70vh);
+  .landing-hub .hub-how-stage {
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .landing-hub .hub-how-perspective {
+    perspective: none;
+    height: auto;
+  }
+
+  .landing-hub .hub-how-cube {
+    transform: none !important;
+    transform-style: flat;
+    height: auto;
+    transition: none;
+    will-change: auto;
   }
 
   .landing-hub .hub-how-face {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    display: none;
     grid-template-columns: 1fr;
-    gap: 16px;
-    align-content: center;
+    gap: 12px;
+    align-content: start;
     padding: 16px;
+    overflow: visible;
+    transform: none !important;
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+  }
+
+  .landing-hub .hub-how-face[aria-hidden="false"],
+  .landing-hub .hub-how-face:not([aria-hidden="true"]) {
+    display: grid;
   }
 
   .landing-hub .hub-how-face-media {
-    min-height: 160px;
-    max-height: 200px;
+    width: 100%;
+    height: 140px;
+    min-height: 140px;
+    max-height: 160px;
+  }
+
+  .landing-hub .hub-how-face-copy {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .landing-hub .hub-how-face-num {
+    font-size: 36px;
+  }
+
+  .landing-hub .hub-how-face-title {
+    margin: 6px 0 0;
+    font-size: clamp(18px, 5vw, 22px);
   }
 
   .landing-hub .hub-how-face-body {
-    font-size: 15px;
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: none;
   }
 
   .landing-hub .hub-how-flat {
     grid-template-columns: 1fr;
   }
+
+  .landing-hub .hub-how-flat .hub-how-face-num {
+    font-size: 36px;
+  }
+
+  .landing-hub .hub-how-flat .hub-how-face-title {
+    margin: 6px 0 0;
+    font-size: clamp(18px, 5vw, 22px);
+  }
+
+  .landing-hub .hub-how-flat .hub-how-face-body {
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
 }
 
-/* —— consent tilt —— */
+/* Hero CTA row — desktop default */
+.landing-hub .hub-hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 40px;
+}
+
+/* —— consent hinge (left-edge rotateY; enter/leave on scroll) —— */
 .landing-hub .hub-consent-stage {
   perspective: 1200px;
   transform-style: preserve-3d;
+  overflow: visible;
+  padding-right: 12px;
+  /* Slight overall shrink — layout box unchanged; visual scale only */
+  transform: scale(0.84);
+  transform-origin: left center;
+}
+
+.landing-hub .hub-consent-grid {
+  overflow: visible;
 }
 
 .landing-hub .hub-consent-card {
   position: relative;
   overflow: hidden;
-  transform-origin: center center;
+  transform-origin: left center;
   will-change: transform;
   background: #fdfdfd;
   border: 1px solid var(--hub-border);
@@ -1304,15 +1386,56 @@ html.hub-how-scroll-lock {
     display: none;
   }
 
+  .landing-hub .hub-hero-ctas {
+    flex-wrap: nowrap;
+    gap: 12px;
+    width: 100%;
+    margin-top: 28px;
+  }
+
+  .landing-hub .hub-hero-ctas .hub-btn-hero {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 48px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  .landing-hub .hub-hero-ctas .hub-btn-ghost {
+    border: 1px solid var(--hub-accent);
+    color: var(--hub-accent);
+    background: transparent;
+  }
+
+  /* Keep stats in one row on phone */
+  .landing-hub .hub-stats {
+    padding: 28px 16px;
+    min-height: 0;
+  }
+
   .landing-hub .hub-stats-grid {
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
   }
 
   .landing-hub .hub-stat {
     text-align: center;
-    max-width: 280px;
+    max-width: none;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .landing-hub .hub-stat-value {
+    font-size: clamp(22px, 6vw, 28px);
+  }
+
+  .landing-hub .hub-stat-label {
+    margin-top: 6px;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
   }
 
   .landing-hub .hub-poster-art {

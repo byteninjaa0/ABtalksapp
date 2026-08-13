@@ -1,8 +1,38 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useSafeReducedMotion } from "@/lib/motion";
+
+const PHONE_MQ = "(max-width: 800px)";
+
+function subscribePhone(onStoreChange: () => void) {
+  const mq = window.matchMedia(PHONE_MQ);
+  mq.addEventListener("change", onStoreChange);
+  return () => mq.removeEventListener("change", onStoreChange);
+}
+
+function getPhoneSnapshot() {
+  return window.matchMedia(PHONE_MQ).matches;
+}
+
+function getPhoneServerSnapshot() {
+  return false;
+}
+
+function useIsPhone() {
+  return useSyncExternalStore(
+    subscribePhone,
+    getPhoneSnapshot,
+    getPhoneServerSnapshot,
+  );
+}
 
 const SLIDES = [
   {
@@ -64,6 +94,7 @@ function setScrollLock(on: boolean) {
 
 export function HowItWorks() {
   const reduce = useSafeReducedMotion();
+  const isPhone = useIsPhone();
   const stageRef = useRef<HTMLDivElement>(null);
   const cubeRef = useRef<HTMLDivElement>(null);
   const indexRef = useRef(0);
@@ -76,10 +107,17 @@ export function HowItWorks() {
   const [index, setIndex] = useState(0);
   const [engaged, setEngaged] = useState(false);
 
-  const applyRotation = useCallback((i: number) => {
-    const deg = ROTATIONS[i] ?? 0;
-    cubeRef.current?.style.setProperty("--hub-how-rotate", `${deg}deg`);
-  }, []);
+  const applyRotation = useCallback(
+    (i: number) => {
+      if (isPhone) {
+        cubeRef.current?.style.removeProperty("--hub-how-rotate");
+        return;
+      }
+      const deg = ROTATIONS[i] ?? 0;
+      cubeRef.current?.style.setProperty("--hub-how-rotate", `${deg}deg`);
+    },
+    [isPhone],
+  );
 
   const goToFace = useCallback(
     (i: number) => {
@@ -98,7 +136,7 @@ export function HowItWorks() {
   useEffect(() => {
     if (reduce) return;
     applyRotation(indexRef.current);
-  }, [applyRotation, reduce]);
+  }, [applyRotation, reduce, isPhone]);
 
   /* Engage when the cube stage is near vertical center (wider band + wheel catch) */
   useEffect(() => {
