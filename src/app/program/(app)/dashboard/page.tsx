@@ -6,11 +6,12 @@ import { getMemberRecommendation } from "@/features/program/recommendations";
 import { getInterviewDashboardCard } from "@/features/program/interview";
 import { ProgramDashboardView } from "@/components/program/program-dashboard-view";
 import { AvailabilityForm } from "@/components/hire/availability-form";
+import { VisibilityToggle } from "@/components/program/visibility-toggle";
 import { prisma } from "@/lib/db";
 
 export default async function ProgramDashboardPage() {
   const { member, cohort, userId } = await requireProgramMember();
-  const [data, atRisk, projects, aiRec, interviewCard, availability] =
+  const [data, atRisk, projects, aiRec, interviewCard, availability, visibility] =
     await Promise.all([
       getMemberDashboard(member.id, cohort.id),
       getMemberAtRiskStatus(member.id, cohort.id),
@@ -32,6 +33,10 @@ export default async function ProgramDashboardPage() {
           },
         })
         .catch(() => null),
+      prisma.programMember.findUnique({
+        where: { id: member.id },
+        select: { recruiterVisibilityConsentAt: true },
+      }),
     ]);
 
   if (!data) {
@@ -42,6 +47,11 @@ export default async function ProgramDashboardPage() {
 
   return (
     <div className="space-y-4">
+      <div className="rounded-xl border border-white/10 bg-white text-foreground">
+        <VisibilityToggle
+          initial={visibility?.recruiterVisibilityConsentAt != null}
+        />
+      </div>
       <div className="rounded-xl border border-white/10 bg-white text-foreground">
         <AvailabilityForm
           initial={

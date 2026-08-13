@@ -312,6 +312,12 @@ export async function runMatchAction(
       search.data.matches,
       search.data.nearMisses,
       spec,
+      {
+        totalEligible: search.data.totalEligible,
+        belowEvidenceFloor: search.data.belowEvidenceFloor,
+        coverageNote: search.data.coverage.note,
+        stage: search.data.stage,
+      },
     );
 
     await prisma.talentRequestMatch.deleteMany({

@@ -60,3 +60,27 @@ export function isHackathonPreviewEnabled(): boolean {
 export function isChatbotEnabled(): boolean {
   return process.env.ENABLE_CHATBOT === "true";
 }
+
+/**
+ * Cohorts whose consenting members `/hire` may match, before their results are
+ * published.
+ *
+ * `/talent` shows a finished, ranked cohort and rightly waits for
+ * `resultsPublishedAt`. `/hire` ranks on evidence-so-far, which exists from the
+ * first passed mission — but a running cohort must not become visible by
+ * accident, so it is opt-in and set deliberately per cohort.
+ *
+ * Comma-separated cohort ids, or the literal `all` for every running cohort.
+ * Unset (the default) means `/hire` behaves exactly as it does today: published
+ * cohorts only.
+ */
+export function hireOpenCohortIds(): string[] | "all" | null {
+  const raw = process.env.HIRE_OPEN_COHORT_IDS?.trim();
+  if (!raw) return null;
+  if (raw.toLowerCase() === "all") return "all";
+  const ids = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return ids.length > 0 ? ids : null;
+}

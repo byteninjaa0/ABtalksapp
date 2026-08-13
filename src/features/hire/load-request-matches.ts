@@ -2,6 +2,9 @@ import "server-only";
 
 import { prisma } from "@/lib/db";
 import { existingEngagements } from "@/features/hire/contact-access";
+import { estimateCompensation, formatBandLpa } from "@/features/hire/compensation";
+import { roleFamilyFor, tidyRoleLabel } from "@/features/hire/role-family";
+import type { MatchTier } from "@/features/hire/types";
 import type { MatchCardData } from "@/components/hire/match-card";
 
 /**
@@ -69,22 +72,35 @@ export async function loadRequestMatches(
     status: request.status,
     alertWhenAvailable: request.alertWhenAvailable,
     cartCount,
-    matches: request.matches.map((m): MatchCardData => ({
-      programMemberId: m.programMemberId,
-      jobRole: m.programMember?.jobRole ?? "Candidate",
-      score: m.score,
-      tier: m.tier,
-      rationale: m.rationale,
-      gaps: m.gaps,
-      availabilityUnknown: m.availabilityUnknown,
-      shortlisted: (m.programMember?.shortlistedBy?.length ?? 0) > 0,
-      engagementStatus: m.programMemberId
-        ? (engagements.get(m.programMemberId)?.status ?? null)
-        : null,
-      evidence:
+    matches: request.matches.map((m): MatchCardData => {
+      const evidence =
         m.evidence && typeof m.evidence === "object"
           ? (m.evidence as MatchCardData["evidence"])
-          : {},
-    })),
+          : {};
+      const rawRole = m.programMember?.jobRole ?? "";
+      // Recomputed rather than stored: the band is a view of the role and the
+      // tier, and a frozen copy would drift the moment the table is retuned.
+      const band = estimateCompensation({
+        roleFamily: roleFamilyFor(rawRole),
+        yearsExperience: evidence.yearsExperience ?? 0,
+        evidenceTier: m.tier as MatchTier,
+        missionsPassed: evidence.missionsPassed ?? 0,
+      });
+      return {
+        programMemberId: m.programMemberId,
+        jobRole: rawRole ? tidyRoleLabel(rawRole) : "Candidate",
+        score: m.score,
+        tier: m.tier,
+        rationale: m.rationale,
+        gaps: m.gaps,
+        availabilityUnknown: m.availabilityUnknown,
+        shortlisted: (m.programMember?.shortlistedBy?.length ?? 0) > 0,
+        engagementStatus: m.programMemberId
+          ? (engagements.get(m.programMemberId)?.status ?? null)
+          : null,
+        compensationBand: band ? formatBandLpa(band) : null,
+        evidence,
+      };
+    }),
   };
 }

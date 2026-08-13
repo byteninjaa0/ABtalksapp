@@ -44,6 +44,15 @@ type Props = {
   initialMessages: Msg[];
   initialSpec: JobSpec;
   initialSummary: string;
+  /**
+   * One true sentence about the pool, from the server.
+   *
+   * The greeting used to promise a search across verified talent whether or
+   * not there was any, which set the recruiter up for a gap report four
+   * questions later. Saying the real size of the pool up front costs a
+   * sentence and buys the rest of the conversation.
+   */
+  poolIntro?: string | null;
 };
 
 const OPENING: Msg = {
@@ -165,11 +174,15 @@ export function ScoutChat({
   initialMessages,
   initialSpec,
   initialSummary,
+  poolIntro = null,
 }: Props) {
+  const opening: Msg = poolIntro
+    ? { ...OPENING, content: `${poolIntro}` }
+    : OPENING;
   const router = useRouter();
   const [requestId, setRequestId] = useState<string | null>(initialRequestId);
   const [messages, setMessages] = useState<Msg[]>(
-    initialMessages.length ? initialMessages : [OPENING],
+    initialMessages.length ? initialMessages : [opening],
   );
   const [spec, setSpec] = useState<JobSpec>(initialSpec);
   const [summary, setSummary] = useState(initialSummary);
@@ -381,7 +394,7 @@ export function ScoutChat({
                 router.push("/hire");
                 return;
               }
-              setMessages([OPENING]);
+              setMessages([opening]);
               setSpec({});
               setSummary("Not started");
               setReadyToSearch(false);

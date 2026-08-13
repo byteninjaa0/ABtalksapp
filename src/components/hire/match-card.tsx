@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ExternalLink, Info } from "lucide-react";
 import { candidatePublicId } from "@/features/hire/public-id";
+import { COMPENSATION_DISCLAIMER } from "@/features/hire/compensation";
 import { buttonVariants } from "@/components/ui/button";
 import { RequestIntroButton } from "@/components/hire/request-intro-button";
 import { ShortlistButton } from "@/components/talent/shortlist-button";
@@ -30,11 +31,24 @@ export type MatchCardData = {
   evidence: {
     skills?: string[];
     missionPoints?: number;
+    /** Missions passed by doing them — excludes the days waived at enrolment.
+     *  Prefer this over missionPoints everywhere it is present. */
+    missionsPassed?: number;
+    missionsAttempted?: number;
     cleanPassCount?: number;
     commitDayCount?: number;
     projectScores?: number[];
     yearsExperience?: number;
+    /** Languages of the mission days they passed. Verified, unlike `skills`. */
+    workingLanguages?: string[];
+    cohortDay?: number;
   };
+  /** Pre-formatted "₹6–12 LPA". An ABTalks estimate, never the candidate's
+   *  ask — the card must always print the disclaimer beside it. */
+  compensationBand?: string | null;
+  /** Which evidence dimensions the ranking could use, and which the cohort has
+   *  not produced yet. */
+  coverageNote?: string | null;
 };
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -134,16 +148,38 @@ export function MatchCard({
         </div>
       </header>
 
-      {/* Enough to decide whether to open it, and no more. */}
+      {/* Enough to decide whether to open it, and no more. Verified counts sit
+          in filled chips, self-declared skills in outlined ones — the
+          difference between the two is the point of the card. */}
       <ul className="mt-3 flex flex-wrap gap-1.5 text-xs">
+        {typeof e.missionsPassed === "number" && (
+          <li
+            className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-900 dark:text-emerald-100"
+            title="Missions passed against the platform's own checks. Excludes the first three days, which are waived for everyone at enrolment."
+          >
+            {e.missionsPassed} missions passed
+          </li>
+        )}
+        {typeof e.cleanPassCount === "number" && e.cleanPassCount > 0 && (
+          <li
+            className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-900 dark:text-emerald-100"
+            title="Passed on the first verification run."
+          >
+            {e.cleanPassCount} first-attempt
+          </li>
+        )}
+        {(e.workingLanguages ?? []).map((l) => (
+          <li
+            key={l}
+            className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-900 lowercase dark:text-emerald-100"
+            title="Language of the mission days this candidate passed."
+          >
+            {l.toLowerCase()}
+          </li>
+        ))}
         {typeof e.yearsExperience === "number" && (
           <li className="rounded-full bg-muted px-2 py-0.5">
             {e.yearsExperience} yrs
-          </li>
-        )}
-        {typeof e.missionPoints === "number" && (
-          <li className="rounded-full bg-muted px-2 py-0.5">
-            {e.missionPoints} mission pts
           </li>
         )}
         {(e.skills ?? []).slice(0, 4).map((s) => (
@@ -156,6 +192,14 @@ export function MatchCard({
             +{e.skills!.length - 4}
           </li>
         )}
+        {match.compensationBand && (
+          <li
+            className="rounded-full border border-dashed px-2 py-0.5 text-muted-foreground"
+            title={COMPENSATION_DISCLAIMER}
+          >
+            est. {match.compensationBand}
+          </li>
+        )}
         {match.availabilityUnknown && (
           <li
             className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-amber-900 dark:text-amber-100"
@@ -166,6 +210,12 @@ export function MatchCard({
           </li>
         )}
       </ul>
+
+      {match.coverageNote && (
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+          {match.coverageNote}
+        </p>
+      )}
 
 
       {/* Two actions, always both: put it in the cart, or look closer. */}
@@ -220,10 +270,12 @@ export function MatchCard({
               }
             />
             <Stat
-              label="Missions"
+              label="Missions passed"
               value={
-                typeof e.missionPoints === "number"
-                  ? `${e.missionPoints} pts`
+                typeof e.missionsPassed === "number"
+                  ? typeof e.missionsAttempted === "number"
+                    ? `${e.missionsPassed} of ${e.missionsAttempted} tried`
+                    : String(e.missionsPassed)
                   : "—"
               }
             />
@@ -249,13 +301,23 @@ export function MatchCard({
                 e.projectScores?.length ? e.projectScores.join(" / ") : "None"
               }
             />
+            <Stat
+              label="Est. compensation"
+              value={match.compensationBand ?? "—"}
+            />
             <Stat label="Reference" value={publicId} />
           </dl>
+
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            Mission, first-attempt, commit and project figures are verified by
+            ABTalks. Experience, skills and role are self-declared.
+            {match.compensationBand ? ` ${COMPENSATION_DISCLAIMER}` : ""}
+          </p>
 
           {(e.skills?.length ?? 0) > 0 && (
             <div>
               <p className="text-[11px] tracking-wide text-muted-foreground uppercase">
-                Skills on file
+                Skills — declared by the candidate
               </p>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {e.skills!.map((s) => (

@@ -1,22 +1,43 @@
 import type { JobSpec } from "@/lib/validations/hire";
 import type {
+  EvidenceCoverage,
   MatchTier,
   ScoreBreakdown,
+  ScoreDimension,
   ScoreableMember,
   ScoredCandidate,
 } from "@/features/hire/types";
 
-/** Default dimension weights — sum to 100 before priority reweight. */
-const BASE_WEIGHTS: Record<keyof Omit<ScoreBreakdown, "weights" | "total">, number> =
-  {
-    stack: 25,
-    missions: 20,
-    cleanPass: 15,
-    projects: 15,
-    consistency: 10,
-    interview: 10,
-    experience: 5,
-  };
+/** Default dimension weights — sum to 100 before priority and coverage. */
+const BASE_WEIGHTS: Record<ScoreDimension, number> = {
+  stack: 25,
+  missions: 20,
+  cleanPass: 15,
+  projects: 15,
+  consistency: 10,
+  interview: 10,
+  experience: 5,
+};
+
+/** Everything counts, for callers that have no pool to measure. */
+const FULL_COVERAGE: EvidenceCoverage = {
+  dimensions: {
+    stack: true,
+    missions: true,
+    cleanPass: true,
+    projects: true,
+    consistency: true,
+    interview: true,
+    experience: true,
+  },
+  note: "Ranked on all 7 evidence dimensions.",
+};
+
+/**
+ * Total curriculum days minus the three waived at enrolment — the most
+ * missions anybody can actually earn.
+ */
+const MAX_EARNABLE_MISSIONS = 28;
 
 /** Map recruiter evidence-priority tokens → score dimensions. */
 const PRIORITY_TO_DIM: Record<string, keyof typeof BASE_WEIGHTS> = {
@@ -55,11 +76,24 @@ function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n));
 }
 
+/**
+ * Weights for this search: recruiter priorities applied, then dimensions the
+ * pool cannot produce dropped and their share redistributed.
+ *
+ * The redistribution is the important half. Projects and interviews are worth
+ * 25 of the 100 points and are cohort milestones — on a cohort that has not
+ * reached them, every member scores zero on a quarter of the rubric and the
+ * best person on the platform cannot clear the STRONG threshold. Scoring an
+ * absent milestone as a failure does not rank anybody; it just compresses
+ * everyone toward the bottom. So an uncovered dimension leaves the rubric
+ * entirely, and the recruiter is told which ones did (see `EvidenceCoverage`).
+ */
 function reweight(
   priority: string[] | undefined,
-): Record<keyof typeof BASE_WEIGHTS, number> {
+  coverage: EvidenceCoverage = FULL_COVERAGE,
+): Record<ScoreDimension, number> {
   const w = { ...BASE_WEIGHTS };
-  const boost = new Set<keyof typeof BASE_WEIGHTS>();
+  const boost = new Set<ScoreDimension>();
   for (const p of priority ?? []) {
     const key = PRIORITY_TO_DIM[normToken(p).replace(/ /g, "_")] ??
       PRIORITY_TO_DIM[normToken(p)];
@@ -68,9 +102,17 @@ function reweight(
   for (const dim of boost) {
     w[dim] = Math.round(w[dim] * 1.5);
   }
-  const sum = Object.values(w).reduce((a, b) => a + b, 0) || 100;
+  for (const k of Object.keys(w) as ScoreDimension[]) {
+    if (!coverage.dimensions[k]) w[k] = 0;
+  }
+  const sum = Object.values(w).reduce((a, b) => a + b, 0);
+  // Every dimension uncovered would mean nothing to rank on. Fall back to the
+  // declared dimensions rather than dividing by zero.
+  if (sum <= 0) {
+    return { ...BASE_WEIGHTS, missions: 0, cleanPass: 0, projects: 0, consistency: 0, interview: 0, stack: 83.3, experience: 16.7 };
+  }
   const scale = 100 / sum;
-  for (const k of Object.keys(w) as (keyof typeof w)[]) {
+  for (const k of Object.keys(w) as ScoreDimension[]) {
     w[k] = Math.round(w[k] * scale * 10) / 10;
   }
   return w;
@@ -93,14 +135,24 @@ function stackScore(memberSkills: string[], spec: JobSpec): { score: number; mis
   return { score: clamp01(score), missing };
 }
 
-function missionScore(missionPoints: number): number {
-  // Typical mission day awards ~12 pts; 20 clean missions ≈ 240.
-  return clamp01(missionPoints / 240);
+/**
+ * Missions earned, measured against the missions there has been time to earn.
+ *
+ * Was `missionPoints / 240`, which is two mistakes at once. `missionPoints`
+ * includes the three days waived at enrolment, so it credits work nobody did;
+ * and 240 assumes a finished cohort, so on day 14 a member who has passed
+ * everything available scores 0.7 and one who has passed nothing scores 0.15 —
+ * a gap far too small to rank on.
+ */
+function missionScore(missionsPassed: number, cohortDay: number): number {
+  const earnable = Math.max(3, Math.min(cohortDay, MAX_EARNABLE_MISSIONS));
+  return clamp01(missionsPassed / earnable);
 }
 
-function cleanPassScore(cleanPassCount: number, missionPoints: number): number {
-  const attempted = Math.max(Math.floor(missionPoints / 12), cleanPassCount, 1);
-  return clamp01(cleanPassCount / attempted);
+/** Share of earned passes that passed on the first verification run. */
+function cleanPassScore(cleanPassCount: number, missionsPassed: number): number {
+  if (missionsPassed <= 0) return 0;
+  return clamp01(cleanPassCount / missionsPassed);
 }
 
 function projectScore(scores: number[]): number {
@@ -110,9 +162,10 @@ function projectScore(scores: number[]): number {
   return clamp01((mean * 0.6 + best * 0.4) / 100);
 }
 
-function consistencyScore(commitDays: number): number {
-  // ~20 active commit days in a cohort is strong.
-  return clamp01(commitDays / 20);
+/** Commit days against days elapsed — showing up daily is the signal, and on
+ *  day 14 nobody can have 20 of them. */
+function consistencyScore(commitDays: number, cohortDay: number): number {
+  return clamp01(commitDays / Math.max(5, Math.min(cohortDay, 30)));
 }
 
 function interviewScore(
@@ -267,6 +320,7 @@ function effectiveExperienceBand(spec: {
 export function scoreCandidate(
   member: ScoreableMember,
   spec: JobSpec,
+  coverage: EvidenceCoverage = FULL_COVERAGE,
 ): ScoredCandidate {
   const { ok, reasons, missingMust } = evaluateHardFilters(member, spec);
   const availabilityUnknown = member.availability == null;
@@ -275,13 +329,14 @@ export function scoreCandidate(
   // Prefer hard-filter missing list when present; stackScore missing aligns.
   const missing = missingMust.length > 0 ? missingMust : stack.missing;
 
-  const weights = reweight(spec.evidencePriority);
-  const dims = {
+  const weights = reweight(spec.evidencePriority, coverage);
+  const cohortDay = member.cohortDay > 0 ? member.cohortDay : 1;
+  const dims: Record<ScoreDimension, number> = {
     stack: stack.score,
-    missions: missionScore(member.missionPoints),
-    cleanPass: cleanPassScore(member.cleanPassCount, member.missionPoints),
+    missions: missionScore(member.missionsPassed, cohortDay),
+    cleanPass: cleanPassScore(member.cleanPassCount, member.missionsPassed),
     projects: projectScore(member.projectScores),
-    consistency: consistencyScore(member.commitDayCount),
+    consistency: consistencyScore(member.commitDayCount, cohortDay),
     interview: interviewScore(member.interview),
     experience: (() => {
       const band = effectiveExperienceBand(spec);
@@ -289,11 +344,35 @@ export function scoreCandidate(
     })(),
   };
 
+  const dimensionsUsed = (Object.keys(dims) as ScoreDimension[]).filter(
+    (k) => coverage.dimensions[k] && weights[k] > 0,
+  );
+
   let total = 0;
-  for (const k of Object.keys(dims) as (keyof typeof dims)[]) {
+  for (const k of dimensionsUsed) {
     total += dims[k] * weights[k];
   }
   total = Math.round(Math.max(0, Math.min(100, total)));
+
+  // An uncovered dimension reports null, not 0 — the audit trail has to
+  // distinguish "this cohort could not produce the evidence" from "the
+  // evidence exists and it was bad".
+  const breakdown = (t: number): ScoreBreakdown => ({
+    stack: coverage.dimensions.stack ? Math.round(dims.stack * 100) : null,
+    missions: coverage.dimensions.missions ? Math.round(dims.missions * 100) : null,
+    cleanPass: coverage.dimensions.cleanPass ? Math.round(dims.cleanPass * 100) : null,
+    projects: coverage.dimensions.projects ? Math.round(dims.projects * 100) : null,
+    consistency: coverage.dimensions.consistency
+      ? Math.round(dims.consistency * 100)
+      : null,
+    interview: coverage.dimensions.interview ? Math.round(dims.interview * 100) : null,
+    experience: coverage.dimensions.experience
+      ? Math.round(dims.experience * 100)
+      : null,
+    weights,
+    total: t,
+    dimensionsUsed,
+  });
 
   if (!ok) {
     return {
@@ -304,26 +383,30 @@ export function scoreCandidate(
       company: member.company,
       score: 0,
       tier: "NONE",
-      scoreBreakdown: {
-        ...Object.fromEntries(
-          Object.entries(dims).map(([k, v]) => [k, Math.round(v * 100)]),
-        ),
-        weights,
-        total: 0,
-      } as ScoreBreakdown,
+      scoreBreakdown: breakdown(0),
       evidence: toEvidence(member),
       gaps: [...reasons, ...missing.map((m) => `Missing stack: ${m}`)],
       availabilityUnknown,
       hardFiltered: true,
       hardFilterReasons: reasons,
+      dossier: member.dossier,
     };
   }
 
   const gaps: string[] = [];
   for (const m of missing) gaps.push(`Missing stack: ${m}`);
-  if (dims.projects < 0.3) gaps.push("Limited graded project evidence");
-  if (dims.interview < 0.3) gaps.push("No or low interview scores");
-  if (dims.consistency < 0.3) gaps.push("Few verified commit days");
+  // Only report a gap the cohort could actually have filled. "No graded
+  // projects" against a cohort whose project days have not arrived reads as a
+  // fault of the candidate, and it is not one.
+  if (coverage.dimensions.projects && dims.projects < 0.3) {
+    gaps.push("Limited graded project evidence");
+  }
+  if (coverage.dimensions.interview && dims.interview < 0.3) {
+    gaps.push("No or low interview scores");
+  }
+  if (coverage.dimensions.consistency && dims.consistency < 0.3) {
+    gaps.push("Few verified commit days");
+  }
   if (availabilityUnknown) {
     gaps.push("Availability not shared — confirm salary/notice/location at outreach");
   }
@@ -338,22 +421,13 @@ export function scoreCandidate(
     company: member.company,
     score: total,
     tier,
-    scoreBreakdown: {
-      stack: Math.round(dims.stack * 100),
-      missions: Math.round(dims.missions * 100),
-      cleanPass: Math.round(dims.cleanPass * 100),
-      projects: Math.round(dims.projects * 100),
-      consistency: Math.round(dims.consistency * 100),
-      interview: Math.round(dims.interview * 100),
-      experience: Math.round(dims.experience * 100),
-      weights,
-      total,
-    },
+    scoreBreakdown: breakdown(total),
     evidence: toEvidence(member),
     gaps,
     availabilityUnknown,
     hardFiltered: false,
     hardFilterReasons: [],
+    dossier: member.dossier,
   };
 }
 
@@ -362,8 +436,13 @@ function toEvidence(member: ScoreableMember) {
     skills: member.skills,
     yearsExperience: member.yearsExperience,
     missionPoints: member.missionPoints,
+    missionsPassed: member.missionsPassed,
+    missionsAttempted: member.missionsAttempted,
+    missionsWaived: member.dossier?.evidence.missionsWaived.value ?? 0,
     cleanPassCount: member.cleanPassCount,
     commitDayCount: member.commitDayCount,
+    workingLanguages: member.dossier?.evidence.workingLanguages.value ?? [],
+    cohortDay: member.cohortDay,
     projectScores: member.projectScores,
     interview: member.interview,
     totalScore: member.totalScore,
@@ -376,9 +455,13 @@ function toEvidence(member: ScoreableMember) {
 export function rankCandidates(
   members: ScoreableMember[],
   spec: JobSpec,
-  opts?: { includeHardFiltered?: boolean; limit?: number },
+  opts?: {
+    includeHardFiltered?: boolean;
+    limit?: number;
+    coverage?: EvidenceCoverage;
+  },
 ): ScoredCandidate[] {
-  const scored = members.map((m) => scoreCandidate(m, spec));
+  const scored = members.map((m) => scoreCandidate(m, spec, opts?.coverage));
   const list = opts?.includeHardFiltered
     ? scored
     : scored.filter((s) => !s.hardFiltered);
@@ -401,4 +484,6 @@ export const __test = {
   experienceScore,
   tierFor,
   normToken,
+  BASE_WEIGHTS,
+  FULL_COVERAGE,
 };

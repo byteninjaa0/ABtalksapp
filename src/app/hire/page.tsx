@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { getRecruiterState } from "@/features/talent-pool/recruiter-registration";
 import { ScoutChat } from "@/components/hire/scout-chat";
+import { describePool, poolSnapshot } from "@/features/hire/pool-facts";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,12 @@ export default async function HirePage() {
     ? await getRecruiterState(userId)
     : { status: "none" as const };
   const persist = recruiter.status === "approved";
+
+  // One extra read on a page that already queries — worth it so the first
+  // thing Scout says is true of today's pool rather than of a hoped-for one.
+  const poolIntro = await poolSnapshot()
+    .then(describePool)
+    .catch(() => null);
 
   let recent: { id: string; title: string; status: string; updatedAt: Date }[] =
     [];
@@ -60,6 +67,7 @@ export default async function HirePage() {
         initialMessages={[]}
         initialSpec={{}}
         initialSummary="Not started"
+        poolIntro={poolIntro}
       />
 
       {recent.length > 0 ? (

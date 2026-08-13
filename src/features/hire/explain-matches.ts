@@ -14,6 +14,21 @@ export type ExplainResult = {
 };
 
 /**
+ * What the pool looked like when this search ran.
+ *
+ * Without it the gap paragraph could only say "no matches", which reads as a
+ * fault of the platform. "Five people opted in, three are still below the
+ * evidence bar" is the same fact with the reason attached — and the reason is
+ * what tells the owner whether to run a consent drive or a training push.
+ */
+export type ExplainContext = {
+  totalEligible: number;
+  belowEvidenceFloor: number;
+  coverageNote: string;
+  stage: "PUBLISHED" | "OPEN_MIDCOHORT" | null;
+};
+
+/**
  * Phase C: grounded rationales from scoreBreakdown + evidence only.
  * Optional Claude polish — never invents numbers (prompt + post-check).
  */
@@ -21,13 +36,14 @@ export function explainMatchesDeterministic(
   matches: ScoredCandidate[],
   nearMisses: ScoredCandidate[],
   spec: JobSpec,
+  context?: ExplainContext,
 ): ExplainResult {
   const explained: ExplainedMatch[] = matches.map((m) => ({
     ...m,
     rationale: buildRationale(m, spec),
   }));
 
-  const overallGap = buildOverallGap(matches, nearMisses, spec);
+  const overallGap = buildOverallGap(matches, nearMisses, spec, context);
   return { matches: explained, overallGap };
 }
 
@@ -90,8 +106,9 @@ export async function explainMatches(
   matches: ScoredCandidate[],
   nearMisses: ScoredCandidate[],
   spec: JobSpec,
+  context?: ExplainContext,
 ): Promise<ExplainResult> {
-  const base = explainMatchesDeterministic(matches, nearMisses, spec);
+  const base = explainMatchesDeterministic(matches, nearMisses, spec, context);
   if (matches.length === 0) return base;
 
   const { askGroqJson, groqConfigured } = await import("@/lib/groq");
@@ -123,6 +140,8 @@ export async function explainMatches(
 
 Rules:
 - Refer to each candidate by their publicId (e.g. AB-1234). You are not given names and must never invent one.
+- Provenance matters and must be worded correctly. Missions passed, first-attempt passes, commit days, project scores and interview scores are VERIFIED by the platform — state them as fact. Skills, job role and years of experience are SELF-DECLARED — write them as "declared" or "says they know". Never present a declared skill as proven.
+- "missionsPassed" is the number of missions they actually completed. Never quote "missionPoints" — it includes days waived to everyone at enrolment and overstates the work.
 - Cite ONLY fields present in the JSON you are given. Never invent a score, a number, a project, a skill or an employer.
 - Every figure you write must appear verbatim in the payload. If you cannot support a claim, leave it out.
 - Two or three sentences per candidate. Say what the evidence shows, then what is missing.
@@ -163,17 +182,22 @@ function buildRationale(m: ScoredCandidate, spec: JobSpec): string {
     `${candidatePublicId(m.programMemberId)} scores ${m.score}/100 (${m.tier}) for ${spec.title ?? "this role"}.`,
   );
   if (e.skills.length) {
-    parts.push(`Skills on file: ${e.skills.slice(0, 8).join(", ")}.`);
+    parts.push(`Declared skills: ${e.skills.slice(0, 8).join(", ")}.`);
   }
+  // Earned passes, not mission points. Points include the three days waived at
+  // enrolment, so quoting them credits every member with work none of them did.
   parts.push(
-    `Missions: ${e.missionPoints} pts, ${e.cleanPassCount} first-attempt passes, ${e.commitDayCount} verified commit days.`,
+    `Verified: ${e.missionsPassed} missions passed of ${e.missionsAttempted} attempted, ${e.cleanPassCount} on the first run, ${e.commitDayCount} commit days.`,
   );
+  if (e.workingLanguages.length) {
+    parts.push(
+      `Worked in ${e.workingLanguages.map((l) => l.toLowerCase()).join(", ")} on the missions they passed.`,
+    );
+  }
   if (e.projectScores.length) {
     parts.push(
       `Graded projects: ${e.projectScores.join(", ")} (platform rubric scores).`,
     );
-  } else {
-    parts.push("No graded project scores on file.");
   }
   if (e.interview?.overall != null) {
     parts.push(
@@ -195,29 +219,47 @@ function buildOverallGap(
   matches: ScoredCandidate[],
   nearMisses: ScoredCandidate[],
   spec: JobSpec,
+  context?: ExplainContext,
 ): string {
   const stack = (spec.mustHaveStack ?? []).join(", ") || "your stack";
+
+  // Say why the pool is the size it is. "No matches" alone gives the recruiter
+  // nothing to judge and gives us nothing to fix — whereas "five opted in,
+  // three are below the evidence bar" points straight at the thing to do next.
+  const poolNote = context
+    ? context.totalEligible === 0
+      ? context.belowEvidenceFloor > 0
+        ? ` ${context.belowEvidenceFloor} member(s) have opted in but have not yet passed enough verified missions to be ranked.`
+        : " No members of an open cohort have opted into recruiter visibility yet."
+      : ` Searched ${context.totalEligible} opted-in candidate(s) with verified work.${
+          context.belowEvidenceFloor > 0
+            ? ` A further ${context.belowEvidenceFloor} opted in but are still below the evidence bar.`
+            : ""
+        }`
+    : "";
+
   if (matches.length === 0 && nearMisses.length === 0) {
     return (
-      `No one in the published, consenting talent pool matches yet for ${spec.title ?? "this role"} ` +
-      `(must-have: ${stack}). I've saved this requirement so we can train and alert you when people clear the bar. ` +
-      `This is normal while the cohort pool is still filling — Scout ranks verified work, not resumes.`
+      `No one matches yet for ${spec.title ?? "this role"} (must-have: ${stack}).${poolNote} ` +
+      `I've saved this requirement so we can train and alert you when people clear the bar. ` +
+      `Scout ranks verified work, not resumes.`
     );
   }
   if (matches.length === 0 && nearMisses.length > 0) {
     const sample = nearMisses[0]!;
     return (
       `No strong matches for ${stack}. Closest profile: ${candidatePublicId(sample.programMemberId)} ` +
-      `(score ${sample.score}) — ${sample.gaps.slice(0, 3).join("; ") || "see gaps"}. ` +
+      `(score ${sample.score}) — ${sample.gaps.slice(0, 3).join("; ") || "see gaps"}.${poolNote} ` +
       `Save this demand and we can train a cohort toward this stack.`
     );
   }
+  const coverage = context?.coverageNote ? ` ${context.coverageNote}` : "";
   const partial = matches.filter((m) => m.tier === "PARTIAL").length;
   if (partial > 0) {
     return (
-      `Found ${matches.length} candidate(s); ${partial} are partial. ` +
+      `Found ${matches.length} candidate(s); ${partial} are partial.${poolNote}${coverage} ` +
       `Review gaps on each card — confirm availability offline before outreach.`
     );
   }
-  return `Found ${matches.length} candidate(s) ranked by verified ABTalks evidence.`;
+  return `Found ${matches.length} candidate(s) ranked by verified ABTalks evidence.${poolNote}${coverage}`;
 }

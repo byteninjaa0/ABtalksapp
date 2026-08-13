@@ -105,11 +105,19 @@ export async function runGuestMatchAction(
       search.data.matches,
       search.data.nearMisses,
       parsed.data.spec,
+      {
+        totalEligible: search.data.totalEligible,
+        belowEvidenceFloor: search.data.belowEvidenceFloor,
+        coverageNote: search.data.coverage.note,
+        stage: search.data.stage,
+      },
     );
     return {
       ok: true,
       data: {
-        matches: explained.matches.map((m) => toPublicMatch(m)),
+        matches: explained.matches.map((m) =>
+          toPublicMatch(m, { coverageNote: search.data.coverage.note }),
+        ),
         overallGap: explained.overallGap,
         matchCount: explained.matches.length,
       },

@@ -1,23 +1,52 @@
 import "server-only";
 
-import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import type { JobSpec } from "@/lib/validations/hire";
 import { rankCandidates } from "@/features/hire/score-candidate";
-import type { ScoreableMember, ScoredCandidate } from "@/features/hire/types";
+import { buildDossierSet, computeCoverage } from "@/features/hire/dossier";
+import {
+  clearsEvidenceFloor,
+  memberEligibilityWhere,
+  resolvePoolCohorts,
+} from "@/features/hire/pool-policy";
+import { estimateCompensation } from "@/features/hire/compensation";
+import type {
+  EvidenceCoverage,
+  ScoreableMember,
+  ScoredCandidate,
+} from "@/features/hire/types";
 
 export type SearchCandidatesResult =
   | {
       ok: true;
       data: {
         cohortName: string | null;
+        /** Whether the pool is a finished cohort or one still running. */
+        stage: "PUBLISHED" | "OPEN_MIDCOHORT" | null;
         matches: ScoredCandidate[];
         /** Near-miss / hard-filtered, for gap analysis only (not shortlist). */
         nearMisses: ScoredCandidate[];
         totalEligible: number;
+        /** Consenting members held back by the evidence floor — the honest
+         *  denominator behind a thin shortlist. */
+        belowEvidenceFloor: number;
+        coverage: EvidenceCoverage;
       };
     }
   | { ok: false; message: string };
+
+const EMPTY_COVERAGE: EvidenceCoverage = {
+  dimensions: {
+    stack: false,
+    missions: false,
+    cleanPass: false,
+    projects: false,
+    consistency: false,
+    interview: false,
+    experience: false,
+  },
+  note: "No candidates in the pool yet.",
+};
 
 /**
  * Phase B: deterministic Prisma load + pure scoring.
@@ -28,119 +57,80 @@ export async function searchCandidates(
   opts?: { limit?: number },
 ): Promise<SearchCandidatesResult> {
   try {
-    const cohort = await prisma.programCohort.findFirst({
-      where: { resultsPublishedAt: { not: null } },
-      orderBy: { resultsPublishedAt: "desc" },
-      select: {
-        id: true,
-        name: true,
-        resultsPublishedAt: true,
-      },
-    });
-
-    if (!cohort) {
+    const gate = await resolvePoolCohorts();
+    if (!gate.ok) {
       return {
         ok: true,
         data: {
           cohortName: null,
+          stage: null,
           matches: [],
           nearMisses: [],
           totalEligible: 0,
+          belowEvidenceFloor: 0,
+          coverage: EMPTY_COVERAGE,
         },
       };
     }
 
-    const members = await prisma.programMember.findMany({
-      where: {
-        cohortId: cohort.id,
-        status: { in: ["ENROLLED", "COMPLETED"] },
-        recruiterVisibilityConsentAt: { not: null },
-      },
-      select: {
-        id: true,
-        userId: true,
-        fullName: true,
-        jobRole: true,
-        company: true,
-        yearsExperience: true,
-        skills: true,
-        missionPoints: true,
-        cleanPassCount: true,
-        totalScore: true,
-        status: true,
-        recruiterVisibilityConsentAt: true,
-        commitDays: { select: { id: true } },
-        projects: {
-          select: { aiScore: true, adminScore: true },
-        },
-        interview: {
-          select: {
-            overallScore: true,
-            commScore: true,
-            techScore: true,
-            problemScore: true,
-          },
-        },
-        user: {
-          select: {
-            candidateAvailability: {
-              select: {
-                openToWork: true,
-                expectedSalaryMin: true,
-                expectedSalaryMax: true,
-                salaryCurrency: true,
-                noticePeriodDays: true,
-                preferredWorkMode: true,
-                preferredCities: true,
-                openToRelocate: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    const cohortIds = gate.cohorts.map((c) => c.id);
+    const set = await buildDossierSet(memberEligibilityWhere(cohortIds));
 
-    const scoreable: ScoreableMember[] = members.map((m) => {
-      const projectScores = m.projects
-        .map((p) => p.adminScore ?? p.aiScore)
-        .filter((n): n is number => typeof n === "number");
-      const av = m.user.candidateAvailability;
+    // The floor is applied on earned passes, which only exist once the dossier
+    // has separated them from the days waived at enrolment — so it cannot be a
+    // Prisma where-clause.
+    const eligible = set.dossiers.filter((d) =>
+      clearsEvidenceFloor(d.evidence.missionsPassed.value),
+    );
+    const belowEvidenceFloor = set.dossiers.length - eligible.length;
+
+    if (eligible.length === 0) {
       return {
-        id: m.id,
-        userId: m.userId,
-        fullName: m.fullName,
-        jobRole: m.jobRole,
-        company: m.company,
-        yearsExperience: m.yearsExperience,
-        skills: m.skills,
-        missionPoints: m.missionPoints,
-        cleanPassCount: m.cleanPassCount,
-        totalScore: m.totalScore,
-        commitDayCount: m.commitDays.length,
-        projectScores,
-        interview: m.interview
-          ? {
-              overall: m.interview.overallScore,
-              comm: m.interview.commScore,
-              tech: m.interview.techScore,
-              problem: m.interview.problemScore,
-            }
-          : null,
-        hasVisibilityConsent: m.recruiterVisibilityConsentAt != null,
+        ok: true,
+        data: {
+          cohortName: gate.cohorts[0]?.name ?? null,
+          stage: gate.cohorts[0]?.stage ?? null,
+          matches: [],
+          nearMisses: [],
+          totalEligible: 0,
+          belowEvidenceFloor,
+          coverage: EMPTY_COVERAGE,
+        },
+      };
+    }
+
+    // Coverage is measured over the ranked pool, not everyone who consented —
+    // members held back by the floor cannot vouch for a dimension existing.
+    const coverage = computeCoverage(eligible);
+
+    const scoreable: ScoreableMember[] = eligible.map((d) => {
+      const id = d.programMemberId!;
+      const identity = set.identityByMember.get(id);
+      const legacy = set.legacyStatsByMember.get(id);
+      return {
+        id,
+        userId: d.userId ?? "",
+        fullName: identity?.fullName ?? "",
+        jobRole: identity?.jobRole ?? "",
+        company: identity?.company ?? "",
+        yearsExperience: d.yearsExperience.value,
+        skills: d.declaredSkills.value,
+        missionPoints: legacy?.missionPoints ?? 0,
+        missionsPassed: d.evidence.missionsPassed.value,
+        missionsAttempted: d.evidence.missionsAttempted.value,
+        cleanPassCount: d.evidence.cleanPassCount.value,
+        totalScore: legacy?.totalScore ?? 0,
+        commitDayCount: d.evidence.commitDays.value,
+        projectScores: d.evidence.projectScores.value,
+        interview: d.evidence.interview.value,
+        // The policy query already enforced both; re-stating them keeps the
+        // pure scorer's own hard filters meaningful when it is called directly.
+        hasVisibilityConsent: true,
         cohortPublished: true,
-        status: m.status,
-        availability: av
-          ? {
-              openToWork: av.openToWork,
-              expectedSalaryMin: av.expectedSalaryMin,
-              expectedSalaryMax: av.expectedSalaryMax,
-              salaryCurrency: av.salaryCurrency,
-              noticePeriodDays: av.noticePeriodDays,
-              preferredWorkMode: av.preferredWorkMode,
-              preferredCities: av.preferredCities,
-              openToRelocate: av.openToRelocate,
-            }
-          : null,
+        status: legacy?.status ?? "ENROLLED",
+        availability: d.availability,
+        cohortDay: set.cohortDayByMember.get(id) ?? 1,
+        dossier: d,
       };
     });
 
@@ -148,7 +138,21 @@ export async function searchCandidates(
     const ranked = rankCandidates(scoreable, spec, {
       includeHardFiltered: true,
       limit: 100,
+      coverage,
     });
+
+    // The band needs the tier, and the tier needs the score — so the estimate
+    // is attached after ranking rather than during dossier assembly.
+    for (const r of ranked) {
+      const d = r.dossier;
+      if (!d) continue;
+      d.compensation.estimate = estimateCompensation({
+        roleFamily: d.roleFamily.value,
+        yearsExperience: d.yearsExperience.value,
+        evidenceTier: r.tier,
+        missionsPassed: d.evidence.missionsPassed.value,
+      });
+    }
 
     const matches = ranked
       .filter((r) => !r.hardFiltered && r.tier !== "NONE")
@@ -166,10 +170,13 @@ export async function searchCandidates(
     return {
       ok: true,
       data: {
-        cohortName: cohort.name,
+        cohortName: gate.cohorts[0]?.name ?? null,
+        stage: gate.cohorts[0]?.stage ?? null,
         matches,
         nearMisses,
         totalEligible: scoreable.length,
+        belowEvidenceFloor,
+        coverage,
       },
     };
   } catch (error) {
