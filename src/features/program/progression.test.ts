@@ -2,10 +2,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   PROGRAM_MEMBER_START_DAY,
   PROGRAM_TOTAL_DAYS,
+  PROGRAM_TZ,
 } from "@/features/program/constants";
 import {
   collectPassSkipSets,
   deriveDayState,
+  getBehindByDays,
   getCalendarDerivedMaxContentDay,
   getCohortCalendarDay,
   getMaxContentDay,
@@ -76,13 +78,17 @@ describe("collectPassSkipSets / getMemberProgressDay", () => {
   });
 });
 
-describe("Chicago cohort calendar unlock", () => {
-  it("counts America/Chicago calendar days from cohort start", () => {
-    // Cohort starts 2026-08-10 05:00 UTC = 2026-08-10 00:00 Chicago (CDT).
-    // "now" 2026-08-11 18:00 UTC = 2026-08-11 13:00 Chicago → calendar day 2.
+describe("IST cohort calendar unlock", () => {
+  it("uses Asia/Kolkata as PROGRAM_TZ", () => {
+    expect(PROGRAM_TZ).toBe("Asia/Kolkata");
+  });
+
+  it("counts Asia/Kolkata calendar days from cohort start", () => {
+    // Cohort starts 2026-08-10 00:00 IST = 2026-08-09T18:30:00.000Z
+    // "now" 2026-08-11T07:30:00.000Z = 2026-08-11 13:00 IST → calendar day 2
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-08-11T18:00:00.000Z"));
-    const startsAt = new Date("2026-08-10T05:00:00.000Z");
+    vi.setSystemTime(new Date("2026-08-11T07:30:00.000Z"));
+    const startsAt = new Date("2026-08-09T18:30:00.000Z");
     expect(getCohortCalendarDay({ startsAt })).toBe(2);
 
     // Admin floor can raise unlock above calendar-derived max
@@ -91,5 +97,32 @@ describe("Chicago cohort calendar unlock", () => {
       calendarMax + 2,
     );
     expect(getMaxContentDay({ startsAt }, 1)).toBe(calendarMax);
+  });
+
+  it("does not inflate cohort day when UTC midnight start is read in IST", () => {
+    // Regression for Chicago→IST: naive UTC midnight startsAt was one civil day
+    // early under America/Chicago, so Mission Control showed Cohort day N+1.
+    // now = 2026-08-12T10:00Z → 15:30 IST / 05:00 Chicago
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-12T10:00:00.000Z"));
+    const startsAt = new Date("2026-08-01T00:00:00.000Z");
+    expect(getCohortCalendarDay({ startsAt })).toBe(12);
+  });
+});
+
+describe("getBehindByDays", () => {
+  it("measures behind-pace against cohort calendar day, not Day-4 unlock ceiling", () => {
+    // Calendar day 2 → unlock ceiling is PROGRAM_MEMBER_START_DAY+1 (=5),
+    // but an on-pace member at progressDay 2 must be behindBy 0 (not 3).
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-11T07:30:00.000Z"));
+    const startsAt = new Date("2026-08-09T18:30:00.000Z");
+    expect(getCohortCalendarDay({ startsAt })).toBe(2);
+    expect(getCalendarDerivedMaxContentDay(2)).toBe(
+      PROGRAM_MEMBER_START_DAY + 1,
+    );
+    expect(getBehindByDays({ startsAt }, 2)).toBe(0);
+    expect(getBehindByDays({ startsAt }, 1)).toBe(1);
+    expect(getBehindByDays({ startsAt }, 5)).toBe(0);
   });
 });
