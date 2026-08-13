@@ -3,6 +3,7 @@ import { Clock } from "lucide-react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getRecruiterState } from "@/features/talent-pool/recruiter-registration";
+import { prisma } from "@/lib/db";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,16 @@ export default async function TalentPendingPage() {
   // recruiter was being sent to a 404 — which reads exactly like this
   // page having been deleted. Scout is where they actually work.
   if (state.status === "approved") redirect("/hire");
+
+  // Someone who registered with candidates already picked was told only that
+  // their application is under review — nothing acknowledged the request that
+  // made them sign up in the first place.
+  const pendingAsks = await prisma.talentEngagementRequest.count({
+    where: {
+      recruiterUserId: session.user.id,
+      status: { notIn: ["CLOSED", "DECLINED"] },
+    },
+  });
 
   return (
     <div className="mx-auto max-w-md space-y-6 text-center">
@@ -32,6 +43,16 @@ export default async function TalentPendingPage() {
           approved.
         </p>
       </header>
+      {pendingAsks > 0 && (
+        <p className="rounded-xl border bg-card p-4 text-sm text-foreground/90">
+          We also have your request to be introduced to{" "}
+          <strong>
+            {pendingAsks} candidate{pendingAsks === 1 ? "" : "s"}
+          </strong>
+          . It is with our team alongside your application — nothing to re-do
+          once you are approved.
+        </p>
+      )}
       <Link href="/program" className={cn(buttonVariants({ variant: "outline" }))}>
         Back to program
       </Link>

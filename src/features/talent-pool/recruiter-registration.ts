@@ -13,6 +13,8 @@ export type PendingRecruiterApplication = {
   phone: string | null;
   createdAt: string;
   email: string;
+  /** Open introduction requests this applicant has already placed. */
+  pendingCandidateAsks: number;
 };
 
 export async function listPendingRecruiterApplications(): Promise<
@@ -23,6 +25,7 @@ export async function listPendingRecruiterApplications(): Promise<
     orderBy: { createdAt: "asc" },
     select: {
       id: true,
+      userId: true,
       fullName: true,
       company: true,
       phone: true,
@@ -31,6 +34,26 @@ export async function listPendingRecruiterApplications(): Promise<
     },
   });
 
+  // What they came for, shown next to the application itself.
+  //
+  // A recruiter who signs up because they want two specific candidates is a
+  // different decision from one who signed up to browse, and the team was
+  // seeing only the second kind. One grouped count rather than a query per row.
+  const asks =
+    pending.length === 0
+      ? []
+      : await prisma.talentEngagementRequest.groupBy({
+          by: ["recruiterUserId"],
+          where: {
+            recruiterUserId: { in: pending.map((p) => p.userId) },
+            status: { notIn: ["CLOSED", "DECLINED"] },
+          },
+          _count: { _all: true },
+        });
+  const asksByUser = new Map(
+    asks.map((a) => [a.recruiterUserId, a._count._all]),
+  );
+
   return pending.map((p) => ({
     id: p.id,
     fullName: p.fullName,
@@ -38,6 +61,7 @@ export async function listPendingRecruiterApplications(): Promise<
     phone: p.phone,
     createdAt: p.createdAt.toISOString(),
     email: p.user.email ?? "",
+    pendingCandidateAsks: asksByUser.get(p.userId) ?? 0,
   }));
 }
 

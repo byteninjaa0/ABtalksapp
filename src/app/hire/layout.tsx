@@ -20,7 +20,11 @@ export default async function HireLayout({ children }: { children: ReactNode }) 
       signedIn={Boolean(userId)}
       pending={pending}
     >
-      {approved && <MergeGuestCart />}
+      {/* Also for a recruiter still awaiting approval: they registered
+          *because* they wanted specific candidates, and that ask lives in
+          sessionStorage until it is recorded. Approval arrives hours later in
+          another session, by which time it is gone. */}
+      {(approved || pending) && <MergeGuestCart />}
       <HireChrome
         account={account}
         serverCartCount={account?.cartCount ?? 0}

@@ -34,40 +34,49 @@ export async function approveRecruiterAction(
 
   const email = profile.user.email?.trim().toLowerCase() ?? "";
 
-  await prisma.$transaction(async (tx) => {
-    await tx.recruiterProfile.update({
+  // Batched, not interactive.
+  //
+  // The callback form holds a connection open and pays a network round trip per
+  // statement. Against Neon that is three round trips from wherever the admin
+  // happens to be, and it blew the 5s interactive timeout on three trivial
+  // writes — the approval failed after having already updated the profile. The
+  // array form sends the whole batch in one round trip and is still atomic.
+  await prisma.$transaction([
+    prisma.recruiterProfile.update({
       where: { id: profile.id },
       data: {
         approved: true,
         approvedAt: new Date(),
         approvedByAdminId: admin.userId,
       },
-    });
-    if (email) {
-      // Approving is the verification decision. Do not overwrite an existing
-      // seat — that row may have been added by hand with different notes.
-      await tx.verifiedRecruiterSeat.upsert({
-        where: { email },
-        create: {
-          email,
-          company: profile.company,
-          contactName: profile.fullName,
-          active: true,
-          verifiedByAdminId: admin.userId,
-          notes: "Created when the application was approved.",
-        },
-        update: {},
-      });
-    }
-    await tx.adminAction.create({
+    }),
+    // Approving is the verification decision. Do not overwrite an existing
+    // seat — that row may have been added by hand with different notes.
+    ...(email
+      ? [
+          prisma.verifiedRecruiterSeat.upsert({
+            where: { email },
+            create: {
+              email,
+              company: profile.company,
+              contactName: profile.fullName,
+              active: true,
+              verifiedByAdminId: admin.userId,
+              notes: "Created when the application was approved.",
+            },
+            update: {},
+          }),
+        ]
+      : []),
+    prisma.adminAction.create({
       data: {
         adminUserId: admin.userId,
         targetUserId: profile.user.id,
         actionType: "PROGRAM_APPROVE_RECRUITER",
         metadata: { recruiterProfileId: profile.id },
       },
-    });
-  });
+    }),
+  ]);
 
   if (email) {
     const appUrl =
@@ -111,13 +120,14 @@ export async function rejectRecruiterAction(
     return { ok: false, message: "Cannot reject an approved recruiter." };
   }
 
-  await prisma.$transaction(async (tx) => {
-    await tx.recruiterProfile.delete({ where: { id: profile.id } });
-    await tx.user.update({
+  // Batched for the same reason as the approve path above.
+  await prisma.$transaction([
+    prisma.recruiterProfile.delete({ where: { id: profile.id } }),
+    prisma.user.update({
       where: { id: profile.user.id },
       data: { role: "STUDENT" },
-    });
-  });
+    }),
+  ]);
 
   await sendEmail({
     to: profile.user.email,

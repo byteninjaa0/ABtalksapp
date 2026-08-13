@@ -27,7 +27,9 @@ export default async function TalentLayout({
       signedIn={Boolean(userId)}
       pending={pending}
     >
-      {approved && <MergeGuestCart />}
+      {/* Same reason as the /hire layout: a pending recruiter's ask has to be
+          recorded before the browser session that holds it goes away. */}
+      {(approved || pending) && <MergeGuestCart />}
       <TalentShell account={account}>{children}</TalentShell>
     </HireAuthProvider>
   );

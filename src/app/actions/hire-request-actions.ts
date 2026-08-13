@@ -33,6 +33,39 @@ async function requireApprovedRecruiter(): Promise<
 }
 
 /**
+ * Registered as a recruiter — approved or still waiting on the team.
+ *
+ * A recruiter who registers *because* they want two specific candidates had
+ * their ask dropped on the floor: it lived in sessionStorage until approval,
+ * which arrives hours later in a different browser session. The intent that
+ * caused the signup was the first thing lost.
+ *
+ * Letting a pending recruiter record the ask is safe — an engagement request
+ * reveals nothing. The candidate stays behind a reference id until an admin
+ * explicitly shares contact, and that decision is unchanged. What it buys is
+ * that the application and what they came for reach the team together.
+ */
+async function requireRegisteredRecruiter(): Promise<
+  ActionResult<{ userId: string; approved: boolean }>
+> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { ok: false, message: "Sign in to place a request." };
+  }
+  const profile = await prisma.recruiterProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { approved: true },
+  });
+  if (!profile) {
+    return { ok: false, message: "Register as a recruiter first." };
+  }
+  return {
+    ok: true,
+    data: { userId: session.user.id, approved: profile.approved },
+  };
+}
+
+/**
  * Ask to be introduced to one candidate.
  *
  * The recruiter never sees who this is — the request is how ABTalks stays in
@@ -129,7 +162,9 @@ export async function placeEngagementRequestAction(
 export async function placeBulkEngagementRequestAction(
   input: unknown,
 ): Promise<ActionResult<{ placed: number; skipped: number }>> {
-  const gate = await requireApprovedRecruiter();
+  // Registered is enough here. This is the path a pending recruiter lands on
+  // straight after signing up with candidates already in their cart.
+  const gate = await requireRegisteredRecruiter();
   if (!gate.ok) return gate;
 
   const parsed = placeBulkEngagementRequestSchema.safeParse(input);
