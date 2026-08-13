@@ -22,19 +22,17 @@ export function RecruiterLoginForm({ redirectTo }: { redirectTo: string }) {
   const router = useRouter();
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
-  const [company, setCompany] = useState("");
   const [code, setCode] = useState("");
   const [devCode, setDevCode] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function requestCode() {
     startTransition(async () => {
-      const res = await requestRecruiterOtpAction({ email });
+      const res = await requestRecruiterOtpAction({ email, intent: "signin" });
       if (!res.ok) {
         toast.error(res.message);
         return;
       }
-      setCompany(res.data.company);
       setDevCode(res.data.devCode ?? null);
       setStep("code");
     });
@@ -101,14 +99,8 @@ export function RecruiterLoginForm({ redirectTo }: { redirectTo: string }) {
         </button>
 
         <p className="text-center text-xs text-muted-foreground">
-          Recruiter access is for verified companies. Not set up yet? Write to{" "}
-          <a
-            href="mailto:team@abtalks.in"
-            className="text-primary hover:underline"
-          >
-            team@abtalks.in
-          </a>{" "}
-          from your work address.
+          Only for recruiters we have already verified. New here? Register
+          above.
         </p>
       </div>
     );
@@ -121,7 +113,7 @@ export function RecruiterLoginForm({ redirectTo }: { redirectTo: string }) {
           Code sent to <span className="font-medium">{email}</span>
         </p>
         <p className="text-xs text-muted-foreground">
-          Signing in for {company}. The code expires in 10 minutes.
+          The code expires in 10 minutes.
         </p>
       </div>
 

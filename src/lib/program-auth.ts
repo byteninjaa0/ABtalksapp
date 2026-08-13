@@ -133,7 +133,7 @@ export async function requireRecruiter() {
   // a backstop — middleware catches unauthenticated recruiter routes first and
   // carries the real path — and the old hardcoded "?from=/hire" sent someone
   // who asked for the cart back to the search instead.
-  if (!session?.user?.id) redirect("/talent/login");
+  if (!session?.user?.id) redirect("/talent/register");
 
   const profile = await prisma.recruiterProfile.findUnique({
     where: { userId: session.user.id },

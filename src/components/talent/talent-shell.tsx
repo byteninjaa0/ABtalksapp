@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { signOutAction } from "@/app/actions/auth-actions";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -37,7 +38,9 @@ export function TalentShell({ children }: { children: React.ReactNode }) {
               />
             </span>
             </Link>
-            <Link href={showNav ? "/talent" : "/program"} className="text-primary">
+            {/* /talent is gone — the pool browser was removed. Scout is the
+                portal now. */}
+            <Link href={showNav ? "/hire" : "/talent/register"} className="text-primary">
               Talent
             </Link>
           </div>
@@ -55,6 +58,14 @@ export function TalentShell({ children }: { children: React.ReactNode }) {
                   {item.label}
                 </Link>
               ))}
+              <form action={signOutAction}>
+                <button
+                  type="submit"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Sign out
+                </button>
+              </form>
             </nav>
           )}
         </div>

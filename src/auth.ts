@@ -7,10 +7,7 @@ import { cookies } from "next/headers";
 import { recordLegalConsents } from "@/features/legal/record-consent";
 import { recordNewsletterOptIn } from "@/features/legal/record-newsletter-optin";
 import { logger } from "@/lib/logger";
-import {
-  findLiveSeat,
-  verifyRecruiterOtp,
-} from "@/features/recruiter-auth/otp";
+import { verifyRecruiterOtp } from "@/features/recruiter-auth/otp";
 //auth is the full config with PrismaAdapter and real Credentials authorize. Used everywhere else.
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -40,50 +37,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const verified = await verifyRecruiterOtp(email, code);
         if (!verified.ok) return null;
 
-        // The seat is re-checked here, not just when the code was issued: it
-        // can be revoked in the ten minutes a code is alive, and the session
-        // outlives the code.
-        const seat = await findLiveSeat(email);
-        if (!seat) return null;
-
+        // Signing in requires a registration. Accounts are created by the
+        // registration flow, never here — a valid code for an unregistered
+        // address must not become an account, or the review step means nothing.
+        // Unapproved profiles are allowed through so they can reach the
+        // "we're reviewing you" page; every recruiter surface still checks
+        // `approved` for itself.
         const existing = await prisma.user.findFirst({
           where: { email },
-          select: { id: true, email: true, name: true, role: true },
-        });
-        if (existing) {
-          return {
-            id: existing.id,
-            email: existing.email,
-            name: existing.name,
-            role: existing.role,
-          };
-        }
-
-        const created = await prisma.user.create({
-          data: {
-            email,
-            name: seat.contactName ?? null,
-            role: "RECRUITER",
-            // The code proved the address. Nothing else here does.
-            emailVerified: new Date(),
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            recruiterProfile: { select: { id: true } },
           },
-          select: { id: true, email: true, name: true, role: true },
         });
+        if (!existing?.recruiterProfile) return null;
 
-        try {
-          await recordLegalConsents({
-            userId: created.id,
-            email: created.email,
-            source: "recruiter_otp_signup",
-          });
-        } catch (error) {
-          // Never break sign-in over this, but it must be visible.
-          logger.error("[recruiter-auth] consent record failed", {
-            error: String(error),
-          });
-        }
-
-        return created;
+        return {
+          id: existing.id,
+          email: existing.email,
+          name: existing.name,
+          role: existing.role,
+        };
       },
     }),
     ...(process.env.ENABLE_DEV_AUTH === "true"

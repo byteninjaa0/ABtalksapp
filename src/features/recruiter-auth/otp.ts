@@ -13,6 +13,9 @@ const RATE_WINDOW_MINUTES = 15;
 
 export type OtpPurpose = "login" | "register";
 
+/** What the recruiter is trying to do, which decides the gate. */
+export type OtpIntent = "register" | "signin";
+
 /**
  * sha256(code + AUTH_SECRET).
  *
@@ -61,7 +64,6 @@ export type IssueResult =
   | {
       ok: true;
       purpose: OtpPurpose;
-      company: string;
       /**
        * The plaintext code, returned to the *server* caller so it can be
        * emailed. It must never be put in a Server Action response outside the
@@ -69,22 +71,37 @@ export type IssueResult =
        */
       code: string;
     }
-  | { ok: false; reason: "no-seat" | "rate-limited" };
+  | {
+      ok: false;
+      reason: "rate-limited" | "not-registered" | "already-registered";
+    };
 
 /**
- * Create a code for an email that owns a verified seat.
+ * Create a code for an email.
  *
- * `purpose` records whether this is a first sign-in or a returning one. It is
- * informational — verification does not depend on it, so a mismatch can never
- * lock someone out of their own account.
+ * The gate depends on what they are doing. Registration is open — anyone can
+ * apply, and the ABTalks team decides afterwards — so the only thing checked is
+ * that they have not already registered. Signing in is the opposite: it needs a
+ * registration to exist, because there is nothing to sign in to otherwise.
  */
 export async function issueRecruiterOtp(
   rawEmail: string,
+  intent: OtpIntent,
 ): Promise<IssueResult> {
   const email = normaliseEmail(rawEmail);
 
-  const seat = await findLiveSeat(email);
-  if (!seat) return { ok: false, reason: "no-seat" };
+  const existing = await prisma.user.findFirst({
+    where: { email },
+    select: { id: true, recruiterProfile: { select: { id: true } } },
+  });
+  const isRegistered = Boolean(existing?.recruiterProfile);
+
+  if (intent === "signin" && !isRegistered) {
+    return { ok: false, reason: "not-registered" };
+  }
+  if (intent === "register" && isRegistered) {
+    return { ok: false, reason: "already-registered" };
+  }
 
   const since = new Date(Date.now() - RATE_WINDOW_MINUTES * 60_000);
   const recent = await prisma.recruiterEmailOtp.count({
@@ -92,17 +109,12 @@ export async function issueRecruiterOtp(
   });
   if (recent >= RATE_LIMIT) return { ok: false, reason: "rate-limited" };
 
-  const existingUser = await prisma.user.findFirst({
-    where: { email },
-    select: { id: true },
-  });
-  const purpose: OtpPurpose = existingUser ? "login" : "register";
-
   // randomInt, not Math.random: this is a credential, however short-lived.
   const code = String(randomInt(0, 10 ** CODE_LENGTH)).padStart(
     CODE_LENGTH,
     "0",
   );
+  const purpose: OtpPurpose = intent === "signin" ? "login" : "register";
 
   await prisma.$transaction([
     // One live code per email. An older one lying around is a second key.
@@ -117,7 +129,7 @@ export async function issueRecruiterOtp(
     }),
   ]);
 
-  return { ok: true, purpose, company: seat.company, code };
+  return { ok: true, purpose, code };
 }
 
 export type VerifyResult =

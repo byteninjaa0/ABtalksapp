@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export default async function TalentPendingPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/talent/login?from=/talent/pending");
+  if (!session?.user?.id) redirect("/talent/register");
 
   const state = await getRecruiterState(session.user.id);
   if (state.status === "none") redirect("/talent/register");

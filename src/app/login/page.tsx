@@ -43,14 +43,13 @@ function registerHrefWithRef(refRaw: string | undefined): string {
 export default async function LoginPage({ searchParams }: Props) {
   const params = await searchParams;
   const from = safeFrom(params.from);
-  // `as` changes the copy and where a successful sign-in lands. It must never
-  // influence role or permissions — those are read from the database after the
-  // verified-seat lookup. A recruiter who is not seated still gets nowhere.
-  // Recruiters have their own door now — work email and a code, no Google.
-  // This parameter used to only change the copy on this page, which is what
-  // made "sign in as a recruiter" land on the candidate's Google button.
+  // This page is the candidate door and nothing else. Recruiters have their own,
+  // and the old `?as=recruiter` links are forwarded there rather than left to
+  // land on a Google button that was never meant for them.
   if (params.as === "recruiter") {
-    redirect(from ? `/talent/login?from=${encodeURIComponent(from)}` : "/talent/login");
+    redirect(
+      from ? `/talent/register?from=${encodeURIComponent(from)}` : "/talent/register",
+    );
   }
 
   const redirectTo = from ?? "/dashboard";
@@ -107,41 +106,13 @@ export default async function LoginPage({ searchParams }: Props) {
     <div className="flex min-h-svh flex-col bg-gradient-to-br from-primary/5 via-background to-background">
       <div className="flex flex-1 flex-col items-center justify-center p-6">
         <Card className="w-full max-w-md border-border/60 shadow-md">
-          <CardHeader className="space-y-3 text-center">
+          <CardHeader className="space-y-2 text-center">
             <CardTitle className="font-display text-3xl font-bold tracking-tight">
               <span className="text-primary">A</span>BTalks
             </CardTitle>
             <CardDescription className="text-base text-muted-foreground">
               Build your coding habit. Get discovered.
             </CardDescription>
-            <div
-              className="mx-auto flex w-full max-w-xs rounded-full border p-1"
-              role="tablist"
-              aria-label="Who are you signing in as"
-            >
-              <Link
-                href="/login"
-                role="tab"
-                aria-selected={true}
-                className={cn(
-                  "flex-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                  "bg-primary text-primary-foreground",
-                )}
-              >
-                For candidates
-              </Link>
-              <Link
-                href="/talent/login"
-                role="tab"
-                aria-selected={false}
-                className={cn(
-                  "flex-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                  "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                For recruiters
-              </Link>
-            </div>
           </CardHeader>
           <CardContent>
             <LoginClient

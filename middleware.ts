@@ -132,7 +132,8 @@ export default auth((req) => {
   // a signed-out recruiter to the candidate login — the exact thing this page
   // exists to avoid. Exact match, never a prefix: /talent/login must not open
   // anything else under it.
-  const isPublicRecruiterEntry = pathname === "/talent/login";
+  const isPublicRecruiterEntry =
+    pathname === "/talent/login" || pathname === "/talent/register";
 
   const isProtected =
     !isPublicRecruiterEntry &&
@@ -149,7 +150,7 @@ export default auth((req) => {
       pathname === "/talent" ||
       pathname.startsWith("/talent/");
     const url = new URL(
-      isRecruiterArea ? "/talent/login" : "/login",
+      isRecruiterArea ? "/talent/register" : "/login",
       req.nextUrl,
     );
     url.searchParams.set("from", pathname + req.nextUrl.search);

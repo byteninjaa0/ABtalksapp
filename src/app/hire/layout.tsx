@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
-import { ShoppingCart } from "lucide-react";
+import { LogOut, ShoppingCart } from "lucide-react";
 import Link from "next/link";
+import { signOutAction } from "@/app/actions/auth-actions";
 import { prisma } from "@/lib/db";
 import { requireRecruiter } from "@/lib/program-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -74,6 +75,21 @@ export default async function HireLayout({ children }: { children: ReactNode }) 
               )}
             </Link>
             <ThemeToggle />
+            {/* There was no way out of the portal at all — a recruiter could
+                sign in and never sign out. */}
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                title="Sign out"
+                aria-label="Sign out"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "icon" }),
+                  "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <LogOut className="size-4" aria-hidden="true" />
+              </button>
+            </form>
           </nav>
         </div>
       </header>
