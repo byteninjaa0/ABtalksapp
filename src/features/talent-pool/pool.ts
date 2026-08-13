@@ -391,6 +391,36 @@ export async function toggleShortlist(
   return { ok: true, shortlisted: true };
 }
 
+/** Add only — never removes. Used to merge a guest cart after sign-in. */
+export async function ensureShortlisted(
+  recruiterUserId: string,
+  memberId: string,
+): Promise<{ ok: true; added: boolean } | { ok: false; message: string }> {
+  const access = await assertPoolAccess(recruiterUserId);
+  if (!access.ok) return access;
+
+  const member = await prisma.programMember.findFirst({
+    where: {
+      id: memberId,
+      cohortId: access.cohort.id,
+      status: { in: ["ENROLLED", "COMPLETED"] },
+    },
+    select: { id: true },
+  });
+  if (!member) return { ok: false, message: "Member not found." };
+
+  const existing = await prisma.recruiterShortlistItem.findUnique({
+    where: { recruiterUserId_memberId: { recruiterUserId, memberId } },
+    select: { id: true },
+  });
+  if (existing) return { ok: true, added: false };
+
+  await prisma.recruiterShortlistItem.create({
+    data: { recruiterUserId, memberId },
+  });
+  return { ok: true, added: true };
+}
+
 export async function updateShortlistNote(
   recruiterUserId: string,
   memberId: string,

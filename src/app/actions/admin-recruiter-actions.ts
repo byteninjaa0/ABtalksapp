@@ -24,12 +24,15 @@ export async function approveRecruiterAction(
       id: true,
       approved: true,
       fullName: true,
+      company: true,
       user: { select: { id: true, email: true } },
     },
   });
 
   if (!profile) return { ok: false, message: "Application not found." };
   if (profile.approved) return { ok: false, message: "Already approved." };
+
+  const email = profile.user.email?.trim().toLowerCase() ?? "";
 
   await prisma.$transaction(async (tx) => {
     await tx.recruiterProfile.update({
@@ -40,6 +43,22 @@ export async function approveRecruiterAction(
         approvedByAdminId: admin.userId,
       },
     });
+    if (email) {
+      // Approving is the verification decision. Do not overwrite an existing
+      // seat — that row may have been added by hand with different notes.
+      await tx.verifiedRecruiterSeat.upsert({
+        where: { email },
+        create: {
+          email,
+          company: profile.company,
+          contactName: profile.fullName,
+          active: true,
+          verifiedByAdminId: admin.userId,
+          notes: "Created when the application was approved.",
+        },
+        update: {},
+      });
+    }
     await tx.adminAction.create({
       data: {
         adminUserId: admin.userId,
@@ -50,17 +69,22 @@ export async function approveRecruiterAction(
     });
   });
 
-  const talentUrl =
-    process.env.NEXTAUTH_URL?.replace(/\/$/, "") ?? "https://abtalks.in";
-  await sendEmail({
-    to: profile.user.email,
-    subject: "Your ABTalks recruiter access is approved",
-    html: `<p>Hi ${profile.fullName},</p><p>Your recruiter application has been approved. Once cohort results are published, you can browse the talent pool at <a href="${talentUrl}/talent">${talentUrl}/talent</a>.</p><p>— ABTalks</p>`,
-    text: `Hi ${profile.fullName},\n\nYour recruiter application has been approved. Browse the talent pool at ${talentUrl}/talent once results are published.\n\n— ABTalks`,
-  });
+  if (email) {
+    const appUrl =
+      process.env.NEXTAUTH_URL?.replace(/\/$/, "") ?? "https://abtalks.in";
+    await sendEmail({
+      to: email,
+      subject: "Your ABTalks recruiter access is approved",
+      html: `<p>Hi ${profile.fullName},</p><p>Your recruiter application has been approved. Sign in at <a href="${appUrl}/talent/login">${appUrl}/talent/login</a> and open <a href="${appUrl}/hire">${appUrl}/hire</a>.</p><p>— ABTalks</p>`,
+      text: `Hi ${profile.fullName},\n\nYour recruiter application has been approved. Sign in at ${appUrl}/talent/login and open ${appUrl}/hire.\n\n— ABTalks`,
+    });
+  }
 
   revalidatePath("/admin/program/recruiters");
-  revalidatePath("/talent");
+  revalidatePath("/admin/recruiters");
+  revalidatePath("/admin/recruiter-seats");
+  revalidatePath("/admin");
+  revalidatePath("/hire");
   return { ok: true };
 }
 
@@ -103,5 +127,7 @@ export async function rejectRecruiterAction(
   });
 
   revalidatePath("/admin/program/recruiters");
+  revalidatePath("/admin/recruiters");
+  revalidatePath("/admin");
   return { ok: true };
 }

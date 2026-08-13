@@ -74,10 +74,10 @@ export function RecruiterSeatsPanel({ seats }: { seats: SeatRow[] }) {
   return (
     <div className="space-y-6">
       <div className="space-y-3 rounded-xl border bg-card p-4">
-        <h2 className="text-sm font-semibold">Verify a recruiter</h2>
+        <h2 className="text-sm font-semibold">Pre-verify a work email</h2>
         <p className="text-xs text-muted-foreground">
-          Only an email on this list can register for recruiter access. Verify
-          the company out of band first — this list is the whole gate.
+          Optional. If they register with this email they skip the wait.
+          Approving an application above also adds them here.
         </p>
         <div className="grid gap-2 sm:grid-cols-3">
           <input
@@ -118,8 +118,8 @@ export function RecruiterSeatsPanel({ seats }: { seats: SeatRow[] }) {
 
       {seats.length === 0 ? (
         <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-          No verified seats yet. Nobody can register as a recruiter until one
-          exists.
+          No pre-verified emails yet. People can still register — they wait in
+          the inbox above until you approve them.
         </p>
       ) : (
         <ul className="divide-y rounded-xl border bg-card">

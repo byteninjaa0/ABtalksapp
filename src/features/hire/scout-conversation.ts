@@ -487,6 +487,13 @@ function questionFor(slot: HireSlot, spec: JobSpec): SlotQuestion {
       };
     case "experience": {
       const band = spec.seniority ? SENIORITY_YEARS[spec.seniority] : null;
+      const bandValue = band ? `${band.min}-${band.max}` : null;
+      const generic = [
+        { label: "0–2 years", value: "0-2" },
+        { label: "2–5 years", value: "2-5" },
+        { label: "5–8 years", value: "5-8" },
+        { label: "8+ years", value: "8-25" },
+      ].filter((o) => o.value !== bandValue);
       return {
         question:
           "Any hard experience band, or should I go by evidence alone?",
@@ -497,14 +504,11 @@ function questionFor(slot: HireSlot, spec: JobSpec): SlotQuestion {
             ? [
                 {
                   label: `Match seniority · ${band.min}–${band.max}y`,
-                  value: `${band.min}-${band.max}`,
+                  value: bandValue!,
                 },
               ]
             : []),
-          { label: "0–2 years", value: "0-2" },
-          { label: "2–5 years", value: "2-5" },
-          { label: "5–8 years", value: "5-8" },
-          { label: "8+ years", value: "8-25" },
+          ...generic,
         ],
       };
     }

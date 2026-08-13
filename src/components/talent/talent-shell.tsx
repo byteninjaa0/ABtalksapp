@@ -4,6 +4,10 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { signOutAction } from "@/app/actions/auth-actions";
+import { RecruiterAccountMenu } from "@/components/hire/recruiter-account-menu";
+import { useHireAuth } from "@/components/hire/hire-auth-provider";
+import type { RecruiterAccountSnapshot } from "@/features/hire/recruiter-account-types";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -17,9 +21,16 @@ const NAV = [
 
 const HIDE_NAV = ["/talent/login", "/talent/register", "/talent/pending"];
 
-export function TalentShell({ children }: { children: React.ReactNode }) {
+export function TalentShell({
+  children,
+  account = null,
+}: {
+  children: React.ReactNode;
+  account?: RecruiterAccountSnapshot | null;
+}) {
   const pathname = usePathname();
   const showNav = !HIDE_NAV.some((p) => pathname === p);
+  const { openAuth, signedIn, pending } = useHireAuth();
 
   return (
     <div className="min-h-svh bg-background">
@@ -58,14 +69,26 @@ export function TalentShell({ children }: { children: React.ReactNode }) {
                   {item.label}
                 </Link>
               ))}
-              <form action={signOutAction}>
+              {account ? (
+                <RecruiterAccountMenu account={account} />
+              ) : signedIn ? (
+                <form action={signOutAction}>
+                  <button
+                    type="submit"
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    {pending ? "Pending · Sign out" : "Sign out"}
+                  </button>
+                </form>
+              ) : (
                 <button
-                  type="submit"
-                  className="text-muted-foreground hover:text-foreground"
+                  type="button"
+                  onClick={() => openAuth("nav")}
+                  className={cn(buttonVariants({ size: "sm" }))}
                 >
-                  Sign out
+                  Sign in
                 </button>
-              </form>
+              )}
             </nav>
           )}
         </div>

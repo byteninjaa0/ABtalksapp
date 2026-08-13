@@ -18,6 +18,7 @@ import {
   Package,
   ShieldCheck,
   Presentation,
+  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -38,7 +39,8 @@ type IconName =
   | "program"
   | "cohort"
   | "hackathon"
-  | "workshop";
+  | "workshop"
+  | "recruiters";
 
 const iconMap = {
   overview: LayoutDashboard,
@@ -56,6 +58,7 @@ const iconMap = {
   cohort: GraduationCap,
   hackathon: Code2,
   workshop: Presentation,
+  recruiters: UserPlus,
 } as const;
 
 type NavItem = {

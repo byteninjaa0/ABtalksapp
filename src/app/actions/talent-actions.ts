@@ -1,11 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { auth } from "@/auth";
 import {
   registerRecruiter,
 } from "@/features/talent-pool/recruiter-registration";
 import {
+  ensureShortlisted,
   toggleShortlist,
   updateShortlistNote,
 } from "@/features/talent-pool/pool";
@@ -110,4 +112,29 @@ export async function updateShortlistNoteAction(
   revalidatePath("/talent/shortlist");
   revalidatePath(`/talent/members/${parsed.data.memberId}`);
   return { ok: true };
+}
+
+const mergeGuestCartSchema = z.object({
+  memberIds: z.array(z.string().min(1).max(80)).max(25),
+});
+
+/** Copy a guest localStorage cart onto the signed-in recruiter's shortlist. */
+export async function mergeGuestCartAction(
+  memberIds: unknown,
+): Promise<ActionResult<{ merged: number }>> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { ok: false, message: "Please sign in." };
+  }
+  const parsed = mergeGuestCartSchema.safeParse({ memberIds });
+  if (!parsed.success) return { ok: false, message: "Invalid cart." };
+
+  let merged = 0;
+  for (const memberId of parsed.data.memberIds) {
+    const result = await ensureShortlisted(session.user.id, memberId);
+    if (result.ok && result.added) merged += 1;
+  }
+  revalidatePath("/talent/shortlist");
+  revalidatePath("/hire", "layout");
+  return { ok: true, data: { merged } };
 }

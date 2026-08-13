@@ -1,30 +1,36 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { requireRecruiter } from "@/lib/program-auth";
 import { MatchResults } from "@/components/hire/match-results";
-import { loadRequestMatches } from "@/features/hire/load-request-matches";
+import { readGuestMatches } from "@/components/hire/guest-matches-store";
+import { readGuestCart } from "@/components/hire/guest-cart";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type Props = { params: Promise<{ requestId: string }> };
+export function GuestMatchesPage() {
+  const [ready, setReady] = useState(false);
+  const [store, setStore] = useState(readGuestMatches());
+  const [cartCount, setCartCount] = useState(0);
 
-export const metadata: Metadata = {
-  title: "Matched candidates | ABTalks Hire",
-};
+  useEffect(() => {
+    setStore(readGuestMatches());
+    setCartCount(readGuestCart().length);
+    setReady(true);
+    const sync = () => setCartCount(readGuestCart().length);
+    window.addEventListener("abtalks-hire-cart", sync);
+    return () => window.removeEventListener("abtalks-hire-cart", sync);
+  }, []);
 
-export default async function HireCandidatesPage({ params }: Props) {
-  const { requestId } = await params;
-  const { userId } = await requireRecruiter();
+  if (!ready) return null;
 
-  const data = await loadRequestMatches(requestId, userId);
-  if (!data) notFound();
+  const matches = store?.matches ?? [];
 
   return (
     <div className="space-y-6">
       <Link
-        href={`/hire/${requestId}`}
+        href="/hire"
         className={cn(
           buttonVariants({ variant: "ghost", size: "sm" }),
           "-ml-2 gap-1.5",
@@ -39,18 +45,18 @@ export default async function HireCandidatesPage({ params }: Props) {
           Step 2 · Matched profiles
         </p>
         <h1 className="font-display text-3xl font-bold tracking-tight">
-          {data.matches.length} matched{" "}
-          {data.matches.length === 1 ? "candidate" : "candidates"}
+          {matches.length} matched{" "}
+          {matches.length === 1 ? "candidate" : "candidates"}
         </h1>
         <p className="max-w-xl text-sm text-muted-foreground">
-          Ranked for {data.title || "your requirement"} on verified platform
+          Ranked for {store?.title || "your requirement"} on verified platform
           evidence — missions, commits, projects and interviews.
         </p>
       </div>
 
-      {data.matches.length === 0 ? (
+      {matches.length === 0 ? (
         <p className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-          No matches for this requirement yet.
+          No matches saved for this search. Run Scout again.
         </p>
       ) : (
         <>
@@ -60,8 +66,7 @@ export default async function HireCandidatesPage({ params }: Props) {
             hidden until you place a request and our team confirms the
             engagement.
           </p>
-          {/* No viewAllHref — this page is where "all" means all. */}
-          <MatchResults matches={data.matches} cartCount={data.cartCount} />
+          <MatchResults matches={matches} cartCount={cartCount} />
         </>
       )}
     </div>

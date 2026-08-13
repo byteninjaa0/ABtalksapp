@@ -128,12 +128,15 @@ export default auth((req) => {
   const hasAttributionCookies =
     req.cookies.has(REF_COOKIE_NAME) || alreadyAttributed;
 
-  // The recruiter's own door. /talent is protected by prefix, which would send
-  // a signed-out recruiter to the candidate login — the exact thing this page
-  // exists to avoid. Exact match, never a prefix: /talent/login must not open
-  // anything else under it.
+  // Scout itself is public. Auth is a dialog on this page, or a dedicated
+  // register/login route. Exact match only: /hire/requests and /hire/[id]
+  // stay behind a session. Same for the cart — guests keep it locally.
   const isPublicRecruiterEntry =
-    pathname === "/talent/login" || pathname === "/talent/register";
+    pathname === "/hire" ||
+    pathname === "/hire/matches" ||
+    pathname === "/talent/shortlist" ||
+    pathname === "/talent/login" ||
+    pathname === "/talent/register";
 
   const isProtected =
     !isPublicRecruiterEntry &&
@@ -150,7 +153,7 @@ export default auth((req) => {
       pathname === "/talent" ||
       pathname.startsWith("/talent/");
     const url = new URL(
-      isRecruiterArea ? "/talent/register" : "/login",
+      isRecruiterArea ? "/talent/login" : "/login",
       req.nextUrl,
     );
     url.searchParams.set("from", pathname + req.nextUrl.search);

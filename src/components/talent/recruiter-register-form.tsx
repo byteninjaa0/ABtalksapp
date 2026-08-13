@@ -88,7 +88,7 @@ export function RecruiterRegisterForm() {
         </h3>
         <p className="text-sm text-muted-foreground">
           {approved
-            ? "Your company was already verified, so you can sign in below straight away."
+            ? "Your company was already verified, so you can sign in straight away."
             : "We've got your details. Someone from ABTalks will contact you to confirm, and you'll be able to sign in once that's done."}
         </p>
         {approved && (

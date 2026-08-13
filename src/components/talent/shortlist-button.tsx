@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { Loader2, ShoppingCart, X } from "lucide-react";
 import { toast } from "sonner";
 import { toggleShortlistAction } from "@/app/actions/talent-actions";
+import { toggleGuestCart } from "@/components/hire/guest-cart";
+import { useHireAuth } from "@/components/hire/hire-auth-provider";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -18,10 +20,14 @@ export function ShortlistButton({
   memberId,
   initialShortlisted,
   compact = false,
+  jobRole,
+  totalScore,
   onToggle,
 }: {
   memberId: string;
   initialShortlisted: boolean;
+  jobRole?: string;
+  totalScore?: number;
   /** Icon-only, for dense rows. */
   compact?: boolean;
   /**
@@ -31,10 +37,22 @@ export function ShortlistButton({
    */
   onToggle?: (inCart: boolean) => void;
 }) {
+  const { approved } = useHireAuth();
   const [inCart, setInCart] = useState(initialShortlisted);
   const [pending, startTransition] = useTransition();
 
   function toggle() {
+    if (!approved) {
+      const next = toggleGuestCart({
+        memberId,
+        jobRole: jobRole ?? "Candidate",
+        totalScore: totalScore ?? 0,
+      });
+      setInCart(next);
+      onToggle?.(next);
+      toast.success(next ? "Added to cart" : "Removed from cart");
+      return;
+    }
     startTransition(async () => {
       const result = await toggleShortlistAction({ memberId });
       if (!result.ok) {

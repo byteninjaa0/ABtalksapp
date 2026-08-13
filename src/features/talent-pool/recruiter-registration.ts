@@ -6,6 +6,41 @@ export type RecruiterState =
   | { status: "pending"; fullName: string; company: string }
   | { status: "approved"; fullName: string; company: string };
 
+export type PendingRecruiterApplication = {
+  id: string;
+  fullName: string;
+  company: string;
+  phone: string | null;
+  createdAt: string;
+  email: string;
+};
+
+export async function listPendingRecruiterApplications(): Promise<
+  PendingRecruiterApplication[]
+> {
+  const pending = await prisma.recruiterProfile.findMany({
+    where: { approved: false },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      fullName: true,
+      company: true,
+      phone: true,
+      createdAt: true,
+      user: { select: { email: true } },
+    },
+  });
+
+  return pending.map((p) => ({
+    id: p.id,
+    fullName: p.fullName,
+    company: p.company,
+    phone: p.phone,
+    createdAt: p.createdAt.toISOString(),
+    email: p.user.email ?? "",
+  }));
+}
+
 export async function getRecruiterState(userId: string): Promise<RecruiterState> {
   const profile = await prisma.recruiterProfile.findUnique({
     where: { userId },

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { requireRecruiter } from "@/lib/program-auth";
 import { ScoutChat } from "@/components/hire/scout-chat";
 import { MatchResults } from "@/components/hire/match-results";
 import type { MatchCardData } from "@/components/hire/match-card";
@@ -16,9 +16,8 @@ export const metadata: Metadata = {
 };
 
 export default async function HireRequestPage({ params }: Props) {
+  const { userId } = await requireRecruiter();
   const { requestId } = await params;
-  const session = await auth();
-  const userId = session!.user!.id;
 
   let request;
   try {
@@ -111,6 +110,7 @@ export default async function HireRequestPage({ params }: Props) {
   return (
     <div className="space-y-10">
       <ScoutChat
+        persist
         initialRequestId={request.id}
         initialMessages={messages}
         initialSpec={spec}

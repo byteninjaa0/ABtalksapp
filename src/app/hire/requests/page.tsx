@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth } from "@/auth";
+import { requireRecruiter } from "@/lib/program-auth";
 import { prisma } from "@/lib/db";
+import { CheckoutFlash } from "@/components/hire/checkout-flash";
 import { EngagementThread } from "@/components/hire/engagement-thread";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -31,8 +32,7 @@ const STATUS_COPY: Record<string, { label: string; hint: string }> = {
 };
 
 export default async function HireRequestsPage() {
-  const session = await auth();
-  const userId = session!.user!.id!;
+  const { userId } = await requireRecruiter();
 
   const engagements = await prisma.talentEngagementRequest.findMany({
     where: { recruiterUserId: userId },
@@ -78,6 +78,8 @@ export default async function HireRequestsPage() {
           the candidate first, then share their details.
         </p>
       </div>
+
+      <CheckoutFlash />
 
       {engagements.length === 0 ? (
         <div className="rounded-xl border border-dashed p-8 text-center">

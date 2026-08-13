@@ -99,8 +99,7 @@ export function RecruiterLoginForm({ redirectTo }: { redirectTo: string }) {
         </button>
 
         <p className="text-center text-xs text-muted-foreground">
-          Only for recruiters we have already verified. New here? Register
-          above.
+          Only for recruiters we have already verified.
         </p>
       </div>
     );

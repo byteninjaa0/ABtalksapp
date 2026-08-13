@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/admin-auth";
+import { prisma } from "@/lib/db";
 import { AppHeader } from "@/components/shared/app-header";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
@@ -9,6 +10,9 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const admin = await requireAdmin();
+  const pendingRecruiterCount = await prisma.recruiterProfile.count({
+    where: { approved: false },
+  });
 
   const navItems = [
     { href: "/admin", label: "Overview", icon: "overview" as const },
@@ -52,9 +56,12 @@ export default async function AdminLayout({
       icon: "dataRequests" as const,
     },
     {
-      href: "/admin/recruiter-seats",
-      label: "Recruiter Seats",
-      icon: "ambassadors" as const,
+      href: "/admin/recruiters",
+      label:
+        pendingRecruiterCount > 0
+          ? `Recruiters (${pendingRecruiterCount})`
+          : "Recruiters",
+      icon: "recruiters" as const,
     },
   ];
 

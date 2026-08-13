@@ -174,6 +174,8 @@ export function MatchCard({
           <ShortlistButton
             memberId={match.programMemberId}
             initialShortlisted={match.shortlisted ?? false}
+            jobRole={match.jobRole}
+            totalScore={match.score}
             onToggle={onCartToggle}
           />
         )}

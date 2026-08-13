@@ -55,6 +55,7 @@ export async function addRecruiterSeatAction(
     });
 
     revalidatePath("/admin/recruiter-seats");
+    revalidatePath("/admin/recruiters");
     return { ok: true, data: { seatId: seat.id } };
   } catch (error) {
     logger.error("[hire] addRecruiterSeatAction", { error: String(error) });
@@ -98,6 +99,7 @@ export async function setRecruiterSeatActiveAction(
     }
 
     revalidatePath("/admin/recruiter-seats");
+    revalidatePath("/admin/recruiters");
     revalidatePath("/admin/program/recruiters");
     return { ok: true, data: { seatId: seat.id, active: seat.active } };
   } catch (error) {

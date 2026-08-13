@@ -6,6 +6,8 @@ import Link from "next/link";
 import { CheckCircle2, Loader2, Lock, Send } from "lucide-react";
 import { toast } from "sonner";
 import { placeBulkEngagementRequestAction } from "@/app/actions/hire-request-actions";
+import { useHireAuth } from "@/components/hire/hire-auth-provider";
+import { savePendingCheckout } from "@/components/hire/pending-checkout";
 import { candidatePublicId } from "@/features/hire/public-id";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -29,6 +31,7 @@ const STATUS_COPY: Record<string, string> = {
 
 export function ShortlistCart({ rows }: { rows: CartRow[] }) {
   const router = useRouter();
+  const { approved, pending: approvalPending, openAuth } = useHireAuth();
   const [note, setNote] = useState("");
   const [pending, startTransition] = useTransition();
 
@@ -55,6 +58,18 @@ export function ShortlistCart({ rows }: { rows: CartRow[] }) {
   }
 
   function place() {
+    if (!approved) {
+      if (approvalPending) {
+        toast.error("Your recruiter application is still being reviewed.");
+        return;
+      }
+      savePendingCheckout({
+        programMemberIds: [...selected],
+        note: note.trim() || undefined,
+      });
+      openAuth("checkout");
+      return;
+    }
     startTransition(async () => {
       const res = await placeBulkEngagementRequestAction({
         programMemberIds: [...selected],
@@ -129,12 +144,18 @@ export function ShortlistCart({ rows }: { rows: CartRow[] }) {
                 className="size-4 shrink-0 accent-[var(--color-primary)] disabled:opacity-40"
               />
               <div className="min-w-0 flex-1">
-                <Link
-                  href={`/talent/members/${r.memberId}`}
-                  className="font-medium hover:underline"
-                >
-                  {r.revealedName ?? candidatePublicId(r.memberId)}
-                </Link>
+                {approved ? (
+                  <Link
+                    href={`/talent/members/${r.memberId}`}
+                    className="font-medium hover:underline"
+                  >
+                    {r.revealedName ?? candidatePublicId(r.memberId)}
+                  </Link>
+                ) : (
+                  <span className="font-medium">
+                    {candidatePublicId(r.memberId)}
+                  </span>
+                )}
                 <p className="text-xs text-muted-foreground">
                   {r.jobRole} · {r.totalScore} pts
                   {r.note ? ` · ${r.note}` : ""}

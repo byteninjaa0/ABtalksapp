@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Loader2, Lock, MessageSquarePlus } from "lucide-react";
 import { toast } from "sonner";
 import { placeEngagementRequestAction } from "@/app/actions/hire-request-actions";
+import { useHireAuth } from "@/components/hire/hire-auth-provider";
+import { savePendingCheckout } from "@/components/hire/pending-checkout";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +33,7 @@ export function RequestIntroButton({
   publicId,
 }: Props) {
   const router = useRouter();
+  const { approved, pending: approvalPending, openAuth } = useHireAuth();
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState("");
   const [status, setStatus] = useState<string | null>(existingStatus ?? null);
@@ -55,6 +58,18 @@ export function RequestIntroButton({
   }
 
   function submit() {
+    if (!approved) {
+      if (approvalPending) {
+        toast.error("Your recruiter application is still being reviewed.");
+        return;
+      }
+      savePendingCheckout({
+        programMemberIds: [programMemberId],
+        note: note.trim() || undefined,
+      });
+      openAuth("checkout");
+      return;
+    }
     startTransition(async () => {
       const res = await placeEngagementRequestAction({
         programMemberId,
@@ -76,7 +91,18 @@ export function RequestIntroButton({
     return (
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          if (!approved) {
+            if (approvalPending) {
+              toast.error("Your recruiter application is still being reviewed.");
+              return;
+            }
+            savePendingCheckout({ programMemberIds: [programMemberId] });
+            openAuth("checkout");
+            return;
+          }
+          setOpen(true);
+        }}
         className={cn(
           buttonVariants({ variant: "outline", size: "sm" }),
           "gap-1.5",

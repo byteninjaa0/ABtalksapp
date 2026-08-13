@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { getRecruiterState } from "@/features/talent-pool/recruiter-registration";
 import { ScoutChat } from "@/components/hire/scout-chat";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,20 +15,25 @@ export const metadata: Metadata = {
 
 export default async function HirePage() {
   const session = await auth();
-  const userId = session!.user!.id;
+  const userId = session?.user?.id ?? null;
+  const recruiter = userId
+    ? await getRecruiterState(userId)
+    : { status: "none" as const };
+  const persist = recruiter.status === "approved";
 
   let recent: { id: string; title: string; status: string; updatedAt: Date }[] =
     [];
-  try {
-    recent = await prisma.talentRequest.findMany({
-      where: { recruiterUserId: userId },
-      orderBy: { updatedAt: "desc" },
-      take: 8,
-      select: { id: true, title: true, status: true, updatedAt: true },
-    });
-  } catch {
-    // Tables may not exist until migration is applied on Neon branch.
-    recent = [];
+  if (userId) {
+    try {
+      recent = await prisma.talentRequest.findMany({
+        where: { recruiterUserId: userId },
+        orderBy: { updatedAt: "desc" },
+        take: 8,
+        select: { id: true, title: true, status: true, updatedAt: true },
+      });
+    } catch {
+      recent = [];
+    }
   }
 
   return (
@@ -49,6 +55,7 @@ export default async function HirePage() {
       </div>
 
       <ScoutChat
+        persist={persist}
         initialRequestId={null}
         initialMessages={[]}
         initialSpec={{}}
@@ -76,12 +83,12 @@ export default async function HirePage() {
             ))}
           </ul>
         </section>
-      ) : (
+      ) : persist ? (
         <p className="text-center text-xs text-muted-foreground">
           No saved requirements yet. If send fails, apply the hire migration on
           a Neon branch first.
         </p>
-      )}
+      ) : null}
 
     </div>
   );

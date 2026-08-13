@@ -75,13 +75,13 @@ export async function requestRecruiterOtpAction(
       if (issued.reason === "already-registered") {
         return {
           ok: false,
-          message: "This email is already registered — sign in below instead.",
+          message: "This email is already registered. Sign in instead.",
         };
       }
       return {
         ok: false,
         message:
-          "We have no registration for this email. Register above and we'll be in touch.",
+          "We have no registration for this email. Register first and we'll be in touch.",
       };
     }
 

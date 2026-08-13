@@ -1,18 +1,39 @@
 import type { Metadata } from "next";
 import { auth } from "@/auth";
-import { requireRecruiter } from "@/lib/program-auth";
+import { getRecruiterState } from "@/features/talent-pool/recruiter-registration";
 import { getShortlist } from "@/features/talent-pool/pool";
 import { existingEngagements } from "@/features/hire/contact-access";
 import { ShortlistCart, type CartRow } from "@/components/hire/shortlist-cart";
+import { GuestCartView } from "@/components/hire/guest-cart-view";
 
 export const metadata: Metadata = {
   title: "Your cart | ABTalks Hire",
 };
 
 export default async function TalentShortlistPage() {
-  await requireRecruiter();
   const session = await auth();
-  const userId = session!.user!.id!;
+  const userId = session?.user?.id ?? null;
+  const state = userId ? await getRecruiterState(userId) : { status: "none" as const };
+
+  if (state.status !== "approved" || !userId) {
+    return (
+      <div className="space-y-6">
+        <header className="space-y-2">
+          <p className="text-xs font-medium tracking-wide text-primary uppercase">
+            Step 3 · Review &amp; request
+          </p>
+          <h1 className="font-display text-2xl font-bold tracking-tight">
+            Your cart
+          </h1>
+          <p className="max-w-xl text-sm text-muted-foreground">
+            Saved on this device until you sign in. Checkout asks you to
+            register or sign in — you stay on this page.
+          </p>
+        </header>
+        <GuestCartView />
+      </div>
+    );
+  }
 
   const result = await getShortlist(userId);
   if (!result.ok) {

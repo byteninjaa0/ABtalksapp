@@ -47,9 +47,7 @@ export default async function LoginPage({ searchParams }: Props) {
   // and the old `?as=recruiter` links are forwarded there rather than left to
   // land on a Google button that was never meant for them.
   if (params.as === "recruiter") {
-    redirect(
-      from ? `/talent/register?from=${encodeURIComponent(from)}` : "/talent/register",
-    );
+    redirect(from ?? "/hire");
   }
 
   const redirectTo = from ?? "/dashboard";

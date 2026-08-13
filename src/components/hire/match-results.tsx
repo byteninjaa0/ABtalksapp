@@ -66,7 +66,7 @@ export function MatchResults({
             "hover:border-primary/45 hover:bg-card hover:shadow-card-hover",
           )}
         >
-          View all {matches.length} candidates
+          View {hidden} more
           <ArrowRight className="size-4" aria-hidden="true" />
         </Link>
       )}

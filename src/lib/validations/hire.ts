@@ -204,3 +204,19 @@ export const sendScoutMessageSchema = z.object({
 export const runMatchSchema = z.object({
   requestId: z.string().cuid(),
 });
+
+export const guestScoutHistorySchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string().trim().min(1).max(2000),
+});
+
+export const guestScoutMessageSchema = z.object({
+  message: z.string().trim().min(1).max(2000),
+  display: z.string().trim().min(1).max(200).optional(),
+  spec: jobSpecSchema,
+  history: z.array(guestScoutHistorySchema).max(40),
+});
+
+export const guestMatchSchema = z.object({
+  spec: jobSpecSchema,
+});

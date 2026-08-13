@@ -16,6 +16,14 @@ import {
   runMatchAction,
   sendScoutMessageAction,
 } from "@/app/actions/hire-actions";
+import {
+  runGuestMatchAction,
+  sendGuestScoutMessageAction,
+} from "@/app/actions/hire-guest-actions";
+import { MatchResults } from "@/components/hire/match-results";
+import type { MatchCardData } from "@/components/hire/match-card";
+import { readGuestCart } from "@/components/hire/guest-cart";
+import { writeGuestMatches } from "@/components/hire/guest-matches-store";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -30,6 +38,8 @@ type Msg = {
 };
 
 type Props = {
+  /** Persist turns as a TalentRequest. False for guests and pending recruiters. */
+  persist?: boolean;
   initialRequestId: string | null;
   initialMessages: Msg[];
   initialSpec: JobSpec;
@@ -150,6 +160,7 @@ function specRows(spec: JobSpec): { label: string; value: string }[] {
 }
 
 export function ScoutChat({
+  persist = false,
   initialRequestId,
   initialMessages,
   initialSpec,
@@ -167,6 +178,8 @@ export function ScoutChat({
   const [pending, startTransition] = useTransition();
   const [searched, setSearched] = useState(false);
   const [matchCount, setMatchCount] = useState<number | null>(null);
+  const [guestMatches, setGuestMatches] = useState<MatchCardData[]>([]);
+  const [guestGap, setGuestGap] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -187,7 +200,8 @@ export function ScoutChat({
   // button after the last answer is what made the conversation feel like it
   // never ended — there was no point at which anything happened.
   useEffect(() => {
-    if (!readyToSearch || !requestId || pending) return;
+    if (!readyToSearch || pending) return;
+    if (persist && !requestId) return;
     if (autoSearchedRef.current) return;
     autoSearchedRef.current = true;
     runSearch();
@@ -212,16 +226,45 @@ export function ScoutChat({
     setMessages((m) => [...m, { role: "user", content: shown }]);
     setText("");
     startTransition(async () => {
-      const res = await sendScoutMessageAction({
-        requestId: requestId ?? undefined,
+      if (persist) {
+        const res = await sendScoutMessageAction({
+          requestId: requestId ?? undefined,
+          message,
+          display: shown === message ? undefined : shown,
+        });
+        if (!res.ok) {
+          toast.error(res.message);
+          return;
+        }
+        setRequestId(res.data.requestId);
+        setSpec(res.data.spec);
+        setSummary(res.data.summary);
+        setReadyToSearch(res.data.readyToSearch);
+        setMessages((m) => [
+          ...m,
+          {
+            role: "assistant",
+            content: res.data.assistantMessage,
+            options: res.data.options,
+          },
+        ]);
+        if (!requestId) router.replace(`/hire/${res.data.requestId}`);
+        return;
+      }
+
+      const res = await sendGuestScoutMessageAction({
         message,
         display: shown === message ? undefined : shown,
+        spec,
+        history: messages.map((row) => ({
+          role: row.role,
+          content: row.content,
+        })),
       });
       if (!res.ok) {
         toast.error(res.message);
         return;
       }
-      setRequestId(res.data.requestId);
       setSpec(res.data.spec);
       setSummary(res.data.summary);
       setReadyToSearch(res.data.readyToSearch);
@@ -233,28 +276,54 @@ export function ScoutChat({
           options: res.data.options,
         },
       ]);
-      if (!requestId) router.replace(`/hire/${res.data.requestId}`);
     });
   }
 
   function runSearch() {
-    if (!requestId) {
+    if (persist && !requestId) {
       toast.error("Answer at least one question first.");
       return;
     }
     startTransition(async () => {
-      const res = await runMatchAction({ requestId });
+      if (persist) {
+        const res = await runMatchAction({ requestId: requestId! });
+        if (!res.ok) {
+          toast.error(res.message);
+          return;
+        }
+        setSearched(true);
+        setMatchCount(res.data.matchCount);
+        setMessages((m) => [
+          ...m,
+          { role: "assistant", content: res.data.overallGap },
+        ]);
+        router.refresh();
+        return;
+      }
+
+      const res = await runGuestMatchAction({ spec });
       if (!res.ok) {
         toast.error(res.message);
         return;
       }
+      const cart = new Set(readGuestCart().map((i) => i.memberId));
+      const cards = res.data.matches.map((m) => ({
+        ...m,
+        shortlisted: m.programMemberId ? cart.has(m.programMemberId) : false,
+      }));
+      setGuestMatches(cards);
+      setGuestGap(res.data.overallGap);
+      writeGuestMatches({
+        matches: cards,
+        overallGap: res.data.overallGap,
+        title: spec.title?.trim() || "your requirement",
+      });
       setSearched(true);
       setMatchCount(res.data.matchCount);
       setMessages((m) => [
         ...m,
         { role: "assistant", content: res.data.overallGap },
       ]);
-      router.refresh();
     });
   }
 
@@ -304,6 +373,34 @@ export function ScoutChat({
               {summary || "Ranks people on verified work, not resumes"}
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (requestId) {
+                router.push("/hire");
+                return;
+              }
+              setMessages([OPENING]);
+              setSpec({});
+              setSummary("Not started");
+              setReadyToSearch(false);
+              setSearched(false);
+              setMatchCount(null);
+              setGuestMatches([]);
+              setGuestGap(null);
+              setText("");
+              setDetailsOpen(false);
+              autoSearchedRef.current = false;
+            }}
+            className={cn(
+              "flex shrink-0 items-center rounded-full border px-3 py-1.5 text-xs font-medium",
+              "transition-colors hover:border-primary hover:text-primary",
+              "focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none",
+            )}
+          >
+            New search
+          </button>
 
           <button
             type="button"
@@ -412,9 +509,9 @@ export function ScoutChat({
 
                 {i === lastIndex && !pending && chips.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {chips.map((o) => (
+                    {chips.map((o, oi) => (
                       <button
-                        key={o.value}
+                        key={`${o.value}-${oi}`}
                         type="button"
                         disabled={pending}
                         onClick={() => send(o.value, o.label)}
@@ -511,7 +608,7 @@ export function ScoutChat({
         ) : (
           <button
             type="button"
-            disabled={pending || !requestId}
+            disabled={pending || (persist && !requestId)}
             onClick={runSearch}
             className={cn(
               buttonVariants({
@@ -539,7 +636,7 @@ export function ScoutChat({
           </p>
         )}
 
-        {searched && matchCount === 0 && (
+        {persist && searched && matchCount === 0 && (
           <button
             type="button"
             disabled={pending}
@@ -553,6 +650,36 @@ export function ScoutChat({
           </button>
         )}
       </div>
+
+      {!persist && searched && (
+        <section id="hire-results" className="scroll-mt-20 space-y-4">
+          <p className="text-xs font-medium tracking-wide text-primary uppercase">
+            Step 2 · Matched profiles
+          </p>
+          <h2 className="font-display text-2xl font-bold tracking-tight">
+            {guestMatches.length > 0
+              ? `${guestMatches.length} matched candidate${guestMatches.length === 1 ? "" : "s"}`
+              : "No matches yet"}
+          </h2>
+          {guestGap && (
+            <p className="text-sm text-muted-foreground">{guestGap}</p>
+          )}
+          {guestMatches.length > 0 && (
+            <>
+              <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-xs leading-relaxed text-amber-900 dark:text-amber-100">
+                <strong className="font-semibold">Privacy protected.</strong>{" "}
+                Candidates are shown by reference ID. Names and contact stay
+                hidden until you send a request.
+              </p>
+              <MatchResults
+                matches={guestMatches}
+                cartCount={readGuestCart().length}
+                viewAllHref="/hire/matches"
+              />
+            </>
+          )}
+        </section>
+      )}
     </div>
   );
 }
