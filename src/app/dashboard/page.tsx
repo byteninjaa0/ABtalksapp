@@ -18,6 +18,9 @@ import { ConsentRefreshBanner } from "@/components/legal/consent-refresh-banner"
 import { needsReconsent } from "@/features/legal/needs-reconsent";
 import { PastMissedChallengeToast } from "@/components/dashboard/past-missed-challenge-toast";
 import { SubmissionHeatmap } from "@/components/dashboard/submission-heatmap";
+import { CompletionSummary } from "@/components/dashboard/completion-summary";
+import { WhatsNext } from "@/components/dashboard/whats-next";
+import { CollapsedHeatmap } from "@/components/dashboard/collapsed-heatmap";
 import {
   getDashboardData,
   type DashboardDataWithEnrollment,
@@ -26,6 +29,7 @@ import { getHeatmapData } from "@/features/dashboard/get-heatmap-data";
 // import { getLeaderboard } from "@/features/dashboard/get-leaderboard"; // hidden post-launch
 import { getAvailableQuiz } from "@/features/quiz/get-available-quiz";
 import { getQuizAttemptHistory } from "@/features/quiz/get-quiz-attempt-history";
+import { certificateDomainLabel } from "@/features/certificate/constants";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -40,7 +44,7 @@ import { formatDateIST, isEnrollmentPreStart } from "@/lib/date-utils";
 import { PreStartDashboard } from "@/components/dashboard/pre-start-dashboard";
 import { prisma } from "@/lib/db";
 import { hackathonRedirectForProfilelessUser, isUserRegistered } from "@/features/hackathon/registration-status";
-import { Domain } from "@prisma/client";
+import { CertificateStatus, Domain } from "@prisma/client";
 import { ClaudeChallengeModal } from "@/components/dashboard/claude-challenge-modal";
 import { getUserActiveEnrollments } from "@/features/enrollment/get-user-enrollments";
 import { isClaudeEnabled, isOtpVerificationRequired } from "@/lib/feature-flags";
@@ -128,10 +132,10 @@ export default async function DashboardPage({
   const claudeEnabled = isClaudeEnabled();
   // Leaderboard hidden temporarily — to be optimized and re-enabled post-launch
   // let leaderboardDomain = parseLeaderboardDomain(
-  //   readQueryParam(query, "lb_domain"),
+  // readQueryParam(query, "lb_domain"),
   // );
   // if (!claudeEnabled && leaderboardDomain === "CLAUDE") {
-  //   leaderboardDomain = "ALL";
+  // leaderboardDomain = "ALL";
   // }
   // const leaderboardSearch = readQueryParam(query, "lb_search");
 
@@ -307,15 +311,26 @@ export default async function DashboardPage({
     );
   }
 
-  const [heatmapData, quizAvailability, quizHistory] = await Promise.all([
-    getHeatmapData(dashboardData.enrollment.id, {
-      enrollment: dashboardData.enrollment,
-      submissions: dashboardData.submissions,
-    }),
-    // getLeaderboard({ ... }), // disabled with leaderboard section
-    getAvailableQuiz(session.user.id, dashboardData.enrollment),
-    getQuizAttemptHistory(session.user.id, dashboardData.enrollment),
-  ]);
+  const isChallengeComplete =
+    enrollment.status === "COMPLETED" ||
+    enrollment.daysCompleted >= enrollment.totalDays;
+
+  const [heatmapData, quizAvailability, quizHistory, certificate] =
+    await Promise.all([
+      getHeatmapData(dashboardData.enrollment.id, {
+        enrollment: dashboardData.enrollment,
+        submissions: dashboardData.submissions,
+      }),
+      // getLeaderboard({ ... }), // disabled with leaderboard section
+      getAvailableQuiz(session.user.id, dashboardData.enrollment),
+      getQuizAttemptHistory(session.user.id, dashboardData.enrollment),
+      isChallengeComplete
+        ? prisma.certificate.findUnique({
+            where: { enrollmentId: enrollment.id },
+            select: { status: true },
+          })
+        : Promise.resolve(null),
+    ]);
 
   const mustReconsent = await needsReconsent(session.user.id);
 
@@ -323,9 +338,7 @@ export default async function DashboardPage({
     100,
     Math.round((enrollment.currentDay / enrollment.totalDays) * 100),
   );
-  const isChallengeComplete =
-    enrollment.status === "COMPLETED" ||
-    enrollment.daysCompleted >= enrollment.totalDays;
+  const hasCertificate = certificate?.status === CertificateStatus.ISSUED;
 
   return (
     <div className="relative flex min-h-svh flex-col bg-muted/30">
@@ -382,21 +395,31 @@ export default async function DashboardPage({
           </div>
         ) : null}
 
-        <Card className="shadow-md">
-          <CardHeader className="pb-3">
-            <CardTitle className="font-display text-2xl">Your 60-Day Journey</CardTitle>
-            <CardDescription>
-              {enrollment.daysCompleted} days complete · Day {enrollment.currentDay} of{" "}
-              {enrollment.totalDays}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="min-w-0 px-5 pb-6">
-            <SubmissionHeatmap
-              data={heatmapData}
-              challengeEnrollmentId={enrollment.id}
-            />
-          </CardContent>
-        </Card>
+        {isChallengeComplete ? (
+          <CompletionSummary
+            domainLabel={certificateDomainLabel(enrollment.domain)}
+            daysCompleted={enrollment.daysCompleted}
+            totalDays={enrollment.totalDays}
+            longestStreak={enrollment.longestStreak}
+            hasCertificate={hasCertificate}
+          />
+        ) : (
+          <Card className="shadow-md">
+            <CardHeader className="pb-3">
+              <CardTitle className="font-display text-2xl">Your 60-Day Journey</CardTitle>
+              <CardDescription>
+                {enrollment.daysCompleted} days complete · Day {enrollment.currentDay} of{" "}
+                {enrollment.totalDays}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="min-w-0 px-5 pb-6">
+              <SubmissionHeatmap
+                data={heatmapData}
+                challengeEnrollmentId={enrollment.id}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
@@ -407,16 +430,12 @@ export default async function DashboardPage({
           </CardHeader>
           <CardContent className="space-y-4">
             {isChallengeComplete ? (
-              <div className="rounded-xl border border-dashed border-border/80 bg-muted/30 p-6 text-center">
-                <p className="font-display text-lg font-semibold">
-                  🎉 Challenge complete! You&apos;re ready for interview!
-                </p>
-                {profile.isReadyForInterview ? (
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Your profile is marked ready for interview opportunities.
-                  </p>
-                ) : null}
-              </div>
+              <WhatsNext
+                isReadyForInterview={profile.isReadyForInterview}
+                claudeEnabled={claudeEnabled}
+                hasClaudeEnrollment={hasClaudeEnrollment}
+                synergyPoints={profile.synergyPoints}
+              />
             ) : isTodayCompleted ? (
               <div className="flex flex-col gap-4 rounded-xl border border-border/60 bg-muted/25 p-6">
                 <div className="flex flex-wrap items-center gap-3">
@@ -501,6 +520,18 @@ export default async function DashboardPage({
             )}
           </CardContent>
         </Card>
+
+        {isChallengeComplete ? (
+          <CollapsedHeatmap
+            submittedDays={enrollment.daysCompleted}
+            totalDays={enrollment.totalDays}
+          >
+            <SubmissionHeatmap
+              data={heatmapData}
+              challengeEnrollmentId={enrollment.id}
+            />
+          </CollapsedHeatmap>
+        ) : null}
 
         <div className="grid gap-5 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4 lg:gap-6">
           <Card className="relative overflow-hidden">

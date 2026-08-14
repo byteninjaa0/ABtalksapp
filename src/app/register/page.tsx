@@ -17,9 +17,19 @@ type PageProps = {
 };
 
 export default async function RegisterPage({ searchParams }: PageProps) {
+  const params = await searchParams;
   const session = await auth();
   if (!session?.user?.id) {
-    redirect("/login");
+    const fromQuery = new URLSearchParams();
+    if (typeof params.domain === "string" && params.domain.trim() !== "") {
+      fromQuery.set("domain", params.domain.trim());
+    }
+    if (typeof params.ref === "string" && params.ref.trim() !== "") {
+      fromQuery.set("ref", params.ref.trim());
+    }
+    const fromPath =
+      fromQuery.size > 0 ? `/register?${fromQuery.toString()}` : "/register";
+    redirect(`/login?from=${encodeURIComponent(fromPath)}`);
   }
 
   const userExists = await prisma.user.findUnique({
@@ -54,7 +64,6 @@ export default async function RegisterPage({ searchParams }: PageProps) {
     });
   }
 
-  const params = await searchParams;
   const claudeEnabled = isClaudeEnabled();
   const requested = params.domain;
   const initialDomain =

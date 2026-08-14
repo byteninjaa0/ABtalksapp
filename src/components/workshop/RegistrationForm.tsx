@@ -447,7 +447,7 @@ export default function RegistrationForm({
             <>
               <button
                 type="submit"
-                disabled={isPending || !legalConsentAccepted(legalConsent)}
+disabled={isPending || !legalConsentAccepted(legalConsent)}
                 className="register-btn mt-6 w-full cursor-pointer rounded-full py-3.5 text-base font-semibold text-white"
               >
                 {isPending ? "Registering..." : "Register Now"}

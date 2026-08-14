@@ -50,7 +50,7 @@ function statusBadgeClass(status: string): string {
   if (status === "COMPLETED")
     return "bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400";
   if (status === "SOLO" || status === "TEAM")
-    return "bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400";
+    return "bg-sky-100 text-sky-700";
   return "bg-muted text-muted-foreground";
 }
 

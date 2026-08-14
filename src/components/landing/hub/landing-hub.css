@@ -1,0 +1,1481 @@
+/* Figma interview landing — page-scoped tokens (rounded marketing; not modernist lattice) */
+
+.landing-hub {
+  --hub-bg: #fbfbfd;
+  --hub-text: #111111;
+  --hub-muted: #555555;
+  --hub-accent: #7c5cff;
+  --hub-accent-700: #6b38d1;
+  --hub-lavender: #ebe3ff;
+  --hub-border: #e2e2e9;
+  --hub-soft: #f3f4f6;
+  --hub-radius: 15px;
+  --hub-radius-lg: 25px;
+  --hub-radius-xl: 30px;
+  --hub-shell: min(1680px, calc(100% - clamp(32px, 8vw, 240px)));
+  --hub-font-sans: var(--font-hub-sans), system-ui, sans-serif;
+  --hub-font-serif: var(--font-hub-serif), Georgia, serif;
+  --hub-font-display: var(--font-hub-display), system-ui, sans-serif;
+  --hub-font-quote: var(--font-hub-quote), Georgia, serif;
+
+  background: var(--hub-bg);
+  color: var(--hub-text);
+  font-family: var(--hub-font-sans);
+  min-height: 100svh;
+  /* no overflow-x here — it creates a backdrop root and kills sticky nav blur */
+}
+
+.landing-hub * {
+  box-sizing: border-box;
+}
+
+.landing-hub .hub-shell {
+  width: var(--hub-shell);
+  margin-inline: auto;
+}
+
+.landing-hub .hub-kicker {
+  display: block;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--hub-accent);
+  margin: 0 0 12px;
+}
+
+.landing-hub .hub-h2 {
+  font-size: clamp(28px, 3.2vw, 40px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--hub-text);
+}
+
+.landing-hub .hub-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 52px;
+  padding: 0 28px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.landing-hub .hub-btn:hover {
+  transform: translateY(-1px);
+}
+
+.landing-hub .hub-btn-primary {
+  background: var(--hub-accent);
+  color: #fff;
+  box-shadow: 0 4px 2px rgba(0, 0, 0, 0.18);
+}
+
+.landing-hub .hub-btn-primary:hover {
+  background: var(--hub-accent-700);
+}
+
+.landing-hub .hub-btn-ghost {
+  background: transparent;
+  color: var(--hub-accent);
+}
+
+.landing-hub .hub-btn-outline-light {
+  background: transparent;
+  color: #fff;
+  border-color: #fff;
+}
+
+.landing-hub .hub-btn-solid-light {
+  background: #fff;
+  color: var(--hub-accent);
+}
+
+.landing-hub .hub-btn-hero {
+  height: 62px;
+  padding: 0 36px;
+  font-size: 20px;
+  border-radius: 10px;
+}
+
+.landing-hub .hub-display {
+  font-family: var(--hub-font-display);
+}
+
+/* —— liquid-glass floating nav —— */
+/* Fixed (not sticky): Chromium often skips backdrop-filter on position:sticky */
+.landing-hub .hub-nav-spacer {
+  height: 96px;
+  flex: none;
+}
+
+/* White frosted glass pill — blur on the fixed shell */
+.landing-hub .hub-navwrap {
+  position: fixed;
+  top: 28px;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  width: min(1493px, calc(100% - 2 * clamp(16px, 4vw, 48px)));
+  height: 54px;
+  margin-inline: auto;
+  border-radius: 22px;
+  overflow: hidden;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    0 6px 18px rgba(15, 15, 15, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  transition:
+    top 260ms ease,
+    background 260ms ease,
+    backdrop-filter 260ms ease;
+}
+
+.landing-hub .hub-navwrap.scrolled {
+  top: 16px;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(36px) saturate(170%);
+  -webkit-backdrop-filter: blur(36px) saturate(170%);
+}
+
+.landing-hub .hub-nav-pill {
+  position: relative;
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "logo links cta";
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  height: 100%;
+  margin-inline: 0;
+  padding: 0 20px 0 24px;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.landing-hub .hub-nav-logo {
+  grid-area: logo;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  flex: none;
+}
+
+.landing-hub .hub-nav-links {
+  position: relative;
+  grid-area: links;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 3vw, 48px);
+}
+
+.landing-hub .hub-nav-indicator {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 30px;
+  margin-top: -15px;
+  border-radius: 999px;
+  background: rgba(124, 92, 255, 0.14);  
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.25s ease;
+}
+
+.landing-hub .hub-nav-indicator.on {
+  opacity: 1;
+}
+
+.landing-hub .hub-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.landing-hub .hub-nav-cta,
+.landing-hub .hub-nav-profile {
+  grid-area: cta;
+  justify-self: end;
+}
+
+.landing-hub .hub-nav-profile {
+  display: inline-flex;
+  align-items: center;
+}
+
+.landing-hub .hub-nav-logo-img {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Logo mark on light chrome — no invert; black plate kept subtle via blend */
+.landing-hub .hub-logo-mark {
+  filter: none;
+  mix-blend-mode: normal;
+}
+
+.landing-hub .hub-footer-logo {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+}
+
+.landing-hub .hub-nav-pill a.hub-nav-link {
+  position: relative;
+  z-index: 1;
+  font-size: 15px;
+  /* Constant weight so active state does not reflow the centered row */
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.72);
+  text-decoration: none;
+  text-transform: capitalize;
+  white-space: nowrap;
+  padding: 5px 12px;
+  transition: color 0.2s ease;
+}
+
+.landing-hub .hub-nav-pill a.hub-nav-link:hover {
+  color: #000000;
+}
+
+.landing-hub .hub-nav-pill a.hub-nav-link.active {
+  color: #000000;
+}
+
+.landing-hub .hub-nav-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  min-width: 148px;
+  padding: 0 24px;
+  border-radius: 12px;
+  background: var(--hub-accent);
+  border: 1px solid #b6a4ff;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(124, 92, 255, 0.25);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.landing-hub .hub-nav-cta:hover {
+  background: var(--hub-accent-700);
+  transform: translateY(-1px);
+}
+
+.landing-hub .hub-navtoggle {
+  display: none;
+  grid-area: toggle;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.landing-hub .hub-navtoggle-bars {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 25px;
+  height: 14px;
+}
+
+.landing-hub .hub-navtoggle-bars span {
+  display: block;
+  width: 25px;
+  height: 2px;
+  border-radius: 5px;
+  background: #4b4b4b;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.landing-hub .hub-navtoggle.open .hub-navtoggle-bars span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.landing-hub .hub-navtoggle.open .hub-navtoggle-bars span:nth-child(2) {
+  opacity: 0;
+}
+
+.landing-hub .hub-navtoggle.open .hub-navtoggle-bars span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.landing-hub .hub-navpanel {
+  display: none;
+  pointer-events: auto;
+}
+
+.landing-hub .hub-navpanel.open {
+  position: fixed;
+  top: 66px;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(1493px, calc(100% - 2 * clamp(16px, 4vw, 48px)));
+  margin-inline: auto;
+  padding: 16px 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(224, 209, 255, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* —— hero band (700px white stage) —— */
+.landing-hub .hub-hero-band {
+  position: relative;
+  height: 700px;
+  overflow: hidden;
+  background: var(--hub-bg);
+}
+
+/*
+ * Short desktop viewports only (e.g. laptop / scaled 1920 displays).
+ * Full 1080px+ tall windows keep the designed 700px hero + stats size.
+ * zoom is used so layout height shrinks with the visual scale (Chromium/Edge).
+ */
+@media (min-width: 901px) and (max-height: 1079px) {
+  .landing-hub .hub-above-fold {
+    zoom: 0.88;
+  }
+}
+
+.landing-hub .hub-above-fold,
+.landing-hub .hub-poster,
+.landing-hub .hub-bridge-section,
+.landing-hub .hub-programs-section,
+.landing-hub .hub-how,
+.landing-hub .hub-community-clip {
+  overflow-x: clip;
+}
+
+.landing-hub .hub-collage {
+  overflow-x: clip;
+}
+
+.landing-hub .hub-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(24px, 3vw, 48px);
+  align-items: center;
+  height: 100%;
+  padding: 72px 0 48px;
+}
+
+.landing-hub .hub-hero-copy {
+  position: relative;
+}
+
+.landing-hub .hub-hero-spacer {
+  min-height: 1px;
+}
+
+/* —— purple stats strip —— */
+.landing-hub .hub-stats {
+  background: linear-gradient(180deg, #7c5cff 0%, #6c51d8 100%);
+  color: #fff;
+  padding: 48px clamp(32px, 8vw, 120px);
+  min-height: 196px;
+  display: flex;
+  align-items: center;
+}
+
+.landing-hub .hub-stats-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: clamp(24px, 5vw, 80px);
+  width: 100%;
+  max-width: min(1493px, 100%);
+  margin-inline: auto;
+}
+
+.landing-hub .hub-stat {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+}
+
+.landing-hub .hub-stat-value {
+  margin: 0;
+  font-size: clamp(44px, 4.5vw, 64px);
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-hub .hub-stat-label {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e0e0e0;
+}
+
+.landing-hub .hub-interview {
+  position: relative;
+  display: inline-block;
+  font-family: var(--hub-font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(52px, 6.5vw, 96px);
+  line-height: 1;
+  color: #888;
+  /* Match Evidence left padding so both words share one left edge */
+  margin: 0 0 0 10px;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.landing-hub .hub-interview.in {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-hub .hub-interview-strike {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 4px;
+  width: 0;
+  background: var(--hub-accent);
+  transform: translateY(-50%);
+  border-radius: 2px;
+}
+
+.landing-hub .hub-interview-strike.on {
+  width: calc(100% + 24px);
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-hub .hub-evidence {
+  position: relative;
+  display: inline-block;
+  margin-top: 10px;
+  max-width: 100%;
+  padding: 10px 10px;
+  border-radius: 4px;
+  font-family: var(--hub-font-sans);
+  font-size: clamp(34px, 5vw, 74px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  color: var(--hub-text);
+  background: transparent;
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  /* Keep ::before (z-index -1) inside this box, not behind the page */
+  isolation: isolate;
+}
+
+.landing-hub .hub-evidence::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: -18px;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--hub-lavender);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-hub .hub-evidence.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.landing-hub .hub-evidence.highlight::before {
+  transform: scaleX(1);
+}
+
+.landing-hub .hub-hero-below {
+  opacity: 0;
+  transform: translateY(18px);
+  pointer-events: none;
+  /* Match Interview margin-left / Evidence padding so copy shares that edge */
+  margin-left: 10px;
+}
+
+.landing-hub .hub-hero-below.on {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hub .hub-interview,
+  .landing-hub .hub-interview.in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .landing-hub .hub-interview-strike {
+    width: calc(100% + 24px);
+    transition: none;
+  }
+
+  .landing-hub .hub-evidence,
+  .landing-hub .hub-evidence.in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .landing-hub .hub-evidence::before,
+  .landing-hub .hub-evidence.highlight::before {
+    transform: scaleX(1);
+    transition: none;
+  }
+
+  .landing-hub .hub-hero-below,
+  .landing-hub .hub-hero-below.on {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition: none;
+  }
+}
+
+/* —— blank media frame —— */
+.landing-hub .hub-blank-frame {
+  background: #d9d9d9;
+  border-radius: var(--hub-radius-lg);
+  box-shadow: 2px 5px 4px rgba(0, 0, 0, 0.18);
+  min-height: 280px;
+  width: 100%;
+}
+
+/* —— How it works wheel-lock cube (067) —— */
+.landing-hub .hub-how {
+  --hub-how-face-h: min(420px, 58vh);
+  --hub-how-r: calc(var(--hub-how-face-h) / 2);
+  position: relative;
+  min-height: auto;
+  padding: 72px 0;
+}
+
+.landing-hub .hub-how-sticky {
+  position: relative;
+  top: auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+html.hub-how-scroll-lock {
+  overflow: hidden;
+}
+
+.landing-hub .hub-how-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.landing-hub .hub-how-dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--hub-border);
+  cursor: pointer;
+  transition: width 0.25s ease, background 0.25s ease;
+}
+
+.landing-hub .hub-how-dot[aria-current="true"] {
+  width: 28px;
+  background: var(--hub-accent);
+}
+
+.landing-hub .hub-how-stage {
+  position: relative;
+  width: 100%;
+  height: var(--hub-how-face-h);
+  overflow: hidden;
+  border-radius: var(--hub-radius-lg);
+  background: var(--hub-soft);
+  box-shadow: none;
+}
+
+.landing-hub .hub-how-perspective {
+  width: 100%;
+  height: 100%;
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+}
+
+.landing-hub .hub-how-cube {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform: rotateX(var(--hub-how-rotate, 0deg));
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-hub .hub-how-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 48px);
+  align-items: center;
+  padding: clamp(20px, 3vw, 36px);
+  background: linear-gradient(90deg, #f3f4f6 0%, #fafafc 100%);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/*
+ * Faces sit on front / top / back so cube rotateX(0 → -90 → -180)
+ * brings each toward the camera upright. (Bottom-face layout hid 02
+ * behind the stage with backface-visibility: hidden.)
+ */
+.landing-hub .hub-how-face[data-face="0"] {
+  transform: rotateX(0deg) translateZ(var(--hub-how-r));
+}
+
+.landing-hub .hub-how-face[data-face="1"] {
+  transform: rotateX(90deg) translateZ(var(--hub-how-r));
+}
+
+.landing-hub .hub-how-face[data-face="2"] {
+  transform: rotateX(180deg) translateZ(var(--hub-how-r));
+}
+
+.landing-hub .hub-how-face-media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  border-radius: var(--hub-radius-lg);
+  overflow: hidden;
+  background: #d9d9d9;
+  box-shadow: none;
+}
+
+.landing-hub .hub-how-face-media img {
+  object-fit: cover;
+  object-position: center;
+}
+
+.landing-hub .hub-how-face-copy {
+  min-width: 0;
+}
+
+.landing-hub .hub-how-face-num {
+  margin: 0;
+  font-size: clamp(48px, 6vw, 80px);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--hub-accent);
+}
+
+.landing-hub .hub-how-face-title {
+  margin: 10px 0 0;
+  font-size: clamp(22px, 2.8vw, 40px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--hub-text);
+}
+
+.landing-hub .hub-how-face-body {
+  margin: 14px 0 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--hub-muted);
+  max-width: 42ch;
+}
+
+/* Reduced motion: no 3D / no scroll lock */
+.landing-hub .hub-how.hub-how--reduce .hub-how-cube {
+  transition: none;
+}
+
+.landing-hub .hub-how-flat {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 64px);
+  align-items: center;
+  margin-top: 8px;
+}
+
+.landing-hub .hub-how-flat-media {
+  position: relative;
+  min-height: 280px;
+  border-radius: var(--hub-radius-lg);
+  overflow: hidden;
+  background: #d9d9d9;
+  box-shadow: none;
+}
+
+/* Phone: flatten 3D cube — fixed translateZ was clipping copy horizontally */
+@media (max-width: 800px) {
+  .landing-hub .hub-how-stage {
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .landing-hub .hub-how-perspective {
+    perspective: none;
+    height: auto;
+  }
+
+  .landing-hub .hub-how-cube {
+    transform: none !important;
+    transform-style: flat;
+    height: auto;
+    transition: none;
+    will-change: auto;
+  }
+
+  .landing-hub .hub-how-face {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    display: none;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-content: start;
+    padding: 16px;
+    overflow: visible;
+    transform: none !important;
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+  }
+
+  .landing-hub .hub-how-face[aria-hidden="false"],
+  .landing-hub .hub-how-face:not([aria-hidden="true"]) {
+    display: grid;
+  }
+
+  .landing-hub .hub-how-face-media {
+    width: 100%;
+    height: 140px;
+    min-height: 140px;
+    max-height: 160px;
+  }
+
+  .landing-hub .hub-how-face-copy {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .landing-hub .hub-how-face-num {
+    font-size: 36px;
+  }
+
+  .landing-hub .hub-how-face-title {
+    margin: 6px 0 0;
+    font-size: clamp(18px, 5vw, 22px);
+  }
+
+  .landing-hub .hub-how-face-body {
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: none;
+  }
+
+  .landing-hub .hub-how-flat {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-hub .hub-how-flat .hub-how-face-num {
+    font-size: 36px;
+  }
+
+  .landing-hub .hub-how-flat .hub-how-face-title {
+    margin: 6px 0 0;
+    font-size: clamp(18px, 5vw, 22px);
+  }
+
+  .landing-hub .hub-how-flat .hub-how-face-body {
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+/* Hero CTA row — desktop default */
+.landing-hub .hub-hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 40px;
+}
+
+/* —— consent hinge (left-edge rotateY; enter/leave on scroll) —— */
+.landing-hub .hub-consent-stage {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  overflow: visible;
+  padding-right: 12px;
+  /* Slight overall shrink — layout box unchanged; visual scale only */
+  transform: scale(0.84);
+  transform-origin: left center;
+}
+
+.landing-hub .hub-consent-grid {
+  overflow: visible;
+}
+
+.landing-hub .hub-consent-card {
+  position: relative;
+  overflow: hidden;
+  transform-origin: left center;
+  will-change: transform;
+  background: #fdfdfd;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  box-shadow: 5px 4px 16px rgba(0, 0, 0, 0.18);
+  padding: 22px;
+  touch-action: pan-y;
+}
+
+.landing-hub .hub-consent-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  mix-blend-mode: soft-light;
+}
+
+.landing-hub .hub-consent-parallax {
+  position: relative;
+  z-index: 1;
+}
+
+/* —— programs (Open right now) — Figma 710:174 calendar-section —— */
+.landing-hub .hub-programs-section {
+  padding: 56px 0 72px;
+  background: linear-gradient(90deg, #f3f4f6 0%, #fafafc 100%);
+}
+
+/* —— program cards —— */
+.landing-hub .hub-program-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+  border: 1px solid #e9e9e9;
+  border-radius: var(--hub-radius-xl);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  padding: 28px 28px 36px;
+  min-height: 300px;
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landing-hub .hub-program-card-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.landing-hub .hub-program-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+}
+
+.landing-hub .hub-program-title {
+  font-family: var(--hub-font-display);
+  font-weight: 700;
+  font-size: clamp(26px, 2.2vw, 36px);
+  line-height: 1.1;
+  text-transform: uppercase;
+  margin: 28px 0 0;
+}
+
+.landing-hub .hub-program-glow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -20px;
+  height: 80px;
+  filter: blur(32px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* —— FAQ —— */
+.landing-hub .hub-faq details {
+  border-bottom: 1px solid #d7d3d3;
+  padding: 18px 0;
+}
+
+.landing-hub .hub-faq summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--hub-text);
+}
+
+.landing-hub .hub-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.landing-hub .hub-faq summary::after {
+  content: "+";
+  color: var(--hub-accent);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.landing-hub .hub-faq details[open] summary::after {
+  content: "–";
+}
+
+.landing-hub .hub-faq-answer {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-hub .hub-faq details[open] .hub-faq-answer {
+  grid-template-rows: 1fr;
+}
+
+.landing-hub .hub-faq-answer > div {
+  overflow: hidden;
+}
+
+.landing-hub .hub-faq-answer p {
+  margin: 12px 0 4px;
+  max-width: 70ch;
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--hub-muted);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.08s,
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.08s;
+}
+
+.landing-hub .hub-faq details[open] .hub-faq-answer p {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hub .hub-faq-answer {
+    transition: none;
+  }
+
+  .landing-hub .hub-faq details[open] .hub-faq-answer {
+    grid-template-rows: 1fr;
+  }
+
+  .landing-hub .hub-faq-answer p {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* —— community —— */
+.landing-hub .hub-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 22px;
+  border-radius: 8px;
+  border: 1px solid #0bc63a;
+  background: linear-gradient(180deg, #61e24a, #4eb53c);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.landing-hub .hub-collage-photo {
+  border-radius: 16px;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+/* —— poster CTA (Figma: 453px tall) —— */
+.landing-hub .hub-poster {
+  position: relative;
+  height: 453px;
+  overflow: hidden;
+  background: linear-gradient(90deg, #7c5cff, #4a3799);
+  color: #fff;
+  display: flex;
+  align-items: center;
+}
+
+/* Attached field art: intrinsic 1024×719 → height fills 453, width from ratio (~645) */
+.landing-hub .hub-poster-art {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 453px;
+  width: auto;
+  aspect-ratio: 1024 / 719;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+  object-fit: contain;
+  object-position: left center;
+  mix-blend-mode: screen;
+}
+
+.landing-hub .hub-poster-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: var(--hub-shell);
+  margin-inline: auto;
+  height: 100%;
+}
+
+.landing-hub .hub-poster-copy {
+  text-align: right;
+  max-width: min(920px, 100%);
+  padding-left: clamp(12px, 8vw, 80px);
+}
+
+.landing-hub .hub-poster-headline {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: clamp(22px, 3.2vw, 48px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.landing-hub .hub-poster-light,
+.landing-hub .hub-poster-bold {
+  display: block;
+  white-space: nowrap;
+}
+
+.landing-hub .hub-poster-light {
+  font-weight: 500;
+}
+
+.landing-hub .hub-poster-bold {
+  font-weight: 800;
+}
+
+.landing-hub .hub-poster-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+/* —— bridge —— */
+.landing-hub .hub-bridge-section {
+  background:
+    radial-gradient(
+      ellipse 80% 70% at 50% 40%,
+      rgba(255, 255, 255, 0.55) 0%,
+      transparent 65%
+    ),
+    linear-gradient(180deg, #f3eefc 0%, #ebe3ff 45%, #f6f2ff 100%);
+}
+
+/* —— testimonials —— */
+.landing-hub .hub-t-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.landing-hub .hub-t-track {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  outline: none;
+  container-type: inline-size;
+  padding: 8px 4px 16px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.landing-hub .hub-t-track::-webkit-scrollbar {
+  display: none;
+}
+
+.landing-hub .hub-t-track-inner {
+  display: flex;
+  width: max-content;
+  gap: 28px;
+  padding-bottom: 4px;
+}
+
+.landing-hub .hub-t-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: calc((100cqi - 56px) / 3);
+  height: 340px;
+  flex: none;
+  scroll-snap-align: start;
+  background: #fff;
+  border: 1px solid #e6e6ea;
+  border-radius: 22px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 8px 20px rgba(0, 0, 0, 0.08);
+  padding: 24px 28px 22px;
+  overflow: hidden;
+}
+
+.landing-hub .hub-t-quote-mark {
+  font-family: var(--hub-font-quote);
+  font-size: 120px;
+  line-height: 0.7;
+  color: #111;
+  margin: -8px 0 0;
+  pointer-events: none;
+  flex: none;
+}
+
+.landing-hub .hub-t-body {
+  margin: -40px 0 0;
+  padding-top: 0;
+  font-size: clamp(13px, 1vw, 15px);
+  line-height: 1.55;
+  color: #111;
+  flex: 0 1 auto;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7;
+  text-align: left;
+}
+
+.landing-hub .hub-t-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: auto;
+  padding-top: 20px;
+  flex: none;
+}
+
+.landing-hub .hub-t-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  object-fit: cover;
+  flex: none;
+}
+
+.landing-hub .hub-t-avatar-fallback {
+  display: inline-flex;
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: var(--hub-lavender);
+  color: var(--hub-accent);
+  font-weight: 700;
+  flex: none;
+}
+
+.landing-hub .hub-t-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 55px;
+  height: 55px;
+  flex: none;
+  border-radius: 999px;
+  border: 1px solid #d2d2d2;
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.landing-hub .hub-t-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.landing-hub .hub-t-arrow:not(:disabled):hover {
+  background: #f6f4ff;
+}
+
+@media (max-width: 960px) {
+  .landing-hub .hub-nav-spacer {
+    height: 66px;
+  }
+
+  /* Full-bleed flat bar — no glass / purple frost on mobile */
+  .landing-hub .hub-navwrap,
+  .landing-hub .hub-navwrap.scrolled {
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    margin-inline: 0;
+    padding: 8px 16px 8px 20px;
+    border-radius: 0;
+    overflow: visible;
+    background: transparent;
+    background-image: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: none;
+  }
+
+  .landing-hub .hub-nav-links {
+    display: none;
+  }
+
+  /*
+   * Mobile header (Figma 826:666): flat bar — hamburger bare on the left,
+   * lavender pill only around the ABTalks mark, CTA on the right.
+   */
+  .landing-hub .hub-nav-pill {
+    grid-template-columns: auto auto 1fr auto;
+    grid-template-areas: "toggle logo . cta";
+    height: 50px;
+    gap: 8px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: none;
+  }
+
+  .landing-hub .hub-nav-logo {
+    justify-self: start;
+    align-self: center;
+    height: 30px;
+    padding: 4px 12px;
+    border-radius: 25px;
+    background: rgba(220, 203, 255, 0.12);
+    border: 1px solid rgba(224, 209, 255, 0.12);
+  }
+
+  .landing-hub .hub-nav-logo-img {
+    height: 21px;
+    width: auto;
+  }
+
+  .landing-hub .hub-navtoggle {
+    display: inline-flex;
+    width: 28px;
+    height: 30px;
+    margin: 0;
+  }
+
+  .landing-hub .hub-nav-cta {
+    display: inline-flex;
+    height: 25px;
+    min-width: 88px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
+  }
+
+  .landing-hub .hub-nav-cta:hover {
+    transform: none;
+  }
+
+  .landing-hub .hub-nav-profile {
+    justify-self: end;
+  }
+
+  .landing-hub .hub-navpanel.open {
+    top: 66px;
+    left: 16px;
+    right: 16px;
+    border-radius: 16px;
+  }
+
+  .landing-hub .hub-hero {
+    grid-template-columns: 1fr;
+    padding: 56px 0 40px;
+  }
+
+  .landing-hub .hub-hero-band {
+    height: auto;
+    min-height: 560px;
+  }
+
+  .landing-hub .hub-hero-spacer {
+    display: none;
+  }
+
+  .landing-hub .hub-hero-ctas {
+    flex-wrap: nowrap;
+    gap: 12px;
+    width: 100%;
+    margin-top: 28px;
+  }
+
+  .landing-hub .hub-hero-ctas .hub-btn-hero {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 48px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  .landing-hub .hub-hero-ctas .hub-btn-ghost {
+    border: 1px solid var(--hub-accent);
+    color: var(--hub-accent);
+    background: transparent;
+  }
+
+  /* Keep stats in one row on phone */
+  .landing-hub .hub-stats {
+    padding: 28px 16px;
+    min-height: 0;
+  }
+
+  .landing-hub .hub-stats-grid {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .landing-hub .hub-stat {
+    text-align: center;
+    max-width: none;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .landing-hub .hub-stat-value {
+    font-size: clamp(22px, 6vw, 28px);
+  }
+
+  .landing-hub .hub-stat-label {
+    margin-top: 6px;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+  }
+
+  .landing-hub .hub-poster-art {
+    height: 280px;
+    opacity: 0.85;
+  }
+
+  .landing-hub .hub-poster {
+    height: auto;
+    min-height: 320px;
+    padding: 40px 0;
+  }
+
+  .landing-hub .hub-poster-headline {
+    font-size: clamp(22px, 5vw, 28px);
+  }
+
+  .landing-hub .hub-poster-light,
+  .landing-hub .hub-poster-bold {
+    white-space: normal;
+  }
+
+  .landing-hub .hub-t-card {
+    width: min(82vw, 100cqi);
+  }
+
+  .landing-hub .hub-t-row {
+    gap: 10px;
+  }
+
+  .landing-hub .hub-t-arrow {
+    width: 44px;
+    height: 44px;
+  }
+}
