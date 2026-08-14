@@ -127,6 +127,8 @@ export async function sendScoutMessageAction(
     readyToSearch: boolean;
     summary: string;
     spec: JobSpec;
+    /** Engine instruction: run the search, or start a fresh brief. */
+    action: "search" | "reset" | null;
   }>
 > {
   const gate = await requireApprovedRecruiter();
@@ -222,8 +224,12 @@ export async function sendScoutMessageAction(
     // What the recruiter sees live and what is replayed on reload must be the
     // same string. They were not: the stored copy prefixed the running summary,
     // so every reloaded bubble repeated it above the actual question.
-    const assistantMessage =
-      turn.nextQuestion ??
+    // A notice is Scout answering something or naming a limit; the question is
+    // what comes next. Stored as one message so the reload replays exactly what
+    // the recruiter saw.
+    const assistantMessage = [turn.notice, turn.nextQuestion]
+      .filter((part): part is string => Boolean(part && part.trim()))
+      .join("\n\n") ||
       "That's everything I need. Ready to search verified talent.";
 
     await prisma.talentRequestMessage.create({
@@ -248,6 +254,7 @@ export async function sendScoutMessageAction(
         readyToSearch: turn.readyToSearch,
         summary: turn.summary,
         spec: turn.spec,
+        action: turn.action ?? null,
       },
     };
   } catch (error) {

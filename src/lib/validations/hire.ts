@@ -74,6 +74,20 @@ export const scoutTurnSchema = z.object({
   allowFreeText: z.boolean(),
   readyToSearch: z.boolean(),
   summary: z.string().max(1000),
+  /**
+   * An instruction to the client, decided by the engine.
+   *
+   * "Search verified talent" was a chip the client intercepted by its literal
+   * value, so the button worked and typing "show me" did nothing. The engine
+   * now says what should happen and the chip and the sentence take one path.
+   */
+  action: z.enum(["search", "reset"]).nullable().optional(),
+  /**
+   * A standalone message that is not an answer to a question — an honest limit
+   * ("nobody has shared a location"), or the answer to something the recruiter
+   * asked. Rendered above the question rather than glued onto it.
+   */
+  notice: z.string().max(700).nullable().optional(),
 });
 
 export type ScoutTurn = z.infer<typeof scoutTurnSchema>;

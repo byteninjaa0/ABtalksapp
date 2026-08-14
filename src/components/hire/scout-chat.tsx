@@ -249,6 +249,10 @@ export function ScoutChat({
           },
         ]);
         if (!requestId) router.replace(`/hire/${res.data.requestId}`);
+        // The engine decides when to search, so a typed "show me" and the chip
+        // take the same path. Previously only the chip worked, because the
+        // client matched its literal value before sending.
+        if (res.data.action === "search") runSearch();
         return;
       }
 
@@ -276,6 +280,8 @@ export function ScoutChat({
           options: res.data.options,
         },
       ]);
+      // Same rule as the signed-in path: the engine says when to search.
+      if (res.data.action === "search") runSearch();
     });
   }
 

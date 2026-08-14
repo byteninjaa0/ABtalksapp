@@ -8,10 +8,16 @@ import {
   isSlotFilled,
   jobSpecSchema,
   scoutTurnSchema,
+  skippedSlots,
   type HireSlot,
   type JobSpec,
   type ScoutTurn,
 } from "@/lib/validations/hire";
+import {
+  SUPPORTED_SUMMARY,
+  findUnsupported,
+  unsupportedReply,
+} from "@/features/hire/capabilities";
 
 export type ChatMessage = {
   role: "user" | "assistant";
@@ -902,21 +908,48 @@ function stillNeeded(spec: JobSpec): string[] {
 }
 
 /** Assemble the visible turn: the model's words, the engine's question. */
-function turnFor(spec: JobSpec, ack: string): ScoutTurn {
+const POST_INTAKE_PROMPT =
+  "I can search now, change any part of the brief, or answer questions about the pool.";
+
+function turnFor(
+  spec: JobSpec,
+  ack: string,
+  extra?: { action?: "search" | "reset" | null; notice?: string | null },
+): ScoutTurn {
   const upcoming = nextSlot(spec);
   const summary = summarize(spec);
+  const action = extra?.action ?? null;
+  const notice = extra?.notice ?? null;
 
   if (!upcoming) {
+    // Intake is done, and this is where the conversation used to die.
+    //
+    // The old branch returned the model's one-line acknowledgement as the
+    // entire turn, and the system prompt forbids that sentence from asking
+    // anything or mentioning any candidate — so every message after the last
+    // question got "Noted — X it is." forever, including "ok then show me".
+    // A standing prompt with real options means there is always something to
+    // do and something to say.
     return {
       spec,
-      nextQuestion: ack || null,
+      // The standing prompt always survives. An acknowledgement on its own
+      // leaves the recruiter with a dead end — "Got it, noted." was the entire
+      // reply to "ok then show me" — so whatever was said, the next line says
+      // what can be done about it.
+      nextQuestion: [ack, POST_INTAKE_PROMPT]
+        .filter((part) => Boolean(part && part.trim()))
+        .join("\n\n"),
       options: [
         { label: "Search verified talent", value: "action:search" },
-        { label: "Change the stack", value: "edit:stack" },
+        { label: "Change the stack", value: "edit:mustHaveStack" },
+        { label: "Change the budget", value: "edit:salary" },
+        { label: "Start a new search", value: "action:reset" },
       ],
       allowFreeText: true,
       readyToSearch: true,
       summary,
+      action,
+      notice,
     };
   }
 
@@ -931,6 +964,8 @@ function turnFor(spec: JobSpec, ack: string): ScoutTurn {
     allowFreeText: true,
     readyToSearch: false,
     summary,
+    action,
+    notice,
   };
 }
 
@@ -942,6 +977,233 @@ function checked(turn: ScoutTurn, fallback: ScoutTurn): ScoutTurn {
   });
   return fallback;
 }
+
+/**
+ * Answer a recruiter's question from figures the engine computed first.
+ *
+ * Deliberately not tool calling. The facts are a fixed, small, exactly
+ * computable set, so they are fetched up front and handed to the model as
+ * data — one round trip inside the Server Action budget, and no way for the
+ * model to choose a filter or invent a row. It phrases; the engine counts.
+ *
+ * Falls back to a plain sentence built from the same numbers when the model is
+ * unreachable, so a question is never met with silence.
+ */
+async function answerQuestion(
+  question: string,
+  spec: JobSpec,
+  history: ChatMessage[],
+): Promise<string> {
+  const { poolSnapshot, previewMatch } = await import(
+    "@/features/hire/pool-facts"
+  );
+
+  const [snap, preview] = await Promise.all([
+    poolSnapshot(),
+    // Only worth previewing once there is something to match on.
+    (spec.mustHaveStack?.length ?? 0) > 0 || spec.title
+      ? previewMatch(spec)
+      : Promise.resolve(null),
+  ]);
+
+  const facts = {
+    searchablePool: snap.eligibleCount,
+    stillBelowEvidenceBar: snap.belowFloorCount,
+    cohortDay: snap.cohortDay,
+    ofDays: snap.ofDays,
+    topDeclaredSkills: snap.topSkills,
+    verifiedWorkingLanguages: snap.workingLanguages,
+    roleFamilies: snap.roleFamilies,
+    experienceMix: snap.experienceMix,
+    evidenceCoverage: snap.coverageNote,
+    matchesForCurrentBrief: preview
+      ? {
+          strong: preview.strong,
+          partial: preview.partial,
+          skillsNobodyHas: preview.topMissingMustHave,
+        }
+      : null,
+  };
+
+  const deterministic = snap.eligibleCount
+    ? `There are ${snap.eligibleCount} searchable candidate(s) right now${
+        snap.belowFloorCount
+          ? `, plus ${snap.belowFloorCount} who opted in but are still below the evidence bar`
+          : ""
+      }. ${SUPPORTED_SUMMARY}`
+    : `Nobody has cleared the bar to be searchable yet. ${SUPPORTED_SUMMARY}`;
+
+  if (!groqConfigured()) return deterministic;
+
+  const ai = await askGroqJson<{ answer: string }>({
+    system: `You are Scout, ABTalks' hiring assistant, answering a recruiter's question.
+
+You are given a FACTS object computed from the live database. Answer only from it.
+
+Rules:
+- Every number you write must appear in FACTS. Never estimate, round differently, or invent one.
+- If FACTS does not contain the answer, say plainly that you cannot see that, and say what you can search on instead.
+- Two or three sentences. No bullet points.
+- Never name a candidate. You have never been given a name.
+- Never promise a hire or predict performance.
+- Match the recruiter's language — reply in Hinglish if they wrote Hinglish.`,
+    messages: [
+      ...history.slice(-4).map((m) => ({ role: m.role, content: m.content })),
+      {
+        role: "user" as const,
+        content: [
+          `FACTS: ${JSON.stringify(facts)}`,
+          `Requirement so far: ${JSON.stringify(spec)}`,
+          `Recruiter asked: ${question}`,
+        ].join("\n"),
+      },
+    ],
+    schemaName: "scout_answer",
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["answer"],
+      properties: { answer: { type: "string" } },
+    },
+    maxTokens: 600,
+    temperature: 0.2,
+  });
+
+  if (!ai.ok || !ai.data.answer.trim()) return deterministic;
+
+  // Same guard as the match rationales: a figure the platform did not produce
+  // is the failure that matters, and it always surfaces as a digit.
+  const allowed = new Set(JSON.stringify(facts).match(/\d+/g) ?? []);
+  const invented = (ai.data.answer.match(/\d+/g) ?? []).filter(
+    (n) => !allowed.has(n),
+  );
+  if (invented.length > 0) {
+    logger.error("[hire] scout answer invented figures", {
+      invented: invented.slice(0, 5).join(","),
+    });
+    return deterministic;
+  }
+
+  return ai.data.answer.trim().slice(0, 700);
+}
+
+/**
+ * Unset one slot so the engine asks about it again.
+ *
+ * "Change the stack" was rendered as a chip from the day the post-intake turn
+ * existed and was never wired to anything: `isChipAnswer` waved `edit:` through,
+ * and the handler behind it was guarded by a pending slot that, after intake,
+ * is always null. Tapping it did nothing at all.
+ *
+ * Also clears the slot from the skipped list — re-opening a question the
+ * recruiter previously declined has to actually re-ask it.
+ */
+function clearSlot(spec: JobSpec, slot: HireSlot): JobSpec {
+  const next: JobSpec = { ...spec };
+  const skipped = [...skippedSlots(spec)].filter((s) => s !== slot);
+  next.extra = { ...(spec.extra ?? {}), skipped };
+
+  switch (slot) {
+    case "title":
+      next.title = undefined;
+      break;
+    case "seniority":
+      next.seniority = null;
+      break;
+    case "mustHaveStack":
+      next.mustHaveStack = [];
+      break;
+    case "evidencePriority":
+      next.evidencePriority = [];
+      break;
+    case "salary":
+      next.salaryMin = null;
+      next.salaryMax = null;
+      break;
+    case "employmentType":
+      next.employmentType = null;
+      break;
+    case "workMode":
+      next.workMode = null;
+      break;
+    case "locationCity":
+      next.locationCity = null;
+      break;
+    case "noticePeriodDays":
+      next.noticePeriodDays = null;
+      break;
+    case "experience":
+      next.minExperience = null;
+      next.maxExperience = null;
+      break;
+  }
+  return next;
+}
+
+/**
+ * Instructions the engine acts on directly, with no model in the loop.
+ *
+ * Deliberately handled before any "is a question pending" check, because the
+ * moment intake finishes there is no pending slot and every one of these used
+ * to fall through to the model — which replied "Noted" and changed nothing.
+ */
+function engineAction(spec: JobSpec, msg: string): ScoutTurn | null {
+  const m = msg.trim();
+
+  if (/^action:search$/i.test(m)) {
+    return turnFor(spec, "Searching the verified pool now.", {
+      action: "search",
+    });
+  }
+
+  if (/^action:reset$/i.test(m)) {
+    return turnFor({}, "Starting fresh — tell me about the new role.", {
+      action: "reset",
+    });
+  }
+
+  const edit = /^edit:(.+)$/i.exec(m);
+  if (edit?.[1]) {
+    const raw = edit[1].trim();
+    const slot =
+      HIRE_SLOTS.find((s) => s.toLowerCase() === raw.toLowerCase()) ??
+      // Older chips said "stack"; the slot is mustHaveStack.
+      (raw.toLowerCase() === "stack" ? ("mustHaveStack" as HireSlot) : null);
+    if (slot) {
+      return turnFor(clearSlot(spec, slot), "");
+    }
+  }
+
+  return null;
+}
+
+/**
+ * "Show me", "dikhao", "run it" — a search asked for in words.
+ *
+ * The chip carried the literal value `action:search`, which the client
+ * intercepted; nothing turned an English or Hinglish sentence into that
+ * string, so typing it did nothing. Kept deterministic so it still works with
+ * the model unreachable.
+ */
+/**
+ * Unambiguous even mid-question. Nobody answers "which skills?" with these.
+ */
+const SEARCH_COMMAND_STRICT =
+  /\b(search now|run the search|show me the (profiles?|candidates?|results?|matches)|show the (profiles?|candidates?|results?|matches)|profiles? (dikhao|dikha do)|candidates? dikhao)\b/i;
+
+/**
+ * Looser phrasing, only trusted once intake is finished.
+ *
+ * During intake nearly every message is an answer, and a verb list is a
+ * minefield there: "Go" is a search verb and also the language the recruiter
+ * just named as a must-have. The first version of this regex ate "Go, Postgres"
+ * as a command and left the stack empty.
+ */
+const SEARCH_COMMAND_LOOSE =
+  /^(ok(ay)?[,\s]*)?(then\s+)?(show|search|find|dikhao|dikha do|dekhao|chalao)\b|^(show|search|find|run)\s+(me|it|them|now|candidates?|profiles?)\b|\b(go ahead|let'?s go)\b/i;
+
+const RESET_COMMAND =
+  /\b(start over|start again|new search|another role|different role|naya|nayi|reset|fresh (search|brief))\b/i;
 
 function mergedBySlot(spec: JobSpec, slot: HireSlot, msg: string): JobSpec {
   const parsed = jobSpecSchema.safeParse(mergeIntoSlot(spec, slot, msg));
@@ -976,11 +1238,74 @@ export async function runScoutTurn(args: {
   const asking = nextSlot(args.priorSpec);
   const unchanged = turnFor(args.priorSpec, "");
 
+  // 0 — engine instructions, before anything else.
+  //
+  // These used to sit behind `if (asking && …)`, so once intake finished and
+  // `asking` went null they were unreachable: "Change the stack" did nothing
+  // and "Search verified talent" only worked because the client intercepted
+  // its literal value before sending.
+  const direct = engineAction(args.priorSpec, msg);
+  if (direct) return checked(direct, unchanged);
+
+  // 0b — a filter we do not have. Never written into the spec: accepting it
+  // silently is how "Noted — US location it is" happened for a field no
+  // candidate has ever filled.
+  const blocked = findUnsupported(msg);
+  if (blocked.length > 0) {
+    return checked(
+      turnFor(args.priorSpec, "", { notice: unsupportedReply(blocked) }),
+      unchanged,
+    );
+  }
+
+  // 0c — a search asked for in words rather than by tapping the chip. Loose
+  // phrasing is only trusted once nothing is pending; see the regex comments.
+  const wantsSearch = asking
+    ? SEARCH_COMMAND_STRICT.test(msg)
+    : SEARCH_COMMAND_STRICT.test(msg) || SEARCH_COMMAND_LOOSE.test(msg);
+  if (wantsSearch) {
+    if (asking) {
+      return checked(
+        turnFor(args.priorSpec, "", {
+          notice: `I can search as soon as I have ${stillNeeded(args.priorSpec).join(", ")}.`,
+        }),
+        unchanged,
+      );
+    }
+    return checked(
+      turnFor(args.priorSpec, "Searching the verified pool now.", {
+        action: "search",
+      }),
+      unchanged,
+    );
+  }
+
+  if (RESET_COMMAND.test(msg)) {
+    return checked(
+      turnFor({}, "Starting fresh — tell me about the new role.", {
+        action: "reset",
+      }),
+      unchanged,
+    );
+  }
+
   // 1 — chip tap
   if (asking && isChipAnswer(asking, args.priorSpec, msg)) {
     const spec = mergedBySlot(args.priorSpec, asking, msg);
     const ack = isSlotFilled(spec, asking) ? chipAck(asking, spec) : "";
     return checked(turnFor(spec, ack), unchanged);
+  }
+
+  // 1b — a question, answered from facts the engine computed.
+  //
+  // `intent: "question"` has been in the schema and the prompt since the start
+  // and was never routed anywhere: it fell into the same acknowledge-only path
+  // as everything else, and the prompt forbids that sentence from mentioning
+  // any count. So Scout could not answer "how many Python people do you have"
+  // even in principle.
+  if (looksLikeQuestion(msg)) {
+    const answer = await answerQuestion(msg, args.priorSpec, args.history);
+    return checked(turnFor(args.priorSpec, "", { notice: answer }), unchanged);
   }
 
   // 2 — typed text, read by the model
@@ -1050,6 +1375,18 @@ export async function runScoutTurn(args: {
       // about to be asked again. Saying the options changed — they do, because
       // the chips are drawn from the role — is the difference between a retry
       // and a loop.
+      // Post-intake, a message that changed nothing gets no sentence from the
+      // model at all.
+      //
+      // Four bare "yes" replies produced four different recaps that
+      // contradicted each other — US, then flexible, then Delhi — because with
+      // no new information and nothing pending, the model fills the space by
+      // restating the brief, and restates it differently each time. The brief
+      // is already on screen; the standing prompt is what is actually useful.
+      if (!asking && JSON.stringify(spec) === JSON.stringify(args.priorSpec)) {
+        return checked(turnFor(spec, ""), unchanged);
+      }
+
       const stillStuck = asking != null && nextSlot(spec) === asking;
       if (ai.data.intent === "objection" && stillStuck) {
         // The model's own sentence is dropped here on purpose. Told it got the

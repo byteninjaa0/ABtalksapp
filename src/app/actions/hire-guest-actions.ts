@@ -49,6 +49,7 @@ export async function sendGuestScoutMessageAction(
     readyToSearch: boolean;
     summary: string;
     spec: JobSpec;
+    action: "search" | "reset" | null;
   }>
 > {
   if (!(await rateLimit())) {
@@ -63,8 +64,10 @@ export async function sendGuestScoutMessageAction(
       history: parsed.data.history,
       userMessage: parsed.data.message,
     });
-    const assistantMessage =
-      turn.nextQuestion ??
+    // Same composition as the signed-in path — the two must never drift.
+    const assistantMessage = [turn.notice, turn.nextQuestion]
+      .filter((part): part is string => Boolean(part && part.trim()))
+      .join("\n\n") ||
       "That's everything I need. Ready to search verified talent.";
     return {
       ok: true,
@@ -75,6 +78,7 @@ export async function sendGuestScoutMessageAction(
         readyToSearch: turn.readyToSearch,
         summary: turn.summary,
         spec: turn.spec,
+        action: turn.action ?? null,
       },
     };
   } catch (error) {
