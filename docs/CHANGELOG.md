@@ -2,6 +2,7 @@
 
 <!-- Reconciled through 2026-08-05 (commit 519cc34) into docs/project-context.md. -->
 
+- 2026-08-13 [rule] Hackathon ViCoDathon 2026 participation certificates (ABT-HK-XXXXX); HACKATHON_CERTIFICATE_TEMPLATE_URL/PATH per-type template
 - 2026-08-13 [convention] Reverted product Modernist retheme (plan 058): pre-modernist globals tokens, Inter, --radius 0.625rem, dark mode; Figma landing hub on `/` unchanged
 - 2026-08-13 [convention] Landing How it works flattens 3D cube on phone (≤800px); active face only + auto height; desktop cube unchanged
 - 2026-08-13 [convention] Landing hub phone UI: how-face type/clamp fit, equal hero CTAs + purple ghost border, stats strip single row
