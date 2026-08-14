@@ -918,6 +918,7 @@ html.hub-how-scroll-lock {
   min-height: 300px;
   text-decoration: none;
   color: inherit;
+  cursor: default;
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }

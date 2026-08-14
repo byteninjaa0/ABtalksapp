@@ -146,7 +146,7 @@ const hubQuote = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "ABTalks | 60 Days Challenge",
+  title: "ABTalks",
   description: "Build your coding habit. Get discovered.",
 };
 

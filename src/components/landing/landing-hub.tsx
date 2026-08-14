@@ -30,7 +30,6 @@ type ProgramKey = "challenge" | "hackathon" | "program" | "claude";
 const PROGRAMS: {
   key: ProgramKey;
   title: string;
-  href: string;
   color: string;
   glow: string;
   lines: string[];
@@ -38,7 +37,6 @@ const PROGRAMS: {
   {
     key: "challenge",
     title: "60 day coding challenge",
-    href: "/challenges",
     color: "#7548e7",
     glow: "rgba(117, 72, 231, 0.28)",
     lines: [
@@ -50,7 +48,6 @@ const PROGRAMS: {
   {
     key: "hackathon",
     title: "abtalks Vicodathon",
-    href: "/hackathon",
     color: "#009cf5",
     glow: "rgba(0, 156, 245, 0.28)",
     lines: [
@@ -62,7 +59,6 @@ const PROGRAMS: {
   {
     key: "program",
     title: "31 days ai cohort",
-    href: "/program",
     color: "#97ea42",
     glow: "rgba(151, 234, 66, 0.28)",
     lines: [
@@ -74,7 +70,6 @@ const PROGRAMS: {
   {
     key: "claude",
     title: "claude challenge",
-    href: "/claude-signup",
     color: "#ff7a00",
     glow: "rgba(255, 122, 0, 0.28)",
     lines: [
@@ -111,17 +106,8 @@ const COMMUNITY_BULLETS = [
   "A network that grows with you",
 ];
 
-function ctaForProgram(key: ProgramKey, state: LandingState) {
-  switch (key) {
-    case "challenge":
-      return state.challengeCta;
-    case "claude":
-      return state.claudeCta;
-    case "program":
-      return state.programCta;
-    case "hackathon":
-      return state.hackathonCta;
-  }
+function badgeForProgram(key: ProgramKey) {
+  return key === "hackathon" ? "Coming Soon" : "enrolling";
 }
 
 export function LandingHub({
@@ -133,14 +119,10 @@ export function LandingHub({
 }) {
   const programs = PROGRAMS.filter(
     (program) => program.key !== "claude" || claudeEnabled,
-  ).map((program) => {
-    const cta = ctaForProgram(program.key, state);
-    return {
-      ...program,
-      href: cta?.href ?? program.href,
-      badge: cta?.ctaLabel ?? "enrolling now",
-    };
-  });
+  ).map((program) => ({
+    ...program,
+    badge: badgeForProgram(program.key),
+  }));
 
   return (
     <div className="landing-hub">
@@ -331,7 +313,7 @@ export function LandingHub({
           >
             {programs.map((program, index) => (
               <HubProgramReveal key={program.key} index={index}>
-                <Link href={program.href} className="hub-program-card">
+                <div className="hub-program-card">
                   <div className="hub-program-card-body">
                     <span
                       style={{
@@ -386,7 +368,7 @@ export function LandingHub({
                       aria-hidden
                     />
                   </div>
-                </Link>
+                </div>
               </HubProgramReveal>
             ))}
           </div>
