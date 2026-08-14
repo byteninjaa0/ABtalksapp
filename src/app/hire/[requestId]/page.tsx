@@ -4,7 +4,6 @@ import { prisma } from "@/lib/db";
 import { requireRecruiter } from "@/lib/program-auth";
 import { ScoutChat } from "@/components/hire/scout-chat";
 import { MatchResults } from "@/components/hire/match-results";
-import type { MatchCardData } from "@/components/hire/match-card";
 import { GapReport } from "@/components/hire/gap-report";
 import { loadRequestMatches } from "@/features/hire/load-request-matches";
 import { jobSpecSchema, type JobSpec } from "@/lib/validations/hire";

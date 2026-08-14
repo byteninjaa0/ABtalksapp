@@ -4,8 +4,6 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { getRecruiterState } from "@/features/talent-pool/recruiter-registration";
 import { ScoutChat } from "@/components/hire/scout-chat";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Scout | Hire with ABTalks",
