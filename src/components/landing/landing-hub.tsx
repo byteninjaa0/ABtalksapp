@@ -47,13 +47,11 @@ const PROGRAMS: {
   },
   {
     key: "hackathon",
-    title: "abtalks Vicodathon",
+    title: "Vicodathon 2.0",
     color: "#009cf5",
     glow: "rgba(0, 156, 245, 0.28)",
     lines: [
-      "A weekend build from brief to shipped demo",
-      "Solo or with a team, judged and archived",
-      "Output that goes on your profile, not slides",
+      "ViCodathon is an AI-assisted development hackathon where participants build and ship real-world projects using any AI tools.",
     ],
   },
   {
@@ -62,9 +60,9 @@ const PROGRAMS: {
     color: "#97ea42",
     glow: "rgba(151, 234, 66, 0.28)",
     lines: [
-      "Built for working professionals shipping AI",
+      "Built for professionals ",
       "Daily missions, projects, and an exit interview",
-      "Visible to hiring partners after you consent",
+      "Visible to hiring partners ",
     ],
   },
   {
@@ -74,7 +72,7 @@ const PROGRAMS: {
     glow: "rgba(255, 122, 0, 0.28)",
     lines: [
       "A focused track for Claude AI mastery",
-      "Synchronized days with the cohort calendar",
+      "Master Prompt Engineering",
       "Build real workflows and share the proof",
     ],
   },
@@ -315,31 +313,14 @@ export function LandingHub({
               <HubProgramReveal key={program.key} index={index}>
                 <div className="hub-program-card">
                   <div className="hub-program-card-body">
-                    <span
-                      style={{
-                        alignSelf: "flex-start",
-                        border: "1px solid var(--hub-accent)",
-                        borderRadius: 8,
-                        padding: "6px 12px",
-                        fontSize: 12,
-                        textTransform: "capitalize",
-                      }}
-                    >
-                      {program.badge}
-                    </span>
-                    <span
-                      aria-hidden
-                      style={{
-                        position: "absolute",
-                        top: 18,
-                        right: 22,
-                        fontSize: 28,
-                        color: "#626262",
-                        transform: "rotate(135deg)",
-                      }}
-                    >
-                      ←
-                    </span>
+                    <div className="hub-program-card-top">
+                      <span className="hub-program-badge">
+                        {program.badge}
+                      </span>
+                      <span className="hub-program-arrow" aria-hidden>
+                        ←
+                      </span>
+                    </div>
                     <p
                       className="hub-program-title"
                       style={{ color: program.color }}

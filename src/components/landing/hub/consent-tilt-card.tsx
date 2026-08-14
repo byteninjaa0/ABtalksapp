@@ -15,7 +15,7 @@ const ROWS = [
   },
 ];
 
-const HINGE_DEG = -30;
+const HINGE_DEG = -20;
 
 export function ConsentTiltCard() {
   const stageRef = useRef<HTMLDivElement>(null);

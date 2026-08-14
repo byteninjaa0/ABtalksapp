@@ -932,6 +932,32 @@ html.hub-how-scroll-lock {
   min-height: 0;
 }
 
+.landing-hub .hub-program-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.landing-hub .hub-program-badge {
+  align-self: center;
+  border: 1px solid var(--hub-accent);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.landing-hub .hub-program-arrow {
+  flex: none;
+  font-size: 28px;
+  line-height: 1;
+  color: #626262;
+  transform: rotate(135deg);
+}
+
 .landing-hub .hub-program-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
