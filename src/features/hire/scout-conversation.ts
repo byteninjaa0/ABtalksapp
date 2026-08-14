@@ -93,6 +93,41 @@ function parseMoney(
   };
 }
 
+/**
+ * A job title, or nothing.
+ *
+ * Strips the way people actually phrase a request — "I want a…", "we're
+ * looking for…" — and then refuses anything still shaped like a sentence
+ * rather than a role. Taking free text verbatim is how a 90-character
+ * requirement ended up as the job title and followed the recruiter through
+ * every later question.
+ */
+function asRoleTitle(raw: string): string | null {
+  let s = raw.trim().replace(/\s+/g, " ");
+
+  s = s
+    .replace(
+      /^(hi|hey|hello)[,!.\s]+/i,
+      "",
+    )
+    .replace(
+      /^(i\s*(want|need|am looking for|'m looking for)|we\s*(want|need|are looking for|'re looking for)|looking for|show me|give me|find me|get me|hire|hiring for|need)\b\s*/i,
+      "",
+    )
+    .replace(/^(a|an|the|some|few|couple of)\b\s*/i, "")
+    .replace(/[.?!]+$/, "")
+    .trim();
+
+  if (!s) return null;
+  // Sentence-shaped, not role-shaped.
+  if (s.length > 60) return null;
+  if (s.split(" ").length > 7) return null;
+  if (/\b(who|whose|which|that has|that have|with at least|atleast|at least)\b/i.test(s)) {
+    return null;
+  }
+  return s.slice(0, 200);
+}
+
 /** First applicable slot with no answer yet. `null` = every question answered. */
 function nextSlot(spec: JobSpec): HireSlot | null {
   const skip = inapplicableSlots(spec);
@@ -148,8 +183,15 @@ function mergeIntoSlot(spec: JobSpec, slot: HireSlot, raw: string): JobSpec {
   }
 
   switch (slot) {
-    case "title":
-      return { ...next, title: msg.slice(0, 200) };
+    case "title": {
+      const role = asRoleTitle(msg);
+      // An unusable title is worse than an empty one: it is echoed back in
+      // every later question and stored on the request. A whole sentence —
+      // "i want few candidates from india who has done atleast 30 days of
+      // claude challenge" — became the job title, and then appeared inside
+      // "What seniority for the …?" for the rest of the conversation.
+      return role ? { ...next, title: role } : next;
+    }
 
     case "seniority": {
       const hit = (["INTERN", "JUNIOR", "MID", "SENIOR", "LEAD"] as const).find(
@@ -374,7 +416,11 @@ type SlotQuestion = {
 };
 
 function questionFor(slot: HireSlot, spec: JobSpec): SlotQuestion {
-  const role = spec.title?.trim() || "this role";
+  // Reads correctly with or without a title: "for the Backend engineer" and
+  // "for this role". The old fallback of "this role" produced "for the this
+  // role" the moment a recruiter skipped the title question.
+  const roleTitle = spec.title?.trim();
+  const forRole = roleTitle ? `the ${roleTitle}` : "this role";
   switch (slot) {
     case "title":
       return {
@@ -385,11 +431,16 @@ function questionFor(slot: HireSlot, spec: JobSpec): SlotQuestion {
           { label: "Data / ML engineer", value: "Data / ML engineer" },
           { label: "AI engineer", value: "AI engineer" },
           { label: "Frontend engineer", value: "Frontend engineer" },
+          // A recruiter who wants "anyone with 30 days of verified work" has
+          // no role in mind, and had no way past this question — it was asked
+          // again after every reply that did not contain a job title, which
+          // reads as being stuck even when the answer alongside it is useful.
+          { label: "Any role — rank on evidence", value: "skip:title" },
         ],
       };
     case "seniority":
       return {
-        question: `What seniority for the ${role}?`,
+        question: `What seniority for ${forRole}?`,
         options: [
           { label: "Intern", value: "INTERN" },
           { label: "Junior · 0–2y", value: "JUNIOR" },
@@ -402,7 +453,7 @@ function questionFor(slot: HireSlot, spec: JobSpec): SlotQuestion {
     case "mustHaveStack":
       return {
         // "Skills" rather than a stack, because not every role has one.
-        question: `Which skills or tools are non-negotiable for the ${role}?`,
+        question: `Which skills or tools are non-negotiable for ${forRole}?`,
         options: stackChipsFor(spec.title),
       };
     case "evidencePriority":
@@ -727,7 +778,10 @@ function applyUnderstood(
     !locked.has(slot) && (revising || !isSlotFilled(base, slot));
 
   if (understood.title?.trim() && open("title")) {
-    next.title = understood.title.trim().slice(0, 200);
+    // Same guard as the slot merge — the model occasionally echoes the whole
+    // request back as the title.
+    const role = asRoleTitle(understood.title);
+    if (role) next.title = role;
   }
 
   if (understood.seniority && open("seniority")) {
@@ -976,6 +1030,30 @@ function checked(turn: ScoutTurn, fallback: ScoutTurn): ScoutTurn {
     err: parsed.error.message.slice(0, 200),
   });
   return fallback;
+}
+
+/**
+ * A limitation, with the size of what is behind it.
+ *
+ * "The Claude challenge isn't in the searchable pool" is true and useless. The
+ * recruiter asked for people with 30 days of challenge submissions, and 225 of
+ * them exist — saying so turns a dead end into a decision the owner can act on,
+ * and tells the recruiter the gap is consent, not supply.
+ */
+async function describeLimits(
+  blocked: ReturnType<typeof findUnsupported>,
+): Promise<string> {
+  const base = unsupportedReply(blocked);
+  if (!blocked.some((f) => f.id === "challenge_track")) return base;
+
+  try {
+    const { challengeReach } = await import("@/features/hire/pool-facts");
+    const reach = await challengeReach();
+    if (!reach || reach.thirtyDayPlus === 0) return base;
+    return `${base} For scale: ${reach.thirtyDayPlus} people have 30+ days of Claude challenge submissions and ${reach.certified} have finished it — none of them has been asked for recruiter visibility yet, so I can't show them.`;
+  } catch {
+    return base;
+  }
 }
 
 /**
@@ -1251,12 +1329,35 @@ export async function runScoutTurn(args: {
   // silently is how "Noted — US location it is" happened for a field no
   // candidate has ever filled.
   const blocked = findUnsupported(msg);
-  if (blocked.length > 0) {
+
+  // A refusal is the whole answer — nothing else in that sentence gets acted
+  // on, and no alternative is offered.
+  if (blocked.some((f) => f.id === "protected_attribute")) {
     return checked(
       turnFor(args.priorSpec, "", { notice: unsupportedReply(blocked) }),
       unchanged,
     );
   }
+
+  // Everything else: say what we cannot do, then keep reading the message.
+  //
+  // Returning here was its own dead end. "candidates from india who have done
+  // 30 days of the claude challenge" contains a real requirement, and Scout
+  // threw the whole sentence away to print a limitation and re-ask the same
+  // question — three times in a row, which is the loop the recruiter hit. The
+  // limitation is now additive: it rides along, and the rest of the message
+  // still moves the brief forward.
+  const limitNotice = blocked.length
+    ? await describeLimits(blocked)
+    : null;
+
+  // The unsupported field must not be written anywhere. "from india" is a
+  // statement about candidates; locationCity is the employer's office.
+  const lockedByLimit = new Set<HireSlot>(
+    blocked.some((f) => f.id === "candidate_location")
+      ? (["locationCity"] as HireSlot[])
+      : [],
+  );
 
   // 0c — a search asked for in words rather than by tapping the chip. Loose
   // phrasing is only trusted once nothing is pending; see the regex comments.
@@ -1293,7 +1394,7 @@ export async function runScoutTurn(args: {
   if (asking && isChipAnswer(asking, args.priorSpec, msg)) {
     const spec = mergedBySlot(args.priorSpec, asking, msg);
     const ack = isSlotFilled(spec, asking) ? chipAck(asking, spec) : "";
-    return checked(turnFor(spec, ack), unchanged);
+    return checked(turnFor(spec, ack, { notice: limitNotice }), unchanged);
   }
 
   // 1b — a question, answered from facts the engine computed.
@@ -1305,7 +1406,12 @@ export async function runScoutTurn(args: {
   // even in principle.
   if (looksLikeQuestion(msg)) {
     const answer = await answerQuestion(msg, args.priorSpec, args.history);
-    return checked(turnFor(args.priorSpec, "", { notice: answer }), unchanged);
+    return checked(
+      turnFor(args.priorSpec, "", {
+        notice: [limitNotice, answer].filter(Boolean).join(" "),
+      }),
+      unchanged,
+    );
   }
 
   // 2 — typed text, read by the model
@@ -1344,11 +1450,13 @@ export async function runScoutTurn(args: {
       const seed = answeringSalary
         ? mergedBySlot(args.priorSpec, "salary", msg)
         : args.priorSpec;
+      const locked = new Set<HireSlot>(lockedByLimit);
+      if (answeringSalary) locked.add("salary");
       let spec = applyUnderstood(
         seed,
         ai.data.understood,
         ai.data.intent === "revise",
-        answeringSalary ? new Set<HireSlot>(["salary"]) : undefined,
+        locked,
       );
 
       // A plain answer the model did not recognise is still an answer. Without
@@ -1384,7 +1492,7 @@ export async function runScoutTurn(args: {
       // restating the brief, and restates it differently each time. The brief
       // is already on screen; the standing prompt is what is actually useful.
       if (!asking && JSON.stringify(spec) === JSON.stringify(args.priorSpec)) {
-        return checked(turnFor(spec, ""), unchanged);
+        return checked(turnFor(spec, "", { notice: limitNotice }), unchanged);
       }
 
       const stillStuck = asking != null && nextSlot(spec) === asking;
@@ -1395,7 +1503,7 @@ export async function runScoutTurn(args: {
         // A recruiter pushing back needs a way forward, not agreement.
         ack = "Fair enough — say it in your own words and I'll take it as-is, or skip this one.";
       }
-      return checked(turnFor(spec, ack), unchanged);
+      return checked(turnFor(spec, ack, { notice: limitNotice }), unchanged);
     }
   }
 
@@ -1410,6 +1518,7 @@ export async function runScoutTurn(args: {
       turnFor(
         spec,
         understood ? "" : "Sorry, I didn't catch that — pick an option below, or say it another way.",
+        { notice: limitNotice },
       ),
       unchanged,
     );
@@ -1422,6 +1531,7 @@ export async function runScoutTurn(args: {
     turnFor(
       args.priorSpec,
       remaining.length ? `Still to cover: ${remaining.join(", ")}.` : "",
+      { notice: limitNotice },
     ),
     unchanged,
   );

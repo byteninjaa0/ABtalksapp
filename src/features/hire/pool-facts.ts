@@ -1,6 +1,7 @@
 import "server-only";
 
 import { logger } from "@/lib/logger";
+import { prisma } from "@/lib/db";
 import type { JobSpec } from "@/lib/validations/hire";
 import { searchCandidates } from "@/features/hire/search-candidates";
 import { buildDossierSet } from "@/features/hire/dossier";
@@ -183,6 +184,52 @@ export async function previewMatch(spec: JobSpec): Promise<MatchPreview | null> 
     };
   } catch (error) {
     logger.error("[hire] previewMatch failed", { error: String(error) });
+    return null;
+  }
+}
+
+export type ChallengeReach = {
+  /** Distinct Claude-challenge enrollees with 30+ days submitted. */
+  thirtyDayPlus: number;
+  /** Certificates issued for the Claude challenge. */
+  certified: number;
+};
+
+/**
+ * How many people sit behind the consent wall on the challenge track.
+ *
+ * Not searchable — `StudentProfile` has no recruiter-visibility field, so none
+ * of these people has agreed to be discoverable and none may be shown. The
+ * count is still worth knowing: it tells a recruiter the gap is consent rather
+ * than supply, and it tells the owner what a consent drive would unlock.
+ *
+ * Cached alongside the pool snapshot; this is a heavy aggregate over ~15k
+ * submission rows and it changes by the day, not by the minute.
+ */
+let reachCache: { at: number; value: ChallengeReach } | null = null;
+
+export async function challengeReach(): Promise<ChallengeReach | null> {
+  if (reachCache && Date.now() - reachCache.at < 10 * 60_000) {
+    return reachCache.value;
+  }
+  try {
+    const [rows, certified] = await Promise.all([
+      prisma.enrollment.findMany({
+        where: { challenge: { domain: "CLAUDE" } },
+        select: { _count: { select: { submissions: true } } },
+      }),
+      prisma.certificate.count({
+        where: { type: "CLAUDE_CHALLENGE", status: "ISSUED" },
+      }),
+    ]);
+    const value: ChallengeReach = {
+      thirtyDayPlus: rows.filter((r) => r._count.submissions >= 30).length,
+      certified,
+    };
+    reachCache = { at: Date.now(), value };
+    return value;
+  } catch (error) {
+    logger.error("[hire] challengeReach failed", { error: String(error) });
     return null;
   }
 }
