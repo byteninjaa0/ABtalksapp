@@ -335,6 +335,9 @@ export async function runMatchAction(
       await prisma.talentRequestMatch.createMany({
         data: explained.matches.map((m) => ({
           requestId: req.id,
+          source: m.source,
+          // Null for anyone outside the cohort — the column is a foreign key to
+          // ProgramMember, and a challenge candidate has no row there.
           programMemberId: m.programMemberId,
           studentUserId: m.userId,
           score: m.score,

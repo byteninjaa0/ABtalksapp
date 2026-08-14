@@ -1,9 +1,10 @@
+import type { CandidateSource } from "@/features/hire/candidate-ref";
 import type { CompensationBand } from "@/features/hire/compensation";
 import type { Fact } from "@/features/hire/dossier-provenance";
 import type { RoleFamily } from "@/features/hire/role-family";
 import type { JobSpec } from "@/lib/validations/hire";
 
-export type { JobSpec };
+export type { JobSpec, CandidateSource };
 
 export type EvidencePriorityKey =
   | "missions"
@@ -74,7 +75,13 @@ export type MatchTier = "STRONG" | "PARTIAL" | "NONE";
  */
 export type CandidateDossier = {
   publicId: string;
-  source: "PROGRAM" | "CHALLENGE_60";
+  source: CandidateSource;
+  /** `PROGRAM:<memberId>` or `CLAUDE:<userId>` — the one handle every surface
+   *  addresses this candidate by. */
+  candidateRef: string;
+  /** Set only for program members. Null for every other source, so a
+   *  program-only affordance (the cart, the member profile) is guarded by the
+   *  absence of the id rather than by remembering to check the source. */
   programMemberId: string | null;
   userId: string | null;
 
@@ -114,6 +121,22 @@ export type CandidateDossier = {
     workingLanguages: Fact<string[]>;
     missionTypesPassed: Fact<string[]>;
     cohortProgress: Fact<{ day: number; ofDays: number }>;
+    /**
+     * Finished the track and had the certificate issued.
+     *
+     * Shown, never scored: it means every day was submitted, which the mission
+     * count already reads in full. Scoring it twice would pay the same work
+     * twice.
+     */
+    certificateIssued?: Fact<boolean>;
+    /**
+     * Mean weekly-quiz score, where the candidate sat any.
+     *
+     * Also shown and not scored — 257 of 682 challenge participants have ever
+     * attempted a quiz, so a dimension two thirds of the pool cannot produce
+     * would rank them down for an assessment nobody offered them.
+     */
+    quizAverage?: Fact<number | null>;
   };
 
   compensation: {
@@ -167,6 +190,11 @@ export type AvailabilitySnapshot = {
 
 export type ScoreableMember = {
   id: string;
+  /** Defaults to PROGRAM when a caller omits it, so the pure scorer stays
+   *  usable from a test with nothing but a member. */
+  source?: CandidateSource;
+  /** `PROGRAM:<id>` / `CLAUDE:<id>`. Derived from `source` + `id` when absent. */
+  candidateRef?: string;
   userId: string;
   fullName: string;
   jobRole: string;
@@ -200,13 +228,37 @@ export type ScoreableMember = {
    * finished one.
    */
   cohortDay: number;
+  /**
+   * The most missions this candidate's track can award, and the window
+   * consistency is read over.
+   *
+   * The cohort runs 31 days with 3 waived, so 28; the challenge runs 60 and
+   * waives none. Hard-coding 28 meant every challenge participant past their
+   * 28th day scored a perfect 1.0 and the 234 people with 30+ days could not be
+   * told apart at all.
+   */
+  maxEarnableMissions?: number;
+  consistencyWindow?: number;
+  /**
+   * Coverage for *this candidate's* source, overriding the search-wide one.
+   *
+   * Two pools in one ranking is where coverage stops being a search property.
+   * One program member with a graded project would otherwise switch the
+   * projects dimension on for every challenge candidate — who have no projects
+   * to grade, and would each lose a sixth of the rubric for a milestone their
+   * track does not have.
+   */
+  coverage?: EvidenceCoverage;
   /** The assembled dossier, when the caller built one. Scoring does not need
    *  it; the card, the agent's tools and admin all do. */
   dossier?: CandidateDossier;
 };
 
 export type ScoredCandidate = {
-  programMemberId: string;
+  /** Program members only — null for every other source. */
+  programMemberId: string | null;
+  source: CandidateSource;
+  candidateRef: string;
   userId: string;
   fullName: string;
   jobRole: string;

@@ -1,9 +1,14 @@
 import "server-only";
 
 import { logger } from "@/lib/logger";
+import { hireChallengePool } from "@/lib/feature-flags";
 import type { JobSpec } from "@/lib/validations/hire";
 import { rankCandidates } from "@/features/hire/score-candidate";
 import { buildDossierSet, computeCoverage } from "@/features/hire/dossier";
+import {
+  CHALLENGE_TOTAL_DAYS,
+  buildChallengeDossierSet,
+} from "@/features/hire/challenge-dossier";
 import {
   clearsEvidenceFloor,
   memberEligibilityWhere,
@@ -42,6 +47,18 @@ export type SearchCandidatesResult =
  */
 const MIN_RESULTS = 5;
 
+/**
+ * How many challenge candidates are loaded before ranking.
+ *
+ * Scoring is a pure function over an in-memory array, so the cost of the pool
+ * is the dossier assembly. Six hundred is comfortably above the whole eligible
+ * cohort today (320 at a ten-day floor) and low enough that a future track with
+ * thousands of enrolments cannot turn one Server Action into a full table scan.
+ * Rows are ordered by days submitted before the cap, so the ceiling can only
+ * ever trim the least-evidenced people.
+ */
+const CHALLENGE_POOL_CAP = 600;
+
 const EMPTY_COVERAGE: EvidenceCoverage = {
   dimensions: {
     stack: false,
@@ -65,23 +82,34 @@ export async function searchCandidates(
 ): Promise<SearchCandidatesResult> {
   try {
     const gate = await resolvePoolCohorts();
-    if (!gate.ok) {
-      return {
-        ok: true,
-        data: {
-          cohortName: null,
-          stage: null,
-          matches: [],
-          nearMisses: [],
-          totalEligible: 0,
-          belowEvidenceFloor: 0,
-          coverage: EMPTY_COVERAGE,
-        },
-      };
-    }
+    const challengeFlag = hireChallengePool();
 
-    const cohortIds = gate.cohorts.map((c) => c.id);
-    const set = await buildDossierSet(memberEligibilityWhere(cohortIds));
+    // Two independent pools. Either may be empty, and the search is only over
+    // when both are — a deployment with no open cohort still has a challenge
+    // track worth searching, and the old early return hid it.
+    const [set, challenge] = await Promise.all([
+      gate.ok
+        ? buildDossierSet(memberEligibilityWhere(gate.cohorts.map((c) => c.id)))
+        : null,
+      challengeFlag.enabled
+        ? buildChallengeDossierSet({
+            minDays: challengeFlag.minDays,
+            limit: CHALLENGE_POOL_CAP,
+          })
+        : null,
+    ]);
+
+    const programDossiers = set?.dossiers ?? [];
+
+    // One person, one card. Somebody who did the challenge and then joined the
+    // cohort has evidence in both tables, and the program dossier is the richer
+    // of the two — it has the graded project and the interview.
+    const programUserIds = new Set(
+      programDossiers.map((d) => d.userId).filter((id): id is string => Boolean(id)),
+    );
+    const challengeDossiers = (challenge?.dossiers ?? []).filter(
+      (d) => !d.userId || !programUserIds.has(d.userId),
+    );
 
     // The floor is a preference, not a wall.
     //
@@ -91,18 +119,20 @@ export async function searchCandidates(
     // and the recruiter learned nothing at all. A thin, honestly-labelled list
     // beats a blank one — they can see the shape of the pool and decide.
     // Below-floor candidates rank below the rest and say why on the card.
-    const aboveFloor = set.dossiers.filter((d) =>
+    //
+    // Challenge candidates are not counted here: their floor is applied in the
+    // query that loads them, so everyone who arrives has already cleared it.
+    const aboveFloor = programDossiers.filter((d) =>
       clearsEvidenceFloor(d.evidence.missionsPassed.value),
     );
-    const belowEvidenceFloor = set.dossiers.length - aboveFloor.length;
-    const eligible = set.dossiers;
+    const belowEvidenceFloor = programDossiers.length - aboveFloor.length;
 
-    if (eligible.length === 0) {
+    if (programDossiers.length === 0 && challengeDossiers.length === 0) {
       return {
         ok: true,
         data: {
-          cohortName: gate.cohorts[0]?.name ?? null,
-          stage: gate.cohorts[0]?.stage ?? null,
+          cohortName: gate.ok ? (gate.cohorts[0]?.name ?? null) : null,
+          stage: gate.ok ? (gate.cohorts[0]?.stage ?? null) : null,
           matches: [],
           nearMisses: [],
           totalEligible: 0,
@@ -116,38 +146,89 @@ export async function searchCandidates(
     // any: someone who has not started cannot tell us whether this cohort
     // produces project scores. With none above the floor, the whole pool is the
     // only evidence there is.
-    const coverage = computeCoverage(aboveFloor.length > 0 ? aboveFloor : eligible);
+    const programCoverage =
+      programDossiers.length > 0
+        ? computeCoverage(aboveFloor.length > 0 ? aboveFloor : programDossiers)
+        : EMPTY_COVERAGE;
+    const challengeCoverage = challenge?.coverage ?? EMPTY_COVERAGE;
 
-    const scoreable: ScoreableMember[] = eligible.map((d) => {
-      const id = d.programMemberId!;
-      const identity = set.identityByMember.get(id);
-      const legacy = set.legacyStatsByMember.get(id);
-      return {
-        id,
+    const scoreable: ScoreableMember[] = [
+      ...programDossiers.map((d): ScoreableMember => {
+        const id = d.programMemberId!;
+        const identity = set?.identityByMember.get(id);
+        const legacy = set?.legacyStatsByMember.get(id);
+        return {
+          id,
+          source: "PROGRAM",
+          candidateRef: d.candidateRef,
+          userId: d.userId ?? "",
+          fullName: identity?.fullName ?? "",
+          jobRole: identity?.jobRole ?? "",
+          company: identity?.company ?? "",
+          yearsExperience: d.yearsExperience.value,
+          skills: d.declaredSkills.value,
+          missionPoints: legacy?.missionPoints ?? 0,
+          missionsPassed: d.evidence.missionsPassed.value,
+          missionsAttempted: d.evidence.missionsAttempted.value,
+          cleanPassCount: d.evidence.cleanPassCount.value,
+          totalScore: legacy?.totalScore ?? 0,
+          commitDayCount: d.evidence.commitDays.value,
+          projectScores: d.evidence.projectScores.value,
+          interview: d.evidence.interview.value,
+          // The policy query already enforced both; re-stating them keeps the
+          // pure scorer's own hard filters meaningful when it is called directly.
+          hasVisibilityConsent: true,
+          cohortPublished: true,
+          status: legacy?.status ?? "ENROLLED",
+          availability: d.availability,
+          cohortDay: set?.cohortDayByMember.get(id) ?? 1,
+          coverage: programCoverage,
+          dossier: d,
+        };
+      }),
+      ...challengeDossiers.map((d): ScoreableMember => ({
+        id: d.userId ?? "",
+        source: "CLAUDE",
+        candidateRef: d.candidateRef,
         userId: d.userId ?? "",
-        fullName: identity?.fullName ?? "",
-        jobRole: identity?.jobRole ?? "",
-        company: identity?.company ?? "",
+        // No name, no employer. There is none to load and none to leak.
+        fullName: "",
+        jobRole: d.rawRoleLabel.value,
+        company: "",
         yearsExperience: d.yearsExperience.value,
         skills: d.declaredSkills.value,
-        missionPoints: legacy?.missionPoints ?? 0,
+        missionPoints: 0,
         missionsPassed: d.evidence.missionsPassed.value,
         missionsAttempted: d.evidence.missionsAttempted.value,
         cleanPassCount: d.evidence.cleanPassCount.value,
-        totalScore: legacy?.totalScore ?? 0,
+        totalScore: 0,
         commitDayCount: d.evidence.commitDays.value,
         projectScores: d.evidence.projectScores.value,
         interview: d.evidence.interview.value,
-        // The policy query already enforced both; re-stating them keeps the
-        // pure scorer's own hard filters meaningful when it is called directly.
+        // Neither gate applies to this track. Consent to be *contacted* is
+        // asked at the introduction, and there is no cohort to publish — the
+        // work is done and recorded either way.
         hasVisibilityConsent: true,
         cohortPublished: true,
-        status: legacy?.status ?? "ENROLLED",
+        status: "ENROLLED",
         availability: d.availability,
-        cohortDay: set.cohortDayByMember.get(id) ?? 1,
+        cohortDay: challenge?.dayByUser.get(d.userId ?? "") ?? CHALLENGE_TOTAL_DAYS,
+        maxEarnableMissions: CHALLENGE_TOTAL_DAYS,
+        consistencyWindow: CHALLENGE_TOTAL_DAYS,
+        coverage: challengeCoverage,
         dossier: d,
-      };
-    });
+      })),
+    ];
+
+    const coverage =
+      programDossiers.length > 0 && challengeDossiers.length > 0
+        ? {
+            dimensions: programCoverage.dimensions,
+            note: `${programCoverage.note} Challenge candidates are ranked separately against what their own track records: ${challengeCoverage.note}`,
+          }
+        : programDossiers.length > 0
+          ? programCoverage
+          : challengeCoverage;
 
     const limit = opts?.limit ?? 25;
     const ranked = rankCandidates(scoreable, spec, {
@@ -195,8 +276,15 @@ export async function searchCandidates(
     return {
       ok: true,
       data: {
-        cohortName: gate.cohorts[0]?.name ?? null,
-        stage: gate.cohorts[0]?.stage ?? null,
+        cohortName: gate.ok
+          ? (gate.cohorts[0]?.name ?? null)
+          : challengeDossiers.length > 0
+            ? "60-Day Challenge"
+            : null,
+        // A rolling track has no single publish state — people are on day 12
+        // and day 60 at the same time — so it reports none rather than
+        // borrowing the cohort's.
+        stage: gate.ok ? (gate.cohorts[0]?.stage ?? null) : null,
         matches,
         nearMisses,
         totalEligible: scoreable.length,

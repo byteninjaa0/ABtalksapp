@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db";
+import { encodeCandidateRef } from "@/features/hire/candidate-ref";
 import { existingEngagements } from "@/features/hire/contact-access";
 import { estimateCompensation, formatBandLpa } from "@/features/hire/compensation";
 import { roleFamilyFor, tidyRoleLabel } from "@/features/hire/role-family";
@@ -36,6 +37,8 @@ export async function loadRequestMatches(
         orderBy: { score: "desc" },
         select: {
           programMemberId: true,
+          studentUserId: true,
+          source: true,
           score: true,
           tier: true,
           rationale: true,
@@ -58,12 +61,14 @@ export async function loadRequestMatches(
   });
   if (!request) return null;
 
-  const memberIds = request.matches
-    .map((m) => m.programMemberId)
+  // Engagements are keyed on the candidate's user id, which both sources fill —
+  // a challenge candidate has no ProgramMember row to key on.
+  const candidateUserIds = request.matches
+    .map((m) => m.studentUserId)
     .filter((id): id is string => id !== null);
 
   const [engagements, cartCount] = await Promise.all([
-    existingEngagements(recruiterUserId, memberIds),
+    existingEngagements(recruiterUserId, candidateUserIds),
     prisma.recruiterShortlistItem.count({ where: { recruiterUserId } }),
   ]);
 
@@ -77,7 +82,14 @@ export async function loadRequestMatches(
         m.evidence && typeof m.evidence === "object"
           ? (m.evidence as MatchCardData["evidence"])
           : {};
-      const rawRole = m.programMember?.jobRole ?? "";
+      const isChallenge = m.source !== "PROGRAM";
+      // The stored evidence blob carries the challenge candidate's role label;
+      // there is no ProgramMember row to read it from.
+      const rawRole =
+        m.programMember?.jobRole ??
+        (typeof (m.evidence as { jobRole?: unknown })?.jobRole === "string"
+          ? ((m.evidence as { jobRole: string }).jobRole)
+          : "");
       // Recomputed rather than stored: the band is a view of the role and the
       // tier, and a frozen copy would drift the moment the table is retuned.
       const band = estimateCompensation({
@@ -87,6 +99,11 @@ export async function loadRequestMatches(
         missionsPassed: evidence.missionsPassed ?? 0,
       });
       return {
+        candidateRef: encodeCandidateRef(
+          isChallenge ? "CLAUDE" : "PROGRAM",
+          (isChallenge ? m.studentUserId : m.programMemberId) ?? "",
+        ),
+        source: isChallenge ? "CLAUDE" : "PROGRAM",
         programMemberId: m.programMemberId,
         jobRole: rawRole ? tidyRoleLabel(rawRole) : "Candidate",
         score: m.score,
@@ -95,8 +112,8 @@ export async function loadRequestMatches(
         gaps: m.gaps,
         availabilityUnknown: m.availabilityUnknown,
         shortlisted: (m.programMember?.shortlistedBy?.length ?? 0) > 0,
-        engagementStatus: m.programMemberId
-          ? (engagements.get(m.programMemberId)?.status ?? null)
+        engagementStatus: m.studentUserId
+          ? (engagements.get(m.studentUserId)?.status ?? null)
           : null,
         compensationBand: band ? formatBandLpa(band) : null,
         evidence,

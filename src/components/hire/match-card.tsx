@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ExternalLink, Info } from "lucide-react";
-import { candidatePublicId } from "@/features/hire/public-id";
+import { refPublicId, type CandidateSource } from "@/features/hire/candidate-ref";
 import { COMPENSATION_DISCLAIMER } from "@/features/hire/compensation";
 import { buttonVariants } from "@/components/ui/button";
 import { RequestIntroButton } from "@/components/hire/request-intro-button";
@@ -11,6 +11,14 @@ import { ShortlistButton } from "@/components/talent/shortlist-button";
 import { cn } from "@/lib/utils";
 
 export type MatchCardData = {
+  /** `PROGRAM:<id>` / `CLAUDE:<id>` — what every action on this card addresses. */
+  candidateRef: string;
+  /** Which track the evidence came from. Decides the wording of the counts:
+   *  the cohort passes graded missions, the challenge submits daily work. */
+  source?: CandidateSource;
+  /** Program members only. Its absence is what hides the cart and the member
+   *  profile link, so a challenge candidate cannot reach a page built around a
+   *  `ProgramMember` row that does not exist. */
   programMemberId: string | null;
   /**
    * Deliberately no name and no employer. A recruiter who can identify a
@@ -42,6 +50,12 @@ export type MatchCardData = {
     /** Languages of the mission days they passed. Verified, unlike `skills`. */
     workingLanguages?: string[];
     cohortDay?: number;
+    /** Finished the track. Verified, and never part of the score. */
+    certificateIssued?: boolean;
+    /** Mean weekly-quiz score where they sat any. Verified, never scored. */
+    quizAverage?: number | null;
+    /** How long the track runs — 31 for the cohort, 60 for the challenge. */
+    totalTrackDays?: number | null;
   };
   /** Pre-formatted "₹6–12 LPA". An ABTalks estimate, never the candidate's
    *  ask — the card must always print the disclaimer beside it. */
@@ -76,9 +90,12 @@ export function MatchCard({
   const e = match.evidence ?? {};
   const isTop = rank === 1;
   const strong = match.tier === "STRONG";
-  const publicId = match.programMemberId
-    ? candidatePublicId(match.programMemberId)
-    : "AB-????";
+  const publicId = refPublicId(match.candidateRef);
+  const isChallenge = match.source === "CLAUDE";
+  // The same number means different work on the two tracks, so it is never
+  // labelled the same way. A cohort mission is graded on submission; a challenge
+  // day is a shipped task with a GitHub URL recorded against it.
+  const workLabel = isChallenge ? "days shipped" : "missions passed";
 
   return (
     <article
@@ -155,9 +172,30 @@ export function MatchCard({
         {typeof e.missionsPassed === "number" && (
           <li
             className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-900 dark:text-emerald-100"
-            title="Missions passed against the platform's own checks. Excludes the first three days, which are waived for everyone at enrolment."
+            title={
+              isChallenge
+                ? "Days of the 60-day challenge submitted and recorded, each against a GitHub URL."
+                : "Missions passed against the platform's own checks. Excludes the first three days, which are waived for everyone at enrolment."
+            }
           >
-            {e.missionsPassed} missions passed
+            {e.missionsPassed}
+            {e.totalTrackDays ? ` of ${e.totalTrackDays}` : ""} {workLabel}
+          </li>
+        )}
+        {e.certificateIssued && (
+          <li
+            className="rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-900 dark:text-emerald-100"
+            title="Finished the full track and had the certificate issued."
+          >
+            certified
+          </li>
+        )}
+        {typeof e.quizAverage === "number" && (
+          <li
+            className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-900 dark:text-emerald-100"
+            title="Mean score across the weekly assessments they sat. Shown for context — it is not part of the ranking, because most of the pool was never offered one."
+          >
+            quiz {e.quizAverage}
           </li>
         )}
         {typeof e.cleanPassCount === "number" && e.cleanPassCount > 0 && (
@@ -249,13 +287,11 @@ export function MatchCard({
             aria-hidden="true"
           />
         </button>
-        {match.programMemberId && (
-          <RequestIntroButton
-            programMemberId={match.programMemberId}
-            existingStatus={match.engagementStatus ?? null}
-            publicId={publicId}
-          />
-        )}
+        <RequestIntroButton
+          candidateRef={match.candidateRef}
+          existingStatus={match.engagementStatus ?? null}
+          publicId={publicId}
+        />
       </div>
 
       {open && (
@@ -272,35 +308,49 @@ export function MatchCard({
               }
             />
             <Stat
-              label="Missions passed"
+              label={isChallenge ? "Days shipped" : "Missions passed"}
               value={
                 typeof e.missionsPassed === "number"
-                  ? typeof e.missionsAttempted === "number"
-                    ? `${e.missionsPassed} of ${e.missionsAttempted} tried`
-                    : String(e.missionsPassed)
+                  ? isChallenge
+                    ? `${e.missionsPassed} of ${e.totalTrackDays ?? 60}`
+                    : typeof e.missionsAttempted === "number"
+                      ? `${e.missionsPassed} of ${e.missionsAttempted} tried`
+                      : String(e.missionsPassed)
                   : "—"
               }
             />
             <Stat
-              label="First-attempt"
+              label={isChallenge ? "Assessments" : "First-attempt"}
               value={
-                typeof e.cleanPassCount === "number"
-                  ? `${e.cleanPassCount} passes`
-                  : "—"
+                isChallenge
+                  ? typeof e.quizAverage === "number"
+                    ? `${e.quizAverage} avg`
+                    : "Not sat"
+                  : typeof e.cleanPassCount === "number"
+                    ? `${e.cleanPassCount} passes`
+                    : "—"
               }
             />
             <Stat
-              label="Commit days"
+              label={isChallenge ? "Longest streak" : "Commit days"}
               value={
                 typeof e.commitDayCount === "number"
-                  ? String(e.commitDayCount)
+                  ? isChallenge
+                    ? `${e.commitDayCount} days`
+                    : String(e.commitDayCount)
                   : "—"
               }
             />
             <Stat
-              label="Projects"
+              label={isChallenge ? "Certificate" : "Projects"}
               value={
-                e.projectScores?.length ? e.projectScores.join(" / ") : "None"
+                isChallenge
+                  ? e.certificateIssued
+                    ? "Issued"
+                    : "Not yet"
+                  : e.projectScores?.length
+                    ? e.projectScores.join(" / ")
+                    : "None"
               }
             />
             <Stat
@@ -311,10 +361,19 @@ export function MatchCard({
           </dl>
 
           <p className="text-[11px] leading-relaxed text-muted-foreground">
-            Mission, first-attempt, commit and project figures are verified by
-            ABTalks. Experience, skills and role are self-declared.
+            {isChallenge
+              ? "Days shipped, streak, assessment scores and the certificate are verified by ABTalks — every day was submitted against a GitHub URL recorded at the time. Experience and skills are self-declared."
+              : "Mission, first-attempt, commit and project figures are verified by ABTalks. Experience, skills and role are self-declared."}
             {match.compensationBand ? ` ${COMPENSATION_DISCLAIMER}` : ""}
           </p>
+
+          {isChallenge && (
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              This candidate came through the 60-day challenge rather than the
+              cohort, so there is no evidence profile page and no shortlist —
+              request an introduction and our team will take it from there.
+            </p>
+          )}
 
           {(e.skills?.length ?? 0) > 0 && (
             <div>

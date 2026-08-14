@@ -1,6 +1,6 @@
 import "server-only";
 
-import { candidatePublicId } from "@/features/hire/public-id";
+import { refPublicId } from "@/features/hire/candidate-ref";
 import type { ScoredCandidate } from "@/features/hire/types";
 import type { JobSpec } from "@/lib/validations/hire";
 
@@ -93,7 +93,7 @@ function groundedFigures(m: ScoredCandidate): Set<string> {
     gaps: m.gaps,
     // The public id is digits the model is *told* to quote. Without it here the
     // guard rejects every rationale for citing the label we asked it to use.
-    publicId: candidatePublicId(m.programMemberId),
+    publicId: refPublicId(m.candidateRef),
   });
   return new Set(source.match(/\d+/g) ?? []);
 }
@@ -121,8 +121,8 @@ export async function explainMatches(
       // No name goes to the model, so no name can come back in a rationale
       // that a recruiter then reads. It refers to candidates by public id.
       matches: matches.map((m) => ({
-        id: m.programMemberId,
-        publicId: candidatePublicId(m.programMemberId),
+        id: m.candidateRef,
+        publicId: refPublicId(m.candidateRef),
         score: m.score,
         tier: m.tier,
         evidence: m.evidence,
@@ -159,7 +159,7 @@ Rules:
     const byId = new Map(ai.data.rationales.map((r) => [r.id, r.rationale]));
     return {
       matches: base.matches.map((m) => {
-        const candidate = byId.get(m.programMemberId);
+        const candidate = byId.get(m.candidateRef);
         if (!candidate || inventsFigures(candidate, groundedFigures(m))) {
           return m;
         }
@@ -179,7 +179,7 @@ function buildRationale(m: ScoredCandidate, spec: JobSpec): string {
   // Public id, not the name: this string is rendered to recruiters and stored
   // on the match row, so it must not carry identity.
   parts.push(
-    `${candidatePublicId(m.programMemberId)} scores ${m.score}/100 (${m.tier}) for ${spec.title ?? "this role"}.`,
+    `${refPublicId(m.candidateRef)} scores ${m.score}/100 (${m.tier}) for ${spec.title ?? "this role"}.`,
   );
   if (e.skills.length) {
     parts.push(`Declared skills: ${e.skills.slice(0, 8).join(", ")}.`);
@@ -248,7 +248,7 @@ function buildOverallGap(
   if (matches.length === 0 && nearMisses.length > 0) {
     const sample = nearMisses[0]!;
     return (
-      `No strong matches for ${stack}. Closest profile: ${candidatePublicId(sample.programMemberId)} ` +
+      `No strong matches for ${stack}. Closest profile: ${refPublicId(sample.candidateRef)} ` +
       `(score ${sample.score}) — ${sample.gaps.slice(0, 3).join("; ") || "see gaps"}.${poolNote} ` +
       `Save this demand and we can train a cohort toward this stack.`
     );

@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { requireAdmin } from "@/lib/admin-auth";
-import { candidatePublicId } from "@/features/hire/public-id";
+import { resolveEligibleCandidates } from "@/features/hire/pool-policy";
 import {
   decideEngagementSchema,
   engagementMessageSchema,
@@ -79,27 +79,20 @@ export async function placeEngagementRequestAction(
 
   const parsed = placeEngagementRequestSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: "Invalid request." };
-  const { programMemberId, requestId, note } = parsed.data;
+  const { candidateRef, requestId, note } = parsed.data;
 
   try {
     // The candidate must be someone this recruiter could legitimately have
-    // seen: in the pool, and consenting to be discoverable.
-    const member = await prisma.programMember.findFirst({
-      where: {
-        id: programMemberId,
-        status: { in: ["ENROLLED", "COMPLETED"] },
-        recruiterVisibilityConsentAt: { not: null },
-      },
-      select: { id: true, userId: true },
-    });
-    if (!member) return { ok: false, message: "Candidate not available." };
+    // seen: in the pool, on whichever track they came from.
+    const [candidate] = await resolveEligibleCandidates([candidateRef]);
+    if (!candidate) return { ok: false, message: "Candidate not available." };
 
     // One open request per recruiter/candidate pair. Asking twice is a
     // duplicate, not a second ask.
     const open = await prisma.talentEngagementRequest.findFirst({
       where: {
         recruiterUserId: gate.data.userId,
-        programMemberId,
+        candidateUserId: candidate.userId,
         status: { notIn: ["CLOSED", "DECLINED"] },
       },
       select: { id: true, status: true },
@@ -113,10 +106,10 @@ export async function placeEngagementRequestAction(
         data: {
           recruiterUserId: gate.data.userId,
           requestId: requestId ?? null,
-          source: "PROGRAM",
-          programMemberId,
-          candidateUserId: member.userId,
-          candidatePublicId: candidatePublicId(programMemberId),
+          source: candidate.source,
+          programMemberId: candidate.programMemberId,
+          candidateUserId: candidate.userId,
+          candidatePublicId: candidate.publicId,
           note: note ?? null,
           status: "SUBMITTED",
           submittedAt: new Date(),
@@ -171,50 +164,43 @@ export async function placeBulkEngagementRequestAction(
   if (!parsed.success) {
     return { ok: false, message: "Select at least one candidate." };
   }
-  const { programMemberIds, requestId, note } = parsed.data;
+  const { candidateRefs, requestId, note } = parsed.data;
   const userId = gate.data.userId;
 
   try {
-    const eligible = await prisma.programMember.findMany({
-      where: {
-        id: { in: programMemberIds },
-        status: { in: ["ENROLLED", "COMPLETED"] },
-        recruiterVisibilityConsentAt: { not: null },
-      },
-      select: { id: true, userId: true },
-    });
+    const eligible = await resolveEligibleCandidates(candidateRefs);
 
     const alreadyOpen = new Set(
       (
         await prisma.talentEngagementRequest.findMany({
           where: {
             recruiterUserId: userId,
-            programMemberId: { in: eligible.map((m) => m.id) },
+            candidateUserId: { in: eligible.map((c) => c.userId) },
             status: { notIn: ["CLOSED", "DECLINED"] },
           },
-          select: { programMemberId: true },
+          select: { candidateUserId: true },
         })
-      ).map((r) => r.programMemberId),
+      ).map((r) => r.candidateUserId),
     );
 
-    const toPlace = eligible.filter((m) => !alreadyOpen.has(m.id));
+    const toPlace = eligible.filter((c) => !alreadyOpen.has(c.userId));
     if (toPlace.length === 0) {
       return {
         ok: true,
-        data: { placed: 0, skipped: programMemberIds.length },
+        data: { placed: 0, skipped: candidateRefs.length },
       };
     }
 
     await prisma.$transaction(async (tx) => {
-      for (const member of toPlace) {
+      for (const candidate of toPlace) {
         const engagement = await tx.talentEngagementRequest.create({
           data: {
             recruiterUserId: userId,
             requestId: requestId ?? null,
-            source: "PROGRAM",
-            programMemberId: member.id,
-            candidateUserId: member.userId,
-            candidatePublicId: candidatePublicId(member.id),
+            source: candidate.source,
+            programMemberId: candidate.programMemberId,
+            candidateUserId: candidate.userId,
+            candidatePublicId: candidate.publicId,
             note: note ?? null,
             status: "SUBMITTED",
             submittedAt: new Date(),
@@ -241,7 +227,7 @@ export async function placeBulkEngagementRequestAction(
       ok: true,
       data: {
         placed: toPlace.length,
-        skipped: programMemberIds.length - toPlace.length,
+        skipped: candidateRefs.length - toPlace.length,
       },
     };
   } catch (error) {

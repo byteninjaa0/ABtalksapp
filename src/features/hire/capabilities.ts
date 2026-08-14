@@ -11,8 +11,12 @@
  * Every gap here is a fact about the data, not a limitation of the model, so
  * this list is the honest one and it lives in exactly one place.
  *
- * Shared, not server-only — the chat renders these strings.
+ * Shared, not server-only — the chat renders these strings. `hireChallengePool`
+ * only reads `process.env`, which is inlined at build time for anything the
+ * client bundles.
  */
+import { hireChallengePool } from "@/lib/feature-flags";
+
 export type UnsupportedFilter = {
   id: string;
   /** Patterns that mean the recruiter is asking for this. */
@@ -24,6 +28,15 @@ export type UnsupportedFilter = {
    * be wrong rather than merely unhelpful.
    */
   instead?: string;
+  /**
+   * When this limit still applies.
+   *
+   * A gap can be closed — the challenge track was unsearchable until it wasn't
+   * — and a stale refusal costs more than the original gap did, because the
+   * recruiter is turned away from something that now works. Absent means
+   * always.
+   */
+  onlyWhen?: () => boolean;
 };
 
 /**
@@ -56,6 +69,10 @@ export const UNSUPPORTED_FILTERS: UnsupportedFilter[] = [
       "I can only search the AI Cohort right now. The 60-day and Claude challenge tracks aren't in the searchable pool yet — those members haven't been asked for recruiter visibility.",
     instead:
       "I can save this as a requirement so you're told when that pool opens.",
+    // The challenge cohort *is* searchable once the pool is open, and a refusal
+    // that has stopped being true is worse than no refusal: the recruiter is
+    // turned away from the largest thing the platform has.
+    onlyWhen: () => !hireChallengePool().enabled,
   },
   {
     id: "education",
@@ -99,7 +116,9 @@ export const UNSUPPORTED_FILTERS: UnsupportedFilter[] = [
 export function findUnsupported(message: string): UnsupportedFilter[] {
   const m = message.trim();
   if (!m) return [];
-  const hits = UNSUPPORTED_FILTERS.filter((f) => f.match.test(m));
+  const hits = UNSUPPORTED_FILTERS.filter(
+    (f) => f.match.test(m) && (f.onlyWhen?.() ?? true),
+  );
   const protectedHit = hits.find((f) => f.id === "protected_attribute");
   return protectedHit ? [protectedHit] : hits;
 }

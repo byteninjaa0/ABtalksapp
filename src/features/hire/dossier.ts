@@ -2,6 +2,7 @@ import "server-only";
 
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { encodeCandidateRef } from "@/features/hire/candidate-ref";
 import { candidatePublicId } from "@/features/hire/public-id";
 import {
   declared,
@@ -315,6 +316,7 @@ export async function buildDossierSet(
     dossiers.push({
       publicId: candidatePublicId(m.id),
       source: "PROGRAM",
+      candidateRef: encodeCandidateRef("PROGRAM", m.id),
       programMemberId: m.id,
       userId: m.userId,
 
@@ -416,12 +418,19 @@ export function computeCoverage(
   const anyCommit = dossiers.some((d) => d.evidence.commitDays.value > 0);
   const anyProject = dossiers.some((d) => d.evidence.projectScores.value.length > 0);
   const anyInterview = dossiers.some((d) => d.evidence.interview.value !== null);
+  // Read from clean passes, not from missions.
+  //
+  // Deriving it from `anyMission` assumed every track records how many attempts
+  // a pass took. The challenge track does not — its submissions are logged, not
+  // re-run — so the dimension would switch on and score everybody zero on 15%
+  // of the rubric for an attempt count nobody ever measured.
+  const anyCleanPass = dossiers.some((d) => d.evidence.cleanPassCount.value > 0);
 
   const dimensions: Record<ScoreDimension, boolean> = {
     stack: true,
     experience: true,
     missions: anyMission,
-    cleanPass: anyMission,
+    cleanPass: anyCleanPass,
     consistency: anyCommit,
     projects: anyProject,
     interview: anyInterview,
@@ -432,6 +441,7 @@ export function computeCoverage(
   if (!anyInterview) missing.push("exit interviews");
   if (!anyMission) missing.push("completed missions");
   if (!anyCommit) missing.push("commit history");
+  if (anyMission && !anyCleanPass) missing.push("first-attempt records");
 
   const used = Object.values(dimensions).filter(Boolean).length;
   const note =

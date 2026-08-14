@@ -13,15 +13,19 @@ import { prisma } from "@/lib/db";
  *
  * One rule, one place. Every surface that could reveal a name, an email, a
  * phone number or a profile link asks this — nothing decides locally.
+ *
+ * Keyed on the candidate's *user* id rather than their program member id, which
+ * is the only key both pools have: a challenge participant has no ProgramMember
+ * row, and a rule that cannot name half the candidates is not one rule.
  */
 export async function hasContactAccess(
   recruiterUserId: string,
-  programMemberId: string,
+  candidateUserId: string,
 ): Promise<boolean> {
   const shared = await prisma.talentEngagementRequest.findFirst({
     where: {
       recruiterUserId,
-      programMemberId,
+      candidateUserId,
       status: "CONTACT_SHARED",
     },
     select: { id: true },
@@ -32,22 +36,22 @@ export async function hasContactAccess(
 /** The same question for a page rendering many candidates at once. */
 export async function contactAccessFor(
   recruiterUserId: string,
-  programMemberIds: string[],
+  candidateUserIds: string[],
 ): Promise<Set<string>> {
-  if (programMemberIds.length === 0) return new Set();
+  if (candidateUserIds.length === 0) return new Set();
 
   const rows = await prisma.talentEngagementRequest.findMany({
     where: {
       recruiterUserId,
-      programMemberId: { in: programMemberIds },
+      candidateUserId: { in: candidateUserIds },
       status: "CONTACT_SHARED",
     },
-    select: { programMemberId: true },
+    select: { candidateUserId: true },
   });
 
   return new Set(
     rows
-      .map((r) => r.programMemberId)
+      .map((r) => r.candidateUserId)
       .filter((id): id is string => id !== null),
   );
 }
@@ -55,25 +59,25 @@ export async function contactAccessFor(
 /** What the recruiter has already asked about, so the UI never offers twice. */
 export async function existingEngagements(
   recruiterUserId: string,
-  programMemberIds: string[],
+  candidateUserIds: string[],
 ): Promise<Map<string, { id: string; status: string }>> {
-  if (programMemberIds.length === 0) return new Map();
+  if (candidateUserIds.length === 0) return new Map();
 
   const rows = await prisma.talentEngagementRequest.findMany({
     where: {
       recruiterUserId,
-      programMemberId: { in: programMemberIds },
+      candidateUserId: { in: candidateUserIds },
       status: { not: "CLOSED" },
     },
-    select: { id: true, status: true, programMemberId: true },
+    select: { id: true, status: true, candidateUserId: true },
     orderBy: { createdAt: "desc" },
   });
 
   const out = new Map<string, { id: string; status: string }>();
   for (const r of rows) {
-    // Newest first, so the first row seen for a member is the live one.
-    if (r.programMemberId && !out.has(r.programMemberId)) {
-      out.set(r.programMemberId, { id: r.id, status: r.status });
+    // Newest first, so the first row seen for a candidate is the live one.
+    if (r.candidateUserId && !out.has(r.candidateUserId)) {
+      out.set(r.candidateUserId, { id: r.id, status: r.status });
     }
   }
   return out;

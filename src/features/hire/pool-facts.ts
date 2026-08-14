@@ -2,6 +2,8 @@ import "server-only";
 
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/db";
+import { hireChallengePool } from "@/lib/feature-flags";
+import { buildChallengeDossierSet } from "@/features/hire/challenge-dossier";
 import type { JobSpec } from "@/lib/validations/hire";
 import { searchCandidates } from "@/features/hire/search-candidates";
 import { buildDossierSet } from "@/features/hire/dossier";
@@ -68,18 +70,40 @@ export async function poolSnapshot(): Promise<PoolSnapshot> {
 
   try {
     const gate = await resolvePoolCohorts();
-    if (!gate.ok) {
+
+    // The snapshot has to span exactly what the search spans. Counting only the
+    // cohort while the shortlist returns 300 challenge candidates is the kind
+    // of small lie plan 076 was written to stop — and returning early on a
+    // closed cohort would have reported an empty pool while one was open.
+    const flag = hireChallengePool();
+    const [set, challenge] = await Promise.all([
+      gate.ok
+        ? buildDossierSet(memberEligibilityWhere(gate.cohorts.map((c) => c.id)))
+        : null,
+      flag.enabled
+        ? buildChallengeDossierSet({ minDays: flag.minDays })
+        : null,
+    ]);
+
+    if (!set && !challenge) {
       snapshotCache = { at: Date.now(), value: EMPTY_SNAPSHOT };
       return EMPTY_SNAPSHOT;
     }
+    const programDossiers = set?.dossiers ?? [];
+    const programUserIds = new Set(
+      programDossiers.map((d) => d.userId).filter((id): id is string => Boolean(id)),
+    );
 
-    const cohortIds = gate.cohorts.map((c) => c.id);
-    const set = await buildDossierSet(memberEligibilityWhere(cohortIds));
     // Everyone the search will actually consider — the floor demotes, it does
     // not exclude (see searchCandidates). A snapshot counting fewer people than
     // the shortlist shows is the kind of small lie that costs trust.
-    const eligible = set.dossiers;
-    const withEvidence = set.dossiers.filter((d) =>
+    const eligible = [
+      ...programDossiers,
+      ...(challenge?.dossiers ?? []).filter(
+        (d) => !d.userId || !programUserIds.has(d.userId),
+      ),
+    ];
+    const withEvidence = programDossiers.filter((d) =>
       clearsEvidenceFloor(d.evidence.missionsPassed.value),
     );
 
@@ -108,14 +132,24 @@ export async function poolSnapshot(): Promise<PoolSnapshot> {
 
     const value: PoolSnapshot = {
       hasPool: eligible.length > 0,
-      stage: gate.cohorts[0]?.stage ?? null,
-      cohortNames: [...new Set(gate.cohorts.map((c) => c.name))],
-      cohortDay: eligible[0]
-        ? (set.cohortDayByMember.get(eligible[0].programMemberId ?? "") ?? null)
+      stage: gate.ok ? (gate.cohorts[0]?.stage ?? null) : null,
+      cohortNames: [
+        ...new Set([
+          ...(gate.ok ? gate.cohorts.map((c) => c.name) : []),
+          ...(challenge && challenge.dossiers.length > 0
+            ? ["60-Day Challenge"]
+            : []),
+        ]),
+      ],
+      cohortDay: programDossiers[0]
+        ? (set?.cohortDayByMember.get(programDossiers[0].programMemberId ?? "") ??
+          null)
         : null,
-      ofDays: eligible[0]?.evidence.cohortProgress.value.ofDays ?? 31,
+      ofDays: programDossiers[0]?.evidence.cohortProgress.value.ofDays ?? 31,
       eligibleCount: eligible.length,
-      belowFloorCount: eligible.length - withEvidence.length,
+      // Program members only. Challenge candidates clear their own floor in the
+      // query that loads them, so none of them is being held back.
+      belowFloorCount: programDossiers.length - withEvidence.length,
       topSkills: byCountDesc(skillCounts)
         .slice(0, 12)
         .map(([skill, count]) => ({ skill, count })),
@@ -132,9 +166,11 @@ export async function poolSnapshot(): Promise<PoolSnapshot> {
         count,
       })),
       coverageNote:
-        withEvidence.length > 0
-          ? set.coverage.note
-          : "No candidate has cleared the evidence bar yet.",
+        challenge && challenge.dossiers.length > 0
+          ? challenge.coverage.note
+          : withEvidence.length > 0 && set
+            ? set.coverage.note
+            : "No candidate has cleared the evidence bar yet.",
     };
 
     snapshotCache = { at: Date.now(), value };

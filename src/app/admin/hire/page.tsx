@@ -55,6 +55,19 @@ export default async function AdminHirePage() {
           user: { select: { email: true } },
         },
       },
+      // Challenge candidates have no ProgramMember row. Reading identity only
+      // from that relation left the one person who has to phone the candidate
+      // looking at "(candidate removed)".
+      candidate: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          studentProfile: {
+            select: { fullName: true, role: true, phone: true, college: true },
+          },
+        },
+      },
       messages: {
         orderBy: { createdAt: "asc" },
         take: 30,
@@ -92,7 +105,23 @@ export default async function AdminHirePage() {
           </p>
         ) : (
           <ul className="space-y-4">
-            {sorted.map((e) => (
+            {sorted.map((e) => {
+              // Whichever pool this person came from, admin needs a name, a way
+              // to reach them, and somewhere to read the rest.
+              const name =
+                e.programMember?.fullName ??
+                e.candidate?.studentProfile?.fullName ??
+                e.candidate?.name ??
+                null;
+              const email = e.programMember?.user?.email ?? e.candidate?.email ?? null;
+              const role =
+                e.programMember?.jobRole ?? e.candidate?.studentProfile?.role ?? null;
+              const profileHref = e.programMember?.id
+                ? `/admin/program/members/${e.programMember.id}`
+                : e.candidate?.id
+                  ? `/students/${e.candidate.id}`
+                  : null;
+              return (
               <li
                 key={e.id}
                 className="space-y-3 rounded-xl border bg-card p-4"
@@ -101,12 +130,10 @@ export default async function AdminHirePage() {
                   <div className="min-w-0">
                     <h3 className="font-display text-base font-semibold">
                       {e.candidatePublicId}
-                      {e.programMember?.fullName
-                        ? ` · ${e.programMember.fullName}`
-                        : " · (candidate removed)"}
+                      {name ? ` · ${name}` : " · (candidate removed)"}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {e.programMember?.jobRole ?? "—"}
+                      {role ?? "—"}
                       {e.request?.title
                         ? ` · for ${e.request.title}`
                         : ""} · {e.source}
@@ -114,22 +141,25 @@ export default async function AdminHirePage() {
                     {/* The email was selected and then never rendered, so the
                       person deciding whether to release a candidate's contact
                       could not see the contact they were releasing. */}
-                    {e.programMember?.user?.email && (
+                    {email && (
                       <p className="mt-1 text-sm">
                         <a
-                          href={`mailto:${e.programMember.user.email}`}
+                          href={`mailto:${email}`}
                           className="underline underline-offset-4"
                         >
-                          {e.programMember.user.email}
+                          {email}
                         </a>
+                        {e.candidate?.studentProfile?.phone
+                          ? ` · ${e.candidate.studentProfile.phone}`
+                          : ""}
                       </p>
                     )}
-                    {e.programMember?.id && (
+                    {profileHref && (
                       <Link
-                        href={`/admin/program/members/${e.programMember.id}`}
+                        href={profileHref}
                         className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary underline underline-offset-4"
                       >
-                        Open full member profile
+                        Open full profile
                       </Link>
                     )}
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -180,7 +210,8 @@ export default async function AdminHirePage() {
 
                 <EngagementDecision engagementId={e.id} status={e.status} />
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </section>

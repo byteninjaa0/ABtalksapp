@@ -19,7 +19,9 @@ const STATUS_COPY: Record<string, string> = {
 };
 
 type Props = {
-  programMemberId: string;
+  /** `PROGRAM:<id>` / `CLAUDE:<id>` — resolved server-side against its own
+   *  table, so this is a name for a candidate and never a key to reach one. */
+  candidateRef: string;
   requestId?: string;
   /** Status of the recruiter's existing live request, if there is one. */
   existingStatus?: string | null;
@@ -27,7 +29,7 @@ type Props = {
 };
 
 export function RequestIntroButton({
-  programMemberId,
+  candidateRef,
   requestId,
   existingStatus,
   publicId,
@@ -64,7 +66,7 @@ export function RequestIntroButton({
         return;
       }
       savePendingCheckout({
-        programMemberIds: [programMemberId],
+        candidateRefs: [candidateRef],
         note: note.trim() || undefined,
       });
       openAuth("checkout");
@@ -72,7 +74,7 @@ export function RequestIntroButton({
     }
     startTransition(async () => {
       const res = await placeEngagementRequestAction({
-        programMemberId,
+        candidateRef,
         requestId,
         note: note.trim() || undefined,
       });
@@ -97,7 +99,7 @@ export function RequestIntroButton({
               toast.error("Your recruiter application is still being reviewed.");
               return;
             }
-            savePendingCheckout({ programMemberIds: [programMemberId] });
+            savePendingCheckout({ candidateRefs: [candidateRef] });
             openAuth("checkout");
             return;
           }
@@ -120,13 +122,13 @@ export function RequestIntroButton({
   return (
     <div className="w-full space-y-2 rounded-lg border bg-muted/40 p-3">
       <label
-        htmlFor={`note-${programMemberId}`}
+        htmlFor={`note-${candidateRef}`}
         className="text-xs font-medium"
       >
         Anything our team should know? <span className="text-muted-foreground">(optional)</span>
       </label>
       <textarea
-        id={`note-${programMemberId}`}
+        id={`note-${candidateRef}`}
         value={note}
         onChange={(e) => setNote(e.target.value)}
         rows={3}

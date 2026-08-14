@@ -1,3 +1,4 @@
+import { encodeCandidateRef } from "@/features/hire/candidate-ref";
 import type { JobSpec } from "@/lib/validations/hire";
 import type {
   EvidenceCoverage,
@@ -62,12 +63,35 @@ function normToken(s: string): string {
   return s.trim().toLowerCase().replace(/[\s/_-]+/g, " ");
 }
 
+/**
+ * The shortest token allowed to match by containment.
+ *
+ * Bare substring matching made "react" match a candidate whose only skills were
+ * "Python" and "C" — because `"react".includes("c")` is true. Single-letter
+ * languages are real ("C", "R", "Go"), so they cannot be dropped from a skill
+ * list; they simply must not be allowed to match *inside* a longer word.
+ */
+const MIN_CONTAINMENT_LENGTH = 3;
+
+/** Is `needle` present in `haystack` as a whole word rather than a fragment? */
+function containsWord(haystack: string, needle: string): boolean {
+  if (needle.length < MIN_CONTAINMENT_LENGTH) return false;
+  const i = haystack.indexOf(needle);
+  if (i === -1) return false;
+  // "js" inside "js" is a word; "java" inside "javascript" is not. Punctuation
+  // and spaces bound a word — "react" matches "react.js" and "react native".
+  const before = i === 0 ? "" : haystack[i - 1]!;
+  const after = haystack[i + needle.length] ?? "";
+  const isBoundary = (c: string) => c === "" || !/[a-z0-9]/.test(c);
+  return isBoundary(before) && isBoundary(after);
+}
+
 function stackTokensMatch(have: string[], need: string): boolean {
   const n = normToken(need);
   if (!n) return true;
   return have.some((h) => {
     const x = normToken(h);
-    return x === n || x.includes(n) || n.includes(x);
+    return x === n || containsWord(x, n) || containsWord(n, x);
   });
 }
 
@@ -144,8 +168,12 @@ function stackScore(memberSkills: string[], spec: JobSpec): { score: number; mis
  * everything available scores 0.7 and one who has passed nothing scores 0.15 —
  * a gap far too small to rank on.
  */
-function missionScore(missionsPassed: number, cohortDay: number): number {
-  const earnable = Math.max(3, Math.min(cohortDay, MAX_EARNABLE_MISSIONS));
+function missionScore(
+  missionsPassed: number,
+  cohortDay: number,
+  maxEarnable: number = MAX_EARNABLE_MISSIONS,
+): number {
+  const earnable = Math.max(3, Math.min(cohortDay, maxEarnable));
   return clamp01(missionsPassed / earnable);
 }
 
@@ -164,8 +192,12 @@ function projectScore(scores: number[]): number {
 
 /** Commit days against days elapsed — showing up daily is the signal, and on
  *  day 14 nobody can have 20 of them. */
-function consistencyScore(commitDays: number, cohortDay: number): number {
-  return clamp01(commitDays / Math.max(5, Math.min(cohortDay, 30)));
+function consistencyScore(
+  commitDays: number,
+  cohortDay: number,
+  window = 30,
+): number {
+  return clamp01(commitDays / Math.max(5, Math.min(cohortDay, window)));
 }
 
 function interviewScore(
@@ -331,8 +363,15 @@ function effectiveExperienceBand(spec: {
 export function scoreCandidate(
   member: ScoreableMember,
   spec: JobSpec,
-  coverage: EvidenceCoverage = FULL_COVERAGE,
+  searchCoverage: EvidenceCoverage = FULL_COVERAGE,
 ): ScoredCandidate {
+  // A candidate carrying its own coverage is scored against what its track can
+  // produce, not against what the widest pool in the search happened to have.
+  const coverage = member.coverage ?? searchCoverage;
+  const source = member.source ?? "PROGRAM";
+  const candidateRef = member.candidateRef ?? encodeCandidateRef(source, member.id);
+  const programMemberId = source === "PROGRAM" ? member.id : null;
+
   const { ok, reasons, missingMust } = evaluateHardFilters(member, spec);
   const availabilityUnknown = member.availability == null;
 
@@ -344,10 +383,18 @@ export function scoreCandidate(
   const cohortDay = member.cohortDay > 0 ? member.cohortDay : 1;
   const dims: Record<ScoreDimension, number> = {
     stack: stack.score,
-    missions: missionScore(member.missionsPassed, cohortDay),
+    missions: missionScore(
+      member.missionsPassed,
+      cohortDay,
+      member.maxEarnableMissions,
+    ),
     cleanPass: cleanPassScore(member.cleanPassCount, member.missionsPassed),
     projects: projectScore(member.projectScores),
-    consistency: consistencyScore(member.commitDayCount, cohortDay),
+    consistency: consistencyScore(
+      member.commitDayCount,
+      cohortDay,
+      member.consistencyWindow,
+    ),
     interview: interviewScore(member.interview),
     experience: (() => {
       const band = effectiveExperienceBand(spec);
@@ -387,7 +434,9 @@ export function scoreCandidate(
 
   if (!ok) {
     return {
-      programMemberId: member.id,
+      programMemberId,
+      source,
+      candidateRef,
       userId: member.userId,
       fullName: member.fullName,
       jobRole: member.jobRole,
@@ -434,7 +483,9 @@ export function scoreCandidate(
   const tier = tierFor(total, missing, member.missionsPassed);
 
   return {
-    programMemberId: member.id,
+    programMemberId,
+    source,
+    candidateRef,
     userId: member.userId,
     fullName: member.fullName,
     jobRole: member.jobRole,
@@ -485,7 +536,16 @@ export function rankCandidates(
   const list = opts?.includeHardFiltered
     ? scored
     : scored.filter((s) => !s.hardFiltered);
-  list.sort((a, b) => b.score - a.score || a.fullName.localeCompare(b.fullName));
+  // Name is the tiebreak where there is one. Candidates outside the program
+  // carry no name by design, so their ties fall back to the handle — arbitrary,
+  // but stable, which is what a tiebreak is for.
+  list.sort(
+    (a, b) =>
+      b.score - a.score ||
+      (a.fullName || a.candidateRef).localeCompare(
+        b.fullName || b.candidateRef,
+      ),
+  );
   const limit = opts?.limit ?? 25;
   return list.slice(0, limit);
 }

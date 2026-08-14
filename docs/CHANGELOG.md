@@ -2,6 +2,7 @@
 
 <!-- Reconciled through 2026-08-05 (commit 519cc34) into docs/project-context.md. -->
 
+- 2026-08-14 — hire: 60-day Claude challenge enters the searchable pool behind `HIRE_CHALLENGE_POOL` (default off). New `candidateRef` handle (`PROGRAM:<memberId>` / `CLAUDE:<userId>`) replaces `programMemberId` as the candidate address across card, cart, intro request and engagement rows; `challenge-dossier.ts` maps daily submissions/streak/certificate/quiz onto the same rubric; coverage is now per-source so neither pool is scored against evidence its track cannot produce; `stackTokensMatch` fixed (substring match made "react" match "C"); engagements and contact access re-keyed on `candidateUserId`; `/admin/hire` resolves identity for both sources. No schema change — `TalentCandidateSource`, `candidateUserId`, `studentUserId` already existed. Plan `docs/plans/077-challenge-candidates-enter-the-pool.md`
 - 2026-08-11 — hire: Scout at `/hire` — TalentRequest pipeline, evidence scoring, demand board, CandidateAvailability form (profile + program dashboard), Claude multi-turn fallback path, match shortlist, nightly `/api/cron/hire-alerts`; migration `20260811140000_talent_requests_hire_scout`
 - 2026-08-13 [convention] Reverted product Modernist retheme (plan 071): pre-modernist globals tokens, Inter, --radius 0.625rem, dark mode; Figma landing hub on `/` unchanged
 - 2026-08-13 [convention] Landing How it works flattens 3D cube on phone (≤800px); active face only + auto height; desktop cube unchanged

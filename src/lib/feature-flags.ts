@@ -84,3 +84,34 @@ export function hireOpenCohortIds(): string[] | "all" | null {
     .filter(Boolean);
   return ids.length > 0 ? ids : null;
 }
+
+/**
+ * Whether `/hire` may also search the Claude challenge track, and from how many
+ * verified days.
+ *
+ * The AI Cohort is one running cohort of a few dozen people. The challenge is
+ * 2,708 enrolments, 682 of whom have submitted at least one day of work against
+ * the platform's own checks. Keeping it out of the pool did not protect anyone
+ * — nothing about a challenge participant is shown that a program member's card
+ * does not also show, and neither carries a name — it just meant the product
+ * ranked 1.5% of the evidence it holds.
+ *
+ * The floor is the interesting half. Below roughly ten submitted days there is
+ * no track record to rank, and a recruiter's first screen filling with people
+ * who tried the challenge for a weekend is worse for the business than a short
+ * list. Ten is the default; the value tunes it.
+ *
+ * `HIRE_CHALLENGE_POOL=10` (or any integer), `=true` for the default floor.
+ * Unset — the default — means `/hire` behaves exactly as it does today.
+ */
+export function hireChallengePool(): { enabled: boolean; minDays: number } {
+  const raw = process.env.HIRE_CHALLENGE_POOL?.trim();
+  if (!raw || raw.toLowerCase() === "false") {
+    return { enabled: false, minDays: 10 };
+  }
+  const parsed = Number.parseInt(raw, 10);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return { enabled: true, minDays: parsed };
+  }
+  return { enabled: raw.toLowerCase() === "true", minDays: 10 };
+}

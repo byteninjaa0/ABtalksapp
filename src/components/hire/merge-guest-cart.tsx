@@ -30,10 +30,10 @@ export function MergeGuestCart() {
       }
 
       const pending = readPendingCheckout();
-      if (!pending || pending.programMemberIds.length === 0) return;
+      if (!pending || pending.candidateRefs.length === 0) return;
 
       const placed = await placeBulkEngagementRequestAction({
-        programMemberIds: pending.programMemberIds,
+        candidateRefs: pending.candidateRefs,
         note: pending.note,
       });
       if (!placed.ok) {

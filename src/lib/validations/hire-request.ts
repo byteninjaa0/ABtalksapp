@@ -17,13 +17,20 @@ export const talentEngagementStatusSchema = z.enum([
 ]);
 
 /**
- * A recruiter asking to be introduced to one candidate.
+ * A candidate handle: the source, then the internal id for that source.
  *
- * `programMemberId` is the internal id, never the AB-#### label — that is a
- * display string and must not be usable to address a row.
+ * Never the AB-#### label — that is a display string and must not be usable to
+ * address a row. Shape is validated here; *eligibility* is re-checked against
+ * the source's own table in the action, because a well-formed ref proves
+ * nothing about whether this recruiter should be able to reach that person.
  */
+export const candidateRefSchema = z
+  .string()
+  .regex(/^(PROGRAM|CLAUDE):c[a-z0-9]{6,}$/, "Invalid candidate reference.");
+
+/** A recruiter asking to be introduced to one candidate. */
 export const placeEngagementRequestSchema = z.object({
-  programMemberId: z.string().cuid(),
+  candidateRef: candidateRefSchema,
   requestId: z.string().cuid().optional(),
   note: z.string().trim().max(2000).optional(),
 });
@@ -35,7 +42,7 @@ export const placeEngagementRequestSchema = z.object({
  * every row here becomes work for a human on the ABTalks side.
  */
 export const placeBulkEngagementRequestSchema = z.object({
-  programMemberIds: z.array(z.string().cuid()).min(1).max(25),
+  candidateRefs: z.array(candidateRefSchema).min(1).max(25),
   requestId: z.string().cuid().optional(),
   note: z.string().trim().max(2000).optional(),
 });

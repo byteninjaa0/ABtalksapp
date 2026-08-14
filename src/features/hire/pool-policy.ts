@@ -1,8 +1,15 @@
 import "server-only";
 
-import { ProgramCohortStatus, type Prisma } from "@prisma/client";
+import { Domain, ProgramCohortStatus, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { hireOpenCohortIds } from "@/lib/feature-flags";
+import { hireChallengePool, hireOpenCohortIds } from "@/lib/feature-flags";
+import {
+  decodeCandidateRef,
+  encodeCandidateRef,
+  type CandidateRef,
+  type CandidateSource,
+} from "@/features/hire/candidate-ref";
+import { candidatePublicId } from "@/features/hire/public-id";
 
 /**
  * The floor below which someone is not a candidate.
@@ -111,4 +118,96 @@ export function memberEligibilityWhere(
  *  `missionPoints`. */
 export function clearsEvidenceFloor(missionsPassed: number): boolean {
   return missionsPassed >= MIN_EARNED_MISSIONS;
+}
+
+export type EligibleCandidate = {
+  candidateRef: string;
+  source: CandidateSource;
+  userId: string;
+  /** Program members only — the FK on the engagement row. */
+  programMemberId: string | null;
+  publicId: string;
+};
+
+/**
+ * Turn candidate handles from a browser into candidates a recruiter is
+ * genuinely allowed to ask about.
+ *
+ * The check is the point. A ref is a name, not a capability: it arrives from
+ * the client, and anything the search would not have shown must not become an
+ * engagement request just because someone can construct the string. So every
+ * ref is re-tested against the same conditions its own pool applies — program
+ * members against status and consent, challenge participants against the flag
+ * and the evidence floor.
+ *
+ * Unknown or ineligible refs are dropped rather than erroring: a shortlist
+ * placed the moment a cohort closes is a race, not an attack, and the caller
+ * reports how many were skipped.
+ */
+export async function resolveEligibleCandidates(
+  refs: string[],
+): Promise<EligibleCandidate[]> {
+  const parsed = refs
+    .map((raw) => ({ raw, ref: decodeCandidateRef(raw) }))
+    .filter((r): r is { raw: string; ref: CandidateRef } => r.ref !== null);
+
+  const programIds = parsed
+    .filter((r) => r.ref.source === "PROGRAM")
+    .map((r) => r.ref.id);
+  const challengeUserIds = parsed
+    .filter((r) => r.ref.source === "CLAUDE")
+    .map((r) => r.ref.id);
+
+  const flag = hireChallengePool();
+
+  const [members, enrollments] = await Promise.all([
+    programIds.length > 0
+      ? prisma.programMember.findMany({
+          where: {
+            id: { in: programIds },
+            status: { in: ["ENROLLED", "COMPLETED"] },
+            recruiterVisibilityConsentAt: { not: null },
+          },
+          select: { id: true, userId: true },
+        })
+      : [],
+    flag.enabled && challengeUserIds.length > 0
+      ? prisma.enrollment.findMany({
+          where: {
+            userId: { in: challengeUserIds },
+            challenge: { domain: Domain.CLAUDE },
+          },
+          select: { userId: true, _count: { select: { submissions: true } } },
+        })
+      : [],
+  ]);
+
+  const out: EligibleCandidate[] = [];
+  for (const m of members) {
+    out.push({
+      candidateRef: encodeCandidateRef("PROGRAM", m.id),
+      source: "PROGRAM",
+      userId: m.userId,
+      programMemberId: m.id,
+      publicId: candidatePublicId(m.id),
+    });
+  }
+  for (const e of enrollments) {
+    if (e._count.submissions < flag.minDays) continue;
+    out.push({
+      candidateRef: encodeCandidateRef("CLAUDE", e.userId),
+      source: "CLAUDE",
+      userId: e.userId,
+      // No ProgramMember row exists, and the column is a foreign key.
+      programMemberId: null,
+      publicId: candidatePublicId(e.userId),
+    });
+  }
+  // Someone enrolled in more than one CLAUDE challenge would appear twice.
+  const seen = new Set<string>();
+  return out.filter((c) => {
+    if (seen.has(c.candidateRef)) return false;
+    seen.add(c.candidateRef);
+    return true;
+  });
 }

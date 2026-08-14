@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { placeBulkEngagementRequestAction } from "@/app/actions/hire-request-actions";
 import { useHireAuth } from "@/components/hire/hire-auth-provider";
 import { savePendingCheckout } from "@/components/hire/pending-checkout";
+import { encodeCandidateRef } from "@/features/hire/candidate-ref";
 import { candidatePublicId } from "@/features/hire/public-id";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -64,7 +65,9 @@ export function ShortlistCart({ rows }: { rows: CartRow[] }) {
         return;
       }
       savePendingCheckout({
-        programMemberIds: [...selected],
+        // The cart is program-only (its table has a foreign key to ProgramMember),
+        // but what survives a sign-in is a candidate handle either way.
+        candidateRefs: [...selected].map((id) => encodeCandidateRef("PROGRAM", id)),
         note: note.trim() || undefined,
       });
       openAuth("checkout");
@@ -72,7 +75,7 @@ export function ShortlistCart({ rows }: { rows: CartRow[] }) {
     }
     startTransition(async () => {
       const res = await placeBulkEngagementRequestAction({
-        programMemberIds: [...selected],
+        candidateRefs: [...selected].map((id) => encodeCandidateRef("PROGRAM", id)),
         note: note.trim() || undefined,
       });
       if (!res.ok) {

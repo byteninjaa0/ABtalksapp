@@ -1,8 +1,15 @@
 export const PENDING_CHECKOUT_KEY = "abtalks-hire-pending-checkout";
 export const CHECKOUT_FLASH_KEY = "abtalks-hire-checkout-flash";
 
+/**
+ * A request the recruiter pressed before they had an account.
+ *
+ * Holds candidate *refs*, not program member ids: the intent that survives a
+ * sign-in has to be able to name a challenge candidate too, and the two pools
+ * are only interchangeable through the one handle.
+ */
 export type PendingCheckout = {
-  programMemberIds: string[];
+  candidateRefs: string[];
   note?: string;
 };
 
@@ -17,12 +24,12 @@ function canUseStorage(): boolean {
 
 export function savePendingCheckout(intent: PendingCheckout): void {
   if (!canUseStorage()) return;
-  const ids = [...new Set(intent.programMemberIds.filter(Boolean))].slice(0, 25);
+  const ids = [...new Set(intent.candidateRefs.filter(Boolean))].slice(0, 25);
   if (ids.length === 0) return;
   window.sessionStorage.setItem(
     PENDING_CHECKOUT_KEY,
     JSON.stringify({
-      programMemberIds: ids,
+      candidateRefs: ids,
       note: intent.note?.trim() || undefined,
     }),
   );
@@ -35,13 +42,13 @@ export function readPendingCheckout(): PendingCheckout | null {
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return null;
-    const ids = (parsed as PendingCheckout).programMemberIds;
+    const ids = (parsed as PendingCheckout).candidateRefs;
     if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string")) {
       return null;
     }
     const note = (parsed as PendingCheckout).note;
     return {
-      programMemberIds: ids.slice(0, 25),
+      candidateRefs: ids.slice(0, 25),
       note: typeof note === "string" && note.trim() ? note.trim() : undefined,
     };
   } catch {
