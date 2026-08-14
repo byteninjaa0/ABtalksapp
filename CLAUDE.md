@@ -56,7 +56,7 @@ shadcn defaults left unthemed.
 Tokens are stored as **bare HSL triplets** (`--primary: 252 100% 68%`) and
 wrapped at the consumption site (`hsl(var(--primary))`). Never paste hex into
 `:root` — it breaks every consumer at once. See
-`docs/plans/058-modernist-app-retheme.md` §3.
+`docs/plans/071-modernist-app-retheme.md` §3.
 
 ## Non-negotiable rules (always apply)
 - Edge-safe middleware: `middleware.ts` and anything it imports use ONLY

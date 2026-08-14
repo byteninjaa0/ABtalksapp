@@ -22,7 +22,7 @@ Connect the shipped Modernist landing CTAs and program lattice to the real publi
 | [src/components/landing/modernist/landing-page.tsx](src/components/landing/modernist/landing-page.tsx) | `[edit]` | Cohort CTAs → `/program`; add `href` on `PROGRAMS`; wrap program cells in `Link` |
 | [src/components/landing/modernist/landing-nav.tsx](src/components/landing/modernist/landing-nav.tsx) | `[edit]` | Cohort CTA → `/program`; add Sign in → `/login` (desktop + mobile) |
 | [src/app/register/page.tsx](src/app/register/page.tsx) | `[edit]` | Unauthed redirect → `/login?from=/register` (preserve query if present) |
-| [docs/plans/060-wire-modernist-homepage-funnels.md](docs/plans/060-wire-modernist-homepage-funnels.md) | `[new]` | This plan on disk |
+| [docs/plans/072-wire-modernist-homepage-funnels.md](docs/plans/072-wire-modernist-homepage-funnels.md) | `[new]` | This plan on disk |
 
 No new React components. Auth tree in `page.tsx` unchanged. Consent untouched. Old `LandingHub` left on disk.
 
@@ -42,7 +42,7 @@ No new React components. Auth tree in `page.tsx` unchanged. Consent untouched. O
 3. **Cohort CTAs** — replace every `href="/register"` labeled “Join the next cohort” in `landing-page.tsx` (hero + poster) and `landing-nav.tsx` (mobile) with `href="/program"`. Leave Hire / Post a requirement on `/talent`. Leave “See the full calendar” on `/hackathon`.
 4. **Sign in** — in `LandingNav`, add ghost `Link` to `/login` labeled `Sign in` on desktop (beside Hire) and in the mobile panel (below Join).
 5. **Register handoff** — in `register/page.tsx`, change unauthed branch from `redirect("/login")` to `redirect("/login?from=/register")` (if `domain`/`ref` search params exist, append them into the `from` value so middleware-equivalent intent is preserved, e.g. `from=/register?domain=AI`).
-6. Write this plan file as `docs/plans/060-wire-modernist-homepage-funnels.md`.
+6. Write this plan file as `docs/plans/072-wire-modernist-homepage-funnels.md`.
 
 ## 6. Design conformance
 

@@ -35,7 +35,7 @@ page. Leave logged-in redirects in `src/app/page.tsx` untouched.
 | `public/landing/community/*` | `[new]` | Figma collage assets |
 | `src/app/page.tsx` | `[edit]` | Wire to `LandingHub` |
 | `docs/design-system.md` | `[edit]` | Landing exception |
-| `docs/plans/061-figma-interview-landing.md` | `[new]` | This plan |
+| `docs/plans/073-figma-interview-landing.md` | `[new]` | This plan |
 
 Do not delete `src/components/landing/modernist/*`.
 

@@ -6,7 +6,7 @@ import "./landing.css";
 
 /* The design encodes its type scale in inline styles — the clamp, tracking and
    optical-margin values do not survive being flattened into utilities, so they
-   are kept verbatim. See docs/plans/057-modernist-landing-page.md §6 Step 4. */
+   are kept verbatim. See docs/plans/070-modernist-landing-page.md §6 Step 4. */
 
 const MUTED_INK = "color-mix(in srgb, var(--m-text) 70%, transparent)";
 const BODY_INK = "color-mix(in srgb, var(--m-text) 78%, transparent)";

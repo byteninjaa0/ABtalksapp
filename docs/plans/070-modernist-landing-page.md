@@ -10,7 +10,7 @@ evidence-based hiring with consent at the centre.
 
 Scope is **the landing route only**. The full-app retheme is confirmed as wanted
 and is planned separately in
-[058-modernist-app-retheme.md](docs/plans/058-modernist-app-retheme.md).
+[071-modernist-app-retheme.md](docs/plans/071-modernist-app-retheme.md).
 **Ship this plan first**: it is self-contained and independently revertible, and
 it gives a production reference for the system before 058 changes 210 files.
 
@@ -322,7 +322,7 @@ Not applicable — no schema, migration, or data change.
 ## 10. Not in this plan
 
 1. **Full-app retheme** → deferred to
-   [058](docs/plans/058-modernist-app-retheme.md), confirmed and planned, not
+   [058](docs/plans/071-modernist-app-retheme.md), confirmed and planned, not
    cancelled. 058 Phase F later collapses this plan's `.modernist-landing` token
    block into the global tokens. Keeping them scoped here is what lets 057 ship
    and revert on its own.
