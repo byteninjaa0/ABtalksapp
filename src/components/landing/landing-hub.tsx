@@ -9,6 +9,7 @@ import { ConsentTiltCard } from "./hub/consent-tilt-card";
 import { CommunityCollage } from "./hub/community-collage";
 import { HubTestimonials } from "./hub/hub-testimonials";
 import { HubProgramReveal } from "./hub/hub-program-reveal";
+import { WaitlistTrackCard } from "./waitlist-track-card";
 import "./hub/landing-hub.css";
 
 const WHATSAPP_LINK = "https://chat.whatsapp.com/LSru1BgvifpEB4OMZsaZEi";
@@ -82,6 +83,42 @@ const PROGRAMS: {
       "Synchronized days with the cohort calendar",
       "Build real workflows and share the proof",
     ],
+  },
+];
+
+/** Tracks announced but not yet open — carried over from master's landing work. */
+const WAITLIST_TRACKS = [
+  {
+    accent: "orange" as const,
+    title: "Databricks",
+    blurb: "Lakehouse, Spark, Unity Catalog, and production data pipelines.",
+    pill: "New",
+    chips: ["Cohort"],
+    ctaLabel: "Enroll now",
+  },
+  {
+    accent: "indigo" as const,
+    title: "Google Cloud (GCP)",
+    blurb: "BigQuery, Cloud Run, and cloud data engineering.",
+    pill: "New",
+    chips: ["Cohort"],
+    ctaLabel: "Enroll now",
+  },
+  {
+    accent: "violet" as const,
+    title: "Snowflake",
+    blurb: "Cloud data warehouse skills — SQL, pipelines, and analytics.",
+    pill: "New",
+    chips: ["Cohort"],
+    ctaLabel: "Enroll now",
+  },
+  {
+    accent: "amber" as const,
+    title: "Cyber Security",
+    blurb: "Practical security fundamentals — threats, hardening, and defense.",
+    pill: "New",
+    chips: ["Cohort"],
+    ctaLabel: "Enroll now",
   },
 ];
 
@@ -389,6 +426,25 @@ export function LandingHub({
                 </Link>
               </HubProgramReveal>
             ))}
+          </div>
+
+          {/* —— coming next ——
+              Four waitlist tracks that landed on master while this hub was
+              being rebuilt. They are deliberately their own row rather than
+              extra cards in the grid above: that grid's reveal stagger is
+              written for exactly four live programs, and a waitlist track is
+              a different promise from an open cohort. */}
+          <div className="hub-waitlist">
+            <p className="hub-kicker">Coming next</p>
+            <div className="hub-waitlist-grid">
+              {WAITLIST_TRACKS.map((track) => (
+                <WaitlistTrackCard
+                  key={track.title}
+                  {...track}
+                  isAuthenticated={Boolean(state.user)}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>

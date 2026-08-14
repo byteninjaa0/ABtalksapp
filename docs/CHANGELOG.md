@@ -12,6 +12,7 @@
 - 2026-08-13 [convention] Landing How it works uses scroll-pinned 3-face CSS 3D cube (rotateX scrub); reduced-motion keeps flat fade
 - 2026-08-12 [convention] App fonts self-hosted via next/font/local + src/fonts (no next/font/google fetch at build)
 - 2026-08-12 [convention] Open-right-now program cards each mount GhostCursor tinted to that card’s brand color (`three` postprocessing)
+- 2026-08-13 [rule] Hackathon ViCoDathon 2026 participation certificates (ABT-HK-XXXXX); HACKATHON_CERTIFICATE_TEMPLATE_URL/PATH per-type template
 - 2026-08-12 [rule] Program behind-by / at-risk pace uses cohort calendar day, not Day-4 unlock ceiling (calendar+3), so on-time members are not falsely flagged ~4 days behind
 - 2026-08-13 — hire: candidate dossiers with per-field provenance (VERIFIED/DECLARED/DERIVED); scoring drops evidence dimensions a running cohort cannot produce and scales mission/commit expectations to cohort day; waived enrolment days (days 1–3) no longer counted as passes; one `pool-policy` gate for `/hire` opened per cohort via `HIRE_OPEN_COHORT_IDS` (`/talent` unchanged); indicative compensation band; `poolSnapshot` drives an honest Scout opening line; members can now turn recruiter visibility on/off from the program dashboard
 - 2026-08-12 [rule|convention] Program day boundaries: PROGRAM_TZ America/Chicago → Asia/Kolkata; admin cohort startsAt/endsAt round-trip via fromZonedTime(PROGRAM_TZ) so Mission Control cohort day matches today's mission

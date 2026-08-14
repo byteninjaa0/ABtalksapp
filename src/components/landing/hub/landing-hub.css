@@ -1479,3 +1479,28 @@ html.hub-how-scroll-lock {
     height: 44px;
   }
 }
+
+/* Coming-next row beneath the live programs grid. Same rhythm as the grid
+   above, but its own block so the four-card reveal stagger is untouched. */
+.landing-hub .hub-waitlist {
+  margin-top: 56px;
+}
+
+.landing-hub .hub-waitlist-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+@media (max-width: 1024px) {
+  .landing-hub .hub-waitlist-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .landing-hub .hub-waitlist-grid {
+    grid-template-columns: 1fr;
+  }
+}
