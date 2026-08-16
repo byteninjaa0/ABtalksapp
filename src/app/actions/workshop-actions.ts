@@ -1,7 +1,6 @@
 "use server";
 
 import { Prisma } from "@prisma/client";
-import { z } from "zod";
 import { auth } from "@/auth";
 import {
   fullDate,
@@ -14,26 +13,12 @@ import { sendWorkshopConfirmationEmail } from "@/lib/workshop-email";
 import { getWorkshopConfig } from "@/lib/workshop-supabase";
 import { recordLegalConsents } from "@/features/legal/record-consent";
 import { recordNewsletterOptIn } from "@/features/legal/record-newsletter-optin";
+import {
+  workshopRegistrationSchema,
+  type WorkshopRegistrationInput,
+} from "@/lib/validations/workshop";
 
-/**
- * `email` is deliberately absent: it comes from the session, never the client.
- * Phone is collected but NOT OTP-verified here — that friction belongs to the
- * 60-day registration flow, not a workshop lead form.
- */
-const workshopRegistrationSchema = z.object({
-  name: z.string().trim().min(1),
-  phone: z.string().trim().min(1),
-  role: z.enum(["Student", "Professional"]),
-  organization: z.string().trim().min(1).nullish(),
-  graduationYear: z.coerce.number().int().min(2020).max(2035).nullish(),
-  acceptLegal: z.boolean().refine((v) => v === true, {
-    message: "Please accept the Terms of Service and Privacy Policy",
-  }),
-  // Marketing opt-in — plain boolean, never blocks signup.
-  newsletterOptIn: z.boolean(),
-});
-
-export type WorkshopRegistrationInput = z.infer<typeof workshopRegistrationSchema>;
+export type { WorkshopRegistrationInput };
 
 type Result =
   | { ok: true; data: { whatsappLink: string } }
