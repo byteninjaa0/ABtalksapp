@@ -13,9 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-
-/** Cookie read by auth createUser so newsletter opt-out survives OAuth redirect. */
-const NEWSLETTER_PREF_COOKIE = "abtalks_newsletter_pref";
+import { NEWSLETTER_PREF_COOKIE } from "@/lib/newsletter-pref";
 
 function writeNewsletterPrefCookie(optIn: boolean) {
   // Short-lived: only needs to survive the OAuth round-trip.
