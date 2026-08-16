@@ -15,9 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { HUB_BUTTON_CLASS } from "@/components/dashboard-hub/nav-items";
 import { cn } from "@/lib/utils";
-
-/** Cookie read by auth createUser so newsletter opt-out survives OAuth redirect. */
-const NEWSLETTER_PREF_COOKIE = "abtalks_newsletter_pref";
+import { NEWSLETTER_PREF_COOKIE } from "@/lib/newsletter-pref";
 
 function writeNewsletterPrefCookie(optIn: boolean) {
   // Short-lived: only needs to survive the OAuth round-trip.
