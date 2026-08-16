@@ -2,6 +2,7 @@
 
 <!-- Reconciled through 2026-08-05 (commit 519cc34) into docs/project-context.md. -->
 
+- 2026-08-16 [convention] Newsletter OAuth pref cookie parse in `src/lib/newsletter-pref.ts`; workshop registration Zod in `src/lib/validations/workshop.ts` for unit tests (consent/newsletter parity)
 - 2026-08-13 [rule] Hackathon ViCoDathon 2026 participation certificates (ABT-HK-XXXXX); HACKATHON_CERTIFICATE_TEMPLATE_URL/PATH per-type template
 - 2026-08-12 [rule] Program behind-by / at-risk pace uses cohort calendar day, not Day-4 unlock ceiling (calendar+3), so on-time members are not falsely flagged ~4 days behind
 - 2026-08-12 [rule|convention] Program day boundaries: PROGRAM_TZ America/Chicago → Asia/Kolkata; admin cohort startsAt/endsAt round-trip via fromZonedTime(PROGRAM_TZ) so Mission Control cohort day matches today's mission
