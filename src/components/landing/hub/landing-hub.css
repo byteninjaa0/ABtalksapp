@@ -394,7 +394,6 @@
 
 .landing-hub .hub-above-fold,
 .landing-hub .hub-poster,
-.landing-hub .hub-bridge-section,
 .landing-hub .hub-programs-section,
 .landing-hub .hub-how,
 .landing-hub .hub-community-clip {
@@ -1234,70 +1233,164 @@ html.hub-how-scroll-lock {
   margin-top: 28px;
 }
 
-/* —— bridge (isometric tile panels; hub-local, not a design-system pattern) —— */
+/* —— bridge (CSS 3D scroll story; hub-local, not a design-system pattern) —— */
 .landing-hub .hub-bridge-section {
-  background: #fbf9f7;
+  --hub-bridge-slab: #fdfdfc;
+  --hub-bridge-candidates: #b8c9d9;
+  --hub-bridge-abtalks: #a8a7be;
+  --hub-bridge-companies: #e9af96;
+  --hub-bridge-connector: #e7a36f;
+  background: var(--hub-bg);
+}
+
+.landing-hub .hub-bridge-track {
+  height: auto;
+}
+
+.landing-hub .hub-bridge-pin {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: visible;
 }
 
 .landing-hub .hub-bridge-shell {
-  border-radius: 25px;
   background: transparent;
-  padding: clamp(28px, 4vw, 48px);
-}
-
-.landing-hub .hub-bridge-panels {
+  padding: clamp(24px, 3vw, 40px) 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: clamp(56px, 7vw, 104px);
-  margin-top: clamp(36px, 4vw, 56px);
+  justify-content: center;
+  min-height: 0;
 }
 
-.landing-hub .hub-bridge-panel {
+.landing-hub .hub-bridge-intro {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  max-width: 16ch;
+  opacity: 1;
+}
+
+.landing-hub .hub-bridge-stage {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
   gap: clamp(8px, 2vw, 32px);
   align-items: center;
+  flex: 1;
+  min-height: 0;
+  margin-top: clamp(20px, 2.5vw, 36px);
 }
 
-.landing-hub .hub-bridge-visual {
+.landing-hub .hub-bridge-scene {
   position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: min(420px, 52vh);
+  perspective: 1400px;
+  perspective-origin: 50% 46%;
   overflow: visible;
+  transform-style: preserve-3d;
 }
 
-.landing-hub .hub-bridge-stack {
-  width: 78%;
-  max-width: 520px;
-  height: auto;
-  display: block;
-}
-
-.landing-hub .hub-bridge-arrows {
+.landing-hub .hub-bridge-scene-inner {
   position: absolute;
-  pointer-events: none;
-  left: 42%;
-  width: 70%;
-  object-fit: contain;
-  object-position: left center;
+  left: 50%;
+  top: 50%;
+  width: 500px;
+  height: 500px;
+  margin-left: -250px;
+  margin-top: -250px;
+  transform-style: preserve-3d;
 }
 
-.landing-hub .hub-bridge-panel[data-tile="candidates"] .hub-bridge-arrows {
-  top: 8%;
-  height: 84%;
+.landing-hub .hub-bridge-card {
+  --hub-bridge-slab: #fdfdfc;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 240px;
+  height: 240px;
+  transform-style: preserve-3d;
 }
 
-.landing-hub .hub-bridge-panel[data-tile="abtalks"] .hub-bridge-arrows {
-  top: 46%;
-  height: 12%;
-  width: 62%;
+.landing-hub .hub-bridge-card-candidates {
+  transform: translate(-50%, -50%) translate3d(0, 168px, 0) rotateX(58deg)
+    rotateZ(45deg);
 }
 
-.landing-hub .hub-bridge-panel[data-tile="companies"] .hub-bridge-arrows {
-  top: 8%;
-  height: 78%;
+.landing-hub .hub-bridge-card-abtalks {
+  transform: translate(-50%, -50%) translate3d(0, 0, 0) rotateX(58deg)
+    rotateZ(45deg);
 }
 
-.landing-hub .hub-bridge-copy {
+.landing-hub .hub-bridge-card-companies {
+  transform: translate(-50%, -50%) translate3d(0, -168px, 0) rotateX(58deg)
+    rotateZ(45deg);
+}
+
+.landing-hub .hub-bridge-card-top {
+  position: absolute;
+  inset: 0;
+  background: var(--hub-bridge-slab);
+  box-shadow:
+    0 25px 35px rgba(0, 0, 0, 0.06),
+    0 8px 15px rgba(0, 0, 0, 0.03);
+}
+
+.landing-hub .hub-bridge-card-candidates .hub-bridge-card-top {
+  box-shadow:
+    0 40px 55px rgba(0, 0, 0, 0.08),
+    0 12px 20px rgba(0, 0, 0, 0.04);
+}
+
+.landing-hub .hub-bridge-card-abtalks .hub-bridge-card-top {
+  box-shadow:
+    0 25px 35px rgba(0, 0, 0, 0.06),
+    0 8px 15px rgba(0, 0, 0, 0.03);
+}
+
+.landing-hub .hub-bridge-card-companies .hub-bridge-card-top {
+  box-shadow:
+    0 16px 24px rgba(0, 0, 0, 0.05),
+    0 4px 10px rgba(0, 0, 0, 0.03);
+}
+
+.landing-hub .hub-bridge-card-front {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 16px;
+  background: color-mix(in srgb, var(--hub-bridge-slab) 78%, #8a8680);
+  transform-origin: bottom;
+  transform: rotateX(-90deg);
+}
+
+.landing-hub .hub-bridge-card-side {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 16px;
+  height: 100%;
+  background: color-mix(in srgb, var(--hub-bridge-slab) 62%, #6e6a64);
+  transform-origin: right;
+  transform: rotateY(-90deg);
+}
+
+.landing-hub .hub-bridge-copy-pane {
+  position: relative;
   min-width: 0;
+  min-height: 280px;
+}
+
+.landing-hub .hub-bridge-copy-panel {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .landing-hub .hub-bridge-title {
@@ -1341,24 +1434,143 @@ html.hub-how-scroll-lock {
   line-height: 1.45;
 }
 
-@media (max-width: 800px) {
-  .landing-hub .hub-bridge-panel {
+.landing-hub .hub-bridge-connector {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.landing-hub .hub-bridge-connector path {
+  fill: none;
+  stroke: var(--hub-bridge-connector);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.landing-hub .hub-bridge-root.is-static .hub-bridge-track {
+  height: auto;
+}
+
+.landing-hub .hub-bridge-root.is-static .hub-bridge-pin {
+  height: auto;
+}
+
+.landing-hub .hub-bridge-root.is-static .hub-bridge-copy-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  min-height: 0;
+}
+
+.landing-hub .hub-bridge-root.is-static .hub-bridge-intro,
+.landing-hub .hub-bridge-root.is-static .hub-bridge-copy-panel {
+  position: relative;
+  inset: auto;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.landing-hub .hub-bridge-root.is-static .hub-bridge-connector {
+  display: none;
+}
+
+.landing-hub .hub-bridge-root.is-static .hub-bridge-card-candidates {
+  transform: translate(-50%, -50%) translate3d(0, 168px, 0) rotateX(58deg)
+    rotateZ(45deg);
+}
+
+.landing-hub .hub-bridge-root.is-static .hub-bridge-card-abtalks {
+  transform: translate(-50%, -50%) translate3d(0, 0, 0) rotateX(58deg)
+    rotateZ(45deg);
+}
+
+.landing-hub .hub-bridge-root.is-static .hub-bridge-card-companies {
+  transform: translate(-50%, -50%) translate3d(0, -168px, 0) rotateX(58deg)
+    rotateZ(45deg);
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .landing-hub .hub-bridge-scene {
+    min-height: 340px;
+  }
+
+  .landing-hub .hub-bridge-scene-inner {
+    width: 400px;
+    height: 400px;
+    margin-left: -200px;
+    margin-top: -200px;
+  }
+
+  .landing-hub .hub-bridge-card {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+@media (max-width: 767px) {
+  .landing-hub .hub-bridge-pin {
+    height: 100dvh;
+  }
+
+  .landing-hub .hub-bridge-shell {
+    padding: 20px 0 24px;
+  }
+
+  .landing-hub .hub-bridge-stage {
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(220px, 38dvh) auto;
+    gap: 16px;
+    margin-top: 16px;
   }
 
-  .landing-hub .hub-bridge-visual {
-    max-width: 420px;
-    margin-inline: auto;
-    width: 100%;
+  .landing-hub .hub-bridge-scene {
+    min-height: 220px;
+    height: 38dvh;
   }
 
-  .landing-hub .hub-bridge-stack {
-    width: 72%;
-    margin-inline: auto;
+  .landing-hub .hub-bridge-scene-inner {
+    width: 320px;
+    height: 320px;
+    margin-left: -160px;
+    margin-top: -160px;
   }
 
-  .landing-hub .hub-bridge-copy {
-    text-align: left;
+  .landing-hub .hub-bridge-card {
+    width: 160px;
+    height: 160px;
+  }
+
+  .landing-hub .hub-bridge-copy-pane {
+    min-height: 200px;
+  }
+
+  .landing-hub .hub-bridge-connector {
+    display: none;
+  }
+
+  .landing-hub .hub-bridge-title {
+    font-size: clamp(24px, 7vw, 32px);
+  }
+
+  .landing-hub .hub-bridge-root.is-static .hub-bridge-card-candidates {
+    transform: translate(-50%, -50%) translate3d(0, 100px, 0) rotateX(58deg)
+      rotateZ(45deg);
+  }
+
+  .landing-hub .hub-bridge-root.is-static .hub-bridge-card-companies {
+    transform: translate(-50%, -50%) translate3d(0, -100px, 0) rotateX(58deg)
+      rotateZ(45deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hub .hub-bridge-root.is-static .hub-bridge-track,
+  .landing-hub .hub-bridge-root.is-static .hub-bridge-pin {
+    height: auto;
   }
 }
 

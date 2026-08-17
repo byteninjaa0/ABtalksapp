@@ -2,10 +2,11 @@
 
 <!-- Reconciled through 2026-08-05 (commit 519cc34) into docs/project-context.md. -->
 
+- 2026-08-18 [convention] Landing Bridge is a GSAP ScrollTrigger CSS-3D story (plan 066); raster step images removed
+
 - 2026-08-18 [convention] Landing hero restored to Interview headline; Bridge restored to static isometric PNG panels (plan 076); scroll-story files removed
 - 2026-08-17 [convention] Landing Bridge tiles stay open layer-by-layer on scroll (plan 075); one moving connector, no return-to-stack
 - 2026-08-17 [convention] Landing hub fonts: Fredoka (display) + Instrument Sans (kickers/quotes) self-hosted; programs/testimonials/FAQ restyled to Figma (plan 074)
-- 2026-08-17 [convention] Landing Bridge is a pinned scroll-scrubbed isometric SVG story (plan 073); raster tile assets removed
 - 2026-08-17 [convention] Logged-out landing hub rethemed to Figma orange/peach; Bridge is three isometric tile panels (assets in public/landing/bridge/)
 - 2026-08-13 [rule] Hackathon ViCoDathon 2026 participation certificates (ABT-HK-XXXXX); HACKATHON_CERTIFICATE_TEMPLATE_URL/PATH per-type template
 - 2026-08-13 [convention] Reverted product Modernist retheme (plan 058): pre-modernist globals tokens, Inter, --radius 0.625rem, dark mode; Figma landing hub on `/` unchanged
