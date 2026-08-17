@@ -6,7 +6,10 @@ import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
 import { RecruiterAccountMenu } from "@/components/hire/recruiter-account-menu";
 import { useHireAuth } from "@/components/hire/hire-auth-provider";
-import { readGuestCart } from "@/components/hire/guest-cart";
+import {
+  guestCartNonProgram,
+  readGuestCart,
+} from "@/components/hire/guest-cart";
 import { signOutAction } from "@/app/actions/auth-actions";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
@@ -26,9 +29,13 @@ export function HireChrome({
 }) {
   const { approved, openAuth } = useHireAuth();
   const [guestCount, setGuestCount] = useState(0);
+  const [overlayCount, setOverlayCount] = useState(0);
 
   useEffect(() => {
-    const sync = () => setGuestCount(readGuestCart().length);
+    const sync = () => {
+      setGuestCount(readGuestCart().length);
+      setOverlayCount(guestCartNonProgram().length);
+    };
     sync();
     window.addEventListener("abtalks-hire-cart", sync);
     window.addEventListener("storage", sync);
@@ -38,7 +45,7 @@ export function HireChrome({
     };
   }, []);
 
-  const cartCount = approved ? serverCartCount : guestCount;
+  const cartCount = approved ? serverCartCount + overlayCount : guestCount;
 
   return (
     <div className="min-h-svh bg-muted/30">

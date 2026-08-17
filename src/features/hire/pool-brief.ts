@@ -39,14 +39,15 @@ export function extractPoolBrief(raw: string): PoolBrief {
   if (!msg) return EMPTY;
 
   const sources: CandidateSource[] = [];
-  if (/\bclaude\b/.test(msg)) {
+  // cllaude / clauude — the typo that otherwise silently drops the search.
+  if (/\bcl+au+de\b/.test(msg)) {
     sources.push("CLAUDE");
   }
   if (
     /\b(60[-\s]?day|sixty[-\s]?day|se track|ds track|ai track|submissions?)\b/.test(
       msg,
     ) &&
-    !/\bclaude\b/.test(msg)
+    !/\bcl+au+de\b/.test(msg)
   ) {
     sources.push("CHALLENGE_60");
   }
@@ -88,19 +89,73 @@ export function extractPoolBrief(raw: string): PoolBrief {
         ? Number(bareDays[1])
         : NaN;
   if (Number.isFinite(dayN) && dayN >= 1 && dayN <= 60) minEvidenceDays = dayN;
-
-  let resultLimit: number | null = null;
-  const capMatch = msg.match(
-    /(?:only|just|top|first)\s*(\d{1,2})(?:\s*(?:candidates?|people|profiles?|students?))?/,
-  );
-  if (capMatch) {
-    const n = Number(capMatch[1]);
-    if (Number.isFinite(n) && n >= 1 && n <= 20) resultLimit = n;
+  if (
+    minEvidenceDays == null &&
+    /\b(completed?|finished|certified|certificate)\b/.test(msg) &&
+    (sources.includes("CLAUDE") ||
+      sources.includes("CHALLENGE_60") ||
+      /\bchallenge\b/.test(msg))
+  ) {
+    minEvidenceDays = 60;
   }
+
+  const resultLimit = parseResultLimit(msg);
 
   const roleStack = extractRoleStack(msg);
 
   return { sources, geo, minEvidenceDays, resultLimit, ...roleStack };
+}
+
+const COUNT_WORDS: Record<string, number> = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  fifteen: 15,
+  twenty: 20,
+};
+
+/** Same ceiling as an unscoped search — they can ask for 20, not 200. */
+const RESULT_LIMIT_MAX = 25;
+
+function parseCountToken(raw: string): number | null {
+  const w = raw.toLowerCase();
+  if (COUNT_WORDS[w] != null) return COUNT_WORDS[w]!;
+  // "fivce" / "fivve" — the typo that left Scout repeating the standing prompt.
+  if (/^fiv/.test(w)) return 5;
+  if (/^twen/.test(w)) return 20;
+  const n = Number(w);
+  if (Number.isFinite(n) && n >= 1 && n <= RESULT_LIMIT_MAX) return n;
+  return null;
+}
+
+const COUNT_TOKEN = "\\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|fifteen|twenty|fiv\\w*|twen\\w*";
+
+function parseResultLimit(msg: string): number | null {
+  const prefixed = msg.match(
+    new RegExp(
+      `(?:only|just|top|first|give\\s+me|list(?:\\s+of)?|show(?:\\s+me)?)\\s+(${COUNT_TOKEN})(?:\\s*(?:candidates?|people|profiles?|students?))?`,
+    ),
+  );
+  // "20 student from claude" / "5 from cohort" — a count, not "60 day".
+  const counted = prefixed
+    ? null
+    : msg.match(
+        new RegExp(
+          `\\b(${COUNT_TOKEN})\\s+(?:candidates?|students?|people|profiles?)\\b`,
+        ),
+      );
+  const from = prefixed || counted
+    ? null
+    : msg.match(new RegExp(`\\b(${COUNT_TOKEN})\\s+from\\b`));
+  const token = prefixed?.[1] ?? counted?.[1] ?? from?.[1];
+  return token ? parseCountToken(token) : null;
 }
 
 const ROLE_HINTS: { re: RegExp; title: string }[] = [
@@ -197,7 +252,9 @@ export function applyPoolBrief(spec: JobSpec, brief: PoolBrief): JobSpec {
     ...(brief.title ? { title: brief.title } : {}),
     ...(brief.mustHaveStack.length
       ? { mustHaveStack: brief.mustHaveStack }
-      : {}),
+      : brief.sources.length > 0
+        ? { mustHaveStack: [] }
+        : {}),
     extra: briefTouched(brief)
       ? {
           ...prior,

@@ -45,7 +45,7 @@ export function MatchResults({
     <div className="space-y-4">
       <ul className="space-y-4">
         {visible.map((m, i) => (
-          <li key={`${m.programMemberId ?? "unknown"}-${i}`}>
+          <li key={m.candidateRef}>
             <MatchCard
               match={m}
               rank={i + 1}

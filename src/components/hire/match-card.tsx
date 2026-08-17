@@ -116,10 +116,10 @@ function orderedSkills(skills: string[], needles: string[]): string[] {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[11px] tracking-wide text-muted-foreground uppercase">
+      <dt className="text-sm tracking-wide text-muted-foreground uppercase">
         {label}
       </dt>
-      <dd className="text-sm font-medium tabular-nums">{value}</dd>
+      <dd className="text-base font-medium tabular-nums">{value}</dd>
     </div>
   );
 }
@@ -174,25 +174,25 @@ export function MatchCard({
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             {rank != null && (
-              <span className="font-display text-sm font-bold text-muted-foreground">
+              <span className="font-display text-base font-bold text-muted-foreground">
                 #{rank}
               </span>
             )}
-            <h3 className="font-display text-lg font-semibold">
+            <h3 className="font-display text-xl font-semibold">
               {match.jobRole}
             </h3>
             {track.label && (
-              <span className="rounded-full border px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              <span className="rounded-full border px-2 py-0.5 text-sm font-medium text-muted-foreground">
                 {track.label}
               </span>
             )}
             {isTop && (
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-sm font-semibold text-primary">
                 Top match
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-sm text-muted-foreground">
+          <p className="mt-0.5 text-base text-muted-foreground">
             {[match.locationLabel, publicId].filter(Boolean).join(" · ")}
           </p>
         </div>
@@ -206,13 +206,13 @@ export function MatchCard({
             >
               {match.score}
             </p>
-            <p className="mt-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+            <p className="mt-1 text-sm font-medium tracking-wide text-muted-foreground uppercase">
               out of 100
             </p>
           </div>
           <span
             className={cn(
-              "rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide uppercase",
+              "rounded-full px-2.5 py-1 text-sm font-semibold tracking-wide uppercase",
               strong
                 ? "bg-primary/10 text-primary"
                 : "bg-muted text-muted-foreground",
@@ -226,7 +226,7 @@ export function MatchCard({
       {/* Enough to decide whether to open it, and no more. Verified counts sit
           in filled chips, self-declared skills in outlined ones — the
           difference between the two is the point of the card. */}
-      <ul className="mt-3 flex flex-wrap gap-1.5 text-xs">
+      <ul className="mt-3 flex flex-wrap gap-1.5 text-base">
         {isHackathon && (
           <li
             className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-900 dark:text-emerald-100"
@@ -328,7 +328,7 @@ export function MatchCard({
       </ul>
 
       {match.coverageNote && (
-        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           {match.coverageNote}
         </p>
       )}
@@ -336,9 +336,10 @@ export function MatchCard({
 
       {/* Two actions, always both: put it in the cart, or look closer. */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        {match.programMemberId && (
+        {match.candidateRef && (
           <ShortlistButton
-            memberId={match.programMemberId}
+            candidateRef={match.candidateRef}
+            programMemberId={match.programMemberId}
             initialShortlisted={match.shortlisted ?? false}
             jobRole={match.jobRole}
             totalScore={match.score}
@@ -452,7 +453,7 @@ export function MatchCard({
             <Stat label="Reference" value={publicId} />
           </dl>
 
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
+          <p className="text-sm leading-relaxed text-muted-foreground">
             {isHackathon
               ? "Shipped a hackathon project the platform recorded. Skills and role are self-declared — there is no daily track behind this card."
               : isChallenge
@@ -462,7 +463,7 @@ export function MatchCard({
           </p>
 
           {(isChallenge || isHackathon) && (
-            <p className="text-[11px] leading-relaxed text-muted-foreground">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               {isHackathon
                 ? "This candidate came through the hackathon rather than the cohort, so there is no evidence profile page and no shortlist — request an introduction and our team will take it from there."
                 : "This candidate came through the 60-day challenge rather than the cohort, so there is no evidence profile page and no shortlist — request an introduction and our team will take it from there."}
@@ -471,7 +472,7 @@ export function MatchCard({
 
           {skills.length > 0 && (
             <div>
-              <p className="text-[11px] tracking-wide text-muted-foreground uppercase">
+              <p className="text-sm tracking-wide text-muted-foreground uppercase">
                 Skills — declared by the candidate
               </p>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -482,8 +483,8 @@ export function MatchCard({
                       key={s}
                       className={
                         hit
-                          ? "rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
-                          : "rounded-full border px-2 py-0.5 text-xs"
+                          ? "rounded-full bg-primary/10 px-2 py-0.5 text-sm font-medium text-primary"
+                          : "rounded-full border px-2 py-0.5 text-sm"
                       }
                     >
                       {s}
@@ -496,10 +497,10 @@ export function MatchCard({
 
           {match.rationale && (
             <div>
-              <p className="text-[11px] tracking-wide text-muted-foreground uppercase">
+              <p className="text-sm tracking-wide text-muted-foreground uppercase">
                 Why this ranking
               </p>
-              <p className="mt-1 text-sm leading-relaxed text-foreground/90">
+              <p className="mt-1 text-base leading-relaxed text-foreground/90">
                 {match.rationale}
               </p>
             </div>
@@ -507,10 +508,10 @@ export function MatchCard({
 
           {match.gaps.length > 0 && (
             <div>
-              <p className="text-[11px] tracking-wide text-muted-foreground uppercase">
+              <p className="text-sm tracking-wide text-muted-foreground uppercase">
                 Gaps
               </p>
-              <ul className="mt-1 list-inside list-disc text-sm text-muted-foreground">
+              <ul className="mt-1 list-inside list-disc text-base text-muted-foreground">
                 {match.gaps.slice(0, 6).map((g) => (
                   <li key={g}>{g}</li>
                 ))}

@@ -79,6 +79,10 @@ export default async function HireRequestPage({ params }: Props) {
     minExperience: request.minExperience,
     maxExperience: request.maxExperience,
     requiresDegree: request.requiresDegree,
+    extra:
+      request.extra && typeof request.extra === "object"
+        ? (request.extra as Record<string, unknown>)
+        : undefined,
   });
 
   // What this recruiter has already asked about, so a card never offers to

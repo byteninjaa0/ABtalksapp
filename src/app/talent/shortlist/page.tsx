@@ -3,8 +3,12 @@ import { auth } from "@/auth";
 import { getRecruiterState } from "@/features/talent-pool/recruiter-registration";
 import { getShortlist } from "@/features/talent-pool/pool";
 import { existingEngagements } from "@/features/hire/contact-access";
-import { ShortlistCart, type CartRow } from "@/components/hire/shortlist-cart";
-import { GuestCartView } from "@/components/hire/guest-cart-view";
+import { type CartRow } from "@/components/hire/shortlist-cart";
+import {
+  ApprovedCart,
+  GuestCartView,
+} from "@/components/hire/guest-cart-view";
+import { encodeCandidateRef } from "@/features/hire/candidate-ref";
 
 export const metadata: Metadata = {
   title: "Your cart | ABTalks Hire",
@@ -46,6 +50,7 @@ export default async function TalentShortlistPage() {
   );
 
   const rows: CartRow[] = result.data.map((r) => ({
+    candidateRef: encodeCandidateRef("PROGRAM", r.memberId),
     memberId: r.memberId,
     jobRole: r.jobRole,
     totalScore: r.totalScore,
@@ -70,7 +75,7 @@ export default async function TalentShortlistPage() {
         </p>
       </header>
 
-      <ShortlistCart rows={rows} />
+      <ApprovedCart rows={rows} />
     </div>
   );
 }

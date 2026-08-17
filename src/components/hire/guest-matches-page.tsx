@@ -4,28 +4,44 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { MatchResults } from "@/components/hire/match-results";
-import { readGuestMatches } from "@/components/hire/guest-matches-store";
+import { SearchTabs } from "@/components/hire/search-tabs";
+import {
+  GUEST_SEARCHES_EVENT,
+  readGuestMatchCollection,
+  setActiveGuestSearch,
+  type GuestMatchCollection,
+} from "@/components/hire/guest-matches-store";
 import { readGuestCart } from "@/components/hire/guest-cart";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function GuestMatchesPage() {
   const [ready, setReady] = useState(false);
-  const [store, setStore] = useState(readGuestMatches());
+  const [store, setStore] = useState<GuestMatchCollection>({
+    activeId: "",
+    tabs: [],
+  });
   const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
-    setStore(readGuestMatches());
-    setCartCount(readGuestCart().length);
+    const syncSearches = () => setStore(readGuestMatchCollection());
+    const syncCart = () => setCartCount(readGuestCart().length);
+    syncSearches();
+    syncCart();
     setReady(true);
-    const sync = () => setCartCount(readGuestCart().length);
-    window.addEventListener("abtalks-hire-cart", sync);
-    return () => window.removeEventListener("abtalks-hire-cart", sync);
+    window.addEventListener(GUEST_SEARCHES_EVENT, syncSearches);
+    window.addEventListener("abtalks-hire-cart", syncCart);
+    return () => {
+      window.removeEventListener(GUEST_SEARCHES_EVENT, syncSearches);
+      window.removeEventListener("abtalks-hire-cart", syncCart);
+    };
   }, []);
 
   if (!ready) return null;
 
-  const matches = store?.matches ?? [];
+  const active =
+    store.tabs.find((t) => t.id === store.activeId) ?? store.tabs.at(-1) ?? null;
+  const matches = active?.matches ?? [];
 
   return (
     <div className="space-y-6">
@@ -44,12 +60,20 @@ export function GuestMatchesPage() {
         <p className="text-xs font-medium tracking-wide text-primary uppercase">
           Step 2 · Matched profiles
         </p>
+        <SearchTabs
+          tabs={store.tabs}
+          activeId={active?.id ?? ""}
+          onSelect={(id) => {
+            setActiveGuestSearch(id);
+            setStore(readGuestMatchCollection());
+          }}
+        />
         <h1 className="font-display text-3xl font-bold tracking-tight">
           {matches.length} matched{" "}
           {matches.length === 1 ? "candidate" : "candidates"}
         </h1>
         <p className="max-w-xl text-sm text-muted-foreground">
-          Ranked for {store?.title || "your requirement"} on verified platform
+          Ranked for {active?.title || "your requirement"} on verified platform
           evidence — missions, commits, projects and interviews.
         </p>
       </div>
@@ -66,7 +90,11 @@ export function GuestMatchesPage() {
             hidden until you place a request and our team confirms the
             engagement.
           </p>
-          <MatchResults matches={matches} cartCount={cartCount} />
+          <MatchResults
+            key={active?.id ?? "none"}
+            matches={matches}
+            cartCount={cartCount}
+          />
         </>
       )}
     </div>

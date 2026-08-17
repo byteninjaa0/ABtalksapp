@@ -12,13 +12,24 @@ import type {
   ScoreableMember,
   ScoreDimension,
 } from "@/features/hire/types";
-import type { JobSpec } from "@/lib/validations/hire";
+import {
+  applyDefaultSkipped,
+  hireProgress,
+  isSlotFilled,
+  skippedSlots,
+  type JobSpec,
+} from "@/lib/validations/hire";
 import {
   extractPoolBrief,
   applyPoolBrief,
   isSearchableBrief,
   resolveSources,
 } from "@/features/hire/pool-brief";
+import { normalizeGuestCartItem } from "@/components/hire/guest-cart";
+import {
+  labelGuestSearch,
+  parseGuestMatchCollection,
+} from "@/components/hire/guest-matches-store";
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
@@ -372,6 +383,137 @@ console.log("score-candidate tests");
     "react/node stack",
   );
   ok("pool brief parser");
+}
+
+{
+  const spec = applyDefaultSkipped({ title: "Backend engineer" });
+  const skip = skippedSlots(spec);
+  assert(skip.has("evidencePriority"), "default skip evidence");
+  assert(skip.has("employmentType"), "default skip engagement");
+  assert(skip.has("workMode"), "default skip work mode");
+  assert(skip.has("locationCity"), "default skip city");
+  assert(skip.has("noticePeriodDays"), "default skip notice");
+  assert(skip.has("experience"), "default skip experience");
+  assert(!skip.has("title"), "do not skip title");
+  assert(!skip.has("seniority"), "do not skip seniority");
+  assert(!skip.has("mustHaveStack"), "do not skip stack");
+  assert(!skip.has("salary"), "do not skip salary");
+  assert(isSlotFilled(spec, "title"), "filled title stays");
+  const progress = hireProgress(spec);
+  assert(progress.total === 4, `default walk is 4 slots, got ${progress.total}`);
+
+  const kept = applyDefaultSkipped({ workMode: "REMOTE" });
+  assert(kept.workMode === "REMOTE", "typed workMode kept");
+  assert(!skippedSlots(kept).has("workMode"), "filled slot is not skipped");
+
+  const legacy = normalizeGuestCartItem({
+    memberId: "pm1",
+    jobRole: "Backend",
+    totalScore: 70,
+  });
+  assert(legacy?.candidateRef === "PROGRAM:pm1", "legacy memberId → PROGRAM ref");
+  const claude = normalizeGuestCartItem({
+    candidateRef: "CLAUDE:u1",
+    jobRole: "Builder",
+    totalScore: 80,
+  });
+  assert(claude?.candidateRef === "CLAUDE:u1", "keeps Claude ref");
+  assert(
+    normalizeGuestCartItem({ candidateRef: "NOPE:x", jobRole: "X", totalScore: 1 }) ===
+      null,
+    "unknown source rejected",
+  );
+  ok("default skip + cart ref");
+}
+
+{
+  const card = { candidateRef: "CLAUDE:u1" };
+  const legacy = parseGuestMatchCollection({
+    matches: [card],
+    overallGap: "thin",
+    title: "Claude",
+  });
+  assert(legacy.tabs.length === 1, "legacy store is one tab");
+  assert(legacy.tabs[0]!.matches[0]!.candidateRef === "CLAUDE:u1", "legacy cards");
+  const two = parseGuestMatchCollection({
+    activeId: "b",
+    tabs: [
+      { id: "a", label: "Claude · 5", title: "A", overallGap: "", matches: [card] },
+      {
+        id: "b",
+        label: "India · 5",
+        title: "B",
+        overallGap: "",
+        matches: [{ candidateRef: "CLAUDE:u2" }],
+      },
+    ],
+  });
+  assert(two.activeId === "b", "active tab kept");
+  assert(two.tabs.length === 2, "two tabs stay separate");
+  assert(two.tabs[0]!.matches[0]!.candidateRef !== two.tabs[1]!.matches[0]!.candidateRef, "no mix");
+  const label = labelGuestSearch(
+    { title: "Backend engineer", mustHaveStack: ["java"], extra: { resultLimit: 5, poolSources: ["CLAUDE"] } },
+    5,
+  );
+  assert(/backend/i.test(label) && /java/i.test(label) && /5/.test(label), `label=${label}`);
+  ok("search tabs stay separate");
+}
+
+{
+  const five = extractPoolBrief(
+    "give me five candidates from claude challenge who have completed claude challenge",
+  );
+  assert(five.sources.includes("CLAUDE"), "five+completed → claude");
+  assert(five.resultLimit === 5, `five → 5, got ${five.resultLimit}`);
+  assert(five.minEvidenceDays === 60, `completed → 60, got ${five.minEvidenceDays}`);
+  assert(five.mustHaveStack.length === 0, "no invented stack");
+
+  const typo = extractPoolBrief("give me only five candidate from cllaude challenge");
+  assert(typo.sources.includes("CLAUDE"), "cllaude typo");
+  assert(typo.resultLimit === 5, "only five");
+
+  const fivce = extractPoolBrief("list of only fivce");
+  assert(fivce.resultLimit === 5, "fivce → 5");
+
+  const prior = applyPoolBrief(
+    {},
+    extractPoolBrief("india claude challenge 30 days backend java python only 5"),
+  );
+  assert(prior.mustHaveStack?.includes("java"), "setup stack");
+  const switched = applyPoolBrief(
+    prior,
+    extractPoolBrief("give me five candidates from claude challenge who have completed"),
+  );
+  assert(
+    !switched.mustHaveStack?.length,
+    "new claude pool without stack clears old MLOps/java",
+  );
+  assert(
+    (switched.extra as { minEvidenceDays?: number })?.minEvidenceDays === 60,
+    "completed kept",
+  );
+  const capOnly = applyPoolBrief(prior, extractPoolBrief("only 5"));
+  assert(capOnly.mustHaveStack?.includes("java"), "only-5 keeps prior stack");
+
+  const twenty = extractPoolBrief("20 student from claude challenge");
+  assert(twenty.sources.includes("CLAUDE"), "20 student → claude");
+  assert(twenty.resultLimit === 20, `20 student → 20, got ${twenty.resultLimit}`);
+  const fiveFrom = extractPoolBrief("5 from cohort challenge");
+  assert(fiveFrom.resultLimit === 5, "5 from → 5");
+  assert(resolveSources(fiveFrom).includes("PROGRAM"), "cohort → program");
+  const sixtyNotCap = extractPoolBrief(
+    "60 day submissions atleast 20 days only 5",
+  );
+  assert(sixtyNotCap.resultLimit === 5, "60-day track is not a cap of 60");
+  const bumped = applyPoolBrief(
+    applyPoolBrief({}, extractPoolBrief("claude challenge only 5")),
+    extractPoolBrief("20 student from claude challenge"),
+  );
+  assert(
+    (bumped.extra as { resultLimit?: number })?.resultLimit === 20,
+    "20 overwrites a prior only-5",
+  );
+  ok("five / completed / typo / stack wipe");
 }
 
 console.log(`\n${passed} passed`);

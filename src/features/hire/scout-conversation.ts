@@ -4,6 +4,7 @@ import { askGroqJson, groqConfigured } from "@/lib/groq";
 import { logger } from "@/lib/logger";
 import {
   HIRE_SLOTS,
+  applyDefaultSkipped,
   inapplicableSlots,
   isSlotFilled,
   jobSpecSchema,
@@ -333,15 +334,15 @@ const STACK_SUGGESTIONS: { match: RegExp; chips: [string, string][] }[] = [
       ["Python + PyTorch", "Python, PyTorch"],
       ["Python + scikit-learn", "Python, scikit-learn"],
       ["LLMs + RAG", "Python, LLMs, RAG"],
-      ["MLOps", "Python, MLOps, Docker"],
+      ["MLOps", "MLOps"],
     ],
   },
   {
     match: /\bfront[\s-]?end\b/i,
     chips: [
       ["TypeScript + React", "TypeScript, React"],
-      ["Next.js", "TypeScript, React, Next.js"],
-      ["Vue", "JavaScript, Vue"],
+      ["Next.js", "Next.js"],
+      ["Vue", "Vue"],
       ["CSS + accessibility", "CSS, Accessibility"],
     ],
   },
@@ -351,7 +352,7 @@ const STACK_SUGGESTIONS: { match: RegExp; chips: [string, string][] }[] = [
       ["Python + SQL", "Python, SQL"],
       ["Node + Postgres", "Node, PostgreSQL"],
       ["Java + Spring", "Java, Spring"],
-      ["Go", "Go, PostgreSQL"],
+      ["Go", "Go"],
     ],
   },
   {
@@ -1321,6 +1322,9 @@ export async function runScoutTurn(args: {
   history: ChatMessage[];
   userMessage: string;
 }): Promise<ScoutTurn> {
+  // Quiet slots the form no longer opens with. Filled values (an old request,
+  // or "remote" typed in this sentence) are left alone.
+  args = { ...args, priorSpec: applyDefaultSkipped(args.priorSpec) };
   const msg = args.userMessage.trim();
   const asking = nextSlot(args.priorSpec);
   const unchanged = turnFor(args.priorSpec, "");

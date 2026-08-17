@@ -4,7 +4,12 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { mergeGuestCartAction } from "@/app/actions/talent-actions";
 import { placeBulkEngagementRequestAction } from "@/app/actions/hire-request-actions";
-import { clearGuestCart, readGuestCart } from "@/components/hire/guest-cart";
+import {
+  guestCartNonProgram,
+  guestCartProgramIds,
+  readGuestCart,
+  writeGuestCart,
+} from "@/components/hire/guest-cart";
 import {
   clearPendingCheckout,
   readPendingCheckout,
@@ -24,9 +29,10 @@ export function MergeGuestCart() {
 
     void (async () => {
       const items = readGuestCart();
-      if (items.length > 0) {
-        const merged = await mergeGuestCartAction(items.map((i) => i.memberId));
-        if (merged.ok) clearGuestCart();
+      const programIds = guestCartProgramIds(items);
+      if (programIds.length > 0) {
+        const merged = await mergeGuestCartAction(programIds);
+        if (merged.ok) writeGuestCart(guestCartNonProgram(items));
       }
 
       const pending = readPendingCheckout();

@@ -116,6 +116,35 @@ export const HIRE_SLOTS = [
 export type HireSlot = (typeof HIRE_SLOTS)[number];
 
 /**
+ * Asked only if the recruiter brings them up. The default walk is role →
+ * seniority → stack → budget. These stay on the spec so a typed "remote"
+ * or an old request still stores them — we just stop opening with them.
+ */
+export const DEFAULT_SKIPPED_SLOTS: readonly HireSlot[] = [
+  "evidencePriority",
+  "employmentType",
+  "workMode",
+  "locationCity",
+  "noticePeriodDays",
+  "experience",
+];
+
+/** Mark the default-skipped slots so nextSlot does not ask them. */
+export function applyDefaultSkipped(spec: JobSpec): JobSpec {
+  const already = skippedSlots(spec);
+  const add: HireSlot[] = [];
+  for (const slot of DEFAULT_SKIPPED_SLOTS) {
+    if (!already.has(slot) && !isSlotFilled(spec, slot)) add.push(slot);
+  }
+  if (add.length === 0) return spec;
+  const prior = (spec.extra ?? {}) as Record<string, unknown>;
+  return {
+    ...spec,
+    extra: { ...prior, skipped: [...already, ...add] },
+  };
+}
+
+/**
  * Slots the recruiter explicitly declined to answer.
  *
  * Most slots have a sentinel that reads as a real answer — "any city",

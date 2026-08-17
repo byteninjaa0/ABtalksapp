@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, Lock } from "lucide-react";
 import { auth } from "@/auth";
 import { requireRecruiter } from "@/lib/program-auth";
+import { encodeCandidateRef } from "@/features/hire/candidate-ref";
 import { candidatePublicId } from "@/features/hire/public-id";
 import { getTalentProfile } from "@/features/talent-pool/pool";
 import { MissionHeatmap } from "@/components/program/mission-heatmap";
@@ -46,7 +47,8 @@ export default async function TalentMemberPage({ params }: Props) {
           Cart
         </Link>
         <ShortlistButton
-          memberId={profile.memberId}
+          candidateRef={encodeCandidateRef("PROGRAM", profile.memberId)}
+          programMemberId={profile.memberId}
           initialShortlisted={profile.shortlisted}
         />
       </div>

@@ -8,13 +8,14 @@ import { toast } from "sonner";
 import { placeBulkEngagementRequestAction } from "@/app/actions/hire-request-actions";
 import { useHireAuth } from "@/components/hire/hire-auth-provider";
 import { savePendingCheckout } from "@/components/hire/pending-checkout";
-import { encodeCandidateRef } from "@/features/hire/candidate-ref";
-import { candidatePublicId } from "@/features/hire/public-id";
+import { refPublicId } from "@/features/hire/candidate-ref";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export type CartRow = {
-  memberId: string;
+  candidateRef: string;
+  /** Program members only — drives the evidence-profile link. */
+  memberId: string | null;
   jobRole: string;
   totalScore: number;
   note: string | null;
@@ -43,17 +44,17 @@ export function ShortlistCart({ rows }: { rows: CartRow[] }) {
     [rows],
   );
   const [selected, setSelected] = useState<Set<string>>(
-    () => new Set(selectable.map((r) => r.memberId)),
+    () => new Set(selectable.map((r) => r.candidateRef)),
   );
 
   const allSelected =
     selectable.length > 0 && selected.size === selectable.length;
 
-  function toggle(memberId: string) {
+  function toggle(candidateRef: string) {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(memberId)) next.delete(memberId);
-      else next.add(memberId);
+      if (next.has(candidateRef)) next.delete(candidateRef);
+      else next.add(candidateRef);
       return next;
     });
   }
@@ -65,9 +66,7 @@ export function ShortlistCart({ rows }: { rows: CartRow[] }) {
         return;
       }
       savePendingCheckout({
-        // The cart is program-only (its table has a foreign key to ProgramMember),
-        // but what survives a sign-in is a candidate handle either way.
-        candidateRefs: [...selected].map((id) => encodeCandidateRef("PROGRAM", id)),
+        candidateRefs: [...selected],
         note: note.trim() || undefined,
       });
       openAuth("checkout");
@@ -75,7 +74,7 @@ export function ShortlistCart({ rows }: { rows: CartRow[] }) {
     }
     startTransition(async () => {
       const res = await placeBulkEngagementRequestAction({
-        candidateRefs: [...selected].map((id) => encodeCandidateRef("PROGRAM", id)),
+        candidateRefs: [...selected],
         note: note.trim() || undefined,
       });
       if (!res.ok) {
@@ -117,7 +116,7 @@ export function ShortlistCart({ rows }: { rows: CartRow[] }) {
           type="button"
           onClick={() =>
             setSelected(
-              allSelected ? new Set() : new Set(selectable.map((r) => r.memberId)),
+              allSelected ? new Set() : new Set(selectable.map((r) => r.candidateRef)),
             )
           }
           className="text-xs font-medium text-primary hover:underline"
@@ -129,10 +128,11 @@ export function ShortlistCart({ rows }: { rows: CartRow[] }) {
       <ul className="divide-y rounded-xl border bg-card">
         {rows.map((r) => {
           const requested = Boolean(r.engagementStatus);
-          const checked = selected.has(r.memberId);
+          const checked = selected.has(r.candidateRef);
+          const publicId = refPublicId(r.candidateRef);
           return (
             <li
-              key={r.memberId}
+              key={r.candidateRef}
               className={cn(
                 "flex flex-wrap items-center gap-3 px-4 py-3",
                 requested && "opacity-70",
@@ -142,21 +142,21 @@ export function ShortlistCart({ rows }: { rows: CartRow[] }) {
                 type="checkbox"
                 checked={checked}
                 disabled={requested || pending}
-                onChange={() => toggle(r.memberId)}
-                aria-label={`Select ${candidatePublicId(r.memberId)}`}
+                onChange={() => toggle(r.candidateRef)}
+                aria-label={`Select ${publicId}`}
                 className="size-4 shrink-0 accent-[var(--color-primary)] disabled:opacity-40"
               />
               <div className="min-w-0 flex-1">
-                {approved ? (
+                {approved && r.memberId ? (
                   <Link
                     href={`/talent/members/${r.memberId}`}
                     className="font-medium hover:underline"
                   >
-                    {r.revealedName ?? candidatePublicId(r.memberId)}
+                    {r.revealedName ?? publicId}
                   </Link>
                 ) : (
                   <span className="font-medium">
-                    {candidatePublicId(r.memberId)}
+                    {r.revealedName ?? publicId}
                   </span>
                 )}
                 <p className="text-xs text-muted-foreground">

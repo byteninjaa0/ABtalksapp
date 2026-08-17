@@ -21,9 +21,21 @@ import {
   sendGuestScoutMessageAction,
 } from "@/app/actions/hire-guest-actions";
 import { MatchResults } from "@/components/hire/match-results";
-import type { MatchCardData } from "@/components/hire/match-card";
 import { readGuestCart } from "@/components/hire/guest-cart";
-import { writeGuestMatches } from "@/components/hire/guest-matches-store";
+import { SearchTabs } from "@/components/hire/search-tabs";
+import {
+  appendGuestSearch,
+  clearGuestMatches,
+  labelGuestSearch,
+  readGuestMatchCollection,
+  setActiveGuestSearch,
+  type GuestSearchTab,
+} from "@/components/hire/guest-matches-store";
+import {
+  clearGuestSession,
+  readGuestSession,
+  writeGuestSession,
+} from "@/components/hire/guest-session";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -178,14 +190,48 @@ export function ScoutChat({
   const [pending, startTransition] = useTransition();
   const [searched, setSearched] = useState(false);
   const [matchCount, setMatchCount] = useState<number | null>(null);
-  const [guestMatches, setGuestMatches] = useState<MatchCardData[]>([]);
-  const [guestGap, setGuestGap] = useState<string | null>(null);
+  const [searchTabs, setSearchTabs] = useState<GuestSearchTab[]>([]);
+  const [activeSearchId, setActiveSearchId] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoSearchedRef = useRef(false);
+  const hydratedRef = useRef(false);
   const rows = specRows(spec);
+  const activeSearch =
+    searchTabs.find((t) => t.id === activeSearchId) ??
+    searchTabs[searchTabs.length - 1] ??
+    null;
+  const guestMatches = activeSearch?.matches ?? [];
+  const guestGap = activeSearch?.overallGap ?? null;
+
+  useEffect(() => {
+    if (persist || hydratedRef.current) return;
+    hydratedRef.current = true;
+    const saved = readGuestSession();
+    if (saved) {
+      setSpec(saved.spec);
+      if (saved.messages.length > 0) setMessages(saved.messages);
+      setSummary(saved.summary);
+      setReadyToSearch(saved.readyToSearch);
+      setSearched(saved.searched);
+      if (saved.readyToSearch || saved.searched) {
+        autoSearchedRef.current = true;
+      }
+    }
+    const searches = readGuestMatchCollection();
+    if (searches.tabs.length > 0) {
+      setSearchTabs(searches.tabs);
+      setActiveSearchId(searches.activeId);
+      const active =
+        searches.tabs.find((t) => t.id === searches.activeId) ??
+        searches.tabs[searches.tabs.length - 1]!;
+      setMatchCount(active.matches.length);
+      setSearched(true);
+      autoSearchedRef.current = true;
+    }
+  }, [persist]);
 
   // Keep the newest turn in view as the transcript grows, and after the panel
   // resizes — otherwise expanding leaves the reader looking at old messages.
@@ -248,14 +294,27 @@ export function ScoutChat({
             options: res.data.options,
           },
         ]);
-        if (!requestId) router.replace(`/hire/${res.data.requestId}`);
-        // The engine decides when to search, so a typed "show me" and the chip
-        // take the same path. Previously only the chip worked, because the
-        // client matched its literal value before sending.
+        // Search on this turn BEFORE navigating. replace() unmounts this
+        // chat; if we kicked search off after it, the first brief never
+        // wrote matches and the new page said "No matches yet".
         if (res.data.action === "search") {
           autoSearchedRef.current = true;
-          runSearch(res.data.spec);
+          const match = await runMatchAction({
+            requestId: res.data.requestId,
+          });
+          if (!match.ok) {
+            toast.error(match.message);
+          } else {
+            setSearched(true);
+            setMatchCount(match.data.matchCount);
+            setMessages((m) => [
+              ...m,
+              { role: "assistant", content: match.data.overallGap },
+            ]);
+          }
         }
+        if (!requestId) router.replace(`/hire/${res.data.requestId}`);
+        else if (res.data.action === "search") router.refresh();
         return;
       }
 
@@ -275,14 +334,24 @@ export function ScoutChat({
       setSpec(res.data.spec);
       setSummary(res.data.summary);
       setReadyToSearch(res.data.readyToSearch);
-      setMessages((m) => [
-        ...m,
-        {
-          role: "assistant",
-          content: res.data.assistantMessage,
-          options: res.data.options,
-        },
-      ]);
+      setMessages((m) => {
+        const next: Msg[] = [
+          ...m,
+          {
+            role: "assistant",
+            content: res.data.assistantMessage,
+            options: res.data.options,
+          },
+        ];
+        writeGuestSession({
+          spec: res.data.spec,
+          messages: next,
+          summary: res.data.summary,
+          readyToSearch: res.data.readyToSearch,
+          searched,
+        });
+        return next;
+      });
       // Same rule as the signed-in path: the engine says when to search.
       if (res.data.action === "search") {
         autoSearchedRef.current = true;
@@ -319,24 +388,41 @@ export function ScoutChat({
         toast.error(res.message);
         return;
       }
-      const cart = new Set(readGuestCart().map((i) => i.memberId));
+      const cart = new Set(readGuestCart().map((i) => i.candidateRef));
       const cards = res.data.matches.map((m) => ({
         ...m,
-        shortlisted: m.programMemberId ? cart.has(m.programMemberId) : false,
+        shortlisted: cart.has(m.candidateRef),
       }));
-      setGuestMatches(cards);
-      setGuestGap(res.data.overallGap);
-      writeGuestMatches({
-        matches: cards,
-        overallGap: res.data.overallGap,
+      const tab = appendGuestSearch({
+        label: labelGuestSearch(active, cards.length),
         title: active.title?.trim() || "your requirement",
+        overallGap: res.data.overallGap,
+        matches: cards,
       });
+      setSearchTabs(readGuestMatchCollection().tabs);
+      setActiveSearchId(tab.id);
       setSearched(true);
-      setMatchCount(res.data.matchCount);
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", content: res.data.overallGap },
-      ]);
+      setMatchCount(cards.length);
+      setMessages((m) => {
+        const next: Msg[] = [
+          ...m,
+          { role: "assistant", content: res.data.overallGap },
+        ];
+        writeGuestSession({
+          spec: active,
+          messages: next,
+          summary,
+          readyToSearch: true,
+          searched: true,
+        });
+        return next;
+      });
+      requestAnimationFrame(() => {
+        document.getElementById("hire-results")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
     });
   }
 
@@ -394,14 +480,16 @@ export function ScoutChat({
                 router.push("/hire");
                 return;
               }
+              clearGuestSession();
+              clearGuestMatches();
               setMessages([OPENING]);
               setSpec({});
               setSummary("Not started");
               setReadyToSearch(false);
               setSearched(false);
               setMatchCount(null);
-              setGuestMatches([]);
-              setGuestGap(null);
+              setSearchTabs([]);
+              setActiveSearchId("");
               setText("");
               setDetailsOpen(false);
               autoSearchedRef.current = false;
@@ -669,6 +757,14 @@ export function ScoutChat({
           <p className="text-xs font-medium tracking-wide text-primary uppercase">
             Step 2 · Matched profiles
           </p>
+          <SearchTabs
+            tabs={searchTabs}
+            activeId={activeSearchId}
+            onSelect={(id) => {
+              setActiveSearchId(id);
+              setActiveGuestSearch(id);
+            }}
+          />
           <h2 className="font-display text-2xl font-bold tracking-tight">
             {guestMatches.length > 0
               ? `${guestMatches.length} matched candidate${guestMatches.length === 1 ? "" : "s"}`
@@ -685,6 +781,7 @@ export function ScoutChat({
                 hidden until you send a request.
               </p>
               <MatchResults
+                key={activeSearchId}
                 matches={guestMatches}
                 cartCount={readGuestCart().length}
                 viewAllHref="/hire/matches"
