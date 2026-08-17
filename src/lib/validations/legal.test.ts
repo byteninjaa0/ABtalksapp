@@ -3,6 +3,7 @@ import {
   cookieConsentSchema,
   dataRightsRequestSchema,
   legalAcceptanceSchema,
+  resolveDataRightsRequestSchema,
 } from "@/lib/validations/legal";
 
 describe("legalAcceptanceSchema", () => {
@@ -78,6 +79,29 @@ describe("dataRightsRequestSchema", () => {
       dataRightsRequestSchema.safeParse({
         email: "a@b.co",
         type: "DELETE_EVERYTHING",
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("resolveDataRightsRequestSchema", () => {
+  it("accepts admin resolution statuses and rejects bad ids/status", () => {
+    expect(
+      resolveDataRightsRequestSchema.safeParse({
+        id: "req_1",
+        status: "DONE",
+      }).success,
+    ).toBe(true);
+    expect(
+      resolveDataRightsRequestSchema.safeParse({
+        id: "",
+        status: "DONE",
+      }).success,
+    ).toBe(false);
+    expect(
+      resolveDataRightsRequestSchema.safeParse({
+        id: "req_1",
+        status: "OPEN",
       }).success,
     ).toBe(false);
   });
