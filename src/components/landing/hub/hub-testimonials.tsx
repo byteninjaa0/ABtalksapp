@@ -22,17 +22,14 @@ function initials(name: string) {
 function HubTestimonialCard({ name, org, photo, quote }: Testimonial) {
   return (
     <figure className="hub-t-card">
-      <span className="hub-t-quote-mark" aria-hidden>
-        “
-      </span>
       <blockquote className="hub-t-body">{quote}</blockquote>
       <figcaption className="hub-t-footer">
         {photo ? (
           <Image
             src={photo}
             alt=""
-            width={64}
-            height={64}
+            width={55}
+            height={55}
             loading="lazy"
             className="hub-t-avatar"
           />
@@ -42,31 +39,8 @@ function HubTestimonialCard({ name, org, photo, quote }: Testimonial) {
           </span>
         )}
         <div style={{ minWidth: 0 }}>
-          <p
-            style={{
-              margin: 0,
-              fontSize: 14,
-              fontWeight: 700,
-              color: "#111",
-            }}
-          >
-            {name}
-          </p>
-          {org ? (
-            <p
-              style={{
-                margin: "2px 0 0",
-                fontSize: 12,
-                color: "#666",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                maxWidth: 240,
-              }}
-            >
-              {org}
-            </p>
-          ) : null}
+          <p className="hub-t-name">{name}</p>
+          {org ? <p className="hub-t-org">{org}</p> : null}
         </div>
       </figcaption>
     </figure>
@@ -76,28 +50,24 @@ function HubTestimonialCard({ name, org, photo, quote }: Testimonial) {
 export function HubTestimonials() {
   const trackRef = useRef<HTMLDivElement>(null);
   const cooldownRef = useRef<number | null>(null);
-  const [atStart, setAtStart] = useState(true);
-  const [atEnd, setAtEnd] = useState(false);
   const [engaged, setEngaged] = useState(false);
   const [cooling, setCooling] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(true);
 
-  const syncEdges = useCallback(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    setAtStart(el.scrollLeft <= 1);
-    setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
-  }, []);
-
-  const step = useCallback((direction: 1 | -1) => {
+  const step = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
     const card = el.querySelector("figure");
     const distance = card
       ? card.clientWidth + CARD_GAP
       : el.clientWidth * 0.8;
-    el.scrollBy({ left: direction * distance, behavior: "smooth" });
+    const finished = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1;
+    if (finished) {
+      el.scrollTo({ left: 0, behavior: "smooth" });
+    } else {
+      el.scrollBy({ left: distance, behavior: "smooth" });
+    }
   }, []);
 
   const holdAutoplay = useCallback(() => {
@@ -114,15 +84,6 @@ export function HubTestimonials() {
       if (cooldownRef.current) window.clearTimeout(cooldownRef.current);
     };
   }, []);
-
-  useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    syncEdges();
-    const observer = new ResizeObserver(syncEdges);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [syncEdges]);
 
   useEffect(() => {
     const query = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -143,23 +104,9 @@ export function HubTestimonials() {
 
   useEffect(() => {
     if (!autoplaying) return;
-    const timer = window.setInterval(() => {
-      const el = trackRef.current;
-      if (!el) return;
-      const finished = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1;
-      if (finished) {
-        el.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        step(1);
-      }
-    }, AUTOPLAY_MS);
+    const timer = window.setInterval(step, AUTOPLAY_MS);
     return () => window.clearInterval(timer);
   }, [autoplaying, step]);
-
-  const manualStep = (direction: 1 | -1) => {
-    holdAutoplay();
-    step(direction);
-  };
 
   return (
     <div
@@ -168,43 +115,27 @@ export function HubTestimonials() {
       onFocus={() => setEngaged(true)}
       onBlur={() => setEngaged(false)}
     >
-      <div className="hub-t-row">
-        <button
-          type="button"
-          className="hub-t-arrow"
-          aria-label="Previous testimonials"
-          disabled={atStart}
-          onClick={() => manualStep(-1)}
-        >
-          ←
-        </button>
+      <header className="hub-t-heading">
+        <h2 className="hub-t-heading-title">What people are saying?</h2>
+        <p className="hub-t-heading-sub">
+          Dont just take our word for it. See what our customers have to say about their experience!
+        </p>
+      </header>
 
-        <div
-          ref={trackRef}
-          onScroll={syncEdges}
-          onPointerDown={holdAutoplay}
-          onTouchStart={holdAutoplay}
-          tabIndex={0}
-          role="region"
-          aria-label="Testimonials, scroll horizontally"
-          className="hub-t-track no-scrollbar"
-        >
-          <div className="hub-t-track-inner">
-            {TESTIMONIALS.map((testimonial) => (
-              <HubTestimonialCard key={testimonial.name} {...testimonial} />
-            ))}
-          </div>
+      <div
+        ref={trackRef}
+        onPointerDown={holdAutoplay}
+        onTouchStart={holdAutoplay}
+        tabIndex={0}
+        role="region"
+        aria-label="Testimonials, scrolling automatically"
+        className="hub-t-track no-scrollbar"
+      >
+        <div className="hub-t-track-inner">
+          {TESTIMONIALS.map((testimonial) => (
+            <HubTestimonialCard key={testimonial.name} {...testimonial} />
+          ))}
         </div>
-
-        <button
-          type="button"
-          className="hub-t-arrow"
-          aria-label="Next testimonials"
-          disabled={atEnd}
-          onClick={() => manualStep(1)}
-        >
-          →
-        </button>
       </div>
     </div>
   );

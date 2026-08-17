@@ -80,7 +80,7 @@ function FaceContent({
         />
       </div>
       <div className="hub-how-face-copy">
-        <p className="hub-display hub-how-face-num">{slide.number}</p>
+        <p className="hub-how-face-num">{slide.number}</p>
         <h3 className="hub-how-face-title">{slide.title}</h3>
         <p className="hub-how-face-body">{slide.body}</p>
       </div>
@@ -333,7 +333,7 @@ export function HowItWorks() {
               ))}
             </div>
             <div>
-              <p className="hub-display hub-how-face-num">{slide.number}</p>
+              <p className="hub-how-face-num">{slide.number}</p>
               <h3 className="hub-how-face-title">{slide.title}</h3>
               <p className="hub-how-face-body">{slide.body}</p>
             </div>

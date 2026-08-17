@@ -1,12 +1,12 @@
 /* Figma interview landing — page-scoped tokens (rounded marketing; not modernist lattice) */
 
 .landing-hub {
-  --hub-bg: #fbfbfd;
+  --hub-bg: #fbf9f7;
   --hub-text: #111111;
   --hub-muted: #555555;
-  --hub-accent: #7c5cff;
-  --hub-accent-700: #6b38d1;
-  --hub-lavender: #ebe3ff;
+  --hub-accent: #e05226;
+  --hub-accent-700: #c4451d;
+  --hub-lavender: #ffeee3;
   --hub-border: #e2e2e9;
   --hub-soft: #f3f4f6;
   --hub-radius: 15px;
@@ -15,13 +15,17 @@
   --hub-shell: min(1680px, calc(100% - clamp(32px, 8vw, 240px)));
   --hub-font-sans: var(--font-hub-sans), system-ui, sans-serif;
   --hub-font-serif: var(--font-hub-serif), Georgia, serif;
-  --hub-font-display: var(--font-hub-display), system-ui, sans-serif;
+  --hub-font-display: var(--font-hub-fredoka), system-ui, sans-serif;
+  --hub-font-gemunu: var(--font-hub-display), system-ui, sans-serif;
+  --hub-font-kicker: var(--font-hub-instrument-sans), system-ui, sans-serif;
   --hub-font-quote: var(--font-hub-quote), Georgia, serif;
 
   background: var(--hub-bg);
   color: var(--hub-text);
   font-family: var(--hub-font-sans);
   min-height: 100svh;
+  margin: 0;
+  padding: 0;
   /* no overflow-x here — it creates a backdrop root and kills sticky nav blur */
 }
 
@@ -36,8 +40,9 @@
 
 .landing-hub .hub-kicker {
   display: block;
-  font-size: 18px;
-  font-weight: 800;
+  font-family: var(--hub-font-kicker);
+  font-size: clamp(18px, 2.4vw, 32px);
+  font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--hub-accent);
@@ -45,8 +50,9 @@
 }
 
 .landing-hub .hub-h2 {
+  font-family: var(--hub-font-display);
   font-size: clamp(28px, 3.2vw, 40px);
-  font-weight: 800;
+  font-weight: 500;
   line-height: 1.15;
   letter-spacing: -0.02em;
   margin: 0;
@@ -85,6 +91,7 @@
 .landing-hub .hub-btn-ghost {
   background: transparent;
   color: var(--hub-accent);
+  border-color: var(--hub-accent);
 }
 
 .landing-hub .hub-btn-outline-light {
@@ -193,7 +200,7 @@
   height: 30px;
   margin-top: -15px;
   border-radius: 999px;
-  background: rgba(124, 92, 255, 0.14);  
+  background: rgba(224, 82, 38, 0.14);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
   opacity: 0;
   pointer-events: none;
@@ -267,12 +274,12 @@
   padding: 0 24px;
   border-radius: 12px;
   background: var(--hub-accent);
-  border: 1px solid #b6a4ff;
+  border: 1px solid var(--hub-accent-700);
   color: #fff;
   font-size: 18px;
   font-weight: 700;
   text-decoration: none;
-  box-shadow: 0 4px 12px rgba(124, 92, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(224, 82, 38, 0.28);
   transition: background 0.15s ease, transform 0.15s ease;
 }
 
@@ -356,6 +363,24 @@
   background: var(--hub-bg);
 }
 
+.landing-hub .hub-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(24px, 3vw, 48px);
+  align-items: center;
+  height: 100%;
+  padding: 72px 0 48px;
+}
+
+.landing-hub .hub-hero-copy {
+  position: relative;
+}
+
+.landing-hub .hub-hero-spacer {
+  min-height: 1px;
+}
+
 /*
  * Short desktop viewports only (e.g. laptop / scaled 1920 displays).
  * Full 1080px+ tall windows keep the designed 700px hero + stats size.
@@ -380,27 +405,9 @@
   overflow-x: clip;
 }
 
-.landing-hub .hub-hero {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: clamp(24px, 3vw, 48px);
-  align-items: center;
-  height: 100%;
-  padding: 72px 0 48px;
-}
-
-.landing-hub .hub-hero-copy {
-  position: relative;
-}
-
-.landing-hub .hub-hero-spacer {
-  min-height: 1px;
-}
-
-/* —— purple stats strip —— */
+/* —— orange stats strip —— */
 .landing-hub .hub-stats {
-  background: linear-gradient(180deg, #7c5cff 0%, #6c51d8 100%);
+  background: linear-gradient(180deg, #efa46b 0%, #e05226 100%);
   color: #fff;
   padding: 48px clamp(32px, 8vw, 120px);
   min-height: 196px;
@@ -712,6 +719,7 @@ html.hub-how-scroll-lock {
 
 .landing-hub .hub-how-face-num {
   margin: 0;
+  font-family: var(--hub-font-gemunu);
   font-size: clamp(48px, 6vw, 80px);
   font-weight: 700;
   line-height: 1;
@@ -720,8 +728,9 @@ html.hub-how-scroll-lock {
 
 .landing-hub .hub-how-face-title {
   margin: 10px 0 0;
+  font-family: var(--hub-font-display);
   font-size: clamp(22px, 2.8vw, 40px);
-  font-weight: 800;
+  font-weight: 500;
   line-height: 1.15;
   letter-spacing: -0.02em;
   color: var(--hub-text);
@@ -729,6 +738,7 @@ html.hub-how-scroll-lock {
 
 .landing-hub .hub-how-face-body {
   margin: 14px 0 0;
+  font-family: var(--hub-font-display);
   font-size: 16px;
   line-height: 1.6;
   color: var(--hub-muted);
@@ -901,7 +911,7 @@ html.hub-how-scroll-lock {
 /* —— programs (Open right now) — Figma 710:174 calendar-section —— */
 .landing-hub .hub-programs-section {
   padding: 56px 0 72px;
-  background: linear-gradient(90deg, #f3f4f6 0%, #fafafc 100%);
+  background: #fbf9f7;
 }
 
 /* —— program cards —— */
@@ -912,10 +922,10 @@ html.hub-how-scroll-lock {
   height: 100%;
   background: #fff;
   border: 1px solid #e9e9e9;
-  border-radius: var(--hub-radius-xl);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  border-radius: 30px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
   padding: 28px 28px 36px;
-  min-height: 300px;
+  min-height: 339px;
   text-decoration: none;
   color: inherit;
   cursor: default;
@@ -948,6 +958,7 @@ html.hub-how-scroll-lock {
   font-size: 12px;
   text-transform: capitalize;
   white-space: nowrap;
+  color: var(--hub-text);
 }
 
 .landing-hub .hub-program-arrow {
@@ -960,33 +971,71 @@ html.hub-how-scroll-lock {
 
 .landing-hub .hub-program-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
 .landing-hub .hub-program-title {
   font-family: var(--hub-font-display);
-  font-weight: 700;
+  font-weight: 500;
   font-size: clamp(26px, 2.2vw, 36px);
   line-height: 1.1;
   text-transform: uppercase;
   margin: 28px 0 0;
+  color: #111111;
 }
 
-.landing-hub .hub-program-glow {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -20px;
-  height: 80px;
-  filter: blur(32px);
-  opacity: 0.55;
-  pointer-events: none;
+.landing-hub .hub-program-lines {
+  margin: auto 0 0;
+  padding-top: 24px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #111;
 }
 
-/* —— FAQ —— */
+/* —— FAQ — Figma 710:211 faq-section —— */
+.landing-hub .hub-faq-section {
+  padding: 48px 0 72px;
+}
+
+.landing-hub .hub-faq {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(28px, 4vw, 56px);
+  align-items: start;
+}
+
+.landing-hub .hub-faq-title {
+  font-family: var(--hub-font-display);
+  font-size: clamp(32px, 3.6vw, 48px);
+  font-weight: 500;
+  line-height: 1.15;
+  margin: 0 0 16px;
+  color: var(--hub-text);
+}
+
+.landing-hub .hub-faq-title-accent {
+  color: var(--hub-accent);
+}
+
+.landing-hub .hub-faq-blurb {
+  margin: 0;
+  max-width: 36ch;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--hub-muted);
+}
+
+.landing-hub .hub-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .landing-hub .hub-faq details {
-  border-bottom: 1px solid #d7d3d3;
-  padding: 18px 0;
+  background: #f9f7f6;
+  border: 1px solid #d2d2d2;
+  border-radius: 25px;
+  padding: 18px 22px;
 }
 
 .landing-hub .hub-faq summary {
@@ -1007,8 +1056,16 @@ html.hub-how-scroll-lock {
 
 .landing-hub .hub-faq summary::after {
   content: "+";
-  color: var(--hub-accent);
-  font-size: 24px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--hub-accent);
+  color: #fff;
+  font-size: 22px;
   font-weight: 500;
   line-height: 1;
 }
@@ -1047,6 +1104,17 @@ html.hub-how-scroll-lock {
 .landing-hub .hub-faq details[open] .hub-faq-answer p {
   opacity: 1;
   transform: translateY(0);
+}
+
+@media (max-width: 900px) {
+  .landing-hub .hub-faq {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .landing-hub .hub-faq-blurb {
+    max-width: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1093,7 +1161,7 @@ html.hub-how-scroll-lock {
   position: relative;
   height: 453px;
   overflow: hidden;
-  background: linear-gradient(90deg, #7c5cff, #4a3799);
+  background: linear-gradient(90deg, #e05226, #ef9550);
   color: #fff;
   display: flex;
   align-items: center;
@@ -1166,26 +1234,164 @@ html.hub-how-scroll-lock {
   margin-top: 28px;
 }
 
-/* —— bridge —— */
+/* —— bridge (isometric tile panels; hub-local, not a design-system pattern) —— */
 .landing-hub .hub-bridge-section {
-  background:
-    radial-gradient(
-      ellipse 80% 70% at 50% 40%,
-      rgba(255, 255, 255, 0.55) 0%,
-      transparent 65%
-    ),
-    linear-gradient(180deg, #f3eefc 0%, #ebe3ff 45%, #f6f2ff 100%);
+  background: #fbf9f7;
 }
 
-/* —— testimonials —— */
-.landing-hub .hub-t-row {
+.landing-hub .hub-bridge-shell {
+  border-radius: 25px;
+  background: transparent;
+  padding: clamp(28px, 4vw, 48px);
+}
+
+.landing-hub .hub-bridge-panels {
   display: flex;
+  flex-direction: column;
+  gap: clamp(56px, 7vw, 104px);
+  margin-top: clamp(36px, 4vw, 56px);
+}
+
+.landing-hub .hub-bridge-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(8px, 2vw, 32px);
   align-items: center;
-  gap: 20px;
+}
+
+.landing-hub .hub-bridge-visual {
+  position: relative;
+  overflow: visible;
+}
+
+.landing-hub .hub-bridge-stack {
+  width: 78%;
+  max-width: 520px;
+  height: auto;
+  display: block;
+}
+
+.landing-hub .hub-bridge-arrows {
+  position: absolute;
+  pointer-events: none;
+  left: 42%;
+  width: 70%;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.landing-hub .hub-bridge-panel[data-tile="candidates"] .hub-bridge-arrows {
+  top: 8%;
+  height: 84%;
+}
+
+.landing-hub .hub-bridge-panel[data-tile="abtalks"] .hub-bridge-arrows {
+  top: 46%;
+  height: 12%;
+  width: 62%;
+}
+
+.landing-hub .hub-bridge-panel[data-tile="companies"] .hub-bridge-arrows {
+  top: 8%;
+  height: 78%;
+}
+
+.landing-hub .hub-bridge-copy {
+  min-width: 0;
+}
+
+.landing-hub .hub-bridge-title {
+  margin: 0;
+  font-size: clamp(28px, 3.2vw, 44px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--hub-text);
+}
+
+.landing-hub .hub-bridge-body {
+  margin: 18px 0 0;
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--hub-muted);
+  max-width: 42ch;
+}
+
+.landing-hub .hub-bridge-list {
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.landing-hub .hub-bridge-list li {
+  display: flex;
+  gap: 10px;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--hub-muted);
+}
+
+.landing-hub .hub-bridge-list li::before {
+  content: "■";
+  color: var(--hub-accent);
+  font-weight: 700;
+  flex: none;
+  line-height: 1.45;
+}
+
+@media (max-width: 800px) {
+  .landing-hub .hub-bridge-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-hub .hub-bridge-visual {
+    max-width: 420px;
+    margin-inline: auto;
+    width: 100%;
+  }
+
+  .landing-hub .hub-bridge-stack {
+    width: 72%;
+    margin-inline: auto;
+  }
+
+  .landing-hub .hub-bridge-copy {
+    text-align: left;
+  }
+}
+
+/* —— testimonials — Figma 960:155 —— */
+.landing-hub .hub-testimonials-section {
+  padding: 48px 0 72px;
+}
+
+.landing-hub .hub-t-heading {
+  text-align: center;
+  margin: 0 0 36px;
+}
+
+.landing-hub .hub-t-heading-title {
+  font-family: var(--hub-font-display);
+  font-size: clamp(32px, 4vw, 64px);
+  font-weight: 500;
+  line-height: 1.15;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+  color: var(--hub-text);
+}
+
+.landing-hub .hub-t-heading-sub {
+  margin: 0;
+  font-size: clamp(16px, 1.6vw, 28px);
+  font-weight: 500;
+  line-height: 1.4;
+  color: #787878;
+  white-space: nowrap;
 }
 
 .landing-hub .hub-t-track {
-  flex: 1;
   min-width: 0;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -1213,42 +1419,72 @@ html.hub-how-scroll-lock {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  width: calc((100cqi - 56px) / 3);
-  height: 340px;
+  width: calc((100cqi - 42px) / 2.5);
+  height: 250px;
   flex: none;
   scroll-snap-align: start;
-  background: #fff;
-  border: 1px solid #e6e6ea;
-  border-radius: 22px;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.06),
-    0 8px 20px rgba(0, 0, 0, 0.08);
-  padding: 24px 28px 22px;
+  background: linear-gradient(180deg, #ffffff 0%, #ffeef8 100%);
+  border: 3px solid #ffa8db;
+  border-radius: 25px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.16);
+  padding: 30px 28px 22px;
   overflow: hidden;
 }
 
-.landing-hub .hub-t-quote-mark {
-  font-family: var(--hub-font-quote);
-  font-size: 120px;
-  line-height: 0.7;
-  color: #111;
-  margin: -8px 0 0;
-  pointer-events: none;
-  flex: none;
+.landing-hub .hub-t-card:nth-child(4n + 1) {
+  border-color: #ffa8db;
+  background: linear-gradient(180deg, #ffffff 0%, #ffeef8 100%);
+}
+
+.landing-hub .hub-t-card:nth-child(4n + 2) {
+  border-color: #f4a6a0;
+  background: linear-gradient(180deg, #ffffff 0%, #ffeceb 100%);
+}
+
+.landing-hub .hub-t-card:nth-child(4n + 3) {
+  border-color: #f5e6a3;
+  background: linear-gradient(180deg, #ffffff 0%, #fff8e2 100%);
+}
+
+.landing-hub .hub-t-card:nth-child(4n + 4) {
+  border-color: #fed3a8;
+  background: linear-gradient(180deg, #ffffff 0%, #fff0e1 100%);
 }
 
 .landing-hub .hub-t-body {
-  margin: -40px 0 0;
+  margin: 0;
   padding-top: 0;
-  font-size: clamp(13px, 1vw, 15px);
-  line-height: 1.55;
+  font-family: var(--hub-font-kicker);
+  font-size: clamp(13px, 1vw, 16px);
+  font-weight: 400;
+  line-height: 1.45;  
   color: #111;
   flex: 0 1 auto;
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 7;
+  -webkit-line-clamp: 6;
   text-align: left;
+}
+
+.landing-hub .hub-t-name {
+  margin: 0;
+  font-family: var(--hub-font-kicker);
+  font-size: clamp(14px, 1vw, 16px);
+  font-weight: 700;
+  font-style: italic;
+  color: #111;
+}
+
+.landing-hub .hub-t-org {
+  margin: 2px 0 0;
+  font-family: var(--hub-font-kicker);
+  font-size: clamp(12px, 0.9vw, 16px);
+  color: #111;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 240px;
 }
 
 .landing-hub .hub-t-footer {
@@ -1261,8 +1497,8 @@ html.hub-how-scroll-lock {
 }
 
 .landing-hub .hub-t-avatar {
-  width: 64px;
-  height: 64px;
+  width: 55px;
+  height: 55px;
   border-radius: 999px;
   object-fit: cover;
   flex: none;
@@ -1270,8 +1506,8 @@ html.hub-how-scroll-lock {
 
 .landing-hub .hub-t-avatar-fallback {
   display: inline-flex;
-  width: 64px;
-  height: 64px;
+  width: 55px;
+  height: 55px;
   border-radius: 999px;
   align-items: center;
   justify-content: center;
@@ -1279,31 +1515,6 @@ html.hub-how-scroll-lock {
   color: var(--hub-accent);
   font-weight: 700;
   flex: none;
-}
-
-.landing-hub .hub-t-arrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 55px;
-  height: 55px;
-  flex: none;
-  border-radius: 999px;
-  border: 1px solid #d2d2d2;
-  background: #fff;
-  color: #111;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: background 0.15s ease, opacity 0.15s ease;
-}
-
-.landing-hub .hub-t-arrow:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.landing-hub .hub-t-arrow:not(:disabled):hover {
-  background: #f6f4ff;
 }
 
 @media (max-width: 960px) {
@@ -1487,16 +1698,11 @@ html.hub-how-scroll-lock {
     white-space: normal;
   }
 
+  .landing-hub .hub-t-heading-sub {
+    white-space: normal;
+  }
+
   .landing-hub .hub-t-card {
     width: min(82vw, 100cqi);
-  }
-
-  .landing-hub .hub-t-row {
-    gap: 10px;
-  }
-
-  .landing-hub .hub-t-arrow {
-    width: 44px;
-    height: 44px;
   }
 }

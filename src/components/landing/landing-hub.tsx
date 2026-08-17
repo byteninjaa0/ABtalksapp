@@ -9,36 +9,21 @@ import { ConsentTiltCard } from "./hub/consent-tilt-card";
 import { CommunityCollage } from "./hub/community-collage";
 import { HubTestimonials } from "./hub/hub-testimonials";
 import { HubProgramReveal } from "./hub/hub-program-reveal";
+import { HubBridgeTiles } from "./hub/hub-bridge-tiles";
 import "./hub/landing-hub.css";
 
 const WHATSAPP_LINK = "https://chat.whatsapp.com/LSru1BgvifpEB4OMZsaZEi";
-
-const CANDIDATE_ITEMS = [
-  "Hackathons — weekend builds, judged and archived",
-  "Cohorts — multi-week programs with mentors",
-  "Challenges — scoped problems from real companies",
-];
-
-const COMPANY_ITEMS = [
-  "Browse candidates by what they shipped",
-  "Send us the role and the skills you need",
-  "We build a cohort against that requirement",
-];
 
 type ProgramKey = "challenge" | "hackathon" | "program" | "claude";
 
 const PROGRAMS: {
   key: ProgramKey;
   title: string;
-  color: string;
-  glow: string;
   lines: string[];
 }[] = [
   {
     key: "challenge",
     title: "60 day coding challenge",
-    color: "#7548e7",
-    glow: "rgba(117, 72, 231, 0.28)",
     lines: [
       "Daily tasks across AI, data, and software",
       "Prove the work on GitHub and LinkedIn",
@@ -48,8 +33,6 @@ const PROGRAMS: {
   {
     key: "hackathon",
     title: "Vicodathon 2.0",
-    color: "#009cf5",
-    glow: "rgba(0, 156, 245, 0.28)",
     lines: [
       "ViCodathon is an AI-assisted development hackathon where participants build and ship real-world projects using any AI tools.",
     ],
@@ -57,8 +40,6 @@ const PROGRAMS: {
   {
     key: "program",
     title: "31 days ai cohort",
-    color: "#97ea42",
-    glow: "rgba(151, 234, 66, 0.28)",
     lines: [
       "Built for professionals ",
       "Daily missions, projects, and an exit interview",
@@ -68,8 +49,6 @@ const PROGRAMS: {
   {
     key: "claude",
     title: "claude challenge",
-    color: "#ff7a00",
-    glow: "rgba(255, 122, 0, 0.28)",
     lines: [
       "A focused track for Claude AI mastery",
       "Master Prompt Engineering",
@@ -170,92 +149,7 @@ export function LandingHub({
         <HubStatsStrip />
       </div>
 
-      {/* —— bridge —— */}
-      <section
-        id="about"
-        className="hub-bridge-section"
-        style={{ padding: "6px 0" }}
-      >
-        <div
-          className="hub-shell"
-          style={{
-            borderRadius: 25,
-            background: "transparent",
-            padding: "clamp(28px, 4vw, 48px)",
-          }}
-        >
-          <p className="hub-kicker">The bridge</p>
-          <h2 className="hub-h2">
-            Talent on one side. Requirements on the other.
-          </h2>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr)",
-              gap: 16,
-              alignItems: "stretch",
-              marginTop: 36,
-            }}
-            className="hub-bridge-grid"
-          >
-            <BridgeSideCard
-              tag="Candidates"
-              title="Make yourself visible by building."
-              items={CANDIDATE_ITEMS}
-            />
-            <BridgeArrow />
-            <div
-              style={{
-                borderRadius: 15,
-                padding: "28px 24px",
-                background:
-                  "linear-gradient(152deg, #7c5cff 2%, #755cdd 100%)",
-                color: "#fff",
-                minHeight: 260,
-              }}
-            >
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: "#ebe3ff",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                THE BRIDGE
-              </p>
-              <p
-                style={{
-                  margin: "12px 0 0",
-                  fontSize: 32,
-                  fontWeight: 800,
-                }}
-              >
-                ABTalks
-              </p>
-              <p
-                style={{
-                  margin: "18px 0 0",
-                  fontSize: 16,
-                  lineHeight: 1.6,
-                  color: "#ebe3ff",
-                }}
-              >
-                We run the programs, score the work, and match evidence to
-                requirements. Profiles move only when the candidate releases
-                them.
-              </p>
-            </div>
-            <BridgeArrow direction="left" />
-            <BridgeSideCard
-              tag="Companies"
-              title="Hire from proof, or commission it."
-              items={COMPANY_ITEMS}
-            />
-          </div>
-        </div>
-      </section>
+      <HubBridgeTiles />
 
       <HowItWorks />
 
@@ -321,21 +215,8 @@ export function LandingHub({
                         ←
                       </span>
                     </div>
-                    <p
-                      className="hub-program-title"
-                      style={{ color: program.color }}
-                    >
-                      {program.title}
-                    </p>
-                    <p
-                      style={{
-                        margin: "auto 0 0",
-                        paddingTop: 24,
-                        fontSize: 15,
-                        lineHeight: 1.5,
-                        color: "#333",
-                      }}
-                    >
+                    <p className="hub-program-title">{program.title}</p>
+                    <p className="hub-program-lines">
                       {program.lines.map((line, i) => (
                         <span key={line}>
                           {i > 0 ? <br /> : null}
@@ -343,11 +224,6 @@ export function LandingHub({
                         </span>
                       ))}
                     </p>
-                    <span
-                      className="hub-program-glow"
-                      style={{ background: program.glow }}
-                      aria-hidden
-                    />
                   </div>
                 </div>
               </HubProgramReveal>
@@ -357,20 +233,26 @@ export function LandingHub({
       </section>
 
       {/* —— testimonials —— */}
-      <section style={{ padding: "48px 0 72px" }}>
+      <section className="hub-testimonials-section">
         <div className="hub-shell">
-          <p className="hub-kicker">From both sides of the bridge</p>
-          <div style={{ marginTop: 24 }}>
-            <HubTestimonials />
-          </div>
+          <HubTestimonials />
         </div>
       </section>
 
       {/* —— FAQ —— */}
-      <section id="faq" style={{ padding: "48px 0 72px" }}>
+      <section id="faq" className="hub-faq-section">
         <div className="hub-shell hub-faq">
-          <p className="hub-kicker">Questions people ask us</p>
-          <div style={{ marginTop: 16 }}>
+          <div className="hub-faq-intro">
+            <h2 className="hub-faq-title">
+              Frequently asked{" "}
+              <span className="hub-faq-title-accent">questions</span>
+            </h2>
+            <p className="hub-faq-blurb">
+              Taking part is free for candidates. Here is what people ask before
+              they join a cohort or open their work to companies.
+            </p>
+          </div>
+          <div className="hub-faq-list">
             {FAQS.map((faq) => (
               <details key={faq.q}>
                 <summary>{faq.q}</summary>
@@ -499,7 +381,7 @@ export function LandingHub({
       {/* —— footer —— */}
       <footer
         style={{
-          background: "var(--hub-lavender)",
+          background: "#ffece3",
           padding: "56px 0 28px",
         }}
       >
@@ -558,7 +440,7 @@ export function LandingHub({
               gap: 12,
               marginTop: 48,
               paddingTop: 20,
-              borderTop: "1px solid color-mix(in srgb, #7c5cff 25%, transparent)",
+              borderTop: "1px solid color-mix(in srgb, var(--hub-accent) 25%, transparent)",
               fontSize: 13,
               color: "#888",
             }}
@@ -575,10 +457,6 @@ export function LandingHub({
           .landing-hub .hub-community-grid {
             grid-template-columns: 1fr !important;
           }
-          .landing-hub .hub-bridge-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .landing-hub .hub-bridge-arrow { display: none !important; }
           .landing-hub .hub-programs-grid {
             grid-template-columns: 1fr 1fr !important;
           }
@@ -592,99 +470,6 @@ export function LandingHub({
           }
         }
       `}</style>
-    </div>
-  );
-}
-
-function BridgeSideCard({
-  tag,
-  title,
-  items,
-}: {
-  tag: string;
-  title: string;
-  items: string[];
-}) {
-  return (
-    <div
-      style={{
-        background: "#fdfdfd",
-        border: "1px solid var(--hub-border)",
-        borderRadius: 15,
-        padding: "22px 24px",
-        minHeight: 260,
-      }}
-    >
-      <span
-        style={{
-          display: "inline-block",
-          border: "1px solid var(--hub-accent)",
-          background: "rgba(107,56,209,0.12)",
-          color: "var(--hub-accent-700)",
-          borderRadius: 3,
-          padding: "4px 10px",
-          fontSize: 12,
-          fontWeight: 700,
-          letterSpacing: "0.04em",
-          textTransform: "uppercase",
-        }}
-      >
-        {tag}
-      </span>
-      <p
-        style={{
-          margin: "18px 0 0",
-          fontSize: 20,
-          fontWeight: 800,
-          lineHeight: 1.25,
-        }}
-      >
-        {title}
-      </p>
-      <ul
-        style={{
-          listStyle: "none",
-          margin: "18px 0 0",
-          padding: 0,
-          display: "grid",
-          gap: 10,
-        }}
-      >
-        {items.map((item) => (
-          <li
-            key={item}
-            style={{
-              display: "flex",
-              gap: 8,
-              fontSize: 14,
-              lineHeight: 1.4,
-              color: "#555",
-            }}
-          >
-            <span style={{ color: "#6c5ce7", fontWeight: 700 }}>■</span>
-            {item}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function BridgeArrow({ direction = "right" }: { direction?: "left" | "right" }) {
-  return (
-    <div
-      className="hub-bridge-arrow"
-      aria-hidden
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: "var(--hub-accent)",
-        fontSize: 28,
-        fontWeight: 700,
-      }}
-    >
-      {direction === "left" ? "←" : "→"}
     </div>
   );
 }

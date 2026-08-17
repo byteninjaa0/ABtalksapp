@@ -145,6 +145,45 @@ const hubQuote = localFont({
   display: "swap",
 });
 
+const hubFredoka = localFont({
+  src: [
+    {
+      path: "../fonts/fredoka/fredoka-latin-400-normal.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../fonts/fredoka/fredoka-latin-500-normal.woff2",
+      weight: "500",
+      style: "normal",
+    },
+  ],
+  variable: "--font-hub-fredoka",
+  display: "swap",
+});
+
+const hubInstrumentSans = localFont({
+  src: [
+    {
+      path: "../fonts/instrument-sans/instrument-sans-latin-400-normal.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../fonts/instrument-sans/instrument-sans-latin-700-normal.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../fonts/instrument-sans/instrument-sans-latin-700-italic.woff2",
+      weight: "700",
+      style: "italic",
+    },
+  ],
+  variable: "--font-hub-instrument-sans",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "ABTalks",
   description: "Build your coding habit. Get discovered.",
@@ -157,6 +196,8 @@ const fontVars = [
   hubSerif.variable,
   hubDisplay.variable,
   hubQuote.variable,
+  hubFredoka.variable,
+  hubInstrumentSans.variable,
 ].join(" ");
 
 export default function RootLayout({
