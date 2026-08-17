@@ -1240,6 +1240,7 @@ html.hub-how-scroll-lock {
   --hub-bridge-abtalks: #a8a7be;
   --hub-bridge-companies: #e9af96;
   --hub-bridge-connector: #e7a36f;
+  --hub-bridge-depth: 72px;
   background: var(--hub-bg);
 }
 
@@ -1289,7 +1290,7 @@ html.hub-how-scroll-lock {
   width: 100%;
   height: 100%;
   min-height: min(420px, 52vh);
-  perspective: 1400px;
+  perspective: 3600px;
   perspective-origin: 50% 46%;
   overflow: visible;
   transform-style: preserve-3d;
@@ -1299,10 +1300,10 @@ html.hub-how-scroll-lock {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 500px;
-  height: 500px;
-  margin-left: -250px;
-  margin-top: -250px;
+  width: 560px;
+  height: 560px;
+  margin-left: -280px;
+  margin-top: -280px;
   transform-style: preserve-3d;
 }
 
@@ -1311,13 +1312,22 @@ html.hub-how-scroll-lock {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 240px;
-  height: 240px;
+  width: 320px;
+  height: 320px;
   transform-style: preserve-3d;
+  transform-origin: center center;
+}
+
+.landing-hub .hub-bridge-anchor {
+  position: absolute;
+  left: 72%;
+  top: 48%;
+  width: 1px;
+  height: 1px;
 }
 
 .landing-hub .hub-bridge-card-candidates {
-  transform: translate(-50%, -50%) translate3d(0, 168px, 0) rotateX(58deg)
+  transform: translate(-50%, -50%) translate3d(0, 130px, 0) rotateX(58deg)
     rotateZ(45deg);
 }
 
@@ -1327,56 +1337,68 @@ html.hub-how-scroll-lock {
 }
 
 .landing-hub .hub-bridge-card-companies {
-  transform: translate(-50%, -50%) translate3d(0, -168px, 0) rotateX(58deg)
+  transform: translate(-50%, -50%) translate3d(0, -130px, 0) rotateX(58deg)
     rotateZ(45deg);
 }
 
-.landing-hub .hub-bridge-card-top {
+.landing-hub .hub-bridge-card-bottom,
+.landing-hub .hub-bridge-card-top,
+.landing-hub .hub-bridge-card-front,
+.landing-hub .hub-bridge-card-side {
   position: absolute;
+  backface-visibility: hidden;
+}
+
+.landing-hub .hub-bridge-card-bottom {
   inset: 0;
-  background: var(--hub-bridge-slab);
+  background: color-mix(in srgb, var(--hub-bridge-slab) 88%, #8a8680);
+  transform: translateZ(0);
   box-shadow:
     0 25px 35px rgba(0, 0, 0, 0.06),
     0 8px 15px rgba(0, 0, 0, 0.03);
 }
 
-.landing-hub .hub-bridge-card-candidates .hub-bridge-card-top {
+.landing-hub .hub-bridge-card-top {
+  inset: 0;
+  background: var(--hub-bridge-slab);
+  transform: translateZ(var(--hub-bridge-depth));
+}
+
+.landing-hub .hub-bridge-card-candidates .hub-bridge-card-bottom {
   box-shadow:
     0 40px 55px rgba(0, 0, 0, 0.08),
     0 12px 20px rgba(0, 0, 0, 0.04);
 }
 
-.landing-hub .hub-bridge-card-abtalks .hub-bridge-card-top {
+.landing-hub .hub-bridge-card-abtalks .hub-bridge-card-bottom {
   box-shadow:
     0 25px 35px rgba(0, 0, 0, 0.06),
     0 8px 15px rgba(0, 0, 0, 0.03);
 }
 
-.landing-hub .hub-bridge-card-companies .hub-bridge-card-top {
+.landing-hub .hub-bridge-card-companies .hub-bridge-card-bottom {
   box-shadow:
     0 16px 24px rgba(0, 0, 0, 0.05),
     0 4px 10px rgba(0, 0, 0, 0.03);
 }
 
 .landing-hub .hub-bridge-card-front {
-  position: absolute;
   left: 0;
   bottom: 0;
   width: 100%;
-  height: 16px;
+  height: var(--hub-bridge-depth);
   background: color-mix(in srgb, var(--hub-bridge-slab) 78%, #8a8680);
-  transform-origin: bottom;
+  transform-origin: bottom center;
   transform: rotateX(-90deg);
 }
 
 .landing-hub .hub-bridge-card-side {
-  position: absolute;
   right: 0;
   top: 0;
-  width: 16px;
+  width: var(--hub-bridge-depth);
   height: 100%;
   background: color-mix(in srgb, var(--hub-bridge-slab) 62%, #6e6a64);
-  transform-origin: right;
+  transform-origin: right center;
   transform: rotateY(-90deg);
 }
 
@@ -1479,7 +1501,7 @@ html.hub-how-scroll-lock {
 }
 
 .landing-hub .hub-bridge-root.is-static .hub-bridge-card-candidates {
-  transform: translate(-50%, -50%) translate3d(0, 168px, 0) rotateX(58deg)
+  transform: translate(-50%, -50%) translate3d(0, 130px, 0) rotateX(58deg)
     rotateZ(45deg);
 }
 
@@ -1489,7 +1511,7 @@ html.hub-how-scroll-lock {
 }
 
 .landing-hub .hub-bridge-root.is-static .hub-bridge-card-companies {
-  transform: translate(-50%, -50%) translate3d(0, -168px, 0) rotateX(58deg)
+  transform: translate(-50%, -50%) translate3d(0, -130px, 0) rotateX(58deg)
     rotateZ(45deg);
 }
 
@@ -1508,6 +1530,10 @@ html.hub-how-scroll-lock {
   .landing-hub .hub-bridge-card {
     width: 200px;
     height: 200px;
+  }
+
+  .landing-hub .hub-bridge-section {
+    --hub-bridge-depth: 48px;
   }
 }
 
@@ -1542,6 +1568,10 @@ html.hub-how-scroll-lock {
   .landing-hub .hub-bridge-card {
     width: 160px;
     height: 160px;
+  }
+
+  .landing-hub .hub-bridge-section {
+    --hub-bridge-depth: 40px;
   }
 
   .landing-hub .hub-bridge-copy-pane {
