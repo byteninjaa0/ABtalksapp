@@ -18,6 +18,15 @@ import {
   findUnsupported,
   unsupportedReply,
 } from "@/features/hire/capabilities";
+import {
+  applyPoolBrief,
+  briefAck,
+  briefTouched,
+  extractPoolBrief,
+  isSearchableBrief,
+  mixedTrackNotice,
+  skipUnfilledIntake,
+} from "@/features/hire/pool-brief";
 
 export type ChatMessage = {
   role: "user" | "assistant";
@@ -1350,6 +1359,49 @@ export async function runScoutTurn(args: {
   const limitNotice = blocked.length
     ? await describeLimits(blocked)
     : null;
+
+  // A stated pool brief (Claude / 30 days / India / only 5) is the search.
+  // Do not restart the role form over it.
+  const brief = extractPoolBrief(msg);
+  if (briefTouched(brief)) {
+    const withBrief = applyPoolBrief(args.priorSpec, brief);
+    if (isSearchableBrief(withBrief)) {
+      const spec = skipUnfilledIntake(withBrief);
+      const notice = [limitNotice, mixedTrackNotice(brief)]
+        .filter((part): part is string => Boolean(part && part.trim()))
+        .join(" ");
+      return checked(
+        turnFor(spec, briefAck(brief), {
+          notice: notice || null,
+          action: "search",
+        }),
+        unchanged,
+      );
+    }
+    args = { ...args, priorSpec: withBrief };
+  } else if (
+    isSearchableBrief(args.priorSpec) &&
+    (brief.title || brief.mustHaveStack.length > 0)
+  ) {
+    // "backend, java" after a Claude/30/5 search re-ranks that same pool.
+    const spec = skipUnfilledIntake(applyPoolBrief(args.priorSpec, brief));
+    return checked(
+      turnFor(spec, briefAck(brief), {
+        notice: limitNotice,
+        action: "search",
+      }),
+      unchanged,
+    );
+  }
+
+  // College / IIT is a refuse, not a role title. Keep any stated stack, do
+  // not let the model file "iit students only, java" as the job.
+  if (blocked.some((f) => f.id === "education")) {
+    const spec = brief.mustHaveStack.length
+      ? { ...args.priorSpec, mustHaveStack: brief.mustHaveStack }
+      : args.priorSpec;
+    return checked(turnFor(spec, "", { notice: limitNotice }), unchanged);
+  }
 
   // The unsupported field must not be written anywhere. "from india" is a
   // statement about candidates; locationCity is the employer's office.

@@ -13,6 +13,12 @@ import type {
   ScoreDimension,
 } from "@/features/hire/types";
 import type { JobSpec } from "@/lib/validations/hire";
+import {
+  extractPoolBrief,
+  applyPoolBrief,
+  isSearchableBrief,
+  resolveSources,
+} from "@/features/hire/pool-brief";
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
@@ -300,6 +306,72 @@ console.log("score-candidate tests");
     "zero-evidence candidate says so on the card",
   );
   ok("T9 declared skills alone never reach STRONG");
+}
+
+{
+  const brief = extractPoolBrief(
+    "i want students from india who has done claude challenge for atleast 30 days only 5 candidate",
+  );
+  assert(brief.geo === "IN", "india geo");
+  assert(brief.sources.includes("CLAUDE"), "claude source");
+  assert(brief.minEvidenceDays === 30, "30 days");
+  assert(brief.resultLimit === 5, "only 5");
+  const spec = applyPoolBrief({}, brief);
+  assert(isSearchableBrief(spec), "searchable");
+  assert(resolveSources(brief).includes("CLAUDE"), "resolve claude");
+  const us = extractPoolBrief("us cohort professionals");
+  assert(us.geo === "US", "us geo");
+  assert(resolveSources(us).includes("PROGRAM"), "us → program");
+
+  const sixty = extractPoolBrief("60 day submissions atleast 20 days only 5");
+  assert(sixty.sources.includes("CHALLENGE_60"), "60-day is challenge_60");
+  assert(!sixty.sources.includes("CLAUDE"), "60-day is not claude");
+  assert(sixty.minEvidenceDays === 20, "20 days not the track name");
+
+  const role = extractPoolBrief(
+    "india claude challenge 30 days backend java python only 5",
+  );
+  assert(role.sources.includes("CLAUDE"), "claude + role");
+  assert(role.minEvidenceDays === 30, "bare 30 days");
+  assert(role.title === "Backend engineer", "backend title");
+  assert(
+    role.mustHaveStack.includes("java") && role.mustHaveStack.includes("python"),
+    "java/python stack",
+  );
+  const roleSpec = applyPoolBrief({}, role);
+  assert(roleSpec.title === "Backend engineer", "apply title");
+  assert(roleSpec.mustHaveStack?.includes("java"), "apply stack");
+
+  const usClaude = extractPoolBrief(
+    "from the US, claude challenge 30 days only 5",
+  );
+  assert(usClaude.geo === "US", "us+claude geo");
+  assert(usClaude.sources.includes("CLAUDE"), "us+claude keeps claude");
+  assert(resolveSources(usClaude).includes("CLAUDE"), "explicit source wins");
+  assert(!resolveSources(usClaude).includes("PROGRAM"), "do not swap to cohort");
+
+  const follow = extractPoolBrief("backend engineer, java");
+  assert(follow.title === "Backend engineer", "follow-up title");
+  assert(follow.mustHaveStack.includes("java"), "follow-up java");
+  assert(follow.sources.length === 0, "follow-up is not a new pool");
+  const rerank = applyPoolBrief(spec, follow);
+  assert(rerank.title === "Backend engineer", "rerank keeps title");
+  assert(rerank.mustHaveStack?.includes("java"), "rerank stack");
+  assert(
+    (rerank.extra as { poolSources?: string[] })?.poolSources?.includes(
+      "CLAUDE",
+    ),
+    "rerank keeps prior pool",
+  );
+
+  const fullstack = extractPoolBrief("us cohort, fullstack, react node, only 5");
+  assert(fullstack.title === "Full-stack engineer", "fullstack title");
+  assert(
+    fullstack.mustHaveStack.includes("react") &&
+      fullstack.mustHaveStack.includes("node"),
+    "react/node stack",
+  );
+  ok("pool brief parser");
 }
 
 console.log(`\n${passed} passed`);

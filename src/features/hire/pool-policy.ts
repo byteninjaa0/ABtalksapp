@@ -154,33 +154,58 @@ export async function resolveEligibleCandidates(
   const programIds = parsed
     .filter((r) => r.ref.source === "PROGRAM")
     .map((r) => r.ref.id);
-  const challengeUserIds = parsed
+  const claudeUserIds = parsed
     .filter((r) => r.ref.source === "CLAUDE")
+    .map((r) => r.ref.id);
+  const sixtyUserIds = parsed
+    .filter((r) => r.ref.source === "CHALLENGE_60")
+    .map((r) => r.ref.id);
+  const hackathonUserIds = parsed
+    .filter((r) => r.ref.source === "HACKATHON")
     .map((r) => r.ref.id);
 
   const flag = hireChallengePool();
 
-  const [members, enrollments] = await Promise.all([
-    programIds.length > 0
-      ? prisma.programMember.findMany({
-          where: {
-            id: { in: programIds },
-            status: { in: ["ENROLLED", "COMPLETED"] },
-            recruiterVisibilityConsentAt: { not: null },
-          },
-          select: { id: true, userId: true },
-        })
-      : [],
-    flag.enabled && challengeUserIds.length > 0
-      ? prisma.enrollment.findMany({
-          where: {
-            userId: { in: challengeUserIds },
-            challenge: { domain: Domain.CLAUDE },
-          },
-          select: { userId: true, _count: { select: { submissions: true } } },
-        })
-      : [],
-  ]);
+  const [members, claudeEnrollments, sixtyEnrollments, hackathonRows] =
+    await Promise.all([
+      programIds.length > 0
+        ? prisma.programMember.findMany({
+            where: {
+              id: { in: programIds },
+              status: { in: ["ENROLLED", "COMPLETED"] },
+              recruiterVisibilityConsentAt: { not: null },
+            },
+            select: { id: true, userId: true },
+          })
+        : [],
+      flag.enabled && claudeUserIds.length > 0
+        ? prisma.enrollment.findMany({
+            where: {
+              userId: { in: claudeUserIds },
+              challenge: { domain: Domain.CLAUDE },
+            },
+            select: { userId: true, _count: { select: { submissions: true } } },
+          })
+        : [],
+      flag.enabled && sixtyUserIds.length > 0
+        ? prisma.enrollment.findMany({
+            where: {
+              userId: { in: sixtyUserIds },
+              challenge: { domain: { in: [Domain.SE, Domain.DS, Domain.AI] } },
+            },
+            select: { userId: true, _count: { select: { submissions: true } } },
+          })
+        : [],
+      hackathonUserIds.length > 0
+        ? prisma.hackathonParticipant.findMany({
+            where: {
+              userId: { in: hackathonUserIds },
+              team: { submission: { isNot: null } },
+            },
+            select: { userId: true },
+          })
+        : [],
+    ]);
 
   const out: EligibleCandidate[] = [];
   for (const m of members) {
@@ -192,15 +217,33 @@ export async function resolveEligibleCandidates(
       publicId: candidatePublicId(m.id),
     });
   }
-  for (const e of enrollments) {
+  for (const e of claudeEnrollments) {
     if (e._count.submissions < flag.minDays) continue;
     out.push({
       candidateRef: encodeCandidateRef("CLAUDE", e.userId),
       source: "CLAUDE",
       userId: e.userId,
-      // No ProgramMember row exists, and the column is a foreign key.
       programMemberId: null,
       publicId: candidatePublicId(e.userId),
+    });
+  }
+  for (const e of sixtyEnrollments) {
+    if (e._count.submissions < flag.minDays) continue;
+    out.push({
+      candidateRef: encodeCandidateRef("CHALLENGE_60", e.userId),
+      source: "CHALLENGE_60",
+      userId: e.userId,
+      programMemberId: null,
+      publicId: candidatePublicId(e.userId),
+    });
+  }
+  for (const h of hackathonRows) {
+    out.push({
+      candidateRef: encodeCandidateRef("HACKATHON", h.userId),
+      source: "HACKATHON",
+      userId: h.userId,
+      programMemberId: null,
+      publicId: candidatePublicId(h.userId),
     });
   }
   // Someone enrolled in more than one CLAUDE challenge would appear twice.

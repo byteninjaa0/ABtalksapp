@@ -252,7 +252,10 @@ export function ScoutChat({
         // The engine decides when to search, so a typed "show me" and the chip
         // take the same path. Previously only the chip worked, because the
         // client matched its literal value before sending.
-        if (res.data.action === "search") runSearch();
+        if (res.data.action === "search") {
+          autoSearchedRef.current = true;
+          runSearch(res.data.spec);
+        }
         return;
       }
 
@@ -281,15 +284,19 @@ export function ScoutChat({
         },
       ]);
       // Same rule as the signed-in path: the engine says when to search.
-      if (res.data.action === "search") runSearch();
+      if (res.data.action === "search") {
+        autoSearchedRef.current = true;
+        runSearch(res.data.spec);
+      }
     });
   }
 
-  function runSearch() {
+  function runSearch(overrideSpec?: JobSpec) {
     if (persist && !requestId) {
       toast.error("Answer at least one question first.");
       return;
     }
+    const active = overrideSpec ?? spec;
     startTransition(async () => {
       if (persist) {
         const res = await runMatchAction({ requestId: requestId! });
@@ -307,7 +314,7 @@ export function ScoutChat({
         return;
       }
 
-      const res = await runGuestMatchAction({ spec });
+      const res = await runGuestMatchAction({ spec: active });
       if (!res.ok) {
         toast.error(res.message);
         return;
@@ -322,7 +329,7 @@ export function ScoutChat({
       writeGuestMatches({
         matches: cards,
         overallGap: res.data.overallGap,
-        title: spec.title?.trim() || "your requirement",
+        title: active.title?.trim() || "your requirement",
       });
       setSearched(true);
       setMatchCount(res.data.matchCount);

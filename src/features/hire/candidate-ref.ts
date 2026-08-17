@@ -9,7 +9,14 @@ import { candidatePublicId } from "@/features/hire/public-id";
  * and the only thing the hiring surface needs from either is a handle it can
  * carry to the browser and back.
  */
-export type CandidateSource = "PROGRAM" | "CLAUDE";
+export type CandidateSource = "PROGRAM" | "CLAUDE" | "CHALLENGE_60" | "HACKATHON";
+
+const SOURCES: ReadonlySet<string> = new Set([
+  "PROGRAM",
+  "CLAUDE",
+  "CHALLENGE_60",
+  "HACKATHON",
+]);
 
 export type CandidateRef = { source: CandidateSource; id: string };
 
@@ -41,8 +48,8 @@ export function decodeCandidateRef(raw: string): CandidateRef | null {
   const source = raw.slice(0, idx);
   const id = raw.slice(idx + 1);
   if (!id) return null;
-  if (source !== "PROGRAM" && source !== "CLAUDE") return null;
-  return { source, id };
+  if (!SOURCES.has(source)) return null;
+  return { source: source as CandidateSource, id };
 }
 
 /**

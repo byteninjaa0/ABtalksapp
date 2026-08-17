@@ -53,13 +53,15 @@ export const UNSUPPORTED_FILTERS: UnsupportedFilter[] = [
       "I don't filter people by gender, age, caste, religion or marital status, and I won't approximate it another way.",
   },
   {
+    // Cities and countries we have no track for. India / US are routed to
+    // the challenge vs cohort pools in pool-brief.ts — they must not land here.
     id: "candidate_location",
     match:
-      /\b(in|from|based in|located in|living in)\s+(the\s+)?(us|usa|america|uk|india|canada|europe|bangalore|bengaluru|delhi|ncr|mumbai|hyderabad|pune|chennai|noida|gurgaon)\b|\b(country|location|city|relocat|onsite in|nearby|local candidates)\b/i,
+      /\b(in|from|based in|located in|living in)\s+(the\s+)?(uk|canada|europe|australia|singapore|uae|dubai)\b|\b(bangalore|bengaluru|delhi|ncr|mumbai|hyderabad|pune|chennai|noida|gurgaon)\b|\b(relocat|onsite in|nearby|local candidates)\b/i,
     reply:
-      "I can't filter candidates by location — nobody in the pool has shared one. It's an opt-in field and it's currently empty for every member.",
+      "I can't filter by that city — nobody in the pool has shared a city. I can search the India tracks or the US cohort.",
     instead:
-      "The role's own location is already on the requirement, and I flag every match as availability-unconfirmed so you can settle location at outreach.",
+      "Say India or US, or name the track (Claude challenge, cohort, hackathon).",
   },
   {
     id: "challenge_track",

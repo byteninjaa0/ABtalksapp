@@ -304,8 +304,11 @@ export async function buildChallengeDossierSet(opts: {
 
     dossiers.push({
       publicId: candidatePublicId(e.userId),
-      source: "CLAUDE",
-      candidateRef: encodeCandidateRef("CLAUDE", e.userId),
+      source: e.domain === Domain.CLAUDE ? "CLAUDE" : "CHALLENGE_60",
+      candidateRef: encodeCandidateRef(
+        e.domain === Domain.CLAUDE ? "CLAUDE" : "CHALLENGE_60",
+        e.userId,
+      ),
       // No ProgramMember row exists for these people, and inventing one would
       // break the foreign key the moment a match is persisted.
       programMemberId: null,

@@ -20,7 +20,11 @@ function declaredRole(match: ScoredCandidate): string {
  */
 export function toPublicMatch(
   match: ScoredCandidate & { rationale?: string | null },
-  opts?: { shortlisted?: boolean; coverageNote?: string | null },
+  opts?: {
+    shortlisted?: boolean;
+    coverageNote?: string | null;
+    highlightSkills?: string[];
+  },
 ): MatchCardData {
   const band = match.dossier?.compensation.estimate ?? null;
   const ev = match.dossier?.evidence;
@@ -46,6 +50,9 @@ export function toPublicMatch(
     engagementStatus: null,
     compensationBand: band ? formatBandLpa(band) : null,
     coverageNote: opts?.coverageNote ?? null,
+    highlightSkills: opts?.highlightSkills?.length
+      ? opts.highlightSkills
+      : undefined,
     evidence: {
       skills: match.evidence.skills,
       missionPoints: match.evidence.missionPoints,

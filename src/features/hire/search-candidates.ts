@@ -1,5 +1,6 @@
 import "server-only";
 
+import { Domain } from "@prisma/client";
 import { logger } from "@/lib/logger";
 import { hireChallengePool } from "@/lib/feature-flags";
 import type { JobSpec } from "@/lib/validations/hire";
@@ -9,6 +10,8 @@ import {
   CHALLENGE_TOTAL_DAYS,
   buildChallengeDossierSet,
 } from "@/features/hire/challenge-dossier";
+import { buildHackathonDossierSet } from "@/features/hire/hackathon-dossier";
+import { readPoolExtra } from "@/features/hire/pool-brief";
 import {
   clearsEvidenceFloor,
   memberEligibilityWhere,
@@ -83,20 +86,35 @@ export async function searchCandidates(
   try {
     const gate = await resolvePoolCohorts();
     const challengeFlag = hireChallengePool();
+    const extra = readPoolExtra(spec);
+    const want = extra.sources;
+    const wantProgram = want.length === 0 || want.includes("PROGRAM");
+    const wantClaude = want.length === 0 || want.includes("CLAUDE");
+    const wantSixty = want.includes("CHALLENGE_60");
+    const wantHackathon = want.includes("HACKATHON");
+    const minDays = Math.max(
+      challengeFlag.minDays,
+      extra.minEvidenceDays ?? 0,
+    );
 
-    // Two independent pools. Either may be empty, and the search is only over
-    // when both are — a deployment with no open cohort still has a challenge
-    // track worth searching, and the old early return hid it.
-    const [set, challenge] = await Promise.all([
-      gate.ok
+    const challengeDomains: Domain[] = [];
+    if (challengeFlag.enabled && wantClaude) challengeDomains.push(Domain.CLAUDE);
+    if (challengeFlag.enabled && wantSixty) {
+      challengeDomains.push(Domain.SE, Domain.DS, Domain.AI);
+    }
+
+    const [set, challenge, hackathon] = await Promise.all([
+      gate.ok && wantProgram
         ? buildDossierSet(memberEligibilityWhere(gate.cohorts.map((c) => c.id)))
         : null,
-      challengeFlag.enabled
+      challengeDomains.length > 0
         ? buildChallengeDossierSet({
-            minDays: challengeFlag.minDays,
+            minDays,
+            domains: challengeDomains,
             limit: CHALLENGE_POOL_CAP,
           })
         : null,
+      wantHackathon ? buildHackathonDossierSet() : null,
     ]);
 
     const programDossiers = set?.dossiers ?? [];
@@ -108,6 +126,9 @@ export async function searchCandidates(
       programDossiers.map((d) => d.userId).filter((id): id is string => Boolean(id)),
     );
     const challengeDossiers = (challenge?.dossiers ?? []).filter(
+      (d) => !d.userId || !programUserIds.has(d.userId),
+    );
+    const hackathonDossiers = (hackathon?.dossiers ?? []).filter(
       (d) => !d.userId || !programUserIds.has(d.userId),
     );
 
@@ -127,7 +148,11 @@ export async function searchCandidates(
     );
     const belowEvidenceFloor = programDossiers.length - aboveFloor.length;
 
-    if (programDossiers.length === 0 && challengeDossiers.length === 0) {
+    if (
+      programDossiers.length === 0 &&
+      challengeDossiers.length === 0 &&
+      hackathonDossiers.length === 0
+    ) {
       return {
         ok: true,
         data: {
@@ -188,7 +213,7 @@ export async function searchCandidates(
       }),
       ...challengeDossiers.map((d): ScoreableMember => ({
         id: d.userId ?? "",
-        source: "CLAUDE",
+        source: d.source,
         candidateRef: d.candidateRef,
         userId: d.userId ?? "",
         // No name, no employer. There is none to load and none to leak.
@@ -218,19 +243,45 @@ export async function searchCandidates(
         coverage: challengeCoverage,
         dossier: d,
       })),
+      ...hackathonDossiers.map((d): ScoreableMember => ({
+        id: d.userId ?? "",
+        source: "HACKATHON",
+        candidateRef: d.candidateRef,
+        userId: d.userId ?? "",
+        fullName: "",
+        jobRole: d.rawRoleLabel.value,
+        company: "",
+        yearsExperience: d.yearsExperience.value,
+        skills: d.declaredSkills.value,
+        missionPoints: 0,
+        missionsPassed: d.evidence.missionsPassed.value,
+        missionsAttempted: d.evidence.missionsAttempted.value,
+        cleanPassCount: 0,
+        totalScore: 0,
+        commitDayCount: d.evidence.commitDays.value,
+        projectScores: [],
+        interview: null,
+        hasVisibilityConsent: true,
+        cohortPublished: true,
+        status: "ENROLLED",
+        availability: d.availability,
+        cohortDay: 1,
+        maxEarnableMissions: 1,
+        consistencyWindow: 1,
+        coverage: hackathon?.coverage ?? EMPTY_COVERAGE,
+        dossier: d,
+      })),
     ];
 
     const coverage =
-      programDossiers.length > 0 && challengeDossiers.length > 0
-        ? {
-            dimensions: programCoverage.dimensions,
-            note: `${programCoverage.note} Challenge candidates are ranked separately against what their own track records: ${challengeCoverage.note}`,
-          }
-        : programDossiers.length > 0
-          ? programCoverage
-          : challengeCoverage;
+      programDossiers.length > 0
+        ? programCoverage
+        : challengeDossiers.length > 0
+          ? challengeCoverage
+          : (hackathon?.coverage ?? EMPTY_COVERAGE);
 
-    const limit = opts?.limit ?? 25;
+    const hardCap = extra.resultLimit;
+    const limit = hardCap ?? opts?.limit ?? 25;
     const ranked = rankCandidates(scoreable, spec, {
       includeHardFiltered: true,
       limit: 100,
@@ -256,11 +307,15 @@ export async function searchCandidates(
     // carrying their real tier and their real gaps, never dressed up.
     const shown = ranked.filter((r) => !r.hardFiltered);
     const primary = shown.filter((r) => r.tier !== "NONE");
-    const matches = (
-      primary.length >= MIN_RESULTS
-        ? primary
-        : [...primary, ...shown.filter((r) => r.tier === "NONE")]
-    ).slice(0, limit);
+    // A stated "only 5" must not pad a good list with leftovers. An empty
+    // primary list is different — hide nobody. Rank them with their real gaps.
+    const padded =
+      primary.length === 0
+        ? shown
+        : hardCap || primary.length >= MIN_RESULTS
+          ? primary
+          : [...primary, ...shown.filter((r) => r.tier === "NONE")];
+    const matches = padded.slice(0, limit);
 
     const shownIds = new Set(matches.map((m) => m.programMemberId));
     const nearMisses = ranked

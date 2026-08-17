@@ -120,7 +120,10 @@ export async function runGuestMatchAction(
       ok: true,
       data: {
         matches: explained.matches.map((m) =>
-          toPublicMatch(m, { coverageNote: search.data.coverage.note }),
+          toPublicMatch(m, {
+            coverageNote: search.data.coverage.note,
+            highlightSkills: parsed.data.spec.mustHaveStack,
+          }),
         ),
         overallGap: explained.overallGap,
         matchCount: explained.matches.length,

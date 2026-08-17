@@ -63,7 +63,55 @@ export type MatchCardData = {
   /** Which evidence dimensions the ranking could use, and which the cohort has
    *  not produced yet. */
   coverageNote?: string | null;
+  /** Stack tokens from this search — matching skill chips are pulled forward. */
+  highlightSkills?: string[];
 };
+
+type TrackKind = "cohort" | "challenge" | "hackathon";
+
+function trackMeta(source?: CandidateSource): {
+  label: string | null;
+  kind: TrackKind;
+  totalDays: number | null;
+} {
+  switch (source) {
+    case "CLAUDE":
+      return { label: "Claude", kind: "challenge", totalDays: 60 };
+    case "CHALLENGE_60":
+      return { label: "60-day", kind: "challenge", totalDays: 60 };
+    case "HACKATHON":
+      return { label: "Hackathon", kind: "hackathon", totalDays: null };
+    case "PROGRAM":
+      return { label: "US cohort", kind: "cohort", totalDays: 31 };
+    default:
+      return { label: null, kind: "cohort", totalDays: null };
+  }
+}
+
+/** Same word-boundary rule as ranking — "java" must not light up "javascript". */
+function skillHighlighted(skill: string, needles: string[]): boolean {
+  const hay = skill.toLowerCase();
+  return needles.some((n) => {
+    const needle = n.toLowerCase().trim();
+    if (!needle) return false;
+    const i = hay.indexOf(needle);
+    if (i === -1) return false;
+    const before = i === 0 ? "" : hay[i - 1]!;
+    const after = hay[i + needle.length] ?? "";
+    const bound = (c: string) => c === "" || !/[a-z0-9]/.test(c);
+    return bound(before) && bound(after);
+  });
+}
+
+function orderedSkills(skills: string[], needles: string[]): string[] {
+  if (!needles.length) return skills;
+  const hit: string[] = [];
+  const rest: string[] = [];
+  for (const s of skills) {
+    (skillHighlighted(s, needles) ? hit : rest).push(s);
+  }
+  return [...hit, ...rest];
+}
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -91,7 +139,12 @@ export function MatchCard({
   const isTop = rank === 1;
   const strong = match.tier === "STRONG";
   const publicId = refPublicId(match.candidateRef);
-  const isChallenge = match.source === "CLAUDE";
+  const track = trackMeta(match.source);
+  const isChallenge = track.kind === "challenge";
+  const isHackathon = track.kind === "hackathon";
+  const needles = match.highlightSkills ?? [];
+  const skills = orderedSkills(e.skills ?? [], needles);
+  const totalDays = e.totalTrackDays ?? track.totalDays;
   // The same number means different work on the two tracks, so it is never
   // labelled the same way. A cohort mission is graded on submission; a challenge
   // day is a shipped task with a GitHub URL recorded against it.
@@ -128,6 +181,11 @@ export function MatchCard({
             <h3 className="font-display text-lg font-semibold">
               {match.jobRole}
             </h3>
+            {track.label && (
+              <span className="rounded-full border px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                {track.label}
+              </span>
+            )}
             {isTop && (
               <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
                 Top match
@@ -169,7 +227,15 @@ export function MatchCard({
           in filled chips, self-declared skills in outlined ones — the
           difference between the two is the point of the card. */}
       <ul className="mt-3 flex flex-wrap gap-1.5 text-xs">
-        {typeof e.missionsPassed === "number" && (
+        {isHackathon && (
+          <li
+            className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-900 dark:text-emerald-100"
+            title="Shipped a hackathon repo the platform recorded."
+          >
+            Shipped project
+          </li>
+        )}
+        {!isHackathon && typeof e.missionsPassed === "number" && (
           <li
             className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-900 dark:text-emerald-100"
             title={
@@ -179,7 +245,7 @@ export function MatchCard({
             }
           >
             {e.missionsPassed}
-            {e.totalTrackDays ? ` of ${e.totalTrackDays}` : ""} {workLabel}
+            {totalDays ? ` of ${totalDays}` : ""} {workLabel}
           </li>
         )}
         {e.certificateIssued && (
@@ -206,7 +272,8 @@ export function MatchCard({
             {e.cleanPassCount} first-attempt
           </li>
         )}
-        {(e.workingLanguages ?? []).map((l) => (
+        {!isHackathon &&
+          (e.workingLanguages ?? []).map((l) => (
           <li
             key={l}
             className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-900 lowercase dark:text-emerald-100"
@@ -215,19 +282,30 @@ export function MatchCard({
             {l.toLowerCase()}
           </li>
         ))}
-        {typeof e.yearsExperience === "number" && (
+        {typeof e.yearsExperience === "number" && e.yearsExperience > 0 && (
           <li className="rounded-full bg-muted px-2 py-0.5">
             {e.yearsExperience} yrs
           </li>
         )}
-        {(e.skills ?? []).slice(0, 4).map((s) => (
-          <li key={s} className="rounded-full border px-2 py-0.5">
-            {s}
-          </li>
-        ))}
-        {(e.skills?.length ?? 0) > 4 && (
+        {skills.slice(0, 4).map((s) => {
+          const hit = skillHighlighted(s, needles);
+          return (
+            <li
+              key={s}
+              className={
+                hit
+                  ? "rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary"
+                  : "rounded-full border px-2 py-0.5"
+              }
+              title={hit ? "Matches the stack you asked for." : undefined}
+            >
+              {s}
+            </li>
+          );
+        })}
+        {skills.length > 4 && (
           <li className="px-1 py-0.5 text-muted-foreground">
-            +{e.skills!.length - 4}
+            +{skills.length - 4}
           </li>
         )}
         {match.compensationBand && (
@@ -308,51 +386,65 @@ export function MatchCard({
               }
             />
             <Stat
-              label={isChallenge ? "Days shipped" : "Missions passed"}
-              value={
-                typeof e.missionsPassed === "number"
-                  ? isChallenge
-                    ? `${e.missionsPassed} of ${e.totalTrackDays ?? 60}`
-                    : typeof e.missionsAttempted === "number"
-                      ? `${e.missionsPassed} of ${e.missionsAttempted} tried`
-                      : String(e.missionsPassed)
-                  : "—"
+              label={
+                isHackathon
+                  ? "Hackathon"
+                  : isChallenge
+                    ? "Days shipped"
+                    : "Missions passed"
               }
-            />
-            <Stat
-              label={isChallenge ? "Assessments" : "First-attempt"}
               value={
-                isChallenge
-                  ? typeof e.quizAverage === "number"
-                    ? `${e.quizAverage} avg`
-                    : "Not sat"
-                  : typeof e.cleanPassCount === "number"
-                    ? `${e.cleanPassCount} passes`
+                isHackathon
+                  ? "Shipped"
+                  : typeof e.missionsPassed === "number"
+                    ? isChallenge
+                      ? `${e.missionsPassed} of ${totalDays ?? 60}`
+                      : typeof e.missionsAttempted === "number"
+                        ? `${e.missionsPassed} of ${e.missionsAttempted} tried`
+                        : String(e.missionsPassed)
                     : "—"
               }
             />
-            <Stat
-              label={isChallenge ? "Longest streak" : "Commit days"}
-              value={
-                typeof e.commitDayCount === "number"
-                  ? isChallenge
-                    ? `${e.commitDayCount} days`
-                    : String(e.commitDayCount)
-                  : "—"
-              }
-            />
-            <Stat
-              label={isChallenge ? "Certificate" : "Projects"}
-              value={
-                isChallenge
-                  ? e.certificateIssued
-                    ? "Issued"
-                    : "Not yet"
-                  : e.projectScores?.length
-                    ? e.projectScores.join(" / ")
-                    : "None"
-              }
-            />
+            {!isHackathon && (
+              <Stat
+                label={isChallenge ? "Assessments" : "First-attempt"}
+                value={
+                  isChallenge
+                    ? typeof e.quizAverage === "number"
+                      ? `${e.quizAverage} avg`
+                      : "Not sat"
+                    : typeof e.cleanPassCount === "number"
+                      ? `${e.cleanPassCount} passes`
+                      : "—"
+                }
+              />
+            )}
+            {!isHackathon && (
+              <Stat
+                label={isChallenge ? "Longest streak" : "Commit days"}
+                value={
+                  typeof e.commitDayCount === "number"
+                    ? isChallenge
+                      ? `${e.commitDayCount} days`
+                      : String(e.commitDayCount)
+                    : "—"
+                }
+              />
+            )}
+            {!isHackathon && (
+              <Stat
+                label={isChallenge ? "Certificate" : "Projects"}
+                value={
+                  isChallenge
+                    ? e.certificateIssued
+                      ? "Issued"
+                      : "Not yet"
+                    : e.projectScores?.length
+                      ? e.projectScores.join(" / ")
+                      : "None"
+                }
+              />
+            )}
             <Stat
               label="Est. compensation"
               value={match.compensationBand ?? "—"}
@@ -361,34 +453,43 @@ export function MatchCard({
           </dl>
 
           <p className="text-[11px] leading-relaxed text-muted-foreground">
-            {isChallenge
-              ? "Days shipped, streak, assessment scores and the certificate are verified by ABTalks — every day was submitted against a GitHub URL recorded at the time. Experience and skills are self-declared."
-              : "Mission, first-attempt, commit and project figures are verified by ABTalks. Experience, skills and role are self-declared."}
+            {isHackathon
+              ? "Shipped a hackathon project the platform recorded. Skills and role are self-declared — there is no daily track behind this card."
+              : isChallenge
+                ? "Days shipped, streak, assessment scores and the certificate are verified by ABTalks — every day was submitted against a GitHub URL recorded at the time. Experience and skills are self-declared."
+                : "Mission, first-attempt, commit and project figures are verified by ABTalks. Experience, skills and role are self-declared."}
             {match.compensationBand ? ` ${COMPENSATION_DISCLAIMER}` : ""}
           </p>
 
-          {isChallenge && (
+          {(isChallenge || isHackathon) && (
             <p className="text-[11px] leading-relaxed text-muted-foreground">
-              This candidate came through the 60-day challenge rather than the
-              cohort, so there is no evidence profile page and no shortlist —
-              request an introduction and our team will take it from there.
+              {isHackathon
+                ? "This candidate came through the hackathon rather than the cohort, so there is no evidence profile page and no shortlist — request an introduction and our team will take it from there."
+                : "This candidate came through the 60-day challenge rather than the cohort, so there is no evidence profile page and no shortlist — request an introduction and our team will take it from there."}
             </p>
           )}
 
-          {(e.skills?.length ?? 0) > 0 && (
+          {skills.length > 0 && (
             <div>
               <p className="text-[11px] tracking-wide text-muted-foreground uppercase">
                 Skills — declared by the candidate
               </p>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {e.skills!.map((s) => (
-                  <span
-                    key={s}
-                    className="rounded-full border px-2 py-0.5 text-xs"
-                  >
-                    {s}
-                  </span>
-                ))}
+                {skills.map((s) => {
+                  const hit = skillHighlighted(s, needles);
+                  return (
+                    <span
+                      key={s}
+                      className={
+                        hit
+                          ? "rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                          : "rounded-full border px-2 py-0.5 text-xs"
+                      }
+                    >
+                      {s}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}

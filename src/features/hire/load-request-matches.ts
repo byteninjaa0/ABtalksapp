@@ -33,6 +33,7 @@ export async function loadRequestMatches(
       title: true,
       status: true,
       alertWhenAvailable: true,
+      mustHaveStack: true,
       matches: {
         orderBy: { score: "desc" },
         select: {
@@ -82,7 +83,8 @@ export async function loadRequestMatches(
         m.evidence && typeof m.evidence === "object"
           ? (m.evidence as MatchCardData["evidence"])
           : {};
-      const isChallenge = m.source !== "PROGRAM";
+      const source = m.source === "PROGRAM" ? "PROGRAM" : m.source;
+      const isProgram = source === "PROGRAM";
       // The stored evidence blob carries the challenge candidate's role label;
       // there is no ProgramMember row to read it from.
       const rawRole =
@@ -100,10 +102,21 @@ export async function loadRequestMatches(
       });
       return {
         candidateRef: encodeCandidateRef(
-          isChallenge ? "CLAUDE" : "PROGRAM",
-          (isChallenge ? m.studentUserId : m.programMemberId) ?? "",
+          source === "PROGRAM" ||
+            source === "CLAUDE" ||
+            source === "CHALLENGE_60" ||
+            source === "HACKATHON"
+            ? source
+            : "CLAUDE",
+          (isProgram ? m.programMemberId : m.studentUserId) ?? "",
         ),
-        source: isChallenge ? "CLAUDE" : "PROGRAM",
+        source:
+          source === "PROGRAM" ||
+          source === "CLAUDE" ||
+          source === "CHALLENGE_60" ||
+          source === "HACKATHON"
+            ? source
+            : "CLAUDE",
         programMemberId: m.programMemberId,
         jobRole: rawRole ? tidyRoleLabel(rawRole) : "Candidate",
         score: m.score,
@@ -116,6 +129,9 @@ export async function loadRequestMatches(
           ? (engagements.get(m.studentUserId)?.status ?? null)
           : null,
         compensationBand: band ? formatBandLpa(band) : null,
+        highlightSkills: request.mustHaveStack.length
+          ? request.mustHaveStack
+          : undefined,
         evidence,
       };
     }),
