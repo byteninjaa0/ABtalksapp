@@ -19,15 +19,25 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
 }));
 
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 import {
   generateProgramJoinCode,
   getCohortByJoinCode,
   normalizeJoinCode,
+  requireProgramMember,
+  requireRecruiter,
   resolveProgramMemberForUser,
 } from "@/lib/program-auth";
 
+const authMock = vi.mocked(auth);
+const redirectMock = vi.mocked(redirect);
+
 beforeEach(() => {
   vi.clearAllMocks();
+  redirectMock.mockImplementation((url: string) => {
+    throw new Error(`REDIRECT:${url}`);
+  });
 });
 
 describe("normalizeJoinCode", () => {
@@ -102,5 +112,102 @@ describe("resolveProgramMemberForUser", () => {
   it("returns null when the user has no qualifying memberships", async () => {
     findMany.mockResolvedValue([]);
     await expect(resolveProgramMemberForUser("user_1")).resolves.toBeNull();
+  });
+});
+
+describe("requireProgramMember", () => {
+  it("redirects unauthenticated users to /program", async () => {
+    authMock.mockResolvedValue(null);
+    await expect(requireProgramMember()).rejects.toThrow("REDIRECT:/program");
+  });
+
+  it("redirects users without a membership to /program", async () => {
+    authMock.mockResolvedValue({ user: { id: "u1" } } as never);
+    findMany.mockResolvedValue([]);
+    await expect(requireProgramMember()).rejects.toThrow("REDIRECT:/program");
+  });
+
+  it("returns member + cohort when enrolled", async () => {
+    const cohort = {
+      id: "c1",
+      name: "Cohort",
+      status: "ACTIVE",
+      startsAt: new Date("2026-01-01"),
+      endsAt: null,
+      capacity: 100,
+      resultsPublishedAt: null,
+      joinCode: "ABCD1234",
+    };
+    authMock.mockResolvedValue({ user: { id: "u1" } } as never);
+    findMany.mockResolvedValue([
+      {
+        id: "m1",
+        status: "ENROLLED",
+        fullName: "Ada",
+        highestUnlockedDay: 3,
+        cohortId: "c1",
+        enrolledAt: new Date("2026-01-01"),
+        cohort,
+      },
+    ]);
+
+    await expect(requireProgramMember()).resolves.toEqual({
+      member: {
+        id: "m1",
+        status: "ENROLLED",
+        fullName: "Ada",
+        highestUnlockedDay: 3,
+        cohortId: "c1",
+      },
+      cohort,
+      userId: "u1",
+    });
+  });
+});
+
+describe("requireRecruiter", () => {
+  it("redirects unauthenticated users to /talent/pending", async () => {
+    authMock.mockResolvedValue(null);
+    await expect(requireRecruiter()).rejects.toThrow(
+      "REDIRECT:/talent/pending",
+    );
+  });
+
+  it("redirects when recruiter profile is missing or unapproved", async () => {
+    authMock.mockResolvedValue({ user: { id: "u1" } } as never);
+    findUnique.mockResolvedValue(null);
+    await expect(requireRecruiter()).rejects.toThrow(
+      "REDIRECT:/talent/pending",
+    );
+
+    findUnique.mockResolvedValue({
+      id: "r1",
+      approved: false,
+      company: "Acme",
+      fullName: "Rec",
+    });
+    await expect(requireRecruiter()).rejects.toThrow(
+      "REDIRECT:/talent/pending",
+    );
+  });
+
+  it("returns the approved recruiter profile", async () => {
+    authMock.mockResolvedValue({ user: { id: "u1" } } as never);
+    findUnique.mockResolvedValue({
+      id: "r1",
+      approved: true,
+      company: "Acme",
+      fullName: "Rec",
+    });
+
+    await expect(requireRecruiter()).resolves.toEqual({
+      profile: {
+        id: "r1",
+        approved: true,
+        company: "Acme",
+        fullName: "Rec",
+      },
+      userId: "u1",
+    });
   });
 });
