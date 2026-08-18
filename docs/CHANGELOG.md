@@ -2,6 +2,7 @@
 
 <!-- Reconciled through 2026-08-05 (commit 519cc34) into docs/project-context.md. -->
 
+- 2026-08-18 [convention] College typeahead pure helpers (`tokenize` / `splitLocationSuffix` / `collapseLocationDupes`) exported from `src/features/college/search-colleges.ts` for Vitest coverage of AISHE/AICTE dupe collapse
 - 2026-08-17 [schema] College catalog table (54,651 institutions) + StudentProfile.collegeId (nullable, no FK) so registration/profile can store a canonical pick while college stays the display string
 - 2026-08-16 [convention] Newsletter OAuth pref cookie parse in `src/lib/newsletter-pref.ts`; workshop registration Zod in `src/lib/validations/workshop.ts` for unit tests (consent/newsletter parity)
 - 2026-08-13 [rule] Hackathon ViCoDathon 2026 participation certificates (ABT-HK-XXXXX); HACKATHON_CERTIFICATE_TEMPLATE_URL/PATH per-type template
