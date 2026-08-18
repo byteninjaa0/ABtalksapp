@@ -2,11 +2,14 @@
 
 <!-- Reconciled through 2026-08-05 (commit 519cc34) into docs/project-context.md. -->
 
+- 2026-08-18 [convention] College typeahead pure helpers (`tokenize` / `splitLocationSuffix` / `collapseLocationDupes`) exported from `src/features/college/search-colleges.ts` for Vitest coverage of AISHE/AICTE dupe collapse
 - 2026-08-17 [schema] College catalog table (54,651 institutions) + StudentProfile.collegeId (nullable, no FK) so registration/profile can store a canonical pick while college stays the display string
-
+- 2026-08-16 [convention] Newsletter OAuth pref cookie parse in `src/lib/newsletter-pref.ts`; workshop registration Zod in `src/lib/validations/workshop.ts` for unit tests (consent/newsletter parity)
 - 2026-08-13 [rule] Hackathon ViCoDathon 2026 participation certificates (ABT-HK-XXXXX); HACKATHON_CERTIFICATE_TEMPLATE_URL/PATH per-type template
 - 2026-08-12 [rule] Program behind-by / at-risk pace uses cohort calendar day, not Day-4 unlock ceiling (calendar+3), so on-time members are not falsely flagged ~4 days behind
 - 2026-08-12 [rule|convention] Program day boundaries: PROGRAM_TZ America/Chicago → Asia/Kolkata; admin cohort startsAt/endsAt round-trip via fromZonedTime(PROGRAM_TZ) so Mission Control cohort day matches today's mission
+- 2026-08-12 [convention] Edge-safe middleware attribution helpers live in `src/middleware-attribution.ts` (not `@/lib/*`); chatbot TF-IDF/BM25 retrieval helpers live in `src/lib/chatbot-kb.ts` for unit testing without Gemini
+- 2026-08-12 [convention] Added Vitest unit-test harness (`npm test` / `vitest.config.ts`) covering high-risk pure logic: chatbot matcher, cookie consent parse, legal/hackathon/phone Zod schemas, date-utils day numbering, hackathon submission window, feature flags
 - 2026-08-11 [env|convention] Site help chatbot behind ENABLE_CHATBOT: /api/chat + ChatWidget in root layout, knowledge/ KB, optional GEMINI_API_KEY / ANTHROPIC_API_KEY for generation
 - 2026-08-11 [convention] Privacy Policy polish (v2026-08-11): plain-English section leads, DNT, hosting logs/IP, DPDP lawful-basis framing, concrete security measures, material-change notice (email/banner/re-accept); PRIVACY_VERSION bump triggers reconsent banner
 - 2026-08-10 [schema|convention] Plan 061: cookie chooser is a small bottom-right banner (no overlay); entity details published (ABTalksOnAI / Suman Shukla / Udyam UDYAM-UP-29-0250625 / Ghaziabad address — no PAN/bank/IFSC); NewsletterSubscription model + pre-checked newsletter opt-in on all signup funnels (excluded from submit gate); Privacy/Terms wording updated to match. Migration 20260810180000_newsletter_subscription applied to Neon on 2026-08-11 (additive only: CREATE TABLE + indexes + FK)
