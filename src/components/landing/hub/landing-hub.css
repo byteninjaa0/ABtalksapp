@@ -1235,12 +1235,14 @@ html.hub-how-scroll-lock {
 
 /* —— bridge (CSS 3D scroll story; hub-local, not a design-system pattern) —— */
 .landing-hub .hub-bridge-section {
-  --hub-bridge-slab: #fdfdfc;
+  --hub-bridge-slab: #ffffff;
   --hub-bridge-candidates: #b8c9d9;
   --hub-bridge-abtalks: #a8a7be;
   --hub-bridge-companies: #e9af96;
   --hub-bridge-connector: #e7a36f;
-  --hub-bridge-depth: 72px;
+  /* slab thickness, not block height: ~10% of the projected diamond so the
+     stack reads as spaced plates. The wall bands measure depth * sin(58deg). */
+  --hub-bridge-depth: 34px;
   background: var(--hub-bg);
 }
 
@@ -1308,7 +1310,7 @@ html.hub-how-scroll-lock {
 }
 
 .landing-hub .hub-bridge-card {
-  --hub-bridge-slab: #fdfdfc;
+  --hub-bridge-slab: #ffffff;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -1351,7 +1353,7 @@ html.hub-how-scroll-lock {
 
 .landing-hub .hub-bridge-card-bottom {
   inset: 0;
-  background: color-mix(in srgb, var(--hub-bridge-slab) 88%, #8a8680);
+  background: color-mix(in srgb, var(--hub-bridge-slab) 86%, #8a8680);
   transform: translateZ(0);
   box-shadow:
     0 25px 35px rgba(0, 0, 0, 0.06),
@@ -1382,12 +1384,16 @@ html.hub-how-scroll-lock {
     0 4px 10px rgba(0, 0, 0, 0.03);
 }
 
+/* Both walls hinge on their own card edge and must swing FORWARD to z =
+   +depth, so they meet the top face. Wrong sign sends a wall to z = -depth,
+   where its normal faces away and backface-visibility deletes it — the box
+   then reads as open on that side. */
 .landing-hub .hub-bridge-card-front {
   left: 0;
   bottom: 0;
   width: 100%;
   height: var(--hub-bridge-depth);
-  background: color-mix(in srgb, var(--hub-bridge-slab) 78%, #8a8680);
+  background: color-mix(in srgb, var(--hub-bridge-slab) 74%, #8a8680);
   transform-origin: bottom center;
   transform: rotateX(-90deg);
 }
@@ -1397,9 +1403,9 @@ html.hub-how-scroll-lock {
   top: 0;
   width: var(--hub-bridge-depth);
   height: 100%;
-  background: color-mix(in srgb, var(--hub-bridge-slab) 62%, #6e6a64);
+  background: color-mix(in srgb, var(--hub-bridge-slab) 56%, #6e6a64);
   transform-origin: right center;
-  transform: rotateY(-90deg);
+  transform: rotateY(90deg);
 }
 
 .landing-hub .hub-bridge-copy-pane {
@@ -1533,7 +1539,7 @@ html.hub-how-scroll-lock {
   }
 
   .landing-hub .hub-bridge-section {
-    --hub-bridge-depth: 48px;
+    --hub-bridge-depth: 24px;
   }
 }
 
@@ -1571,7 +1577,7 @@ html.hub-how-scroll-lock {
   }
 
   .landing-hub .hub-bridge-section {
-    --hub-bridge-depth: 40px;
+    --hub-bridge-depth: 20px;
   }
 
   .landing-hub .hub-bridge-copy-pane {

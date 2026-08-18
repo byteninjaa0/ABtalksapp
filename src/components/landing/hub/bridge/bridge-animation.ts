@@ -10,10 +10,8 @@ type StageYs = [number, number, number];
 
 type Geo = {
   y: [number, number, number];
-  riseY: number;
   riseZ: number;
   riseX: number;
-  compress: number;
   scaleActive: number;
   scaleIdle: number;
   scrollEnd: string;
@@ -64,43 +62,46 @@ function scaleStages(factor: number): Geo["stages"] {
 
 const DESKTOP: Geo = {
   y: [130, 0, -130],
-  riseY: -35,
   riseZ: 95,
   riseX: 25,
-  compress: 26,
   scaleActive: 1.03,
   scaleIdle: 0.98,
-  scrollEnd: "+=400%",
+  // Four stages, boundaries at 1/6 · 1/2 · 5/6 of the pin. Short enough that
+  // one deliberate flick clears a boundary instead of stalling mid-stage.
+  scrollEnd: "+=240%",
   stages: DESKTOP_STAGES,
 };
 
 const TABLET: Geo = {
   y: [104, 0, -104],
-  riseY: -28,
   riseZ: 76,
   riseX: 20,
-  compress: 21,
   scaleActive: 1.03,
   scaleIdle: 0.98,
-  scrollEnd: "+=320%",
+  scrollEnd: "+=210%",
   stages: scaleStages(0.8),
 };
 
 const MOBILE: Geo = {
   y: [85, 0, -85],
-  riseY: -23,
   riseZ: 62,
   riseX: 16,
-  compress: 17,
   scaleActive: 1.03,
   scaleIdle: 0.98,
-  scrollEnd: "+=220%",
+  scrollEnd: "+=180%",
   stages: scaleStages(0.65),
 };
 
 const ISO = { rotateX: 58, rotateZ: 45 } as const;
 const EASE = "power3.inOut";
 const COPY_EASE = "power2.out";
+
+/* The timeline is a step machine, not a scrub track. Stage index === timeline
+   time: 0 = stack at rest, 1/2/3 = that slab fully risen. Scroll only picks a
+   stage; the slab always plays the whole transition, never a fraction of it. */
+const STEPS = 3;
+const STEP_DURATION = 0.85;
+const STEP_DURATION_FAR = 1.1;
 
 function query(root: HTMLElement, selector: string): HTMLElement | null {
   return root.querySelector(selector);
@@ -157,21 +158,12 @@ function cardPose(geo: Geo, y: number, active: boolean) {
   };
 }
 
-function connectorKind(progress: number): BridgeStoryKey | null {
-  if (progress < 0.05) return null;
-
-  if (progress < 0.375) {
-    return "candidates";
-  }
-
-  if (progress < 0.625) {
-    return "abtalks";
-  }
-
-  if (progress < 0.9) {
-    return "companies";
-  }
-
+/* Keyed on timeline time (0..3), not scroll progress — the connector has to
+   track the anchor while a step tween is playing, and scroll is idle then. */
+function connectorKind(time: number): BridgeStoryKey | null {
+  if (time < 0.2) return null;
+  if (time < 1.5) return "candidates";
+  if (time < 2.5) return "abtalks";
   return "companies";
 }
 
@@ -216,10 +208,10 @@ function updateConnector(
   cards: HTMLElement[],
   copies: HTMLElement[],
   path: SVGPathElement,
-  progress: number,
+  time: number,
 ): void {
   try {
-    const kind = connectorKind(progress);
+    const kind = connectorKind(time);
     if (!kind) {
       path.style.opacity = "0";
       return;
@@ -237,7 +229,7 @@ function updateConnector(
     }
     const drawn =
       kind === "candidates"
-        ? Math.min(1, Math.max(0, (progress - 0.05) / 0.12))
+        ? Math.min(1, Math.max(0, (time - 0.2) / 0.45))
         : 1;
     path.style.strokeDasharray = `${length}`;
     path.style.strokeDashoffset = `${length * (1 - drawn)}`;
@@ -247,13 +239,13 @@ function updateConnector(
   }
 }
 
-function buildTimeline(root: HTMLElement, geo: Geo): gsap.core.Timeline | null {
+function buildTimeline(root: HTMLElement, geo: Geo): void {
   const pin = query(root, "[data-bridge-pin]");
   const stage = query(root, "[data-bridge-stage]");
   const path = root.querySelector("[data-bridge-connector-path]");
   const cards = cardEls(root);
   const copies = copyEls(root);
-  if (!pin || !stage || !path || !cards || !copies) return null;
+  if (!pin || !stage || !path || !cards || !copies) return;
 
   const svgPath = path as SVGPathElement;
   const intro = query(root, '[data-bridge-copy="intro"]');
@@ -268,34 +260,19 @@ function buildTimeline(root: HTMLElement, geo: Geo): gsap.core.Timeline | null {
   gsap.set(svgPath, { opacity: 0 });
 
   const tl = gsap.timeline({
+    paused: true,
     defaults: { ease: EASE },
-    scrollTrigger: {
-      trigger: pin,
-      pin: true,
-      pinSpacing: true,
-      start: "top top",
-      end: geo.scrollEnd,
-      scrub: 1,
-      anticipatePin: 1,
-      invalidateOnRefresh: true,
-      onToggle(self) {
-        const value = self.isActive ? "transform" : "";
-        cards.forEach((card) => {
-          card.style.willChange = value;
-        });
-      },
-      onUpdate(self) {
-        updateConnector(stage, cards, copies, svgPath, self.progress);
-      },
+    onUpdate() {
+      updateConnector(stage, cards, copies, svgPath, tl.time());
     },
   });
 
-  tl.addLabel("candidates", 0);
-  tl.addLabel("abtalks", 1);
-  tl.addLabel("companies", 2);
-  tl.addLabel("hold", 3);
+  tl.addLabel("rest", 0);
+  tl.addLabel("candidates", 1);
+  tl.addLabel("abtalks", 2);
+  tl.addLabel("companies", 3);
 
-  // 0.00 → 0.25  Candidates
+  // t 0 → 1   rest → Candidates
   tl.to(
     cards[0],
     { ...cardPose(geo, geo.stages.candidates[0], true), duration: 1 },
@@ -322,7 +299,7 @@ function buildTimeline(root: HTMLElement, geo: Geo): gsap.core.Timeline | null {
     tl.to(intro, { opacity: 0, y: -12, duration: 0.35 }, 0);
   }
 
-  // 0.25 → 0.50  ABTalks
+  // t 1 → 2   Candidates → ABTalks
   tl.to(
     cards[0],
     { ...cardPose(geo, geo.stages.abtalks[0], false), duration: 1 },
@@ -349,7 +326,7 @@ function buildTimeline(root: HTMLElement, geo: Geo): gsap.core.Timeline | null {
       1.15,
     );
 
-  // 0.50 → 0.75  Companies
+  // t 2 → 3   ABTalks → Companies
   tl.to(
     cards[0],
     { ...cardPose(geo, geo.stages.companies[0], false), duration: 1 },
@@ -376,10 +353,63 @@ function buildTimeline(root: HTMLElement, geo: Geo): gsap.core.Timeline | null {
       2.15,
     );
 
-  // 0.75 → 1.00  hold
-  tl.to(pin, { duration: 1 }, 3);
+  let current = -1;
+  let step: gsap.core.Tween | null = null;
 
-  return tl;
+  // Arrow, not a declaration: a hoisted `function` would drop the null-guard
+  // narrowing on stage/cards/copies above.
+  const goToStage = (index: number, immediate: boolean): void => {
+    const next = Math.min(STEPS, Math.max(0, index));
+    if (next === current && !immediate) return;
+
+    const distance = current < 0 ? 1 : Math.abs(next - current);
+    current = next;
+    step?.kill();
+    step = null;
+
+    if (immediate) {
+      tl.time(next);
+      updateConnector(stage, cards, copies, svgPath, tl.time());
+      return;
+    }
+
+    // Always run the transition end-to-end. Scroll chooses the destination,
+    // it does not scrub the slab — so a slab is never left half out.
+    step = tl.tweenTo(next, {
+      duration: distance > 1 ? STEP_DURATION_FAR : STEP_DURATION,
+      ease: EASE,
+      overwrite: true,
+    });
+  };
+
+  ScrollTrigger.create({
+    trigger: pin,
+    pin: true,
+    pinSpacing: true,
+    start: "top top",
+    end: geo.scrollEnd,
+    anticipatePin: 1,
+    invalidateOnRefresh: true,
+    // Parks the scrollbar on a stage so you can never rest between two states.
+    snap: {
+      snapTo: 1 / STEPS,
+      duration: { min: 0.2, max: 0.6 },
+      delay: 0.04,
+      ease: "power2.inOut",
+    },
+    onToggle(self) {
+      const value = self.isActive ? "transform" : "";
+      cards.forEach((card) => {
+        card.style.willChange = value;
+      });
+    },
+    onUpdate(self) {
+      goToStage(Math.round(self.progress * STEPS), false);
+    },
+    onRefresh(self) {
+      goToStage(Math.round(self.progress * STEPS), true);
+    },
+  });
 }
 
 export function createBridgeTimeline(root: HTMLElement): void {

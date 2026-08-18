@@ -47,4 +47,6 @@ export const BRIDGE_TINTS: Record<BridgeStoryKey, string> = {
   companies: "#E9AF96",
 };
 
-export const BRIDGE_SLAB_IDLE = "#fdfdfc";
+/* Must stay lighter than --hub-bg (#fbf9f7) or the idle top face disappears
+   into the page and the slab reads as two floating shadow bands. */
+export const BRIDGE_SLAB_IDLE = "#ffffff";
