@@ -88,6 +88,47 @@ describe("registerPayloadSchema", () => {
     });
     expect(ok.success).toBe(true);
   });
+
+  it("accepts empty collegeId or a cuid, and rejects other ids", () => {
+    const empty = registerPayloadSchema.safeParse({
+      ...baseLegal,
+      userType: "STUDENT",
+      fullName: "Ada Lovelace",
+      college: "Other College",
+      collegeId: "",
+      graduationYear: 2027,
+      domain: "AI",
+      countryCode: "+91",
+      phoneNumber: "9876543210",
+    });
+    expect(empty.success).toBe(true);
+
+    const cuid = registerPayloadSchema.safeParse({
+      ...baseLegal,
+      userType: "STUDENT",
+      fullName: "Ada Lovelace",
+      college: "IIT Bombay",
+      collegeId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+      graduationYear: 2027,
+      domain: "AI",
+      countryCode: "+91",
+      phoneNumber: "9876543210",
+    });
+    expect(cuid.success).toBe(true);
+
+    const bad = registerPayloadSchema.safeParse({
+      ...baseLegal,
+      userType: "STUDENT",
+      fullName: "Ada Lovelace",
+      college: "IIT Bombay",
+      collegeId: "not-a-cuid",
+      graduationYear: 2027,
+      domain: "AI",
+      countryCode: "+91",
+      phoneNumber: "9876543210",
+    });
+    expect(bad.success).toBe(false);
+  });
 });
 
 describe("registerSchema (legacy)", () => {
