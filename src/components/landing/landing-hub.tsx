@@ -10,6 +10,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationBellButton } from "@/components/shared/notification-bell-button";
 import { buttonVariants } from "@/components/ui/button";
 import type { LandingState } from "@/features/landing/get-landing-state";
 import { cn } from "@/lib/utils";
@@ -159,6 +160,11 @@ export function LandingHub({ claudeEnabled, state }: LandingHubProps) {
             />
           </Link>
           <div className="flex items-center gap-1">
+            {/* Signed-in only. The bell hides itself for signed-out viewers, but
+                gating here also stops it fetching on the public landing page. */}
+            {state.user ? (
+              <NotificationBellButton className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border/60 bg-card transition-colors hover:bg-muted" />
+            ) : null}
             <ThemeToggle />
             {state.user ? (
               <LandingUserMenu user={state.user} />
