@@ -6,7 +6,11 @@ import {
   CERTIFICATE_TYPES,
   CERT_ID_ALPHABET,
   CERT_ID_PATTERN,
+  HACKATHON_VARIANT_FILE_SLUGS,
+  HACKATHON_VARIANT_LABELS,
+  HACKATHON_VARIANT_TEMPLATES,
   certificateDomainLabel,
+  parseHackathonVariant,
 } from "@/features/certificate/constants";
 
 describe("certificate ID alphabet / pattern", () => {
@@ -50,5 +54,30 @@ describe("certificateDomainLabel", () => {
     expect(certificateDomainLabel(Domain.CLAUDE)).toBe("Claude AI Mastery");
     expect(certificateDomainLabel(Domain.SE)).toBe("Software Engineering");
     expect(certificateDomainLabel(null)).toBe("—");
+  });
+});
+
+describe("hackathon placement variants", () => {
+  it("parses only known award variants", () => {
+    expect(parseHackathonVariant("winner")).toBe("winner");
+    expect(parseHackathonVariant("second")).toBe("second");
+    expect(parseHackathonVariant("third")).toBe("third");
+    expect(parseHackathonVariant("top5")).toBe("top5");
+    expect(parseHackathonVariant("participation")).toBeNull();
+    expect(parseHackathonVariant(null)).toBeNull();
+    expect(parseHackathonVariant(1)).toBeNull();
+  });
+
+  it("maps each variant to a distinct PDF path, label, and file slug", () => {
+    expect(HACKATHON_VARIANT_TEMPLATES.winner).toContain("winner-vicod-aug.pdf");
+    expect(HACKATHON_VARIANT_TEMPLATES.top5).toContain("top5-vicod-aug.pdf");
+    expect(HACKATHON_VARIANT_LABELS).toEqual({
+      winner: "Winner",
+      second: "2nd place",
+      third: "3rd place",
+      top5: "Top 5",
+    });
+    expect(HACKATHON_VARIANT_FILE_SLUGS.second).toBe("2nd");
+    expect(HACKATHON_VARIANT_FILE_SLUGS.third).toBe("3rd");
   });
 });
