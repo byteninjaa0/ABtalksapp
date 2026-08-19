@@ -83,6 +83,53 @@ describe("getAchievements", () => {
     });
   });
 
+  it("maps placement awards to Winner/Top 5 labels and Placement stat", async () => {
+    findMany.mockResolvedValue([
+      {
+        id: "row_win",
+        certificateId: "ABT-HK-WINNR",
+        type: CertificateType.HACKATHON,
+        status: CertificateStatus.ISSUED,
+        issuedAt: new Date("2026-08-13T18:30:00Z"),
+        metadata: {
+          teamName: "Team Ada",
+          problemTitle: "Brief A",
+          hackathonVariant: "winner",
+        },
+      },
+      {
+        id: "row_top5",
+        certificateId: "ABT-HK-TOP5X",
+        type: CertificateType.HACKATHON,
+        status: CertificateStatus.ISSUED,
+        issuedAt: new Date("2026-08-13T18:30:00Z"),
+        metadata: {
+          teamName: "Team Five",
+          problemTitle: "Brief B",
+          hackathonVariant: "top5",
+        },
+      },
+    ]);
+
+    const views = await getAchievements("user_1");
+    expect(views[0]).toMatchObject({
+      statusLabel: "Winner",
+      stats: [
+        { label: "Placement", value: "Winner" },
+        { label: "Team", value: "Team Ada" },
+        { label: "Brief", value: "Brief A" },
+      ],
+    });
+    expect(views[1]).toMatchObject({
+      statusLabel: "Top 5",
+      stats: [
+        { label: "Placement", value: "Top 5" },
+        { label: "Team", value: "Team Five" },
+        { label: "Brief", value: "Brief B" },
+      ],
+    });
+  });
+
   it("maps Claude challenge days/streak and survives ensureClaude failure", async () => {
     ensureClaudeCertificate.mockRejectedValue(new Error("issue failed"));
     findMany.mockResolvedValue([
