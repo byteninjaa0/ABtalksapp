@@ -54,7 +54,33 @@ describe("getPublicCertificate", () => {
         { label: "Team", value: "Team Ada" },
         { label: "Brief", value: "Brief A" },
       ],
+      hackathonVariant: null,
       isRevoked: false,
+    });
+  });
+
+  it("maps placement award metadata to Winner label + variant", async () => {
+    findUnique.mockResolvedValue({
+      certificateId: "ABT-HK-WINNR",
+      recipientName: "Ada Lovelace",
+      type: CertificateType.HACKATHON,
+      status: CertificateStatus.ISSUED,
+      domain: null,
+      issuedAt: new Date("2026-08-13T18:30:00Z"),
+      metadata: {
+        teamName: "Team Ada",
+        problemTitle: "Brief A",
+        hackathonVariant: "winner",
+      },
+    });
+
+    await expect(getPublicCertificate("ABT-HK-WINNR")).resolves.toMatchObject({
+      statusLabel: "Winner",
+      hackathonVariant: "winner",
+      details: [
+        { label: "Team", value: "Team Ada" },
+        { label: "Brief", value: "Brief A" },
+      ],
     });
   });
 
@@ -72,6 +98,7 @@ describe("getPublicCertificate", () => {
     const view = await getPublicCertificate("ABT-HK-ABCDE");
     expect(view).toMatchObject({
       statusLabel: "Participated",
+      hackathonVariant: null,
       isRevoked: true,
       details: [
         { label: "Team", value: "Solo entry" },
@@ -95,6 +122,7 @@ describe("getPublicCertificate", () => {
     expect(view).toMatchObject({
       statusLabel: "Completed",
       title: "60-Day Claude Challenge",
+      hackathonVariant: null,
       details: [
         { label: "Track", value: "Claude AI Mastery" },
         { label: "Days completed", value: "60" },
