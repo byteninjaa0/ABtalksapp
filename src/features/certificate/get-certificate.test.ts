@@ -61,7 +61,7 @@ describe("getPublicCertificate", () => {
 
   it("maps placement award metadata to Winner label + variant", async () => {
     findUnique.mockResolvedValue({
-      certificateId: "ABT-HK-WINNR",
+      certificateId: "ABT-HK-W2N3R",
       recipientName: "Ada Lovelace",
       type: CertificateType.HACKATHON,
       status: CertificateStatus.ISSUED,
@@ -74,7 +74,7 @@ describe("getPublicCertificate", () => {
       },
     });
 
-    await expect(getPublicCertificate("ABT-HK-WINNR")).resolves.toMatchObject({
+    await expect(getPublicCertificate("ABT-HK-W2N3R")).resolves.toMatchObject({
       statusLabel: "Winner",
       hackathonVariant: "winner",
       details: [
