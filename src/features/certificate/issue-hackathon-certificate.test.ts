@@ -4,11 +4,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
   findUniqueParticipant,
   findFirstCertificate,
+  findManyCertificates,
   createCertificate,
   generateCertificateId,
 } = vi.hoisted(() => ({
   findUniqueParticipant: vi.fn(),
   findFirstCertificate: vi.fn(),
+  findManyCertificates: vi.fn(),
   createCertificate: vi.fn(),
   generateCertificateId: vi.fn(),
 }));
@@ -18,6 +20,7 @@ vi.mock("@/lib/db", () => ({
     hackathonParticipant: { findUnique: findUniqueParticipant },
     certificate: {
       findFirst: findFirstCertificate,
+      findMany: findManyCertificates,
       create: createCertificate,
     },
   },
@@ -32,7 +35,9 @@ vi.mock("@/features/certificate/generate-certificate-id", () => ({
 }));
 
 import {
+  HACKATHON_CERTIFICATE_ISSUED_AT,
   HACKATHON_EVENT_KEY,
+  ensureHackathonAwardCertificate,
   ensureHackathonCertificate,
 } from "@/features/certificate/issue-hackathon-certificate";
 
@@ -53,7 +58,8 @@ function participant(overrides?: {
           repoUrl: overrides?.submission?.repoUrl ?? "https://github.com/a/b",
           liveUrl: overrides?.submission?.liveUrl ?? "https://example.com",
           aiLogUrl: overrides?.submission?.aiLogUrl ?? null,
-          updatedAt: overrides?.submission?.updatedAt ?? new Date("2026-08-09T12:00:00Z"),
+          updatedAt:
+            overrides?.submission?.updatedAt ?? new Date("2026-08-09T12:00:00Z"),
           problem: overrides?.submission?.problem ?? { title: "Brief A" },
         };
 
@@ -149,6 +155,105 @@ describe("ensureHackathonCertificate", () => {
           }),
         }),
         select: { certificateId: true },
+      }),
+    );
+  });
+});
+
+describe("ensureHackathonAwardCertificate", () => {
+  it("rejects blank recipient names", async () => {
+    await expect(
+      ensureHackathonAwardCertificate({
+        userId: "u1",
+        variant: "winner",
+        recipientName: "  ",
+      }),
+    ).resolves.toEqual({ ok: false, message: "Recipient name is required" });
+    expect(findUniqueParticipant).not.toHaveBeenCalled();
+  });
+
+  it("rejects users who are not registered", async () => {
+    findUniqueParticipant.mockResolvedValue(null);
+    await expect(
+      ensureHackathonAwardCertificate({
+        userId: "u1",
+        variant: "top5",
+        recipientName: "Ada Lovelace",
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      message: "Not registered for the hackathon",
+    });
+  });
+
+  it("returns the matching award row idempotently without blocking other variants", async () => {
+    findUniqueParticipant.mockResolvedValue(participant());
+    findManyCertificates.mockResolvedValue([
+      {
+        certificateId: "ABT-HK-PART",
+        metadata: { event: HACKATHON_EVENT_KEY },
+      },
+      {
+        certificateId: "ABT-HK-WIN",
+        metadata: { hackathonVariant: "winner" },
+      },
+    ]);
+
+    await expect(
+      ensureHackathonAwardCertificate({
+        userId: "u1",
+        variant: "winner",
+        recipientName: "Ada Lovelace",
+      }),
+    ).resolves.toEqual({
+      ok: true,
+      data: { certificateId: "ABT-HK-WIN", alreadyIssued: true },
+    });
+    expect(createCertificate).not.toHaveBeenCalled();
+  });
+
+  it("issues a top5 award even when participation and winner rows already exist", async () => {
+    findUniqueParticipant.mockResolvedValue(
+      participant({ submission: null }),
+    );
+    findManyCertificates.mockResolvedValue([
+      { certificateId: "ABT-HK-PART", metadata: {} },
+      {
+        certificateId: "ABT-HK-WIN",
+        metadata: { hackathonVariant: "winner" },
+      },
+    ]);
+    generateCertificateId.mockResolvedValue("ABT-HK-TOP5X");
+    createCertificate.mockResolvedValue({ certificateId: "ABT-HK-TOP5X" });
+
+    await expect(
+      ensureHackathonAwardCertificate({
+        userId: "u1",
+        variant: "top5",
+        recipientName: "  Ada Lovelace  ",
+      }),
+    ).resolves.toEqual({
+      ok: true,
+      data: { certificateId: "ABT-HK-TOP5X", alreadyIssued: false },
+    });
+
+    expect(createCertificate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          certificateId: "ABT-HK-TOP5X",
+          userId: "u1",
+          type: CertificateType.HACKATHON,
+          recipientName: "Ada Lovelace",
+          issuedAt: HACKATHON_CERTIFICATE_ISSUED_AT,
+          metadata: expect.objectContaining({
+            event: HACKATHON_EVENT_KEY,
+            teamId: "team-1",
+            hackathonVariant: "top5",
+            repoUrl: "",
+            liveUrl: "",
+            submittedAt: null,
+          }),
+        }),
       }),
     );
   });
