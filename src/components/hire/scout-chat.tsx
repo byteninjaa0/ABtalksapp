@@ -196,7 +196,6 @@ export function ScoutChat({
   const [expanded, setExpanded] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const autoSearchedRef = useRef(false);
   const hydratedRef = useRef(false);
   const rows = specRows(spec);
   const activeSearch =
@@ -216,9 +215,6 @@ export function ScoutChat({
       setSummary(saved.summary);
       setReadyToSearch(saved.readyToSearch);
       setSearched(saved.searched);
-      if (saved.readyToSearch || saved.searched) {
-        autoSearchedRef.current = true;
-      }
     }
     const searches = readGuestMatchCollection();
     if (searches.tabs.length > 0) {
@@ -229,7 +225,6 @@ export function ScoutChat({
         searches.tabs[searches.tabs.length - 1]!;
       setMatchCount(active.matches.length);
       setSearched(true);
-      autoSearchedRef.current = true;
     }
   }, [persist]);
 
@@ -242,18 +237,18 @@ export function ScoutChat({
     });
   }, [messages, pending, expanded, detailsOpen]);
 
-  // Finishing the questions IS the trigger. Leaving the recruiter to notice a
-  // button after the last answer is what made the conversation feel like it
-  // never ended — there was no point at which anything happened.
-  useEffect(() => {
-    if (!readyToSearch || pending) return;
-    if (persist && !requestId) return;
-    if (autoSearchedRef.current) return;
-    autoSearchedRef.current = true;
-    runSearch();
-    // runSearch is stable for this component's lifetime and guarded by the ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readyToSearch, requestId, pending]);
+  // There is deliberately NO auto-search effect here any more.
+  //
+  // "Finishing the questions IS the trigger" was right for a fixed form that
+  // ended: the last answer was an event, so searching on it felt like the
+  // conversation arriving somewhere. Scout is an agent now and there is no such
+  // moment — `readyToSearch` only means a search *would* mean something, and it
+  // goes true the instant a role and a stack exist. Firing on it searched behind
+  // the agent's back, mid-brief, and stole the decision from it.
+  //
+  // A search now happens for exactly two reasons, both explicit: the recruiter
+  // tapped the button (`action:search`, handled in `send`), or the agent called
+  // its own search tool and the turn came back with `action === "search"`.
 
   /**
    * `label` is what the recruiter read on the chip, when that differs from the
@@ -298,7 +293,6 @@ export function ScoutChat({
         // chat; if we kicked search off after it, the first brief never
         // wrote matches and the new page said "No matches yet".
         if (res.data.action === "search") {
-          autoSearchedRef.current = true;
           const match = await runMatchAction({
             requestId: res.data.requestId,
           });
@@ -354,7 +348,6 @@ export function ScoutChat({
       });
       // Same rule as the signed-in path: the engine says when to search.
       if (res.data.action === "search") {
-        autoSearchedRef.current = true;
         runSearch(res.data.spec);
       }
     });
@@ -492,7 +485,6 @@ export function ScoutChat({
               setActiveSearchId("");
               setText("");
               setDetailsOpen(false);
-              autoSearchedRef.current = false;
             }}
             className={cn(
               "flex shrink-0 items-center rounded-full border px-3 py-1.5 text-xs font-medium",
@@ -710,7 +702,9 @@ export function ScoutChat({
           <button
             type="button"
             disabled={pending || (persist && !requestId)}
-            onClick={runSearch}
+            // Not `onClick={runSearch}`: React passes the MouseEvent, which
+            // landed in `overrideSpec` and became the guest search's JobSpec.
+            onClick={() => runSearch()}
             className={cn(
               buttonVariants({
                 size: "lg",

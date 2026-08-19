@@ -93,3 +93,25 @@ export function guestCartProgramIds(items: GuestCartItem[] = readGuestCart()): s
 export function guestCartNonProgram(items: GuestCartItem[] = readGuestCart()): GuestCartItem[] {
   return items.filter((i) => decodeCandidateRef(i.candidateRef)?.source !== "PROGRAM");
 }
+
+/**
+ * The cart minus only the program members the server CONFIRMED it has.
+ *
+ * The guest cart is the sole copy of a shortlist built before the recruiter had
+ * an account, so forgetting an item is destructive and must be earned. Sign-in
+ * used to drop every program candidate whenever the merge action returned `ok`,
+ * and that action returned `ok` even when it had merged none of them — which is
+ * what happens while a recruiter is still waiting on approval. Anything the
+ * server did not name stays here and is retried.
+ */
+export function guestCartWithoutMerged(
+  items: GuestCartItem[],
+  mergedMemberIds: string[],
+): GuestCartItem[] {
+  const landed = new Set(mergedMemberIds);
+  return items.filter((i) => {
+    const ref = decodeCandidateRef(i.candidateRef);
+    if (ref?.source !== "PROGRAM") return true;
+    return !landed.has(ref.id);
+  });
+}

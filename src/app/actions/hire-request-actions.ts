@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { requireAdmin } from "@/lib/admin-auth";
 import { resolveEligibleCandidates } from "@/features/hire/pool-policy";
+import { persistableSource } from "@/features/hire/track-loaders";
 import {
   decideEngagementSchema,
   engagementMessageSchema,
@@ -101,12 +102,26 @@ export async function placeEngagementRequestAction(
       return { ok: true, data: { engagementId: open.id, status: open.status } };
     }
 
+    // An intro is an explicit click, so a track the DB enum cannot store must
+    // say so rather than fail inside a transaction the recruiter never sees.
+    const source = persistableSource(candidate.source);
+    if (!source) {
+      logger.error("[hire] intro blocked: source missing from enum", {
+        source: candidate.source,
+      });
+      return {
+        ok: false,
+        message:
+          "Introductions aren't open for this track yet. Shortlist them and we'll reach out.",
+      };
+    }
+
     const created = await prisma.$transaction(async (tx) => {
       const engagement = await tx.talentEngagementRequest.create({
         data: {
           recruiterUserId: gate.data.userId,
           requestId: requestId ?? null,
-          source: candidate.source,
+          source,
           programMemberId: candidate.programMemberId,
           candidateUserId: candidate.userId,
           candidatePublicId: candidate.publicId,
@@ -183,7 +198,18 @@ export async function placeBulkEngagementRequestAction(
       ).map((r) => r.candidateUserId),
     );
 
-    const toPlace = eligible.filter((c) => !alreadyOpen.has(c.userId));
+    // Same enum limit as the single intro. Here the batch continues without the
+    // unstorable ones and they are reported as skipped, so a mixed cart still
+    // places the introductions it can.
+    const toPlace = eligible
+      .filter((c) => !alreadyOpen.has(c.userId))
+      .filter((c) => {
+        if (persistableSource(c.source)) return true;
+        logger.error("[hire] intro skipped: source missing from enum", {
+          source: c.source,
+        });
+        return false;
+      });
     if (toPlace.length === 0) {
       return {
         ok: true,
@@ -197,7 +223,7 @@ export async function placeBulkEngagementRequestAction(
           data: {
             recruiterUserId: userId,
             requestId: requestId ?? null,
-            source: candidate.source,
+            source: persistableSource(candidate.source)!,
             programMemberId: candidate.programMemberId,
             candidateUserId: candidate.userId,
             candidatePublicId: candidate.publicId,

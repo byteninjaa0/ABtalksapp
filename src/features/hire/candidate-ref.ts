@@ -1,4 +1,5 @@
 import { candidatePublicId } from "@/features/hire/public-id";
+import { isKnownTrack } from "@/features/hire/track-registry";
 
 /**
  * Where a candidate's evidence comes from.
@@ -8,15 +9,14 @@ import { candidatePublicId } from "@/features/hire/public-id";
  * a pile of daily submissions. They are different people in different tables,
  * and the only thing the hiring surface needs from either is a handle it can
  * carry to the browser and back.
+ *
+ * A track slug from `track-registry.ts`, not a closed union. It was
+ * `"PROGRAM" | "CLAUDE" | "CHALLENGE_60" | "HACKATHON"`, which made a track added
+ * later unaddressable: `decodeCandidateRef` rejected its refs, so its card could
+ * render while the shortlist button behind it could never work. The registry is
+ * the validator now — see `decodeCandidateRef`.
  */
-export type CandidateSource = "PROGRAM" | "CLAUDE" | "CHALLENGE_60" | "HACKATHON";
-
-const SOURCES: ReadonlySet<string> = new Set([
-  "PROGRAM",
-  "CLAUDE",
-  "CHALLENGE_60",
-  "HACKATHON",
-]);
+export type CandidateSource = string;
 
 export type CandidateRef = { source: CandidateSource; id: string };
 
@@ -48,8 +48,11 @@ export function decodeCandidateRef(raw: string): CandidateRef | null {
   const source = raw.slice(0, idx);
   const id = raw.slice(idx + 1);
   if (!id) return null;
-  if (!SOURCES.has(source)) return null;
-  return { source: source as CandidateSource, id };
+  // The registry decides what a real track is, so a track added later addresses
+  // its candidates without this file changing. Still a whitelist: an arbitrary
+  // prefix from a client is rejected exactly as before.
+  if (!isKnownTrack(source)) return null;
+  return { source, id };
 }
 
 /**

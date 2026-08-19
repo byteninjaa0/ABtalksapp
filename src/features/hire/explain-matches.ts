@@ -1,5 +1,6 @@
 import "server-only";
 
+import { logger } from "@/lib/logger";
 import { refPublicId } from "@/features/hire/candidate-ref";
 import type { ScoredCandidate } from "@/features/hire/types";
 import type { JobSpec } from "@/lib/validations/hire";
@@ -98,8 +99,63 @@ function groundedFigures(m: ScoredCandidate): Set<string> {
   return new Set(source.match(/\d+/g) ?? []);
 }
 
+/**
+ * Counts written as words, because a fabricated count does not have to be a digit.
+ *
+ * A real shortlist of ten came back described as "The six shown here" and sailed
+ * through a guard that only ever looked at /\d+/. "one" is deliberately absent:
+ * it is far more often an article than a count ("one of the strongest"), and a
+ * wrong count of one is not the failure worth false-positives.
+ */
+const NUMBER_WORDS: Record<string, string> = {
+  two: "2",
+  three: "3",
+  four: "4",
+  five: "5",
+  six: "6",
+  seven: "7",
+  eight: "8",
+  nine: "9",
+  ten: "10",
+  eleven: "11",
+  twelve: "12",
+  fifteen: "15",
+  twenty: "20",
+};
+
+function figuresIn(text: string): string[] {
+  const digits = text.match(/\d+/g) ?? [];
+  const words = (text.toLowerCase().match(/[a-z]+/g) ?? [])
+    .map((w) => NUMBER_WORDS[w])
+    .filter((n): n is string => Boolean(n));
+  return [...digits, ...words];
+}
+
 function inventsFigures(candidate: string, allowed: Set<string>): boolean {
-  return (candidate.match(/\d+/g) ?? []).some((n) => !allowed.has(n));
+  return figuresIn(candidate).some((n) => !allowed.has(n));
+}
+
+/**
+ * A sweeping claim about the whole shortlist that the payload does not support.
+ *
+ * `overallGap` was the least verified string on the page: per-candidate
+ * rationales went through `inventsFigures`, and this one was accepted on a length
+ * check alone. It produced "All shortlisted candidates have verified full
+ * completion of the 60-mission curriculum and 60 commit days" for a shortlist
+ * nobody had checked that against — the one sentence that generalises over
+ * everybody being the one nobody validated.
+ *
+ * An absolute quantifier is only honest when it holds for every match, and this
+ * cannot know that, so it is refused outright and the deterministic paragraph —
+ * built from counted figures — is used instead.
+ */
+function overreaches(text: string): boolean {
+  // Bare "none" was missing, and a real shortlist came back described as "none
+  // provide declared experience details" — a claim about every candidate, made
+  // by a model that was shown ten of them and counted six.
+  return /\b(all|every|everyone|none|no one|nobody|each of the(m|se)|each candidate|every single|across the board)\b/i.test(
+    text,
+  );
 }
 
 export async function explainMatches(
@@ -147,7 +203,8 @@ Rules:
 - Two or three sentences per candidate. Say what the evidence shows, then what is missing.
 - Where availabilityUnknown is true, say salary, notice and location are unconfirmed.
 - Never promise a hire, predict performance, or compare candidates as people.
-- "overallGap" is one short paragraph on what this shortlist does and does not cover.`,
+- "overallGap" is one short paragraph on what this shortlist does and does not cover.
+- In "overallGap", never use an absolute quantifier — no "all", "every", "none of them", "nobody". You cannot verify a claim about everybody. Write "the 6 shown here" or "most of this shortlist" instead.`,
       messages: [{ role: "user", content: JSON.stringify(payload) }],
       schemaName: "match_rationales",
       schema: EXPLAIN_SCHEMA,
@@ -157,6 +214,27 @@ Rules:
     if (!ai.ok) return base;
 
     const byId = new Map(ai.data.rationales.map((r) => [r.id, r.rationale]));
+
+    // The shortlist paragraph gets the same figure guard as a rationale, against
+    // the union of every match's grounded figures plus the near-miss count — it
+    // legitimately summarises all of them. Plus a refusal of absolute claims.
+    const allowedOverall = new Set<string>([
+      ...matches.flatMap((m) => [...groundedFigures(m)]),
+      String(nearMisses.length),
+      String(matches.length),
+    ]);
+    const gap = ai.data.overallGap.trim();
+    const gapUsable =
+      gap.length > 20 &&
+      !inventsFigures(gap, allowedOverall) &&
+      !overreaches(gap);
+    if (!gapUsable && gap.length > 20) {
+      logger.error("[hire] overallGap rejected", {
+        reason: overreaches(gap) ? "absolute claim" : "ungrounded figure",
+        gap: gap.slice(0, 160),
+      });
+    }
+
     return {
       matches: base.matches.map((m) => {
         const candidate = byId.get(m.candidateRef);
@@ -165,8 +243,7 @@ Rules:
         }
         return { ...m, rationale: candidate };
       }),
-      overallGap:
-        ai.data.overallGap.length > 20 ? ai.data.overallGap : base.overallGap,
+      overallGap: gapUsable ? gap : base.overallGap,
     };
   } catch {
     return base;
@@ -263,3 +340,6 @@ function buildOverallGap(
   }
   return `Found ${matches.length} candidate(s) ranked by verified ABTalks evidence.${poolNote}${coverage}`;
 }
+
+/** Exported for the evals — the two guards that decide what a recruiter reads. */
+export const __test = { overreaches, inventsFigures, groundedFigures, figuresIn };

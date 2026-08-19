@@ -71,7 +71,7 @@ const NOT_A_SKILL = new Set([
   "etc.",
   "basic",
   "basics",
-]);
+]);         
 
 /**
  * Skills as typed, split into skills.
@@ -92,6 +92,8 @@ const NOT_A_SKILL = new Set([
  * Single letters survive: "C" and "R" are languages. What stops them matching
  * everything is `containsWord` in the scorer, not a filter here.
  */
+
+
 export function splitSkills(raw: string[]): string[] {
   const out: string[] = [];
   for (const entry of raw) {

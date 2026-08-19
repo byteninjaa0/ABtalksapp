@@ -92,6 +92,67 @@ export const scoutTurnSchema = z.object({
 
 export type ScoutTurn = z.infer<typeof scoutTurnSchema>;
 
+/* ── Scout agent tool arguments ──────────────────────────────────────────────
+ *
+ * The boundary between the model and the engine. Every argument the agent can
+ * send arrives through one of these, so "Zod at every boundary" becomes the tool
+ * definition itself rather than a convention someone has to remember.
+ *
+ * Optionality is `.nullish()`, and that is not cosmetic. With `.nullable()` every
+ * field lands in the schema's `required` list, and Groq then rejects the call
+ * outright — "missing properties: 'niceToHaveStack'" — because the model sends
+ * only the fields it actually has values for. The whole turn 400s and the
+ * recruiter gets a fallback sentence. `.nullish()` keeps them out of `required`,
+ * so the model may omit a field or send null and both are accepted.
+ */
+
+/**
+ * What the agent may state about the role.
+ *
+ * `salaryText` is a STRING on purpose, and it is the field worth explaining. The
+ * model is not allowed to compute money: it quotes the recruiter ("20k", "25
+ * LPA") and `parseMoney` decides the figure. When the model was asked for a
+ * number instead, "20k" for an internship came back as ₹20,000 a year — a
+ * twelvefold error, and silent, because nothing read the figure back.
+ */
+export const updateBriefArgsSchema = z.object({
+  title: z.string().max(200).nullish(),
+  seniority: talentSenioritySchema.nullish(),
+  mustHaveStack: z.array(z.string().max(60)).max(12).nullish(),
+  niceToHaveStack: z.array(z.string().max(60)).max(12).nullish(),
+  evidencePriority: z.array(evidenceDimensionSchema).max(5).nullish(),
+  employmentType: talentEmploymentTypeSchema.nullish(),
+  workMode: talentWorkModeSchema.nullish(),
+  locationCity: z.string().max(80).nullish(),
+  noticePeriodDays: z.number().min(0).max(180).nullish(),
+  minExperience: z.number().min(0).max(50).nullish(),
+  maxExperience: z.number().min(0).max(50).nullish(),
+  salaryText: z.string().max(120).nullish(),
+});
+
+export type UpdateBriefArgs = z.infer<typeof updateBriefArgsSchema>;
+
+/**
+ * Which candidates count.
+ *
+ * `trackSlugs` is `string[]` and deliberately NOT an enum. An enum here is
+ * exactly what makes a track added next month unspeakable — the model could not
+ * name a Java challenge that was never compiled into the schema. Unknown slugs
+ * are rejected at execution time against the registry, and the rejection names
+ * the tracks that do exist so the model can correct itself on the next hop.
+ */
+export const setPoolFiltersArgsSchema = z.object({
+  trackSlugs: z.array(z.string().max(40)).max(8).nullish(),
+  geo: z.enum(["IN", "US"]).nullish(),
+  minEvidenceDays: z.number().min(1).max(60).nullish(),
+  resultLimit: z.number().min(1).max(25).nullish(),
+});
+
+export type SetPoolFiltersArgs = z.infer<typeof setPoolFiltersArgsSchema>;
+
+/** `list_tracks`, `get_pool_stats`, `preview_matches`, `search_pool`. */
+export const noArgsSchema = z.object({});
+
 /**
  * Ordered question slots, highest information gain first.
  *

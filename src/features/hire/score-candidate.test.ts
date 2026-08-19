@@ -25,13 +25,21 @@ import {
   isSearchableBrief,
   resolveSources,
 } from "@/features/hire/pool-brief";
-import { normalizeGuestCartItem } from "@/components/hire/guest-cart";
+import {
+  guestCartWithoutMerged,
+  normalizeGuestCartItem,
+} from "@/components/hire/guest-cart";
 import {
   labelGuestSearch,
   parseGuestMatchCollection,
 } from "@/components/hire/guest-matches-store";
 
-function assert(cond: boolean, msg: string) {
+/**
+ * `cond` accepts undefined so `spec.mustHaveStack?.includes(...)` can be
+ * asserted directly — an undefined condition is a failed assertion, which is
+ * exactly what a missing array should be.
+ */
+function assert(cond: boolean | undefined, msg: string) {
   if (!cond) throw new Error(msg);
 }
 
@@ -514,6 +522,47 @@ console.log("score-candidate tests");
     "20 overwrites a prior only-5",
   );
   ok("five / completed / typo / stack wipe");
+}
+
+/* ── guest cart: nothing is forgotten until the server confirms it ───────── */
+{
+  const item = (ref: string) => ({
+    candidateRef: ref,
+    jobRole: "Engineer",
+    totalScore: 60,
+  });
+  const cart = [
+    item("PROGRAM:m1"),
+    item("PROGRAM:m2"),
+    item("PROGRAM:m3"),
+    item("CLAUDE:u9"),
+  ];
+
+  // The bug: a pending recruiter merged nothing, the action still said ok, and
+  // every program candidate was dropped from the only copy that existed.
+  const noneMerged = guestCartWithoutMerged(cart, []);
+  assert(noneMerged.length === 4, `nothing merged → nothing dropped, got ${noneMerged.length}`);
+
+  const partial = guestCartWithoutMerged(cart, ["m1", "m3"]);
+  assert(partial.length === 2, `two merged → two kept, got ${partial.length}`);
+  assert(
+    partial.some((i) => i.candidateRef === "PROGRAM:m2"),
+    "the member that failed to merge is still in the cart",
+  );
+  assert(
+    partial.some((i) => i.candidateRef === "CLAUDE:u9"),
+    "a non-program candidate is never touched by a program merge",
+  );
+
+  const allMerged = guestCartWithoutMerged(cart, ["m1", "m2", "m3"]);
+  assert(allMerged.length === 1, "all merged → only the non-program item remains");
+  assert(allMerged[0]!.candidateRef === "CLAUDE:u9", "and it is the right one");
+
+  // An id the server names that is not in the cart must not disturb anything.
+  const stray = guestCartWithoutMerged(cart, ["m1", "not-in-cart"]);
+  assert(stray.length === 3, "an unknown merged id drops nothing extra");
+
+  ok("guest cart survives a failed or partial merge");
 }
 
 console.log(`\n${passed} passed`);

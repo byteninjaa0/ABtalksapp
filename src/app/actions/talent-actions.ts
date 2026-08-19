@@ -119,10 +119,22 @@ const mergeGuestCartSchema = z.object({
   memberIds: z.array(z.string().min(1).max(80)).max(25),
 });
 
-/** Copy a guest localStorage cart onto the signed-in recruiter's shortlist. */
+/**
+ * Copy a guest localStorage cart onto the signed-in recruiter's shortlist.
+ *
+ * Reports WHICH members landed, not just how many, and that distinction is the
+ * whole fix. This used to swallow every per-member failure and return
+ * `{ ok: true, merged: 0 }` regardless — and the caller, reading only `ok`,
+ * then deleted the local copy. A recruiter who registered and was still waiting
+ * on approval failed `assertPoolAccess` for every candidate, so the guaranteed
+ * outcome of the normal signup path was: nothing merged, cart erased, blank
+ * shortlist, no message. The client can only safely forget what this confirms.
+ */
 export async function mergeGuestCartAction(
   memberIds: unknown,
-): Promise<ActionResult<{ merged: number }>> {
+): Promise<
+  ActionResult<{ merged: number; mergedIds: string[]; failedIds: string[] }>
+> {
   const session = await auth();
   if (!session?.user?.id) {
     return { ok: false, message: "Please sign in." };
@@ -131,13 +143,38 @@ export async function mergeGuestCartAction(
   if (!parsed.success) return { ok: false, message: "Invalid cart." };
 
   let merged = 0;
+  const mergedIds: string[] = [];
+  const failedIds: string[] = [];
+  let firstFailure: string | null = null;
+
   for (const memberId of parsed.data.memberIds) {
     const result = await ensureShortlisted(session.user.id, memberId);
-    if (result.ok && result.added) merged += 1;
+    if (result.ok) {
+      // `added: false` means it was already on the shortlist — that is on the
+      // account either way, so the guest copy is safe to drop.
+      mergedIds.push(memberId);
+      if (result.added) merged += 1;
+    } else {
+      failedIds.push(memberId);
+      firstFailure ??= result.message;
+    }
   }
+
   revalidatePath("/talent/shortlist");
   revalidatePath("/hire", "layout");
-  return { ok: true, data: { merged } };
+
+  // Nothing landed at all: that is a failure, however cleanly each step
+  // returned. Saying otherwise is what cost recruiters their shortlist.
+  if (mergedIds.length === 0 && failedIds.length > 0) {
+    return {
+      ok: false,
+      message:
+        firstFailure ??
+        "Could not add your shortlist to this account yet.",
+    };
+  }
+
+  return { ok: true, data: { merged, mergedIds, failedIds } };
 }
 
 const recruiterVisibilitySchema = z.object({ enabled: z.boolean() });

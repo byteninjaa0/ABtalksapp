@@ -21,6 +21,7 @@ import {
 } from "@/lib/validations/hire";
 import { runScoutTurn } from "@/features/hire/scout-conversation";
 import { searchCandidates } from "@/features/hire/search-candidates";
+import { persistableSource } from "@/features/hire/track-loaders";
 import { explainMatches } from "@/features/hire/explain-matches";
 
 type ActionOk<T> = { ok: true; data: T };
@@ -331,11 +332,31 @@ export async function runMatchAction(
       where: { requestId: req.id },
     });
 
-    if (explained.matches.length > 0) {
+    // A track the DB enum does not know yet cannot be stored. It is still shown
+    // and still ranked — only the persisted copy is skipped — and it is logged,
+    // because the fix is a one-line enum migration and silence would hide it.
+    const persistable = explained.matches.filter((m) =>
+      Boolean(persistableSource(m.source)),
+    );
+    const unstorable = explained.matches.length - persistable.length;
+    if (unstorable > 0) {
+      logger.error("[hire] matches not persisted: source missing from enum", {
+        count: unstorable,
+        sources: [
+          ...new Set(
+            explained.matches
+              .filter((m) => !persistableSource(m.source))
+              .map((m) => m.source),
+          ),
+        ].join(","),
+      });
+    }
+
+    if (persistable.length > 0) {
       await prisma.talentRequestMatch.createMany({
-        data: explained.matches.map((m) => ({
+        data: persistable.map((m) => ({
           requestId: req.id,
-          source: m.source,
+          source: persistableSource(m.source)!,
           // Null for anyone outside the cohort — the column is a foreign key to
           // ProgramMember, and a challenge candidate has no row there.
           programMemberId: m.programMemberId,
