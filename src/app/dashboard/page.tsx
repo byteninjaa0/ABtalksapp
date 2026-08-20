@@ -41,11 +41,8 @@ import { PreStartDashboard } from "@/components/dashboard/pre-start-dashboard";
 import { prisma } from "@/lib/db";
 import { hackathonRedirectForProfilelessUser, isUserRegistered } from "@/features/hackathon/registration-status";
 import { Domain } from "@prisma/client";
-import { ClaudeChallengeModal } from "@/components/dashboard/claude-challenge-modal";
 import { getUserActiveEnrollments } from "@/features/enrollment/get-user-enrollments";
-import { isClaudeEnabled, isOtpVerificationRequired } from "@/lib/feature-flags";
-import { shouldShowClaudeBanner } from "@/features/user/check-claude-enrollment";
-import { ClaudeEnrollmentBanner } from "@/components/shared/claude-enrollment-banner";
+import { isOtpVerificationRequired } from "@/lib/feature-flags";
 import { CampusAmbassadorBanner } from "@/components/dashboard/campus-ambassador-banner";
 import { PhoneVerifyNudge } from "@/components/dashboard/phone-verify-nudge";
 import { ClaudeFAQ } from "@/components/shared/claude-faq";
@@ -125,7 +122,6 @@ export default async function DashboardPage({
   const showPastMissedToast =
     readQueryParam(query, "toast") === "past-missed";
   const dashboardPathWithoutToast = `/dashboard${stripQueryKeys(query, ["toast"])}`;
-  const claudeEnabled = isClaudeEnabled();
   // Leaderboard hidden temporarily — to be optimized and re-enabled post-launch
   // let leaderboardDomain = parseLeaderboardDomain(
   //   readQueryParam(query, "lb_domain"),
@@ -187,10 +183,6 @@ export default async function DashboardPage({
     dashboardData.enrollment.challenge,
   );
 
-  const claudeBanner = claudeEnabled
-    ? await shouldShowClaudeBanner(session.user.id, hasClaudeEnrollment)
-    : { show: false, startsAt: null as Date | null };
-
   if (dashboardData.enrollment.status === "ABANDONED") {
     const endedAction = await prisma.adminAction.findFirst({
       where: {
@@ -230,12 +222,6 @@ export default async function DashboardPage({
           headerDomain={dashboardData.enrollment.domain}
           domain={dashboardData.profile.domain as Domain}
         />
-        {!hasClaudeEnrollment && claudeBanner.show && claudeBanner.startsAt ? (
-          <ClaudeEnrollmentBanner
-            claudeStartsAt={claudeBanner.startsAt}
-            useSharedModal
-          />
-        ) : null}
         {shouldShowAmbassadorBanner ? (
           <CampusAmbassadorBanner
             alreadyApplied={profile.isCampusAmbassadorCandidate}
@@ -253,9 +239,6 @@ export default async function DashboardPage({
     );
   }
 
-  const showClaudeModal = claudeBanner.show && !!claudeBanner.startsAt;
-  const claudeModalStartsAt = claudeBanner.startsAt;
-
   if (isPreStart) {
     return (
       <div className="relative flex min-h-svh flex-col bg-muted/30">
@@ -271,12 +254,6 @@ export default async function DashboardPage({
           headerDomain={dashboardData.enrollment.domain}
           domain={dashboardData.profile.domain as Domain}
         />
-        {!hasClaudeEnrollment && claudeBanner.show && claudeBanner.startsAt ? (
-          <ClaudeEnrollmentBanner
-            claudeStartsAt={claudeBanner.startsAt}
-            useSharedModal
-          />
-        ) : null}
         {shouldShowAmbassadorBanner ? (
           <CampusAmbassadorBanner
             alreadyApplied={profile.isCampusAmbassadorCandidate}
@@ -342,19 +319,10 @@ export default async function DashboardPage({
         headerDomain={dashboardData.enrollment.domain}
         domain={dashboardData.profile.domain as Domain}
       />
-      {!hasClaudeEnrollment && claudeBanner.show && claudeBanner.startsAt ? (
-        <ClaudeEnrollmentBanner
-          claudeStartsAt={claudeBanner.startsAt}
-          useSharedModal
-        />
-      ) : null}
       {shouldShowAmbassadorBanner ? (
         <CampusAmbassadorBanner
           alreadyApplied={profile.isCampusAmbassadorCandidate}
         />
-      ) : null}
-      {showClaudeModal && claudeModalStartsAt ? (
-        <ClaudeChallengeModal startsAt={claudeModalStartsAt} />
       ) : null}
       <HackathonPromoModal />
       {hasClaudeEnrollment ? (
