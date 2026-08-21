@@ -207,7 +207,12 @@ export function ScoutChat({
   const guestGap = activeSearch?.overallGap ?? null;
 
   useEffect(() => {
-    if (persist || hydratedRef.current) return;
+    if (hydratedRef.current) return;
+    // After sign-in the page flips to persist=true with empty server
+    // history. That used to skip this hydrate and look like the brief
+    // had been deleted. Keep the guest transcript until the server copy
+    // exists.
+    if (persist && (initialMessages.length > 0 || initialRequestId)) return;
     hydratedRef.current = true;
     const saved = readGuestSession();
     if (saved) {
@@ -227,7 +232,7 @@ export function ScoutChat({
       setMatchCount(active.matches.length);
       setSearched(true);
     }
-  }, [persist]);
+  }, [persist, initialMessages.length, initialRequestId]);
 
   // Keep the newest turn in view as the transcript grows, and after the panel
   // resizes — otherwise expanding leaves the reader looking at old messages.
@@ -747,7 +752,7 @@ export function ScoutChat({
         )}
       </div>
 
-      {!persist && searched && (
+      {(!persist || !requestId) && searched && (
         <section id="hire-results" className="scroll-mt-20 space-y-4">
           <p className="text-xs font-medium tracking-wide text-primary uppercase">
             Step 2 · Matched profiles

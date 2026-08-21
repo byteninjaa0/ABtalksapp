@@ -2,7 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { recordSampleDemandAction } from "@/app/actions/hire-actions";
+import {
+  adoptGuestScoutSessionAction,
+  recordSampleDemandAction,
+} from "@/app/actions/hire-actions";
+import { readGuestSession } from "@/components/hire/guest-session";
 import { mergeGuestCartAction } from "@/app/actions/talent-actions";
 import { placeBulkEngagementRequestAction } from "@/app/actions/hire-request-actions";
 import {
@@ -86,6 +90,19 @@ export function MergeGuestCart() {
         }
 
         done.current = true;
+
+        const guestBrief = readGuestSession();
+        if (
+          guestBrief &&
+          guestBrief.messages.some((m) => m.role === "user")
+        ) {
+          await adoptGuestScoutSessionAction({
+            spec: guestBrief.spec,
+            summary: guestBrief.summary,
+            searched: guestBrief.searched,
+            messages: guestBrief.messages,
+          });
+        }
 
         const pending = readPendingCheckout();
         if (!pending || pending.candidateRefs.length === 0) return;

@@ -15,6 +15,7 @@ import { logger } from "@/lib/logger";
 import {
   candidateAvailabilitySchema,
   jobSpecSchema,
+  adoptGuestScoutSessionSchema,
   recordSampleDemandSchema,
   runMatchSchema,
   sendScoutMessageSchema,
@@ -619,5 +620,80 @@ export async function recordSampleDemandAction(
   } catch (error) {
     logger.error("[hire] recordSampleDemandAction", { error: String(error) });
     return { ok: false, message: "Could not save that requirement." };
+  }
+}
+
+/**
+ * After sign-in, write the guest Scout transcript onto a TalentRequest so the
+ * brief and chat are not trapped in the browser and lost on the next page.
+ */
+export async function adoptGuestScoutSessionAction(
+  input: unknown,
+): Promise<ActionResult<{ requestId: string }>> {
+  const gate = await requireApprovedRecruiter();
+  if (!gate.ok) return gate;
+  const parsed = adoptGuestScoutSessionSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: "Could not save that conversation." };
+  }
+
+  const { spec, messages, searched } = parsed.data;
+  const userId = gate.data.userId;
+  const last = messages[messages.length - 1]?.content ?? "";
+
+  try {
+    const recent = await prisma.talentRequest.findMany({
+      where: {
+        recruiterUserId: userId,
+        createdAt: { gte: new Date(Date.now() - 15 * 60_000) },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        messages: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { content: true },
+        },
+      },
+    });
+    const already = recent.find((r) => r.messages[0]?.content === last);
+    if (already) {
+      return { ok: true, data: { requestId: already.id } };
+    }
+
+    const dbFields = specToDb(spec);
+    const created = await prisma.$transaction(async (tx) => {
+      const row = await tx.talentRequest.create({
+        data: {
+          recruiterUserId: userId,
+          status: searched
+            ? TalentRequestStatus.MATCHED
+            : TalentRequestStatus.DRAFT,
+          ...dbFields,
+          extra: dbFields.extra ?? Prisma.JsonNull,
+        },
+        select: { id: true },
+      });
+      await tx.talentRequestMessage.createMany({
+        data: messages.map((m) => ({
+          requestId: row.id,
+          role: m.role,
+          content: m.content,
+          ...(m.options
+            ? { options: m.options as Prisma.InputJsonValue }
+            : {}),
+        })),
+      });
+      return row;
+    });
+
+    revalidatePath("/hire");
+    revalidatePath(`/hire/${created.id}`);
+    return { ok: true, data: { requestId: created.id } };
+  } catch (error) {
+    logger.error("[hire] adoptGuestScoutSessionAction", { error: String(error) });
+    return { ok: false, message: "Could not save that conversation." };
   }
 }

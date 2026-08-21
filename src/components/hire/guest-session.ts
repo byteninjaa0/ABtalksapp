@@ -20,20 +20,31 @@ function canUseStorage(): boolean {
   return typeof window !== "undefined";
 }
 
+function readRaw(): string | null {
+  if (!canUseStorage()) return null;
+  return (
+    window.localStorage.getItem(GUEST_SESSION_KEY) ??
+    window.sessionStorage.getItem(GUEST_SESSION_KEY)
+  );
+}
+
 export function writeGuestSession(session: GuestScoutSession): void {
   if (!canUseStorage()) return;
-  window.sessionStorage.setItem(GUEST_SESSION_KEY, JSON.stringify(session));
+  const raw = JSON.stringify(session);
+  window.localStorage.setItem(GUEST_SESSION_KEY, raw);
+  window.sessionStorage.setItem(GUEST_SESSION_KEY, raw);
 }
 
 export function clearGuestSession(): void {
   if (!canUseStorage()) return;
+  window.localStorage.removeItem(GUEST_SESSION_KEY);
   window.sessionStorage.removeItem(GUEST_SESSION_KEY);
 }
 
 export function readGuestSession(): GuestScoutSession | null {
   if (!canUseStorage()) return null;
   try {
-    const raw = window.sessionStorage.getItem(GUEST_SESSION_KEY);
+    const raw = readRaw();
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return null;

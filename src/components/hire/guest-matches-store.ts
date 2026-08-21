@@ -109,7 +109,9 @@ export function parseGuestMatchCollection(raw: unknown): GuestMatchCollection {
 export function readGuestMatchCollection(): GuestMatchCollection {
   if (!canUseStorage()) return { activeId: "", tabs: [] };
   try {
-    const raw = window.sessionStorage.getItem(GUEST_MATCHES_KEY);
+    const raw =
+      window.localStorage.getItem(GUEST_MATCHES_KEY) ??
+      window.sessionStorage.getItem(GUEST_MATCHES_KEY);
     if (!raw) return { activeId: "", tabs: [] };
     return parseGuestMatchCollection(JSON.parse(raw));
   } catch {
@@ -119,7 +121,9 @@ export function readGuestMatchCollection(): GuestMatchCollection {
 
 export function writeGuestMatchCollection(store: GuestMatchCollection): void {
   if (!canUseStorage()) return;
-  window.sessionStorage.setItem(GUEST_MATCHES_KEY, JSON.stringify(store));
+  const raw = JSON.stringify(store);
+  window.localStorage.setItem(GUEST_MATCHES_KEY, raw);
+  window.sessionStorage.setItem(GUEST_MATCHES_KEY, raw);
   window.dispatchEvent(new Event(GUEST_SEARCHES_EVENT));
 }
 
@@ -143,6 +147,7 @@ export function setActiveGuestSearch(id: string): void {
 
 export function clearGuestMatches(): void {
   if (!canUseStorage()) return;
+  window.localStorage.removeItem(GUEST_MATCHES_KEY);
   window.sessionStorage.removeItem(GUEST_MATCHES_KEY);
   window.dispatchEvent(new Event(GUEST_SEARCHES_EVENT));
 }

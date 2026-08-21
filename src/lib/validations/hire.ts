@@ -384,3 +384,20 @@ export const guestScoutMessageSchema = z.object({
 export const guestMatchSchema = z.object({
   spec: jobSpecSchema,
 });
+
+/** Persist a guest Scout transcript onto a TalentRequest after sign-in. */
+export const adoptGuestScoutSessionSchema = z.object({
+  spec: jobSpecSchema,
+  summary: z.string().max(1000).optional(),
+  searched: z.boolean().optional(),
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string().trim().min(1).max(4000),
+        options: z.array(scoutOptionSchema).max(12).nullable().optional(),
+      }),
+    )
+    .min(1)
+    .max(50),
+});
