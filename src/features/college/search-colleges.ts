@@ -11,9 +11,10 @@ export type CollegeOption = {
   district: string | null;
 };
 
-type CollegeSearchRow = CollegeOption & { city: string | null };
+export type CollegeSearchRow = CollegeOption & { city: string | null };
 
-function tokenize(query: string): string[] {
+/** Exported for unit tests — tokenizes typeahead query for LIKE clauses. */
+export function tokenize(query: string): string[] {
   return query
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, " ")
@@ -33,7 +34,10 @@ function placeTokens(row: CollegeSearchRow): Set<string> {
   );
 }
 
-function splitLocationSuffix(name: string): { stem: string; place: string } | null {
+/** Exported for unit tests — detects ", Place" AISHE/AICTE name twins. */
+export function splitLocationSuffix(
+  name: string,
+): { stem: string; place: string } | null {
   const comma = name.lastIndexOf(",");
   if (comma < 8) return null;
   const stem = name.slice(0, comma).trim();
@@ -49,7 +53,9 @@ function splitLocationSuffix(name: string): { stem: string; place: string } | nu
  * Do not collapse identical names in different districts (40 "Government
  * Polytechnic" rows) unless the suffix itself names that row's place.
  */
-function collapseLocationDupes(rows: CollegeSearchRow[]): CollegeSearchRow[] {
+export function collapseLocationDupes(
+  rows: CollegeSearchRow[],
+): CollegeSearchRow[] {
   const drop = new Set<string>();
 
   const byAlnumName = new Map<string, CollegeSearchRow[]>();
