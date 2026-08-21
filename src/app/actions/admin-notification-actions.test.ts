@@ -4,6 +4,9 @@ const requireAdmin = vi.hoisted(() => vi.fn());
 const transaction = vi.hoisted(() => vi.fn());
 const findUnique = vi.hoisted(() => vi.fn());
 const revalidatePath = vi.hoisted(() => vi.fn());
+const updateNotification = vi.hoisted(() => vi.fn());
+const deleteNotificationRow = vi.hoisted(() => vi.fn());
+const createAdminAction = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/admin-auth", () => ({ requireAdmin }));
 vi.mock("@/lib/db", () => ({
@@ -20,11 +23,30 @@ vi.mock("next/cache", () => ({ revalidatePath }));
 import {
   createNotificationAction,
   deactivateNotificationAction,
+  deleteNotificationAction,
 } from "@/app/actions/admin-notification-actions";
 
 beforeEach(() => {
   vi.clearAllMocks();
   requireAdmin.mockResolvedValue({ userId: "admin-1", email: "admin@x.com" });
+  transaction.mockImplementation(
+    async (
+      fn: (client: {
+        notification: {
+          update: typeof updateNotification;
+          delete: typeof deleteNotificationRow;
+        };
+        adminAction: { create: typeof createAdminAction };
+      }) => unknown,
+    ) =>
+      fn({
+        notification: {
+          update: updateNotification,
+          delete: deleteNotificationRow,
+        },
+        adminAction: { create: createAdminAction },
+      }),
+  );
 });
 
 describe("createNotificationAction validation", () => {
@@ -110,5 +132,72 @@ describe("deactivateNotificationAction", () => {
       deactivateNotificationAction({ id: "missing" }),
     ).resolves.toEqual({ ok: false, message: "Announcement not found" });
     expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("soft-deactivates an announcement and audits the admin action", async () => {
+    findUnique.mockResolvedValue({
+      id: "n1",
+      title: "Kickoff",
+      isActive: true,
+    });
+    updateNotification.mockResolvedValue({ id: "n1" });
+    createAdminAction.mockResolvedValue({ id: "a1" });
+
+    await expect(
+      deactivateNotificationAction({ id: "n1" }),
+    ).resolves.toEqual({ ok: true, data: null });
+
+    expect(updateNotification).toHaveBeenCalledWith({
+      where: { id: "n1" },
+      data: { isActive: false },
+      select: { id: true },
+    });
+    expect(createAdminAction).toHaveBeenCalledWith({
+      data: {
+        adminUserId: "admin-1",
+        targetUserId: "admin-1",
+        actionType: "deactivateNotification",
+        metadata: { notificationId: "n1", title: "Kickoff" },
+      },
+      select: { id: true },
+    });
+    expect(revalidatePath).toHaveBeenCalledWith("/admin/notifications");
+  });
+});
+
+describe("deleteNotificationAction", () => {
+  it("rejects unknown announcements before deleting", async () => {
+    findUnique.mockResolvedValue(null);
+    await expect(deleteNotificationAction({ id: "missing" })).resolves.toEqual({
+      ok: false,
+      message: "Announcement not found",
+    });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("hard-deletes an announcement and audits the admin action", async () => {
+    findUnique.mockResolvedValue({ id: "n2", title: "Old promo" });
+    deleteNotificationRow.mockResolvedValue({ id: "n2" });
+    createAdminAction.mockResolvedValue({ id: "a2" });
+
+    await expect(deleteNotificationAction({ id: "n2" })).resolves.toEqual({
+      ok: true,
+      data: null,
+    });
+
+    expect(deleteNotificationRow).toHaveBeenCalledWith({
+      where: { id: "n2" },
+      select: { id: true },
+    });
+    expect(createAdminAction).toHaveBeenCalledWith({
+      data: {
+        adminUserId: "admin-1",
+        targetUserId: "admin-1",
+        actionType: "deleteNotification",
+        metadata: { notificationId: "n2", title: "Old promo" },
+      },
+      select: { id: true },
+    });
+    expect(revalidatePath).toHaveBeenCalledWith("/admin/notifications");
   });
 });
