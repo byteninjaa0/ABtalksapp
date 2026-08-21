@@ -5,6 +5,7 @@
 import {
   scoreCandidate,
   rankCandidates,
+  pickSearchMatches,
   __test,
 } from "@/features/hire/score-candidate";
 import type {
@@ -274,6 +275,23 @@ console.log("score-candidate tests");
   );
   assert(r.tier !== "STRONG", `missing must-have tier=${r.tier}`);
   ok("T6 missing must-have never STRONG under any coverage");
+}
+
+{
+  const langchain = { mustHaveStack: ["langchain"] };
+  const noneOfIt = rankCandidates(
+    [baseMember({ skills: ["Excel", "Sales"], jobRole: "Business Executive" })],
+    langchain,
+  );
+  const picked = pickSearchMatches(noneOfIt, langchain);
+  assert(picked.length === 0, "unmet must-have is empty, not a padded exec");
+  const hasIt = rankCandidates(
+    [baseMember({ skills: ["LangChain", "Python"] })],
+    langchain,
+  );
+  const kept = pickSearchMatches(hasIt, langchain);
+  assert(kept.length === 1, "the person who has it still shows");
+  ok("unmet must-have stack yields no result cards");
 }
 
 {

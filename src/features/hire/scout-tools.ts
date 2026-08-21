@@ -7,12 +7,15 @@ import { logger } from "@/lib/logger";
 import {
   jobSpecSchema,
   noArgsSchema,
+  offerOptionsArgsSchema,
   setPoolFiltersArgsSchema,
   updateBriefArgsSchema,
   type JobSpec,
+  type OfferOptionsArgs,
   type SetPoolFiltersArgs,
   type UpdateBriefArgs,
 } from "@/lib/validations/hire";
+import type { ScoutChip } from "@/features/hire/scout-chips";
 import { findUnsupported } from "@/features/hire/capabilities";
 import {
   applyPoolBrief,
@@ -89,6 +92,11 @@ export type ScoutToolContext = {
   facts: unknown[];
   /** Tool names in call order, for logging and for the evals to assert on. */
   called: string[];
+  /**
+   * Quick replies the agent offered this turn, if it called `offer_options`.
+   * The conversation layer prefers these over the fixed ladder.
+   */
+  offeredChips: ScoutChip[] | null;
 };
 
 export function createScoutToolContext(
@@ -103,6 +111,7 @@ export function createScoutToolContext(
     action: null,
     facts: [],
     called: [],
+    offeredChips: null,
   };
 }
 
@@ -351,6 +360,39 @@ function applySetPoolFilters(
   };
 }
 
+/* ── offer_options ────────────────────────────────────────────────────────── */
+
+const PROTOCOL_PREFIX = /^(action|edit|skip|salary):/i;
+
+function applyOfferOptions(
+  ctx: ScoutToolContext,
+  args: OfferOptionsArgs | unknown,
+): Record<string, unknown> {
+  const parsed = offerOptionsArgsSchema.safeParse(args);
+  if (!parsed.success) {
+    return {
+      offered: false,
+      reason:
+        "Need 2–4 short options. Labels ≤ 40 characters. Do not use action:, edit:, skip: or salary: values — those are reserved.",
+    };
+  }
+  const reserved = parsed.data.options.filter((o) =>
+    PROTOCOL_PREFIX.test(o.value),
+  );
+  if (reserved.length > 0) {
+    return {
+      offered: false,
+      reason:
+        "Those values are reserved for the engine. Pick ordinary answers the recruiter would tap.",
+    };
+  }
+  ctx.offeredChips = parsed.data.options.map((o) => ({
+    label: o.label,
+    value: o.value,
+  }));
+  return { offered: true, count: ctx.offeredChips.length };
+}
+
 /* ── the tools ────────────────────────────────────────────────────────────── */
 
 export function createScoutTools(
@@ -438,6 +480,17 @@ export function createScoutTools(
     },
   );
 
+  const offerOptions = tool(
+    async (args: OfferOptionsArgs) =>
+      result(ctx, "offer_options", applyOfferOptions(ctx, args)),
+    {
+      name: "offer_options",
+      description:
+        "Call this when you ask something the standard quick replies do not cover. The recruiter can always type instead. Pass 2–4 short labels with a value for each — ordinary answers, never action: / edit: / skip: / salary: prefixes.",
+      schema: offerOptionsArgsSchema,
+    },
+  );
+
   const searchPool = tool(
     async () => {
       if (!searchable(ctx.spec)) {
@@ -489,6 +542,7 @@ export function createScoutTools(
     setPoolFilters,
     previewMatches,
     resetBrief,
+    offerOptions,
     searchPool,
   ];
 }
@@ -497,6 +551,12 @@ export function createScoutTools(
 export const __test = {
   applyUpdateBrief,
   applySetPoolFilters,
+  applyOfferOptions,
   stillMissing,
-  schemas: { updateBriefArgsSchema, setPoolFiltersArgsSchema, z },
+  schemas: {
+    updateBriefArgsSchema,
+    setPoolFiltersArgsSchema,
+    offerOptionsArgsSchema,
+    z,
+  },
 };

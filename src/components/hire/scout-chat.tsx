@@ -22,6 +22,7 @@ import {
 } from "@/app/actions/hire-guest-actions";
 import { MatchResults } from "@/components/hire/match-results";
 import { readGuestCart } from "@/components/hire/guest-cart";
+import { buildSampleCards } from "@/features/hire/sample-card";
 import { SearchTabs } from "@/components/hire/search-tabs";
 import {
   appendGuestSearch,
@@ -767,7 +768,7 @@ export function ScoutChat({
           {guestGap && (
             <p className="text-sm text-muted-foreground">{guestGap}</p>
           )}
-          {guestMatches.length > 0 && (
+          {guestMatches.length > 0 ? (
             <>
               <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-xs leading-relaxed text-amber-900 dark:text-amber-100">
                 <strong className="font-semibold">Privacy protected.</strong>{" "}
@@ -781,6 +782,14 @@ export function ScoutChat({
                 viewAllHref="/hire/matches"
               />
             </>
+          ) : (
+            <MatchResults
+              key={`sample-${activeSearchId}`}
+              matches={[]}
+              samples={buildSampleCards(spec)}
+              sampleDemand={{ spec }}
+              cartCount={0}
+            />
           )}
         </section>
       )}

@@ -7,6 +7,10 @@ import { refPublicId, type CandidateSource } from "@/features/hire/candidate-ref
 import { COMPENSATION_DISCLAIMER } from "@/features/hire/compensation";
 import { buttonVariants } from "@/components/ui/button";
 import { RequestIntroButton } from "@/components/hire/request-intro-button";
+import {
+  SampleCardNotice,
+  type SampleDemand,
+} from "@/components/hire/sample-card-notice";
 import { ShortlistButton } from "@/components/talent/shortlist-button";
 import { cn } from "@/lib/utils";
 
@@ -128,9 +132,38 @@ export function MatchCard({
   match,
   rank,
   onCartToggle,
+  variant = "real",
+  sampleDemand,
 }: {
   match: MatchCardData;
   /** 1-based position in the ranking; 1 gets the standing glow. */
+  rank?: number;
+  onCartToggle?: (inCart: boolean) => void;
+  /**
+   * Sample cards are a reduced card, not a forked one. The real path below
+   * does not read this — branching here is how that path stays untouched.
+   */
+  variant?: "real" | "sample";
+  sampleDemand?: SampleDemand;
+}) {
+  if (variant === "sample") {
+    return <SampleMatchCard match={match} sampleDemand={sampleDemand} />;
+  }
+  return (
+    <RealMatchCard
+      match={match}
+      rank={rank}
+      onCartToggle={onCartToggle}
+    />
+  );
+}
+
+function RealMatchCard({
+  match,
+  rank,
+  onCartToggle,
+}: {
+  match: MatchCardData;
   rank?: number;
   onCartToggle?: (inCart: boolean) => void;
 }) {
@@ -535,4 +568,65 @@ export function MatchCard({
       )}
     </article>
   );
+}
+
+/**
+ * Reduced card for an unmet requirement. Same shell as the real card; score,
+ * tier, rank, reference id, evidence stats, shortlist, intro and member link
+ * are simply not here. Do not add them — a recruiter who believes this is a
+ * person is the failure this component exists to prevent.
+ */
+function SampleMatchCard({
+  match,
+  sampleDemand,
+}: {
+  match: MatchCardData;
+  sampleDemand?: SampleDemand;
+}) {
+  const skills = match.evidence.skills ?? [];
+  const years = match.evidence.yearsExperience;
+  const subtitle = [
+    typeof years === "number" && years > 0 ? `${years}+ years` : null,
+    sampleDemand ? niceToHaveLine(sampleDemand.spec) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <article
+      className={cn(
+        "relative overflow-hidden rounded-2xl border bg-card p-5",
+        "shadow-card",
+      )}
+    >
+      <div className="space-y-3">
+        {sampleDemand && <SampleCardNotice {...sampleDemand} />}
+        <div>
+          <h3 className="font-display text-xl font-semibold">{match.jobRole}</h3>
+          {subtitle ? (
+            <p className="mt-0.5 text-base text-muted-foreground">{subtitle}</p>
+          ) : null}
+        </div>
+        {skills.length > 0 && (
+          <p className="text-sm text-muted-foreground">
+            You asked for:{" "}
+            <span className="font-medium text-foreground">
+              {skills.join(" · ")}
+            </span>
+          </p>
+        )}
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          This is what a match would look like. Nobody in the pool fits it yet.
+        </p>
+      </div>
+    </article>
+  );
+}
+
+function niceToHaveLine(spec: SampleDemand["spec"]): string | null {
+  const nice = (spec.niceToHaveStack ?? [])
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  return nice.length ? nice.join(" · ") : null;
 }

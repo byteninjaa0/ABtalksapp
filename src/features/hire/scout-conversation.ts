@@ -22,7 +22,7 @@ import {
 import { readPoolExtra } from "@/features/hire/pool-brief";
 import { trackLabels } from "@/features/hire/track-registry";
 import { runScoutAgent } from "@/features/hire/scout-agent";
-import { suggestChips } from "@/features/hire/scout-chips";
+import { readOfferedChips, suggestChips, type ScoutChip } from "@/features/hire/scout-chips";
 import { searchable, type ScoutToolDeps } from "@/features/hire/scout-tools";
 
 export type ChatMessage = {
@@ -380,6 +380,28 @@ function engineAction(spec: JobSpec, msg: string): ScoutTurn | null {
     }
   }
 
+  // A generated chip whose value is a real field, not a protocol prefix —
+  // "MID", "REMOTE", "Python, SQL". These used to fall through to the model,
+  // so a tap of Mid could 429 and lose the answer.
+  const enumSlot = enumChipSlot(m);
+  if (enumSlot) {
+    const parsed = jobSpecSchema.safeParse(mergeIntoSlot(spec, enumSlot, m));
+    const next = parsed.success ? parsed.data : spec;
+    if (isSlotFilled(next, enumSlot)) {
+      return turnFor(next, chipAck(enumSlot, next));
+    }
+  }
+
+  return null;
+}
+
+function enumChipSlot(raw: string): HireSlot | null {
+  const m = raw.trim();
+  if (/^(INTERN|JUNIOR|MID|SENIOR|LEAD)$/i.test(m)) return "seniority";
+  if (/^(ONSITE|HYBRID|REMOTE|FLEXIBLE)$/i.test(m)) return "workMode";
+  if (/^(FULL_TIME|CONTRACT|INTERNSHIP|PART_TIME)$/i.test(m)) {
+    return "employmentType";
+  }
   return null;
 }
 
@@ -406,7 +428,25 @@ const SLOT_WORD: Record<HireSlot, string> = {
 function isChipValue(spec: JobSpec, msg: string): boolean {
   const m = msg.trim();
   if (/^(skip|salary|action|edit):/i.test(m)) return true;
-  return suggestChips(spec, searchable(spec)).some((c) => c.value === m);
+  if (enumChipSlot(m)) return true;
+  return suggestChips(spec, searchable(spec), readOfferedChips(spec)).some(
+    (c) => c.value === m,
+  );
+}
+
+/**
+ * Stash (or clear) the chips offered this turn so the next tap can be
+ * recognised without the model. Lives on `spec.extra`, which already carries
+ * pool filters and skipped slots — one JSON column, no schema change.
+ */
+function withOfferedChips(
+  spec: JobSpec,
+  chips: ScoutChip[] | null | undefined,
+): JobSpec {
+  const extra = { ...(spec.extra ?? {}) } as Record<string, unknown>;
+  if (chips && chips.length > 0) extra.offeredChips = chips;
+  else delete extra.offeredChips;
+  return { ...spec, extra };
 }
 
 /**
@@ -421,13 +461,18 @@ function isChipValue(spec: JobSpec, msg: string): boolean {
 function turnFor(
   spec: JobSpec,
   text: string,
-  extra?: { action?: "search" | "reset" | null; notice?: string | null },
+  extra?: {
+    action?: "search" | "reset" | null;
+    notice?: string | null;
+    offeredChips?: ScoutChip[] | null;
+  },
 ): ScoutTurn {
   const ready = searchable(spec);
+  const agentChips = extra?.offeredChips ?? null;
   return {
-    spec,
+    spec: withOfferedChips(spec, agentChips),
     nextQuestion: text.trim() ? text.trim().slice(0, 500) : null,
-    options: suggestChips(spec, ready).slice(0, 12),
+    options: suggestChips(spec, ready, agentChips).slice(0, 12),
     allowFreeText: true,
     readyToSearch: ready,
     summary: summarize(spec),
@@ -493,7 +538,10 @@ export async function runScoutTurn(args: {
   });
 
   return checked(
-    turnFor(out.spec, out.text, { action: out.action }),
+    turnFor(out.spec, out.text, {
+      action: out.action,
+      offeredChips: out.offeredChips,
+    }),
     unchanged,
   );
 }

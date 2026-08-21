@@ -2,7 +2,7 @@ import "server-only";
 
 import { logger } from "@/lib/logger";
 import type { JobSpec } from "@/lib/validations/hire";
-import { rankCandidates } from "@/features/hire/score-candidate";
+import { pickSearchMatches, rankCandidates } from "@/features/hire/score-candidate";
 import { readPoolExtra } from "@/features/hire/pool-brief";
 import { estimateCompensation } from "@/features/hire/compensation";
 import { enabledTracks, isKnownTrack } from "@/features/hire/track-registry";
@@ -129,17 +129,11 @@ export async function searchCandidates(
     // So the shortlist is the ranked STRONG/PARTIAL list, and when that comes
     // back thin it is topped up with the next best people the pool has — still
     // carrying their real tier and their real gaps, never dressed up.
-    const shown = ranked.filter((r) => !r.hardFiltered);
-    const primary = shown.filter((r) => r.tier !== "NONE");
-    // A stated "only 5" must not pad a good list with leftovers. An empty
-    // primary list is different — hide nobody. Rank them with their real gaps.
-    const padded =
-      primary.length === 0
-        ? shown
-        : hardCap || primary.length >= MIN_RESULTS
-          ? primary
-          : [...primary, ...shown.filter((r) => r.tier === "NONE")];
-    const matches = padded.slice(0, limit);
+    const matches = pickSearchMatches(ranked, spec, {
+      hardCap,
+      limit,
+      minResults: MIN_RESULTS,
+    });
 
     const shownIds = new Set(matches.map((m) => m.programMemberId));
     const nearMisses = ranked

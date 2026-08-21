@@ -162,24 +162,71 @@ function readyChips(): ScoutChip[] {
 }
 
 /**
+ * Chips the agent offered on the previous turn, stashed on the spec so a tap
+ * can be recognised without the model. Written by `turnFor`; read by
+ * `isChipValue`. Not a display source — display takes the third argument of
+ * `suggestChips` on the turn they were offered.
+ */
+export function readOfferedChips(spec: JobSpec): ScoutChip[] | null {
+  const raw = (spec.extra as { offeredChips?: unknown } | null | undefined)
+    ?.offeredChips;
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const chips: ScoutChip[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") continue;
+    const label = (row as { label?: unknown }).label;
+    const value = (row as { value?: unknown }).value;
+    if (typeof label === "string" && label && typeof value === "string" && value) {
+      chips.push({ label, value });
+    }
+  }
+  return chips.length ? chips : null;
+}
+
+/**
  * Up to four suggestions for where the conversation can go next.
  *
  * `ready` is the engine's judgement that a search would mean something — it is
  * not the model's, and not a claim that the brief is finished. A recruiter can
  * always keep talking instead of tapping.
+ *
+ * `agentChips`, when present, are what Scout just asked — they win over the
+ * fixed ladder. The stable "change the stack / change the budget / start a new
+ * search" chips stay on a ready brief so those exits never disappear.
  */
-export function suggestChips(spec: JobSpec, ready: boolean): ScoutChip[] {
-  if (ready) return readyChips();
+export function suggestChips(
+  spec: JobSpec,
+  ready: boolean,
+  agentChips?: ScoutChip[] | null,
+): ScoutChip[] {
+  if (agentChips && agentChips.length > 0) {
+    if (!ready) return agentChips;
+    const stable = readyChips().filter((c) => c.value !== "action:search");
+    const seen = new Set(agentChips.map((c) => c.value));
+    return [...agentChips, ...stable.filter((c) => !seen.has(c.value))];
+  }
 
-  // Order is by how much the answer narrows the search, which is also the order
-  // a recruiter naturally volunteers things.
+  // A searchable brief is not a finished brief. Jumping to "Change the stack"
+  // while Scout is still asking seniority is how the chips stop matching the
+  // question on screen. Keep the ladder; hang the stable exits off the end.
   const wanted: HireSlot[] = ["mustHaveStack", "seniority", "salary"];
   for (const slot of wanted) {
     if (isSlotFilled(spec, slot)) continue;
-    if (slot === "mustHaveStack") return stackChips(spec);
-    if (slot === "seniority") return seniorityChips();
-    if (slot === "salary") return salaryChips(spec);
+    const slotChips =
+      slot === "mustHaveStack"
+        ? stackChips(spec)
+        : slot === "seniority"
+          ? seniorityChips()
+          : salaryChips(spec);
+    if (!ready) return slotChips;
+    const seen = new Set(slotChips.map((c) => c.value));
+    return [
+      ...slotChips,
+      ...readyChips().filter((c) => !seen.has(c.value)),
+    ];
   }
+
+  if (ready) return readyChips();
 
   // Nothing obvious left to suggest, but a pool brief with no role can still be
   // searched, so offer that rather than nothing.

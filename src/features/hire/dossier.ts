@@ -2,6 +2,7 @@ import "server-only";
 
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { encodeCandidateRef } from "@/features/hire/candidate-ref";
 import { candidatePublicId } from "@/features/hire/public-id";
 import {
@@ -123,23 +124,58 @@ const MEMBER_SELECT = {
       problemScore: true,
     },
   },
-  user: {
-    select: {
-      candidateAvailability: {
-        select: {
-          openToWork: true,
-          expectedSalaryMin: true,
-          expectedSalaryMax: true,
-          salaryCurrency: true,
-          noticePeriodDays: true,
-          preferredWorkMode: true,
-          preferredCities: true,
-          openToRelocate: true,
-        },
-      },
-    },
-  },
 } satisfies Prisma.ProgramMemberSelect;
+
+export type AvailabilityRow = {
+  userId: string;
+  openToWork: boolean;
+  expectedSalaryMin: number | null;
+  expectedSalaryMax: number | null;
+  salaryCurrency: string;
+  noticePeriodDays: number | null;
+  preferredWorkMode: string | null;
+  preferredCities: string[];
+  openToRelocate: boolean;
+};
+
+/**
+ * Opt-in logistics, loaded separately so a missing `CandidateAvailability`
+ * table cannot take the whole search down with it. Nested Prisma selects
+ * JOIN that table; if the hire migration has not been applied, every
+ * member query 500s and the recruiter sees a toast instead of cards.
+ */
+let availabilityMissing = false;
+
+export async function loadAvailabilityByUserId(
+  userIds: string[],
+): Promise<Map<string, AvailabilityRow>> {
+  if (availabilityMissing) return new Map();
+  const ids = [...new Set(userIds.filter(Boolean))];
+  if (ids.length === 0) return new Map();
+  try {
+    const rows = await prisma.candidateAvailability.findMany({
+      where: { userId: { in: ids } },
+      select: {
+        userId: true,
+        openToWork: true,
+        expectedSalaryMin: true,
+        expectedSalaryMax: true,
+        salaryCurrency: true,
+        noticePeriodDays: true,
+        preferredWorkMode: true,
+        preferredCities: true,
+        openToRelocate: true,
+      },
+    });
+    return new Map(rows.map((r) => [r.userId, r]));
+  } catch (error) {
+    availabilityMissing = true;
+    logger.error("[hire] CandidateAvailability unread", {
+      error: String(error).slice(0, 240),
+    });
+    return new Map();
+  }
+}
 
 /**
  * Assemble dossiers for every member matching `where`, plus the coverage of
@@ -175,7 +211,7 @@ export async function buildDossierSet(
   }
 
   const memberIds = members.map((m) => m.id);
-  const [submissions, dayMeta] = await Promise.all([
+  const [submissions, dayMeta, availability] = await Promise.all([
     prisma.programMissionSubmission.findMany({
       where: { memberId: { in: memberIds } },
       select: {
@@ -189,6 +225,7 @@ export async function buildDossierSet(
       orderBy: [{ dayNumber: "asc" }, { attemptNumber: "asc" }],
     }),
     getDayMeta(),
+    loadAvailabilityByUserId(members.map((m) => m.userId)),
   ]);
 
   const subsByMember = new Map<string, typeof submissions>();
@@ -311,7 +348,7 @@ export async function buildDossierSet(
     const cohortDay = getCohortCalendarDay({ startsAt: m.cohort.startsAt });
     cohortDayByMember.set(m.id, cohortDay);
 
-    const av = m.user.candidateAvailability;
+    const av = availability.get(m.userId) ?? null;
 
     dossiers.push({
       publicId: candidatePublicId(m.id),

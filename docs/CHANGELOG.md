@@ -2,6 +2,8 @@
 
 <!-- Reconciled through 2026-08-05 (commit 519cc34) into docs/project-context.md. -->
 
+- 2026-08-20 — hire: empty searches show sample cards built from the recruiter's own spec, with a demand button that sets `TalentRequest.alertWhenAvailable`; `SAMPLE:` refs stay off the track whitelist so they cannot be shortlisted or introduced. Scout can offer its own chips via `offer_options` when the fixed ladder does not cover the question. Plan `docs/plans/081-sample-cards-and-adaptive-chips.md`
+
 - 2026-08-17 — hire: Scout no longer invents Python/Docker from the MLOps chip; “five / only fivce / completed / cllaude” parse and search; a new named pool without a stack does not keep the old must-haves.
 - 2026-08-17 — hire: each guest search is its own tab (5 vs 20 stay separate); View more and Back to the requirement keep the same tabs; New search still wipes. Signed-in TalentRequest matches unchanged.
 - 2026-08-17 — hire: match-card type one step larger; guest Scout session restores on Back to the requirement; default intake is role/seniority/stack/budget (six slots skipped, not deleted); Add to cart keys on candidateRef so Claude/hackathon cards have a cart again — RecruiterShortlistItem ProgramMember FK untouched. Plan `docs/plans/079-hire-card-session-cart-intake.md`

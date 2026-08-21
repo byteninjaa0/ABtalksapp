@@ -2,6 +2,7 @@ import "server-only";
 
 import { Domain, TalentCandidateSource } from "@prisma/client";
 
+import { logger } from "@/lib/logger";
 import { hireChallengePool } from "@/lib/feature-flags";
 import { buildDossierSet, computeCoverage } from "@/features/hire/dossier";
 import {
@@ -289,16 +290,24 @@ export async function loadTrack(
   const track = findTrack(slug);
   if (!track || !(track.enabled?.() ?? true)) return emptyLoad(slug);
 
-  switch (track.slug) {
-    case "PROGRAM":
-      return loadProgram();
-    case "CLAUDE":
-    case "CHALLENGE_60":
-      return loadChallenge(track.slug, opts);
-    case "HACKATHON":
-      return loadHackathon();
-    default:
-      return emptyLoad(track.slug);
+  try {
+    switch (track.slug) {
+      case "PROGRAM":
+        return await loadProgram();
+      case "CLAUDE":
+      case "CHALLENGE_60":
+        return await loadChallenge(track.slug, opts);
+      case "HACKATHON":
+        return await loadHackathon();
+      default:
+        return emptyLoad(track.slug);
+    }
+  } catch (error) {
+    logger.error("[hire] loadTrack failed", {
+      slug,
+      error: String(error).slice(0, 240),
+    });
+    return emptyLoad(slug);
   }
 }
 

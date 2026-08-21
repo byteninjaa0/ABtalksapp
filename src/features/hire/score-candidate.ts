@@ -550,6 +550,40 @@ export function rankCandidates(
   return list.slice(0, limit);
 }
 
+/**
+ * Who actually appears as a result card.
+ *
+ * Ranked people who fail a stated must-have are near-misses for the gap
+ * report, not results. Padding an empty must-have search with a business
+ * executive is how the sample-card path never fired.
+ */
+export function pickSearchMatches(
+  ranked: ScoredCandidate[],
+  spec: JobSpec,
+  opts?: { hardCap?: number | null; limit?: number; minResults?: number },
+): ScoredCandidate[] {
+  const must = spec.mustHaveStack ?? [];
+  const minResults = opts?.minResults ?? 5;
+  const hardCap = opts?.hardCap ?? null;
+  const limit = hardCap ?? opts?.limit ?? 25;
+
+  const shown = ranked.filter((r) => {
+    if (r.hardFiltered) return false;
+    if (must.length === 0) return true;
+    const skills = r.evidence.skills ?? [];
+    return must.every((t) => stackTokensMatch(skills, t));
+  });
+  const primary = shown.filter((r) => r.tier !== "NONE");
+  if (primary.length === 0) {
+    return must.length > 0 ? [] : shown.slice(0, limit);
+  }
+  const padded =
+    hardCap || primary.length >= minResults
+      ? primary
+      : [...primary, ...shown.filter((r) => r.tier === "NONE")];
+  return padded.slice(0, limit);
+}
+
 // ─── Pure helpers exported for unit tests (no DB) ───────────────────────────
 
 export const __test = {

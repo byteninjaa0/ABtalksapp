@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { recordSampleDemandAction } from "@/app/actions/hire-actions";
 import { mergeGuestCartAction } from "@/app/actions/talent-actions";
 import { placeBulkEngagementRequestAction } from "@/app/actions/hire-request-actions";
 import {
@@ -10,6 +11,10 @@ import {
   readGuestCart,
   writeGuestCart,
 } from "@/components/hire/guest-cart";
+import {
+  clearPendingDemand,
+  readPendingDemand,
+} from "@/components/hire/pending-demand";
 import {
   clearPendingCheckout,
   readPendingCheckout,
@@ -41,6 +46,19 @@ export function MergeGuestCart() {
 
     void (async () => {
       try {
+        const pendingDemand = readPendingDemand();
+        if (pendingDemand) {
+          const recorded = await recordSampleDemandAction({
+            spec: pendingDemand.spec,
+          });
+          if (recorded.ok) {
+            clearPendingDemand();
+            toast.success("Noted — we'll be in touch when someone matches.");
+          } else {
+            toast.error(recorded.message);
+          }
+        }
+
         const items = readGuestCart();
         const programIds = guestCartProgramIds(items);
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 import { MatchCard, type MatchCardData } from "@/components/hire/match-card";
+import type { SampleDemand } from "@/components/hire/sample-card-notice";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,8 @@ export function MatchResults({
   matches,
   cartCount,
   viewAllHref,
+  samples,
+  sampleDemand,
 }: {
   matches: MatchCardData[];
   /**
@@ -33,6 +36,12 @@ export function MatchResults({
    * Omit it to render the whole list — which is what that page then does.
    */
   viewAllHref?: string;
+  /**
+   * Illustrative cards for an empty search. Rendered only when there are no
+   * real matches, in a separate list, so they can never read as results.
+   */
+  samples?: MatchCardData[];
+  sampleDemand?: SampleDemand;
 }) {
   // Seeded from the server once, then owned here. Reading it from the prop on
   // every render double-counted: the toggle moved it, and the refresh that
@@ -40,22 +49,44 @@ export function MatchResults({
   const [count, setCount] = useState(cartCount);
   const visible = viewAllHref ? matches.slice(0, INITIAL_VISIBLE) : matches;
   const hidden = matches.length - visible.length;
+  const showSamples = matches.length === 0 && (samples?.length ?? 0) > 0;
 
   return (
     <div className="space-y-4">
-      <ul className="space-y-4">
-        {visible.map((m, i) => (
-          <li key={m.candidateRef}>
-            <MatchCard
-              match={m}
-              rank={i + 1}
-              onCartToggle={(inCart) =>
-                setCount((c) => Math.max(0, c + (inCart ? 1 : -1)))
-              }
-            />
-          </li>
-        ))}
-      </ul>
+      {showSamples && (
+        <div className="space-y-3">
+          <h3 className="font-display text-lg font-semibold">
+            What a match would look like
+          </h3>
+          <ul className="space-y-4">
+            {samples!.map((m) => (
+              <li key={m.candidateRef}>
+                <MatchCard
+                  match={m}
+                  variant="sample"
+                  sampleDemand={sampleDemand}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {visible.length > 0 && (
+        <ul className="space-y-4">
+          {visible.map((m, i) => (
+            <li key={m.candidateRef}>
+              <MatchCard
+                match={m}
+                rank={i + 1}
+                onCartToggle={(inCart) =>
+                  setCount((c) => Math.max(0, c + (inCart ? 1 : -1)))
+                }
+              />
+            </li>
+          ))}
+        </ul>
+      )}
 
       {viewAllHref && hidden > 0 && (
         <Link

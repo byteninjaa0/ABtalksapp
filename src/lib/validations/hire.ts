@@ -150,6 +150,66 @@ export const setPoolFiltersArgsSchema = z.object({
 
 export type SetPoolFiltersArgs = z.infer<typeof setPoolFiltersArgsSchema>;
 
+/**
+ * Quick replies the agent may put under its own question.
+ *
+ * Protocol prefixes (`action:` / `edit:` / `skip:` / `salary:`) are reserved
+ * for the engine. The model must not forge them — a chip with those values
+ * would fire a search or clear a slot without the recruiter meaning to.
+ */
+const PROTOCOL_PREFIX = /^(action|edit|skip|salary):/i;
+
+export const offerOptionsArgsSchema = z.object({
+  options: z
+    .array(
+      z.object({
+        label: z.string().trim().min(1).max(40),
+        value: z.string().trim().min(1).max(120),
+      }),
+    )
+    .min(2)
+    .max(4)
+    .superRefine((options, ctx) => {
+      options.forEach((option, i) => {
+        if (PROTOCOL_PREFIX.test(option.value)) {
+          ctx.addIssue({
+            code: "custom",
+            message: "That value is reserved for the engine.",
+            path: [i, "value"],
+          });
+        }
+      });
+    }),
+});
+
+export type OfferOptionsArgs = z.infer<typeof offerOptionsArgsSchema>;
+
+export const recordSampleDemandSchema = z
+  .object({
+    requestId: z.string().cuid().optional(),
+    spec: jobSpecSchema.optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.requestId) return;
+    if (!v.spec) {
+      ctx.addIssue({
+        code: "custom",
+        message: "A request or a spec is required.",
+        path: ["spec"],
+      });
+      return;
+    }
+    if (!v.spec.title?.trim() && (v.spec.mustHaveStack?.length ?? 0) === 0) {
+      ctx.addIssue({
+        code: "custom",
+        message: "The spec has nothing to record.",
+        path: ["spec"],
+      });
+    }
+  });
+
+export type RecordSampleDemandInput = z.infer<typeof recordSampleDemandSchema>;
+
 /** `list_tracks`, `get_pool_stats`, `preview_matches`, `search_pool`. */
 export const noArgsSchema = z.object({});
 

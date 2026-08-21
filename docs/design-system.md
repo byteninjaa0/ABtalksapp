@@ -86,6 +86,13 @@ Reusable app patterns (bridge figure, consent card, numbered rows, program
 card, stat, kicker) live in feature components. Do not invent a second
 accent hue or a second product font.
 
+**Sample banner (hire).** A full-width, non-dismissible warning strip at the
+top of an illustrative match card, used only when a search returned nobody.
+Same amber treatment as the hire privacy notice (`border-amber-500/30
+bg-amber-500/10 text-amber-900`). Never a tooltip, never a toast. The card
+states the recruiter's own requirement and never invents a person. Accent
+is spent once, on *Tell ABTalks I need this*.
+
 ---
 
 ## 6. Copy voice

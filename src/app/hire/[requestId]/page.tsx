@@ -6,6 +6,7 @@ import { ScoutChat } from "@/components/hire/scout-chat";
 import { MatchResults } from "@/components/hire/match-results";
 import { GapReport } from "@/components/hire/gap-report";
 import { loadRequestMatches } from "@/features/hire/load-request-matches";
+import { buildSampleCards } from "@/features/hire/sample-card";
 import { jobSpecSchema, type JobSpec } from "@/lib/validations/hire";
 
 type Props = { params: Promise<{ requestId: string }> };
@@ -130,15 +131,29 @@ export default async function HireRequestPage({ params }: Props) {
             : "No matches yet"}
         </h2>
         {matches.length === 0 ? (
-          <GapReport
-            requestId={request.id}
-            overallGap={
-              request.status === "DRAFT"
-                ? "Search when you're ready — or keep chatting with Scout to refine the spec."
-                : "No verified matches in the published pool for this requirement yet. Your demand is saved."
-            }
-            alertWhenAvailable={request.alertWhenAvailable}
-          />
+          <>
+            {request.status !== "DRAFT" && (
+              <MatchResults
+                matches={[]}
+                samples={buildSampleCards(spec)}
+                sampleDemand={{
+                  spec,
+                  requestId: request.id,
+                  alreadyRecorded: request.alertWhenAvailable,
+                }}
+                cartCount={0}
+              />
+            )}
+            <GapReport
+              requestId={request.id}
+              overallGap={
+                request.status === "DRAFT"
+                  ? "Search when you're ready — or keep chatting with Scout to refine the spec."
+                  : "No verified matches in the published pool for this requirement yet. Your demand is saved."
+              }
+              alertWhenAvailable={request.alertWhenAvailable}
+            />
+          </>
         ) : (
           <>
             <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-xs leading-relaxed text-amber-900 dark:text-amber-100">

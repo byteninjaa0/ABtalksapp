@@ -3,7 +3,7 @@ import "server-only";
 import { Domain } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { encodeCandidateRef } from "@/features/hire/candidate-ref";
-import { computeCoverage } from "@/features/hire/dossier";
+import { computeCoverage, loadAvailabilityByUserId } from "@/features/hire/dossier";
 import {
   declared,
   derived,
@@ -222,18 +222,6 @@ export async function buildChallengeDossierSet(opts: {
               resumeUrl: true,
             },
           },
-          candidateAvailability: {
-            select: {
-              openToWork: true,
-              expectedSalaryMin: true,
-              expectedSalaryMax: true,
-              salaryCurrency: true,
-              noticePeriodDays: true,
-              preferredWorkMode: true,
-              preferredCities: true,
-              openToRelocate: true,
-            },
-          },
         },
       },
     },
@@ -249,7 +237,7 @@ export async function buildChallengeDossierSet(opts: {
   const rows = opts.limit ? eligible.slice(0, opts.limit) : eligible;
 
   const userIds = rows.map((e) => e.userId);
-  const [lastSubmissions, quiz] = await Promise.all([
+  const [lastSubmissions, quiz, availability] = await Promise.all([
     prisma.submission.groupBy({
       by: ["userId"],
       where: { userId: { in: userIds } },
@@ -262,6 +250,7 @@ export async function buildChallengeDossierSet(opts: {
       _avg: { score: true },
       _count: true,
     }),
+    loadAvailabilityByUserId(userIds),
   ]);
 
   const activity = new Map(lastSubmissions.map((s) => [s.userId, s]));
@@ -302,7 +291,7 @@ export async function buildChallengeDossierSet(opts: {
 
     const skills = splitSkills(p?.skills ?? []);
     const family = familyFor(p?.role ?? null, e.domain, skills);
-    const av = e.user.candidateAvailability;
+    const av = availability.get(e.userId) ?? null;
 
     dossiers.push({
       publicId: candidatePublicId(e.userId),

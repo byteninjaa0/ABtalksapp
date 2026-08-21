@@ -15,6 +15,7 @@ import { logger } from "@/lib/logger";
 import {
   candidateAvailabilitySchema,
   jobSpecSchema,
+  recordSampleDemandSchema,
   runMatchSchema,
   sendScoutMessageSchema,
   type JobSpec,
@@ -41,6 +42,30 @@ async function requireApprovedRecruiter(): Promise<
   });
   if (!profile?.approved) {
     return { ok: false, message: "Recruiter access not approved yet." };
+  }
+  return { ok: true, data: { userId: session.user.id } };
+}
+
+/**
+ * Registered as a recruiter — approved or still waiting.
+ *
+ * Sample-card demand is how we learn what a recruiter wanted when the pool
+ * had nobody. A pending recruiter is exactly who we want to hear from; gating
+ * this on approval would drop the ask they signed up to place.
+ */
+async function requireRegisteredRecruiter(): Promise<
+  ActionResult<{ userId: string }>
+> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { ok: false, message: "Sign in to save this requirement." };
+  }
+  const profile = await prisma.recruiterProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { approved: true },
+  });
+  if (!profile) {
+    return { ok: false, message: "Register as a recruiter first." };
   }
   return { ok: true, data: { userId: session.user.id } };
 }
@@ -501,5 +526,98 @@ export async function requestCohortTrainAction(
   } catch (error) {
     logger.error("[hire] requestCohortTrainAction", { error: String(error) });
     return { ok: false, message: "Could not save training request." };
+  }
+}
+
+const SAMPLE_DEMAND_NOTE =
+  "Demand captured from a sample card — recruiter asked to be told when someone matching this requirement exists.";
+
+/**
+ * Record that the recruiter wants this requirement filled.
+ *
+ * Sets `alertWhenAvailable` on an existing TalentRequest, or creates one from
+ * a spec when the recruiter arrived via the guest pending-demand rail. Same
+ * columns `requestCohortTrainAction` already writes; the system message is
+ * how admin can tell a sample-card ask from a normal one.
+ */
+export async function recordSampleDemandAction(
+  input: unknown,
+): Promise<ActionResult<{ requestId: string }>> {
+  const gate = await requireRegisteredRecruiter();
+  if (!gate.ok) return gate;
+  const parsed = recordSampleDemandSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: "Could not read that requirement." };
+  }
+
+  const userId = gate.data.userId;
+  const { requestId: existingId, spec } = parsed.data;
+
+  try {
+    if (existingId) {
+      const existing = await prisma.talentRequest.findFirst({
+        where: { id: existingId, recruiterUserId: userId },
+        select: { id: true, alertWhenAvailable: true },
+      });
+      if (!existing) return { ok: false, message: "Request not found." };
+
+      if (!existing.alertWhenAvailable) {
+        await prisma.talentRequest.update({
+          where: { id: existing.id },
+          data: {
+            alertWhenAvailable: true,
+            status: TalentRequestStatus.ACTIVE,
+          },
+        });
+      }
+
+      await prisma.talentRequestMessage.create({
+        data: {
+          requestId: existing.id,
+          role: "system",
+          content: SAMPLE_DEMAND_NOTE,
+        },
+      });
+
+      revalidatePath(`/hire/${existing.id}`);
+      revalidatePath("/admin/hire");
+      return { ok: true, data: { requestId: existing.id } };
+    }
+
+    if (!spec) return { ok: false, message: "Could not read that requirement." };
+
+    const derivedTitle =
+      spec.title?.trim() ||
+      (spec.mustHaveStack?.[0]
+        ? `${spec.mustHaveStack[0]!.charAt(0).toUpperCase()}${spec.mustHaveStack[0]!.slice(1)} developer`
+        : "Untitled requirement");
+
+    const created = await prisma.$transaction(async (tx) => {
+      const row = await tx.talentRequest.create({
+        data: {
+          recruiterUserId: userId,
+          status: TalentRequestStatus.ACTIVE,
+          ...specToDb({ ...spec, title: derivedTitle }),
+          alertWhenAvailable: true,
+        },
+        select: { id: true },
+      });
+      await tx.talentRequestMessage.create({
+        data: {
+          requestId: row.id,
+          role: "system",
+          content: SAMPLE_DEMAND_NOTE,
+        },
+      });
+      return row;
+    });
+
+    revalidatePath("/hire");
+    revalidatePath(`/hire/${created.id}`);
+    revalidatePath("/admin/hire");
+    return { ok: true, data: { requestId: created.id } };
+  } catch (error) {
+    logger.error("[hire] recordSampleDemandAction", { error: String(error) });
+    return { ok: false, message: "Could not save that requirement." };
   }
 }

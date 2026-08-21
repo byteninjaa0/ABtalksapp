@@ -164,6 +164,246 @@ export function asRoleTitle(raw: string): string | null {
   return s.slice(0, 200);
 }
 
+/**
+ * Unambiguous seniority / work-mode words in the recruiter's own message.
+ *
+ * Used as a seed before the model (same idea as `extractPoolBrief`) and as the
+ * safety net when Groq 429s: "mid, work mode will be remote" must not vanish
+ * just because the hop ran out of tokens. Negation and long essays are left
+ * alone — those belong to the model.
+ */
+const STACK_STOP = new Set([
+  "a",
+  "an",
+  "the",
+  "and",
+  "or",
+  "in",
+  "on",
+  "of",
+  "for",
+  "with",
+  "to",
+  "who",
+  "that",
+  "this",
+  "only",
+  "also",
+  "just",
+  "should",
+  "be",
+  "is",
+  "am",
+  "are",
+  "was",
+  "know",
+  "knows",
+  "known",
+  "expert",
+  "expertise",
+  "candidate",
+  "candidates",
+  "developer",
+  "developers",
+  "engineer",
+  "engineers",
+  "person",
+  "people",
+  "profile",
+  "profiles",
+  "stack",
+  "nothing",
+  "else",
+  "anything",
+  "anyone",
+  "someone",
+  "something",
+  "them",
+  "they",
+  "their",
+  "my",
+  "our",
+  "me",
+  "i",
+  "want",
+  "need",
+  "looking",
+  "hire",
+  "hiring",
+  "skilled",
+  "experience",
+  "experienced",
+  "years",
+  "year",
+  "mid",
+  "senior",
+  "junior",
+  "intern",
+  "level",
+  "full",
+  "must",
+  "have",
+  "has",
+  "had",
+  "please",
+  "give",
+  "show",
+  "list",
+  "from",
+  "using",
+  "use",
+  "used",
+  "like",
+  "really",
+  "very",
+  "highly",
+  "strong",
+  "good",
+  "great",
+  "able",
+  "work",
+  "working",
+]);
+
+/**
+ * Stack tokens the recruiter actually named — "know langchain", "in mern stack",
+ * "expert in python only". Stopwords and bare numbers are dropped so
+ * "only 3 candidates" does not become a skill.
+ */
+export function extractStatedStack(text: string): string[] {
+  const found: string[] = [];
+  const push = (raw: string) => {
+    const parts = raw
+      .trim()
+      .toLowerCase()
+      .replace(/[,.]+$/g, "")
+      .split(/\s+/);
+    for (const part of parts) {
+      if (part.length < 2 || part.length > 40) continue;
+      if (STACK_STOP.has(part)) continue;
+      if (/^\d+$/.test(part)) continue;
+      if (!found.includes(part)) found.push(part);
+    }
+  };
+  const patterns = [
+    /\bknows?\s+(?:only\s+)?([a-z][a-z0-9.+#\-]*(?:\s+[a-z][a-z0-9.+#\-]*)?)/gi,
+    /\bexpert(?:ise)?\s+in\s+(?:only\s+)?([a-z][a-z0-9.+#\-]*)/gi,
+    /\bin\s+([a-z][a-z0-9.+#\-]{2,24})\s+stack\b/gi,
+    /\bonly\s+([a-z][a-z0-9.+#\-]{2,40})\b/gi,
+  ];
+  for (const re of patterns) {
+    re.lastIndex = 0;
+    let m: RegExpExecArray | null = re.exec(text);
+    while (m) {
+      if (m[1]) push(m[1]);
+      m = re.exec(text);
+    }
+  }
+  return found.slice(0, 6);
+}
+
+export function applyObviousAnswers(spec: JobSpec, msg: string): JobSpec {
+  const text = msg.trim();
+  if (!text || text.length > 400) return spec;
+  if (/\b(not|don't|dont|doesn't|except)\b/i.test(text)) return spec;
+
+  const next: JobSpec = { ...spec };
+
+  if (next.seniority == null) {
+    const seniority = firstHit(text, [
+      [/\bintern(?:ship)?\b/i, "INTERN"],
+      [/\bjunior\b|\bjr\.?\b/i, "JUNIOR"],
+      [/\bmid(?:[\s-]?level)?\b/i, "MID"],
+      [/\bsenior\b|\bsr\.?\b/i, "SENIOR"],
+      [/\blead\b/i, "LEAD"],
+    ] as const);
+    if (seniority) next.seniority = seniority;
+  }
+
+  if (next.workMode == null) {
+    const workMode = firstHit(text, [
+      [/\bremote\b/i, "REMOTE"],
+      [/\bhybrid\b/i, "HYBRID"],
+      [/\bon[\s-]?site\b/i, "ONSITE"],
+    ] as const);
+    if (workMode) next.workMode = workMode;
+  }
+
+  if (!next.title?.trim()) {
+    if (/\bfull[\s-]?stack\b/i.test(text)) next.title = "Full-stack developer";
+    else if (/\bfront[\s-]?end\b/i.test(text)) next.title = "Frontend engineer";
+    else if (/\bback[\s-]?end\b/i.test(text)) next.title = "Backend engineer";
+  }
+
+  const statedStack = extractStatedStack(text);
+  const replaceStack =
+    statedStack.length > 0 &&
+    (!(next.mustHaveStack?.length) || /\bonly\b|\binstead\b/i.test(text));
+  if (replaceStack) {
+    const exclusive = /\bonly\b/i.test(text);
+    const word =
+      statedStack.find((s) => s === "langchain") ??
+      statedStack.find((s) => s === "langgraph") ??
+      statedStack[0]!;
+    next.mustHaveStack = exclusive ? [word] : statedStack;
+    if (exclusive) {
+      next.title = `${word.charAt(0).toUpperCase()}${word.slice(1)} developer`;
+    }
+  } else if (!next.mustHaveStack?.length) {
+    if (/\bmer?n\b/i.test(text)) next.mustHaveStack = ["mern"];
+    else if (/\bmean\b/i.test(text)) next.mustHaveStack = ["mean"];
+  } else if (/\bonly\b/i.test(text)) {
+    // "only ai engineer" is a new role, not a new library. The previous
+    // stack (MERN, etc.) must not ride along and rank the wrong people.
+    const afterOnly = text.replace(/^.*?\bonly\b\s*/i, "").trim();
+    const role = asRoleTitle(afterOnly);
+    if (role && !/^\d/.test(role) && !/^(candidates?|people|profiles?)$/i.test(role)) {
+      next.title = /ai\s*engineer/i.test(role) ? "AI engineer" : role;
+      next.mustHaveStack = [];
+    }
+  }
+
+  if (next.minExperience == null) {
+    const years = /\b(\d{1,2})\s*\+?\s*(?:years?|yrs?)\b/i.exec(text);
+    if (years) next.minExperience = Number(years[1]);
+  }
+
+  return next;
+}
+
+function firstHit<T extends string>(
+  text: string,
+  pairs: readonly (readonly [RegExp, T])[],
+): T | null {
+  let best: { index: number; value: T } | null = null;
+  for (const [re, value] of pairs) {
+    const m = re.exec(text);
+    if (!m || m.index == null) continue;
+    if (!best || m.index < best.index) best = { index: m.index, value };
+  }
+  return best?.value ?? null;
+}
+
+/** What landed this turn, for a one-line ack when the model did not speak. */
+export function briefDelta(before: JobSpec, after: JobSpec): string[] {
+  const bits: string[] = [];
+  const label = (s: string) => s.charAt(0) + s.slice(1).toLowerCase();
+  if (after.seniority && after.seniority !== before.seniority) {
+    bits.push(label(after.seniority));
+  }
+  if (after.workMode && after.workMode !== before.workMode) {
+    bits.push(label(after.workMode));
+  }
+  if (after.title && after.title !== before.title) bits.push(after.title);
+  if (
+    (after.mustHaveStack?.length ?? 0) > 0 &&
+    JSON.stringify(after.mustHaveStack) !== JSON.stringify(before.mustHaveStack)
+  ) {
+    bits.push((after.mustHaveStack ?? []).join(" · "));
+  }
+  return bits;
+}
+
 /** Money as the recruiter wrote it, for reading back. */
 export function formatSpecSalary(spec: JobSpec): string | null {
   const lo = spec.salaryMin;
