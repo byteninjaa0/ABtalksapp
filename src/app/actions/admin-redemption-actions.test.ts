@@ -28,6 +28,8 @@ function tx() {
   };
 }
 
+const REDEMPTION_ID = "cm4redemption000000000001";
+
 function form(data: Record<string, string>) {
   const fd = new FormData();
   for (const [key, value] of Object.entries(data)) {
@@ -62,7 +64,7 @@ describe("updateRedemptionStatusAction", () => {
     await expect(
       updateRedemptionStatusAction(
         form({
-          redemptionId: "red-1",
+          redemptionId: REDEMPTION_ID,
           nextStatus: RedemptionStatus.CANCELLED,
         }),
       ),
@@ -85,7 +87,7 @@ describe("updateRedemptionStatusAction", () => {
     await expect(
       updateRedemptionStatusAction(
         form({
-          redemptionId: "red-1",
+          redemptionId: REDEMPTION_ID,
           nextStatus: RedemptionStatus.SHIPPED,
         }),
       ),
@@ -110,7 +112,7 @@ describe("updateRedemptionStatusAction", () => {
     await expect(
       updateRedemptionStatusAction(
         form({
-          redemptionId: "red-1",
+          redemptionId: REDEMPTION_ID,
           nextStatus: RedemptionStatus.CANCELLED,
           trackingNote: "Out of stock",
         }),
@@ -118,7 +120,7 @@ describe("updateRedemptionStatusAction", () => {
     ).resolves.toEqual({ ok: true });
 
     expect(updateManyRedemption).toHaveBeenCalledWith({
-      where: { id: "red-1", status: RedemptionStatus.PENDING },
+      where: { id: REDEMPTION_ID, status: RedemptionStatus.PENDING },
       data: {
         status: RedemptionStatus.CANCELLED,
         trackingNote: "Out of stock",
@@ -137,7 +139,7 @@ describe("updateRedemptionStatusAction", () => {
         userId: "user-1",
         points: 120,
         type: "REDEEM_REFUND",
-        reason: "Refund for cancelled redemption red-1",
+        reason: `Refund for cancelled redemption ${REDEMPTION_ID}`,
       },
     });
   });
@@ -153,7 +155,7 @@ describe("updateRedemptionStatusAction", () => {
     await expect(
       updateRedemptionStatusAction(
         form({
-          redemptionId: "red-1",
+          redemptionId: REDEMPTION_ID,
           nextStatus: RedemptionStatus.SHIPPED,
         }),
       ),
