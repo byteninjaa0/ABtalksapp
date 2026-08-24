@@ -4,7 +4,12 @@ import { useEffect, useState, useTransition } from "react";
 import { Loader2, ShoppingCart, X } from "lucide-react";
 import { toast } from "sonner";
 import { toggleShortlistAction } from "@/app/actions/talent-actions";
-import { guestCartHas, toggleGuestCart } from "@/components/hire/guest-cart";
+import {
+  cartItemFromMatch,
+  guestCartHas,
+  toggleGuestCart,
+} from "@/components/hire/guest-cart";
+import type { MatchCardData } from "@/components/hire/match-card";
 import { useHireAuth } from "@/components/hire/hire-auth-provider";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,6 +31,7 @@ export function ShortlistButton({
   totalScore,
   displayName,
   skills,
+  snapshot,
   onToggle,
   className,
   podLabel = false,
@@ -38,6 +44,7 @@ export function ShortlistButton({
   totalScore?: number;
   displayName?: string | null;
   skills?: string[];
+  snapshot?: MatchCardData;
   /** Icon-only, for dense rows. */
   compact?: boolean;
   onToggle?: (inCart: boolean) => void;
@@ -56,13 +63,17 @@ export function ShortlistButton({
   }, [candidateRef, useDb]);
 
   function toggleLocal() {
-    const next = toggleGuestCart({
-      candidateRef,
-      jobRole: jobRole ?? "Candidate",
-      totalScore: totalScore ?? 0,
-      displayName: displayName ?? null,
-      skills,
-    });
+    const next = toggleGuestCart(
+      snapshot
+        ? cartItemFromMatch(snapshot)
+        : {
+            candidateRef,
+            jobRole: jobRole ?? "Candidate",
+            totalScore: totalScore ?? 0,
+            displayName: displayName ?? null,
+            skills,
+          },
+    );
     setInCart(next);
     onToggle?.(next);
     toast.success(

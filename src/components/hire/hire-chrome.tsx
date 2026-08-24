@@ -144,7 +144,7 @@ export function HireChrome({
               <button
                 type="button"
                 onClick={() => openAuth("checkout")}
-                className="hire-hbtn"
+                className="hire-register"
               >
                 Register
               </button>

@@ -7,6 +7,10 @@ import { estimateCompensation, formatBandLpa } from "@/features/hire/compensatio
 import { roleFamilyFor, tidyRoleLabel } from "@/features/hire/role-family";
 import type { MatchTier } from "@/features/hire/types";
 import type { MatchCardData } from "@/components/hire/match-card";
+import {
+  pickPublicEvidence,
+  pickPublicScores,
+} from "@/features/hire/to-public-match";
 
 /**
  * Matches for one requirement, ready to render, for one recruiter.
@@ -41,6 +45,7 @@ export async function loadRequestMatches(
           source: true,
           score: true,
           tier: true,
+          scoreBreakdown: true,
           rationale: true,
           gaps: true,
           availabilityUnknown: true,
@@ -90,10 +95,32 @@ export async function loadRequestMatches(
     alertWhenAvailable: request.alertWhenAvailable,
     cartCount,
     matches: request.matches.map((m): MatchCardData => {
-      const evidence =
+      const raw =
         m.evidence && typeof m.evidence === "object"
-          ? (m.evidence as MatchCardData["evidence"])
+          ? (m.evidence as Record<string, unknown>)
           : {};
+      const evidence = pickPublicEvidence(raw);
+      // Older rows stored CandidateEvidence.interview as a nested object.
+      const nested = raw.interview;
+      if (nested && typeof nested === "object") {
+        const iv = nested as Record<string, unknown>;
+        if (evidence.interviewOverall == null && typeof iv.overall === "number") {
+          evidence.interviewOverall = iv.overall;
+        }
+        if (evidence.interviewComm == null && typeof iv.comm === "number") {
+          evidence.interviewComm = iv.comm;
+        }
+        if (evidence.interviewTech == null && typeof iv.tech === "number") {
+          evidence.interviewTech = iv.tech;
+        }
+        if (evidence.interviewProblem == null && typeof iv.problem === "number") {
+          evidence.interviewProblem = iv.problem;
+        }
+      }
+      const storedLocation =
+        typeof raw.locationLabel === "string" && raw.locationLabel.trim()
+          ? raw.locationLabel.trim()
+          : null;
       const source = m.source === "PROGRAM" ? "PROGRAM" : m.source;
       const isProgram = source === "PROGRAM";
       // The stored evidence blob carries the challenge candidate's role label;
@@ -134,6 +161,7 @@ export async function loadRequestMatches(
             (m.studentUserId ? nameByUser.get(m.studentUserId) : null)) ??
           null,
         jobRole: rawRole ? tidyRoleLabel(rawRole) : "Candidate",
+        locationLabel: storedLocation,
         score: m.score,
         tier: m.tier,
         rationale: m.rationale,
@@ -143,7 +171,15 @@ export async function loadRequestMatches(
         engagementStatus: m.studentUserId
           ? (engagements.get(m.studentUserId)?.status ?? null)
           : null,
-        compensationBand: band ? formatBandLpa(band) : null,
+        scores: pickPublicScores(m.scoreBreakdown),
+        compensationBand:
+          raw.compensationDeclared === true &&
+          typeof raw.compensationBand === "string"
+            ? raw.compensationBand
+            : band
+              ? formatBandLpa(band)
+              : null,
+        compensationDeclared: raw.compensationDeclared === true,
         highlightSkills: request.mustHaveStack.length
           ? request.mustHaveStack
           : undefined,

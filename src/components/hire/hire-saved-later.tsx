@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import { ArrowRight, ChevronLeft, UserRound } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, UserRound } from "lucide-react";
 import { toast } from "sonner";
-import { refPublicId } from "@/features/hire/candidate-ref";
+import { decodeCandidateRef, refPublicId } from "@/features/hire/candidate-ref";
 import { useHireDesk } from "@/components/hire/hire-desk-context";
 import {
   DESK_SHORTLIST_EVENT,
@@ -13,9 +13,42 @@ import {
   type DeskShortlistItem,
 } from "@/components/hire/desk-shortlist";
 import {
+  cartItemFromMatch,
   guestCartHas,
   toggleGuestCart,
 } from "@/components/hire/guest-cart";
+import { hydrateMatch } from "@/components/hire/evidence-cache";
+import { MatchMetaTags, MatchPills } from "@/components/hire/hire-card-facts";
+import { PodEmptyArt } from "@/components/hire/pod-empty-art";
+import type { MatchCardData } from "@/components/hire/match-card";
+
+function savedToMatch(row: DeskShortlistItem): MatchCardData {
+  const decoded = decodeCandidateRef(row.candidateRef);
+  return hydrateMatch({
+    candidateRef: row.candidateRef,
+    programMemberId: decoded?.source === "PROGRAM" ? decoded.id : null,
+    jobRole: row.jobRole,
+    score: row.totalScore ?? 0,
+    displayName: row.displayName,
+    source: row.source,
+    locationLabel: row.locationLabel,
+    tier: "PARTIAL",
+    rationale: row.rationale ?? null,
+    gaps: [],
+    availabilityUnknown: row.availabilityUnknown ?? false,
+    compensationBand: row.compensationBand,
+    compensationDeclared: row.compensationDeclared,
+    evidence: {
+      skills: row.skills,
+      yearsExperience: row.yearsExperience,
+      missionsPassed: row.missionsPassed,
+      totalTrackDays: row.totalTrackDays,
+      certificateIssued: row.certificateIssued,
+      workMode: row.workMode,
+      educationLevel: row.educationLevel,
+    },
+  });
+}
 
 /**
  * A cached snapshot, because `useSyncExternalStore` compares by reference and
@@ -61,7 +94,7 @@ function subscribeSaved(onChange: () => void): () => void {
  * survives sign-in, because that is the list the team acts on.
  */
 export function HireSavedLater() {
-  const { closePod, openPod } = useHireDesk();
+  const { closePod, openPod, openInspect } = useHireDesk();
   const [moving, setMoving] = useState(false);
 
   // The list lives in localStorage, so it is an external store — reading it in
@@ -83,11 +116,7 @@ export function HireSavedLater() {
   function promote(item: DeskShortlistItem): boolean {
     const already = guestCartHas(item.candidateRef);
     if (!already) {
-      toggleGuestCart({
-        candidateRef: item.candidateRef,
-        jobRole: item.jobRole,
-        totalScore: 0,
-      });
+      toggleGuestCart(cartItemFromMatch(savedToMatch(item)));
     }
     toggleDeskShortlist(item);
     return !already;
@@ -145,18 +174,26 @@ export function HireSavedLater() {
                   Nothing saved yet. Use <strong>Save for later</strong> on a
                   card to keep someone here while you keep looking.
                 </p>
+                <PodEmptyArt />
                 <button
                   type="button"
                   className="pod-empty__cta"
                   onClick={closePod}
                 >
-                  Back to Scout
+                  Start a search
                 </button>
               </div>
             ) : (
               rows.map((row) => {
                 const publicId = refPublicId(row.candidateRef);
                 const onShortlist = guestCartHas(row.candidateRef);
+                const match = savedToMatch(row);
+                const stack =
+                  match.evidence.skills && match.evidence.skills.length > 0
+                    ? match.evidence.skills.slice(0, 6).join(" · ")
+                    : match.displayName
+                      ? row.jobRole
+                      : null;
                 return (
                   <article key={row.candidateRef} className="hire-pod__card">
                     <div className="hire-pod__who">
@@ -164,11 +201,35 @@ export function HireSavedLater() {
                         <UserRound className="size-6" />
                       </span>
                       <div>
-                        <p className="hire-pod__role">{row.jobRole}</p>
+                        <p className="hire-pod__name">
+                          {match.displayName || row.jobRole}
+                        </p>
+                        {stack && <p className="desk-card__stack">{stack}</p>}
                         <p className="hire-pod__ref">{publicId}</p>
+                        <MatchMetaTags match={match} />
                       </div>
                     </div>
+                    {typeof row.totalScore === "number" && row.totalScore > 0 && (
+                      <div className="desk-card__score">
+                        <div>
+                          <b>{row.totalScore}</b>
+                        </div>
+                        <span>out of 100</span>
+                      </div>
+                    )}
+                    <MatchPills match={match} compact />
+                    {match.rationale && (
+                      <p className="desk-card__why">{match.rationale}</p>
+                    )}
                     <div className="hire-pod__actions">
+                      <button
+                        type="button"
+                        className="desk-ghost"
+                        onClick={() => openInspect(match)}
+                      >
+                        View more details
+                        <ChevronRight className="size-3.5" aria-hidden="true" />
+                      </button>
                       <button
                         type="button"
                         className="hire-pod__move"

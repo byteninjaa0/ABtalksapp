@@ -63,9 +63,9 @@ export function HireJourney() {
         <div className="hire-rail__nodes" aria-hidden="true">
           <span className={step === 1 ? "is-on" : step > 1 ? "is-done" : ""}>1</span>
           <i />
-          <span className={step === 2 ? "is-on" : ""}>2</span>
+          <span className={step === 2 ? "is-on" : step > 2 ? "is-done" : ""}>2</span>
           <i />
-          <span>3</span>
+          <span className={step === 3 ? "is-on" : ""}>3</span>
         </div>
         <p>
           <strong>

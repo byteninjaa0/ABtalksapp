@@ -3,16 +3,20 @@
 import { useEffect, useState } from "react";
 import {
   deskShortlistHas,
+  itemFromMatch,
   toggleDeskShortlist,
 } from "@/components/hire/desk-shortlist";
+import type { MatchCardData } from "@/components/hire/match-card";
 import { cn } from "@/lib/utils";
 
 export function DeskShortlistButton({
   candidateRef,
   jobRole,
+  match,
 }: {
   candidateRef: string;
   jobRole: string;
+  match?: MatchCardData;
 }) {
   const [on, setOn] = useState(false);
 
@@ -27,10 +31,11 @@ export function DeskShortlistButton({
       aria-pressed={on}
       onClick={() => {
         setOn(
-          toggleDeskShortlist({
-            candidateRef,
-            jobRole,
-          }),
+          toggleDeskShortlist(
+            match
+              ? itemFromMatch(match)
+              : { candidateRef, jobRole },
+          ),
         );
       }}
     >

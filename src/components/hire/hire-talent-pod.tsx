@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Loader2, Send, UserRound } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Send, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { placeBulkEngagementRequestAction } from "@/app/actions/hire-request-actions";
 import { toggleShortlistAction } from "@/app/actions/talent-actions";
@@ -18,7 +18,39 @@ import { readGuestCart, toggleGuestCart } from "@/components/hire/guest-cart";
 import { savePendingCheckout } from "@/components/hire/pending-checkout";
 import { decodeCandidateRef, refPublicId } from "@/features/hire/candidate-ref";
 import type { CartRow } from "@/components/hire/shortlist-cart";
+import { hydrateMatch } from "@/components/hire/evidence-cache";
+import { MatchMetaTags, MatchPills } from "@/components/hire/hire-card-facts";
+import { PodEmptyArt } from "@/components/hire/pod-empty-art";
+import type { MatchCardData } from "@/components/hire/match-card";
 import { cn } from "@/lib/utils";
+
+function cartRowToMatch(row: CartRow): MatchCardData {
+  return hydrateMatch({
+    candidateRef: row.candidateRef,
+    programMemberId: row.memberId,
+    jobRole: row.jobRole,
+    score: row.totalScore,
+    displayName: row.displayName,
+    source: row.source,
+    locationLabel: row.locationLabel,
+    tier: "PARTIAL",
+    rationale: row.rationale ?? null,
+    gaps: [],
+    availabilityUnknown: row.availabilityUnknown ?? false,
+    shortlisted: true,
+    engagementStatus: row.engagementStatus,
+    compensationBand: row.compensationBand,
+    evidence: {
+      skills: row.skills,
+      yearsExperience: row.yearsExperience,
+      missionsPassed: row.missionsPassed,
+      totalTrackDays: row.totalTrackDays,
+      certificateIssued: row.certificateIssued,
+      workMode: row.workMode,
+      educationLevel: row.educationLevel,
+    },
+  });
+}
 
 function isAsked(row: CartRow, requested: string[]): boolean {
   return Boolean(row.engagementStatus) || requested.includes(row.candidateRef);
@@ -26,7 +58,7 @@ function isAsked(row: CartRow, requested: string[]): boolean {
 
 export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
   const router = useRouter();
-  const { closePod } = useHireDesk();
+  const { closePod, openInspect } = useHireDesk();
   const { approved, pending: approvalPending, openAuth } = useHireAuth();
   const [extra, setExtra] = useState<CartRow[]>([]);
   const [requested, setRequested] = useState<string[]>([]);
@@ -48,6 +80,17 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
           note: null,
           displayName: i.displayName ?? null,
           skills: i.skills,
+          source: i.source,
+          locationLabel: i.locationLabel,
+          yearsExperience: i.yearsExperience,
+          missionsPassed: i.missionsPassed,
+          totalTrackDays: i.totalTrackDays,
+          certificateIssued: i.certificateIssued,
+          rationale: i.rationale,
+          workMode: i.workMode,
+          educationLevel: i.educationLevel,
+          availabilityUnknown: i.availabilityUnknown,
+          compensationBand: i.compensationBand,
           revealedName: null,
           engagementStatus: null,
         })),
@@ -211,35 +254,7 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
                   Your Shortlist is empty. Add candidates from a search, then
                   tick the ones you want to request.
                 </p>
-                <svg
-                  className="pe"
-                  viewBox="0 0 165 165"
-                  role="img"
-                  aria-label="An empty folder being searched"
-                >
-                  <ellipse
-                    className="pe__ground"
-                    cx="82"
-                    cy="139"
-                    rx="40"
-                    ry="3.5"
-                  />
-                  <g className="pe__paper pe__paper--a">
-                    <rect x="30" y="36" width="56" height="68" rx="3" />
-                  </g>
-                  <g className="pe__paper pe__paper--b">
-                    <rect x="46" y="30" width="56" height="68" rx="3" />
-                  </g>
-                  <g className="pe__paper pe__paper--c">
-                    <rect x="58" y="26" width="52" height="64" rx="3" />
-                    <path d="M74 44 96 66M96 44 74 66" />
-                  </g>
-                  <g className="pe__glass">
-                    <circle className="pe__lens" r="18" />
-                    <path className="pe__handle" d="M12.7 12.7 26 26" />
-                    <path className="pe__glint" d="M-7-10A12 12 0 0 1 4-13" />
-                  </g>
-                </svg>
+                <PodEmptyArt />
                 <button
                   type="button"
                   className="pod-empty__cta"
@@ -253,9 +268,10 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
                 const publicId = refPublicId(row.candidateRef);
                 const asked = isAsked(row, requested);
                 const checked = selected.has(row.candidateRef);
+                const match = cartRowToMatch(row);
                 const stack =
-                  row.skills && row.skills.length > 0
-                    ? row.skills.slice(0, 6).join(" · ")
+                  match.evidence.skills && match.evidence.skills.length > 0
+                    ? match.evidence.skills.slice(0, 6).join(" · ")
                     : row.displayName
                       ? row.jobRole
                       : null;
@@ -289,6 +305,7 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
                         </p>
                         {stack && <p className="desk-card__stack">{stack}</p>}
                         <p className="hire-pod__ref">{publicId}</p>
+                        <MatchMetaTags match={match} />
                       </div>
                     </div>
                     <div className="desk-card__score">
@@ -297,7 +314,19 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
                       </div>
                       <span>out of 100</span>
                     </div>
+                    <MatchPills match={match} compact />
+                    {match.rationale && (
+                      <p className="desk-card__why">{match.rationale}</p>
+                    )}
                     <div className="hire-pod__actions">
+                      <button
+                        type="button"
+                        className="desk-ghost"
+                        onClick={() => openInspect(match)}
+                      >
+                        View more details
+                        <ChevronRight className="size-3.5" aria-hidden="true" />
+                      </button>
                       {asked ? (
                         <span className="hire-pod__status">Requested</span>
                       ) : (
@@ -305,6 +334,7 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
                           <DeskShortlistButton
                             candidateRef={row.candidateRef}
                             jobRole={row.jobRole}
+                            match={match}
                           />
                           <button
                             type="button"

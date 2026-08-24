@@ -144,6 +144,7 @@ export function DeskMatchCard({
           <DeskShortlistButton
             candidateRef={match.candidateRef}
             jobRole={match.jobRole}
+            match={match}
           />
         </div>
       </header>
@@ -219,6 +220,7 @@ export function DeskMatchCard({
           totalScore={match.score}
           displayName={match.displayName}
           skills={skills}
+          snapshot={match}
           onToggle={onCartToggle}
           className={cn("desk-pod", match.shortlisted && "desk-pod--on")}
           podLabel

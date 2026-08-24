@@ -25,6 +25,17 @@ export function rememberEvidence(matches: MatchCardData[]): void {
   }
 }
 
+/** Prefer the last-search card (full evidence) over a sparse list snapshot. */
+export function hydrateMatch(fallback: MatchCardData): MatchCardData {
+  const cached = recallEvidence(fallback.candidateRef);
+  if (!cached) return fallback;
+  return {
+    ...cached,
+    shortlisted: fallback.shortlisted ?? cached.shortlisted,
+    engagementStatus: fallback.engagementStatus ?? cached.engagementStatus,
+  };
+}
+
 export function recallEvidence(key: string): MatchCardData | null {
   const want = key.trim();
   if (!want) return null;

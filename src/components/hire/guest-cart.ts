@@ -1,7 +1,9 @@
 import {
   decodeCandidateRef,
   encodeCandidateRef,
+  type CandidateSource,
 } from "@/features/hire/candidate-ref";
+import type { MatchCardData } from "@/components/hire/match-card";
 
 export const GUEST_CART_KEY = "abtalks-hire-cart";
 
@@ -11,7 +13,40 @@ export type GuestCartItem = {
   totalScore: number;
   displayName?: string | null;
   skills?: string[];
+  source?: CandidateSource;
+  locationLabel?: string | null;
+  yearsExperience?: number;
+  missionsPassed?: number;
+  totalTrackDays?: number | null;
+  certificateIssued?: boolean;
+  rationale?: string | null;
+  workMode?: string | null;
+  educationLevel?: string | null;
+  availabilityUnknown?: boolean;
+  compensationBand?: string | null;
 };
+
+export function cartItemFromMatch(match: MatchCardData): GuestCartItem {
+  const e = match.evidence ?? {};
+  return {
+    candidateRef: match.candidateRef,
+    jobRole: match.jobRole,
+    totalScore: match.score,
+    displayName: match.displayName ?? null,
+    skills: e.skills,
+    source: match.source,
+    locationLabel: match.locationLabel ?? null,
+    yearsExperience: e.yearsExperience,
+    missionsPassed: e.missionsPassed,
+    totalTrackDays: e.totalTrackDays,
+    certificateIssued: e.certificateIssued,
+    rationale: match.rationale,
+    workMode: e.workMode ?? null,
+    educationLevel: e.educationLevel ?? null,
+    availabilityUnknown: match.availabilityUnknown,
+    compensationBand: match.compensationBand ?? null,
+  };
+}
 
 function canUseStorage(): boolean {
   return typeof window !== "undefined";
@@ -31,6 +66,17 @@ export function normalizeGuestCartItem(raw: unknown): GuestCartItem | null {
     totalScore?: unknown;
     displayName?: unknown;
     skills?: unknown;
+    source?: unknown;
+    locationLabel?: unknown;
+    yearsExperience?: unknown;
+    missionsPassed?: unknown;
+    totalTrackDays?: unknown;
+    certificateIssued?: unknown;
+    rationale?: unknown;
+    workMode?: unknown;
+    educationLevel?: unknown;
+    availabilityUnknown?: unknown;
+    compensationBand?: unknown;
   };
   const jobRole = typeof row.jobRole === "string" ? row.jobRole : "Candidate";
   const totalScore = typeof row.totalScore === "number" ? row.totalScore : 0;
@@ -41,17 +87,49 @@ export function normalizeGuestCartItem(raw: unknown): GuestCartItem | null {
   const skills = Array.isArray(row.skills)
     ? row.skills.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
     : undefined;
+  const extra: Omit<GuestCartItem, "candidateRef" | "jobRole" | "totalScore"> = {
+    displayName,
+    skills,
+    source:
+      row.source === "PROGRAM" ||
+      row.source === "CLAUDE" ||
+      row.source === "CHALLENGE_60" ||
+      row.source === "HACKATHON"
+        ? row.source
+        : undefined,
+    locationLabel:
+      typeof row.locationLabel === "string" ? row.locationLabel : null,
+    yearsExperience:
+      typeof row.yearsExperience === "number" ? row.yearsExperience : undefined,
+    missionsPassed:
+      typeof row.missionsPassed === "number" ? row.missionsPassed : undefined,
+    totalTrackDays:
+      typeof row.totalTrackDays === "number" ? row.totalTrackDays : undefined,
+    certificateIssued:
+      typeof row.certificateIssued === "boolean"
+        ? row.certificateIssued
+        : undefined,
+    rationale: typeof row.rationale === "string" ? row.rationale : null,
+    workMode: typeof row.workMode === "string" ? row.workMode : null,
+    educationLevel:
+      typeof row.educationLevel === "string" ? row.educationLevel : null,
+    availabilityUnknown:
+      typeof row.availabilityUnknown === "boolean"
+        ? row.availabilityUnknown
+        : undefined,
+    compensationBand:
+      typeof row.compensationBand === "string" ? row.compensationBand : null,
+  };
   if (typeof row.candidateRef === "string") {
     if (!decodeCandidateRef(row.candidateRef)) return null;
-    return { candidateRef: row.candidateRef, jobRole, totalScore, displayName, skills };
+    return { candidateRef: row.candidateRef, jobRole, totalScore, ...extra };
   }
   if (typeof row.memberId === "string" && row.memberId.trim()) {
     return {
       candidateRef: encodeCandidateRef("PROGRAM", row.memberId),
       jobRole,
       totalScore,
-      displayName,
-      skills,
+      ...extra,
     };
   }
   return null;

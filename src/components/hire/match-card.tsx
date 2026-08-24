@@ -14,6 +14,17 @@ import {
 import { ShortlistButton } from "@/components/talent/shortlist-button";
 import { cn } from "@/lib/utils";
 
+/** One ranking dimension as the inspector chart reads it. Null ≠ 0. */
+export type PublicScoreSlice = {
+  stack: number | null;
+  missions: number | null;
+  cleanPass: number | null;
+  projects: number | null;
+  consistency: number | null;
+  interview: number | null;
+  experience: number | null;
+};
+
 export type MatchCardData = {
   /** `PROGRAM:<id>` / `CLAUDE:<id>` — what every action on this card addresses. */
   candidateRef: string;
@@ -43,6 +54,11 @@ export type MatchCardData = {
   shortlisted?: boolean;
   /** Status of this recruiter's live engagement request, if any. */
   engagementStatus?: string | null;
+  /**
+   * The seven ranking dimensions, 0–100. `null` means the track cannot
+   * produce that evidence — never a zero. Safe to show; it is not identity.
+   */
+  scores?: PublicScoreSlice;
   evidence: {
     skills?: string[];
     missionPoints?: number;
@@ -63,10 +79,23 @@ export type MatchCardData = {
     quizAverage?: number | null;
     /** How long the track runs — 31 for the cohort, 60 for the challenge. */
     totalTrackDays?: number | null;
+    /** Declared education level only — never the university name. */
+    educationLevel?: string | null;
+    /** Candidate preference (ONSITE / HYBRID / REMOTE / FLEXIBLE). */
+    workMode?: string | null;
+    /** Booleans, never profile URLs. */
+    githubConnected?: boolean;
+    linkedinConnected?: boolean;
+    interviewOverall?: number | null;
+    interviewComm?: number | null;
+    interviewTech?: number | null;
+    interviewProblem?: number | null;
   };
-  /** Pre-formatted "₹6–12 LPA". An ABTalks estimate, never the candidate's
-   *  ask — the card must always print the disclaimer beside it. */
+  /** Pre-formatted "₹6–12 LPA". Candidate-stated when `compensationDeclared`
+   *  is true; otherwise an ABTalks estimate — print the disclaimer. */
   compensationBand?: string | null;
+  /** True only when `compensationBand` is the candidate's own figure. */
+  compensationDeclared?: boolean;
   /** Which evidence dimensions the ranking could use, and which the cohort has
    *  not produced yet. */
   coverageNote?: string | null;

@@ -1,10 +1,51 @@
+import type { CandidateSource } from "@/features/hire/candidate-ref";
+import type { MatchCardData } from "@/components/hire/match-card";
+
 export const DESK_SHORTLIST_KEY = "abtalks-hire-star";
 export const DESK_SHORTLIST_EVENT = "abtalks-hire-star";
 
 export type DeskShortlistItem = {
   candidateRef: string;
   jobRole: string;
+  displayName?: string | null;
+  skills?: string[];
+  totalScore?: number;
+  source?: CandidateSource;
+  locationLabel?: string | null;
+  yearsExperience?: number;
+  missionsPassed?: number;
+  totalTrackDays?: number | null;
+  certificateIssued?: boolean;
+  rationale?: string | null;
+  workMode?: string | null;
+  educationLevel?: string | null;
+  availabilityUnknown?: boolean;
+  compensationBand?: string | null;
+  compensationDeclared?: boolean;
 };
+
+export function itemFromMatch(match: MatchCardData): DeskShortlistItem {
+  const e = match.evidence ?? {};
+  return {
+    candidateRef: match.candidateRef,
+    jobRole: match.jobRole,
+    displayName: match.displayName ?? null,
+    skills: e.skills,
+    totalScore: match.score,
+    source: match.source,
+    locationLabel: match.locationLabel ?? null,
+    yearsExperience: e.yearsExperience,
+    missionsPassed: e.missionsPassed,
+    totalTrackDays: e.totalTrackDays,
+    certificateIssued: e.certificateIssued,
+    rationale: match.rationale,
+    workMode: e.workMode ?? null,
+    educationLevel: e.educationLevel ?? null,
+    availabilityUnknown: match.availabilityUnknown,
+    compensationBand: match.compensationBand ?? null,
+    compensationDeclared: match.compensationDeclared,
+  };
+}
 
 function canUseStorage(): boolean {
   return typeof window !== "undefined";

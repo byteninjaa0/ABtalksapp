@@ -2,6 +2,10 @@
 
 <!-- Reconciled through 2026-08-05 (commit 519cc34) into docs/project-context.md. -->
 
+- 2026-08-24 — hire desk: profile menu is a short identity + requests + sign-out card (no long list). Journey nodes 1–2–3 pulse on the active step; Scout's thinking state is a bursting star, not an orbit.
+
+- 2026-08-24 — hire desk v18 pass: View details maps mock inspector (metrics, AI summary, score donut, GitHub/LinkedIn platforms) onto real MatchCardData — no company, no fake LeetCode. Shortlist and Saved-for-later cards reuse evidence pills + meta tags from the last search snapshot; empty Saved-for-later uses the same folder animation as Shortlist. Profile menu follows hire peach/orange and drops Open cart. Open requests has Back to Scout. Requirement dropdown asks unmet slots and records employment type. Mobile tightening under 640px.
+
 - 2026-08-24 — hire Talent Pod: tick who to request; already-requested rows show Requested + View details only and are not sent again.
 
 - 2026-08-24 — hire Scout thread: cards pin under the search turn and the pane scrolls to the latest message so a follow-up starts below the cards, not at the top.

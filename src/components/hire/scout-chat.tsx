@@ -648,17 +648,59 @@ export function ScoutChat({
     { key: "Skills", on: (spec.mustHaveStack?.length ?? 0) > 0 || spoken.skills },
     {
       key: "Availability",
-      on: spec.workMode != null || spec.employmentType != null || spoken.availability,
+      on: spec.workMode != null || spoken.availability,
     },
     {
       key: "Compensation",
       on: spec.salaryMin != null || spec.salaryMax != null || spoken.compensation,
     },
     {
+      key: "Type of Employment",
+      on: spec.employmentType != null,
+    },
+    {
       key: "ABtalks Recommended",
       on: (spec.evidencePriority?.length ?? 0) > 0 || spoken.abtalks,
     },
   ] as const;
+
+  const REQUIREMENT_ASK: Record<(typeof criteria)[number]["key"], string> = {
+    Role: "Let's cover the role — what are you hiring for?",
+    "Years of Experience": "What years of experience should they have?",
+    Location: "Which city should they be in, or is remote fine?",
+    "Education Qualification": "Do they need a degree?",
+    Skills: "Which skills are must-haves?",
+    Availability: "Remote, hybrid or onsite?",
+    Compensation: "What's the budget for this role?",
+    "Type of Employment": "Full-time, part-time, internship or contract?",
+    "ABtalks Recommended": "Should we rank on ABTalks verified evidence first?",
+  };
+
+  const EMP_FILTERS = [
+    { label: "All", value: "All" as const, prompt: "Any employment type is fine." },
+    { label: "Full-time", value: "FULL_TIME" as const, prompt: "This is a full-time role." },
+    { label: "Part-time", value: "PART_TIME" as const, prompt: "This is a part-time role." },
+    { label: "Internship", value: "INTERNSHIP" as const, prompt: "This is an internship." },
+    { label: "Contract", value: "CONTRACT" as const, prompt: "This is a contract role." },
+  ];
+
+  function pickRequirement(key: (typeof criteria)[number]["key"], already: boolean) {
+    setDetailsOpen(false);
+    if (already || pending) return;
+    send(REQUIREMENT_ASK[key]);
+  }
+
+  function pickEmployment(value: (typeof EMP_FILTERS)[number]["value"]) {
+    const row = EMP_FILTERS.find((f) => f.value === value);
+    if (!row || pending) return;
+    const current = spec.employmentType ?? "All";
+    if (current === value) {
+      setDetailsOpen(false);
+      return;
+    }
+    setDetailsOpen(false);
+    send(row.prompt);
+  }
 
   function resetDesk() {
     if (requestId) {
@@ -720,11 +762,43 @@ export function ScoutChat({
                     className={cn("hire-req__item", c.on && "is-on")}
                     role="menuitemcheckbox"
                     aria-checked={c.on}
+                    onClick={() => pickRequirement(c.key, c.on)}
                   >
                     {c.key}
                     <span className="hire-req__dot" />
                   </button>
                 ))}
+                <p className="hire-req__label hire-req__label--filter">
+                  Employment type
+                </p>
+                <div
+                  className="hire-req__filter"
+                  role="radiogroup"
+                  aria-label="Filter by employment type"
+                >
+                  {EMP_FILTERS.map((f) => {
+                    const checked =
+                      f.value === "All"
+                        ? spec.employmentType == null
+                        : spec.employmentType === f.value;
+                    return (
+                      <button
+                        key={f.value}
+                        type="button"
+                        className={cn(
+                          "hire-req__item hire-req__item--radio",
+                          checked && "is-on",
+                        )}
+                        role="menuitemradio"
+                        aria-checked={checked}
+                        onClick={() => pickEmployment(f.value)}
+                      >
+                        {f.label}
+                        <span className="hire-req__dot" />
+                      </button>
+                    );
+                  })}
+                </div>
                 {rows.length > 0 && (
                   <dl className="hire-req__rows">
                     {rows.map((r) => (
@@ -993,7 +1067,9 @@ export function ScoutChat({
 function ScoutLoader() {
   return (
     <span className="scout-loader" aria-label="Scout is thinking">
-      <span className="scout-loader__orbit" aria-hidden="true">
+      <span className="scout-loader__burst" aria-hidden="true">
+        <i />
+        <i />
         <i />
         <i />
         <i />
