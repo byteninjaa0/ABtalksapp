@@ -68,10 +68,10 @@ export function ShortlistButton({
     toast.success(
       next
         ? podLabel
-          ? "Added to Talent Pod"
+          ? "Added to Shortlist"
           : "Added to cart"
         : podLabel
-          ? "Removed from Talent Pod"
+          ? "Removed from Shortlist"
           : "Removed from cart",
     );
   }
@@ -92,10 +92,10 @@ export function ShortlistButton({
       toast.success(
         result.data.shortlisted
           ? podLabel
-            ? "Added to Talent Pod"
+            ? "Added to Shortlist"
             : "Added to cart"
           : podLabel
-            ? "Removed from Talent Pod"
+            ? "Removed from Shortlist"
             : "Removed from cart",
       );
     });
@@ -103,8 +103,8 @@ export function ShortlistButton({
 
   const label = podLabel
     ? inCart
-      ? "In Talent Pod"
-      : "Add to Talent Pod"
+      ? "In Shortlist"
+      : "Add to Shortlist"
     : inCart
       ? "Remove from cart"
       : "Add to cart";

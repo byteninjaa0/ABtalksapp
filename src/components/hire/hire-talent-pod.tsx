@@ -106,7 +106,7 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
           toast.error(res.message);
           return;
         }
-        toast.success("Removed from Talent Pod");
+        toast.success("Removed from Shortlist");
       });
       return;
     }
@@ -115,7 +115,7 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
       jobRole: row.jobRole,
       totalScore: row.totalScore,
     });
-    toast.success("Removed from Talent Pod");
+    toast.success("Removed from Shortlist");
   }
 
   function place() {
@@ -165,24 +165,25 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
     selectable.length > 0 && selected.size === selectable.length;
 
   return (
-    <section className="hire-pod" aria-label="Your Talent Pod">
+    <section className="hire-pod" aria-label="Your Shortlist">
       <header className="hire-pod__header">
         <button type="button" className="hire-back" onClick={closePod}>
           <ChevronLeft aria-hidden="true" />
           Back to Scout
         </button>
-        <h1 className="hire-pod__title">Your Talent Pod</h1>
+        <h1 className="hire-pod__title">Your Shortlist</h1>
         <p className="hire-pod__sub">
-          Tick who you want to request. Already requested people stay in the
-          pod — only View details.
+          Saved on this device until you sign in. Checkout asks you to
+          register or sign in — you stay on this page.
         </p>
       </header>
 
       <div className="hire-pod__main">
         <div className="hire-pod__col">
           <p className="hire-pod__privacy">
-            <strong>Privacy protected.</strong> Contact details stay hidden
-            until you place a request and our team confirms the engagement.
+            <strong>Privacy protected.</strong> Candidates are shown by
+            reference ID. Names and contact details stay hidden until you place a
+            request and our team confirms the engagement.
           </p>
 
           {selectable.length > 0 && (
@@ -207,7 +208,7 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
             {rows.length === 0 ? (
               <div className="pod-empty">
                 <p className="pod-empty__copy">
-                  Your Talent Pod is empty. Add candidates from a search, then
+                  Your Shortlist is empty. Add candidates from a search, then
                   tick the ones you want to request.
                 </p>
                 <svg
@@ -310,7 +311,7 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
                             className="desk-ghost"
                             onClick={() => remove(row)}
                           >
-                            Remove from Talent Pod
+                            Remove from Shortlist
                           </button>
                         </>
                       )}

@@ -44,7 +44,7 @@ export function DeskShortlistButton({
           />
         </svg>
       </span>
-      {on ? "Shortlisted" : "Shortlist"}
+      {on ? "Saved for later" : "Save for later"}
     </button>
   );
 }

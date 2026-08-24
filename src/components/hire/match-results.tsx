@@ -134,7 +134,7 @@ export function MatchResults({
         </Link>
       )}
 
-      {/* Desk chrome already has the Talent Pod bar. Don't duplicate it. */}
+      {/* Desk chrome already has the Shortlist bar. Don't duplicate it. */}
       {!desk && count > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/40 px-4 py-3">
           <p className="text-sm">

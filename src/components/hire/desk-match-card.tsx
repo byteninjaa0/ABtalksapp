@@ -27,6 +27,21 @@ function trackLabel(source?: CandidateSource): string | null {
   }
 }
 
+/**
+ * A stable tint index for a skill name.
+ *
+ * Same hash the design mockup uses, so "React" is the same hue on every card,
+ * in the inspector, and between sessions — the colour is information about the
+ * skill, not about where it happened to be rendered.
+ */
+function skillTint(skill: string): string {
+  let hash = 0;
+  for (let i = 0; i < skill.length; i += 1) {
+    hash = (hash * 31 + skill.charCodeAt(i)) % 997;
+  }
+  return `desk-pill--c${hash % 6}`;
+}
+
 export function DeskMatchCard({
   match,
   rank,
@@ -65,7 +80,7 @@ export function DeskMatchCard({
         {skills.length > 0 && (
           <div className="desk-card__facts">
             {skills.map((s) => (
-              <span key={s} className="desk-pill desk-pill--hit">
+              <span key={s} className={`desk-pill ${skillTint(s)}`}>
                 {s}
               </span>
             ))}
@@ -170,7 +185,12 @@ export function DeskMatchCard({
           return (
             <span
               key={s}
-              className={hit ? "desk-pill desk-pill--hit" : "desk-pill"}
+              // A skill the recruiter asked for keeps the emphasis mark; the
+              // rest take their own tint. Dropping the hit state to match the
+              // mockup would lose which skill actually answered the search.
+              className={
+                hit ? "desk-pill desk-pill--hit" : `desk-pill ${skillTint(s)}`
+              }
             >
               {s}
             </span>

@@ -1171,12 +1171,72 @@ html.dark .hire-app .desk-card.desk-card--top::before {
   margin-top: 16px;
 }
 
+/* Saved for Later — the same shell as the Shortlist, so the two read as
+   siblings rather than two different products. Only the pieces that differ are
+   defined here. */
+.hire-pod__savedcount {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--h-ink);
+  margin: 0;
+}
+
+.hire-pod__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hire-pod__move {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 8px;
+  border: 1px solid var(--h-primary);
+  background: transparent;
+  color: var(--h-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.hire-pod__move:hover {
+  background: var(--h-primary);
+  color: #fff;
+}
+
+.hire-pod__drop {
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 8px;
+  border: 1px solid var(--h-border);
+  background: transparent;
+  color: var(--h-slate);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hire-pod__drop:hover {
+  color: var(--h-ink);
+  border-color: var(--h-ink);
+}
+
+.hire-podbar__dot {
+  opacity: 0.5;
+}
+
 .desk-pill {
   display: inline-flex;
   align-items: center;
-  height: 26px;
-  padding: 0 11px;
-  border-radius: 8px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 6px;
   border: 1px solid transparent;
   background: var(--h-pill);
   color: var(--h-pill-ink);
@@ -1186,14 +1246,38 @@ html.dark .hire-app .desk-card.desk-card--top::before {
 }
 
 .desk-pill--good {
-  background: #d9f4e6;
-  color: #146c45;
+  background: #eaf8f1;
+  color: #1f8a5b;
   border-color: transparent;
 }
 
 .desk-pill--warn {
-  background: var(--h-warn);
-  color: var(--h-warn-ink);
+  background: #fff6e5;
+  color: #9a6216;
+}
+
+/* Skill chips take a stable tint from the skill's own name, so "React" is the
+   same hue on every card and in the inspector. Six soft tints; the index comes
+   from `skillTint()` in desk-match-card.tsx, never from the render order. */
+.desk-pill--c0 { background: #ffede4; color: #b8431e; }
+.desk-pill--c1 { background: #e8f1fe; color: #2b6cb0; }
+.desk-pill--c2 { background: #e6f7f3; color: #1c8375; }
+.desk-pill--c3 { background: #f0edfe; color: #5b4bc4; }
+.desk-pill--c4 { background: #fff3dc; color: #96631a; }
+.desk-pill--c5 { background: #fde9f1; color: #a63b67; }
+
+/* The tints are light-mode inks on light-mode grounds; on dark they would sit
+   at roughly 2:1. Same hue family, inverted, so a skill keeps its identity. */
+html.dark .desk-pill--c0 { background: #4a2418; color: #ffd2bf; }
+html.dark .desk-pill--c1 { background: #1b3757; color: #cfe2ff; }
+html.dark .desk-pill--c2 { background: #16413b; color: #c3f0e6; }
+html.dark .desk-pill--c3 { background: #2e2860; color: #ddd6ff; }
+html.dark .desk-pill--c4 { background: #4a3612; color: #ffe6b8; }
+html.dark .desk-pill--c5 { background: #4d1f33; color: #ffd0e2; }
+
+html.dark .desk-pill--warn {
+  background: #4a3612;
+  color: #ffe6b8;
 }
 
 .desk-pill--hit {
@@ -1527,7 +1611,7 @@ html.dark .hire-detail__resume {
   border-top: 1px solid var(--h-border);
 }
 
-/* Pod bar — always dark so “View Talent Pod” stays readable in night mode.
+/* Pod bar — always dark so “View Shortlist” stays readable in night mode.
    --h-ink flips to near-white under html.dark, which made white type vanish. */
 .hire-podbar {
   position: fixed;

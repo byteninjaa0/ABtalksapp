@@ -9,6 +9,7 @@ import { useHireAuth } from "@/components/hire/hire-auth-provider";
 import { useHireDesk } from "@/components/hire/hire-desk-context";
 import { HireJourney } from "@/components/hire/hire-journey";
 import { HireTalentPod } from "@/components/hire/hire-talent-pod";
+import { HireSavedLater } from "@/components/hire/hire-saved-later";
 import type { CartRow } from "@/components/hire/shortlist-cart";
 import {
   guestCartNonProgram,
@@ -37,12 +38,11 @@ export function HireChrome({
   children: React.ReactNode;
 }) {
   const { approved, openAuth } = useHireAuth();
-  const { view, openPod, closePod } = useHireDesk();
+  const { view, openPod, closePod, openSaved } = useHireDesk();
   const [guestCount, setGuestCount] = useState(0);
   const [overlayCount, setOverlayCount] = useState(0);
   const [starCount, setStarCount] = useState(0);
   const [podDismissed, setPodDismissed] = useState(false);
-  const [starPing, setStarPing] = useState(false);
 
   useEffect(() => {
     const sync = () => {
@@ -94,19 +94,16 @@ export function HireChrome({
             className={cn(
               "hire-hbtn",
               starCount > 0 && "has-count",
-              starPing && "is-pinged",
+              view === "saved" && "is-current",
             )}
-            title="Shortlisted on this device — no separate page"
-            onClick={() => {
-              setStarPing(true);
-              window.setTimeout(() => setStarPing(false), 900);
-            }}
-            onAnimationEnd={() => setStarPing(false)}
+            aria-current={view === "saved" ? "page" : undefined}
+            title="Kept on this device — nothing is sent to our team from here"
+            onClick={() => (view === "saved" ? closePod() : openSaved())}
           >
             <span className="hire-hbtn__icon hire-hbtn__icon--list" aria-hidden="true">
               <img src="/hire/shortlist.jpg" alt="" width={14} height={18} />
             </span>
-            <span>Shortlist</span>
+            <span>Save for Later</span>
             {starCount > 0 && (
               <span className="hire-hbtn__count">{starCount}</span>
             )}
@@ -124,7 +121,7 @@ export function HireChrome({
             <span className="hire-hbtn__icon hire-hbtn__icon--pod" aria-hidden="true">
               <img src="/hire/talentpod.jpg" alt="" width={18} height={20} />
             </span>
-            <span>Talent Pod</span>
+            <span>Shortlist</span>
             {cartCount > 0 && (
               <span className="hire-hbtn__count">{cartCount}</span>
             )}
@@ -182,6 +179,11 @@ export function HireChrome({
               <HireTalentPod serverRows={podRows} />
             </div>
           )}
+          {view === "saved" && (
+            <div className="hire-pod-region">
+              <HireSavedLater />
+            </div>
+          )}
         </main>
       ) : (
         <div className="hire-plain">{children}</div>
@@ -193,10 +195,18 @@ export function HireChrome({
             <img src="/hire/talentpod.jpg" alt="" width={18} height={20} />
           </span>
           <span>
-            {cartCount} in Talent Pod
+            {cartCount} in Shortlist
+            {starCount > 0 && (
+              <>
+                <span className="hire-podbar__dot" aria-hidden="true">
+                  {" · "}
+                </span>
+                {starCount} saved for later
+              </>
+            )}
           </span>
           <button type="button" onClick={openPod}>
-            View Talent Pod
+            View Shortlist
           </button>
           <button
             type="button"
