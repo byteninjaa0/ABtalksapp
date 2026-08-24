@@ -19,6 +19,8 @@ export type CartRow = {
   jobRole: string;
   totalScore: number;
   note: string | null;
+  displayName?: string | null;
+  skills?: string[];
   revealedName: string | null;
   /** Live engagement status for this candidate, if one exists. */
   engagementStatus: string | null;

@@ -14,9 +14,9 @@ function declaredRole(match: ScoredCandidate): string {
 /**
  * What a browser is allowed to see of a scored candidate.
  *
- * Drops name, company, userId and any other identity. The card type already
- * forbids those fields — this is the one mapper so a guest action cannot
- * accidentally spread a ScoredCandidate across the wire.
+ * Drops company, userId, email and profile URLs. Given name is allowed on the
+ * card; contact still waits on an introduction. This is the one mapper so a
+ * guest action cannot accidentally spread a ScoredCandidate across the wire.
  */
 export function toPublicMatch(
   match: ScoredCandidate & { rationale?: string | null },
@@ -32,7 +32,8 @@ export function toPublicMatch(
     candidateRef: match.candidateRef,
     source: match.source,
     programMemberId: match.programMemberId,
-    // The raw job title is free text the member typed ("STUDENT", "B.Tech 3rd
+    displayName: match.fullName.trim() ? match.fullName.trim() : null,
+    // The raw job title is free text the member typed ("STUDENT", "B.Tech 3rd"
     // year Student"). The derived family is the readable version; the raw one
     // stays on the dossier for the profile page to attribute properly.
     //

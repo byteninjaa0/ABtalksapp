@@ -66,10 +66,12 @@ export type TalentProfile = {
 
 export type ShortlistRow = {
   memberId: string;
+  userId: string;
   jobRole: string;
   totalScore: number;
   note: string | null;
   shortlistedAt: string;
+  displayName: string | null;
   /**
    * The real name, and only once an engagement request for this recruiter and
    * this candidate has reached CONTACT_SHARED. Null everywhere else — the
@@ -464,6 +466,7 @@ export async function getShortlist(
       member: {
         select: {
           id: true,
+          userId: true,
           fullName: true,
           jobRole: true,
           totalScore: true,
@@ -501,9 +504,11 @@ export async function getShortlist(
     data: visible
       .map((i) => ({
         memberId: i.member.id,
+        userId: i.member.userId,
         jobRole: i.member.jobRole,
         totalScore: i.member.totalScore,
         note: i.note,
+        displayName: i.member.fullName.trim() ? i.member.fullName.trim() : null,
         revealedName: released.has(i.member.id) ? i.member.fullName : null,
         shortlistedAt: i.createdAt.toISOString(),
       })),

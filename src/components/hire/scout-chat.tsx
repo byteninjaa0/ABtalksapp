@@ -1,18 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 import {
   ChevronDown,
-  Loader2,
   Maximize2,
   Minimize2,
   Search,
   Sparkles,
 } from "lucide-react";
+import { suggestChips } from "@/features/hire/scout-chips";
 import { toast } from "sonner";
 import {
-  requestCohortTrainAction,
   runMatchAction,
   sendScoutMessageAction,
 } from "@/app/actions/hire-actions";
@@ -21,8 +27,12 @@ import {
   sendGuestScoutMessageAction,
 } from "@/app/actions/hire-guest-actions";
 import { MatchResults } from "@/components/hire/match-results";
+import { CandidateInspector } from "@/components/hire/candidate-inspector";
+import { GapReport } from "@/components/hire/gap-report";
+import { useHireDesk } from "@/components/hire/hire-desk-context";
 import { readGuestCart } from "@/components/hire/guest-cart";
 import { buildSampleCards } from "@/features/hire/sample-card";
+import type { MatchCardData } from "@/components/hire/match-card";
 import { SearchTabs } from "@/components/hire/search-tabs";
 import {
   appendGuestSearch,
@@ -37,8 +47,6 @@ import {
   readGuestSession,
   writeGuestSession,
 } from "@/components/hire/guest-session";
-import { buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { type JobSpec } from "@/lib/validations/hire";
 
@@ -50,6 +58,13 @@ type Msg = {
   options?: Option[] | null;
 };
 
+type RecentRequest = {
+  id: string;
+  title: string;
+  status: string;
+  date: string;
+};
+
 type Props = {
   /** Persist turns as a TalentRequest. False for guests and pending recruiters. */
   persist?: boolean;
@@ -57,6 +72,13 @@ type Props = {
   initialMessages: Msg[];
   initialSpec: JobSpec;
   initialSummary: string;
+  /** Signed-in matches from the request page. Rendered inside the desk. */
+  results?: MatchCardData[];
+  resultsCartCount?: number;
+  recent?: RecentRequest[];
+  alertWhenAvailable?: boolean;
+  /** True when this TalentRequest has already been searched. */
+  initialSearched?: boolean;
 };
 
 const OPENING: Msg = {
@@ -100,6 +122,77 @@ const EVIDENCE_LABEL: Record<string, string> = {
   consistency: "Consistency",
   interview: "Communication",
 };
+
+function looksLikeSalaryAsk(text: string): boolean {
+  return /\b(salary|budget|compensation|lpa|ctc|stipend|pay range|package)\b/i.test(
+    text,
+  );
+}
+
+/** Display-only. Engine chip label can stay "Search verified talent". */
+function chipLabel(o: Option): string {
+  return o.value === "action:search" ? "Show me" : o.label;
+}
+
+function displaySalaryChips(): Option[] {
+  return [
+    { label: "₹5-10 LPA", value: "salary:500000-1000000" },
+    { label: "₹10-20 LPA", value: "salary:1000000-2000000" },
+    { label: "₹20-35 LPA", value: "salary:2000000-3500000" },
+    { label: "Not decided", value: "skip:salary" },
+  ];
+}
+
+/** Juicebox-style: ticks go green as the recruiter types, not only after Scout stores the spec. */
+function detectSpoken(raw: string) {
+  const text = raw.toLowerCase();
+  const role =
+    /\b(backend|front-?end|full[-\s]?stack|data\s*\/?\s*ml|ai|ml|software|react|python|node|java|ios|android|mobile|devops|platform|cloud|security|qa|product)\b.{0,20}\b(engineer|developer|designer|scientist|analyst|manager|architect)\b/.test(
+      text,
+    ) ||
+    /\b(hiring|need|looking\s+for|want|recruit)\b.{0,28}\b(engineer|developer|designer|scientist|analyst)\b/.test(
+      text,
+    );
+  const experience =
+    /\b\d{1,2}\s*(\+|plus)?\s*(yrs?|years?)\b/.test(text) ||
+    /\b(fresher|entry[-\s]?level|junior|jr\.?|mid[-\s]?level|senior|sr\.?|staff|principal|lead|intern)\b/.test(
+      text,
+    );
+  const location =
+    /\b(delhi|ncr|mumbai|bangalore|bengaluru|hyderabad|chennai|pune|kolkata|gurgaon|gurugram|noida|india|remote|hybrid|onsite|on-site|wfh|work from home|anywhere)\b/.test(
+      text,
+    );
+  const education =
+    /\b(b\.?\s?tech|m\.?\s?tech|bca|mca|mba|bachelor|master|degree|diploma|graduate|iit|nit)\b/.test(
+      text,
+    );
+  const skills =
+    /\b(python|java|javascript|typescript|react|node|next\.?js|sql|postgres|mongodb|aws|docker|kubernetes|golang|go\b|rust|django|flask|spring|redis|graphql|html|css|tailwind|pytorch|tensorflow|langchain)\b/.test(
+      text,
+    );
+  const availability =
+    /\b(remote|hybrid|onsite|on-site|wfh|immediate|notice|available|full[-\s]?time|contract|intern(ship)?|part[-\s]?time)\b/.test(
+      text,
+    );
+  const compensation =
+    /\b(\d+(\.\d+)?\s*(-\s*\d+(\.\d+)?)?\s*(lpa|lakh|ctc)|salary|budget|₹|inr|compensation|stipend)\b/.test(
+      text,
+    );
+  const abtalks =
+    /\b(ab\s?talks?.{0,40}(recommend|verif|rank|approv|vett|certif|score)|platform[-\s]verified)\b/.test(
+      text,
+    );
+  return {
+    role,
+    experience,
+    location,
+    education,
+    skills,
+    availability,
+    compensation,
+    abtalks,
+  };
+}
 
 function toLpa(rupees: number): string {
   const lakhs = rupees / 100_000;
@@ -178,6 +271,11 @@ export function ScoutChat({
   initialMessages,
   initialSpec,
   initialSummary,
+  results,
+  resultsCartCount = 0,
+  recent = [],
+  alertWhenAvailable = false,
+  initialSearched = false,
 }: Props) {
   const router = useRouter();
   const [requestId, setRequestId] = useState<string | null>(initialRequestId);
@@ -189,14 +287,35 @@ export function ScoutChat({
   const [readyToSearch, setReadyToSearch] = useState(false);
   const [text, setText] = useState("");
   const [pending, startTransition] = useTransition();
-  const [searched, setSearched] = useState(false);
-  const [matchCount, setMatchCount] = useState<number | null>(null);
+  const [searched, setSearched] = useState(
+    initialSearched || (results?.length ?? 0) > 0,
+  );
+  const [matchCount, setMatchCount] = useState<number | null>(
+    results != null ? results.length : null,
+  );
   const [searchTabs, setSearchTabs] = useState<GuestSearchTab[]>([]);
   const [activeSearchId, setActiveSearchId] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
-
+  const [openMatch, setOpenMatch] = useState<MatchCardData | null>(null);
+  /** Cards sit under this message index so a later turn starts below them. */
+  const [resultsPin, setResultsPin] = useState<number | null>(
+    initialSearched || (results?.length ?? 0) > 0
+      ? Math.max(0, (initialMessages.length || 1) - 1)
+      : null,
+  );
+  const { setDesk, view, inspect, clearInspect } = useHireDesk();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
+
+  useLayoutEffect(() => {
+    const el = promptRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 132)}px`;
+  }, [text]);
+  const reqMenuRef = useRef<HTMLDivElement>(null);
   const hydratedRef = useRef(false);
   const rows = specRows(spec);
   const activeSearch =
@@ -205,9 +324,37 @@ export function ScoutChat({
     null;
   const guestMatches = activeSearch?.matches ?? [];
   const guestGap = activeSearch?.overallGap ?? null;
+  const deskMatches =
+    persist && (results?.length ?? 0) > 0 ? (results ?? []) : guestMatches;
+  const deskGap = persist && (results?.length ?? 0) > 0 ? null : guestGap;
+  const deskSamples =
+    searched && deskMatches.length === 0 ? buildSampleCards(spec) : [];
 
   useEffect(() => {
-    if (persist || hydratedRef.current) return;
+    if (persist && (results?.length ?? 0) > 0) {
+      setSearched(true);
+      setMatchCount(results!.length);
+    }
+  }, [persist, results]);
+
+  useEffect(() => {
+    if (!inspect) return;
+    setOpenMatch(inspect);
+    clearInspect();
+  }, [inspect, clearInspect]);
+
+  useEffect(() => {
+    if (view === "pod") return;
+    setDesk({
+      step: searched ? 2 : 1,
+      matchCount,
+      gap: deskGap,
+    });
+  }, [searched, matchCount, deskGap, setDesk, view]);
+
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    if (persist && (initialMessages.length > 0 || initialRequestId)) return;
     hydratedRef.current = true;
     const saved = readGuestSession();
     if (saved) {
@@ -227,16 +374,46 @@ export function ScoutChat({
       setMatchCount(active.matches.length);
       setSearched(true);
     }
-  }, [persist]);
+  }, [persist, initialMessages.length, initialRequestId]);
 
-  // Keep the newest turn in view as the transcript grows, and after the panel
-  // resizes — otherwise expanding leaves the reader looking at old messages.
+  // ChatGPT-style: always land on the latest turn. Cards pin under the
+  // search message so the next question is below them, not above.
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
+    if (searched && resultsPin == null && messages.length > 0) {
+      setResultsPin(messages.length - 1);
+    }
+  }, [searched, resultsPin, messages.length]);
+
+  useEffect(() => {
+    const root = scrollRef.current;
+    if (!root) return;
+    const frame = window.requestAnimationFrame(() => {
+      root.scrollTo({
+        top: root.scrollHeight,
+        behavior: pending ? "auto" : "smooth",
+      });
     });
-  }, [messages, pending, expanded, detailsOpen]);
+    return () => window.cancelAnimationFrame(frame);
+  }, [
+    messages.length,
+    pending,
+    searched,
+    deskMatches.length,
+    resultsPin,
+    expanded,
+    detailsOpen,
+  ]);
+
+  useEffect(() => {
+    if (!detailsOpen) return;
+    function onPointer(e: MouseEvent) {
+      if (reqMenuRef.current && !reqMenuRef.current.contains(e.target as Node)) {
+        setDetailsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onPointer);
+    return () => document.removeEventListener("mousedown", onPointer);
+  }, [detailsOpen]);
 
   // There is deliberately NO auto-search effect here any more.
   //
@@ -302,10 +479,14 @@ export function ScoutChat({
           } else {
             setSearched(true);
             setMatchCount(match.data.matchCount);
-            setMessages((m) => [
-              ...m,
-              { role: "assistant", content: match.data.overallGap },
-            ]);
+            setMessages((m) => {
+              const next: Msg[] = [
+                ...m,
+                { role: "assistant", content: match.data.overallGap },
+              ];
+              setResultsPin(next.length - 1);
+              return next;
+            });
           }
         }
         if (!requestId) router.replace(`/hire/${res.data.requestId}`);
@@ -369,10 +550,14 @@ export function ScoutChat({
         }
         setSearched(true);
         setMatchCount(res.data.matchCount);
-        setMessages((m) => [
-          ...m,
-          { role: "assistant", content: res.data.overallGap },
-        ]);
+        setMessages((m) => {
+          const next: Msg[] = [
+            ...m,
+            { role: "assistant", content: res.data.overallGap },
+          ];
+          setResultsPin(next.length - 1);
+          return next;
+        });
         router.refresh();
         return;
       }
@@ -402,6 +587,7 @@ export function ScoutChat({
           ...m,
           { role: "assistant", content: res.data.overallGap },
         ];
+        setResultsPin(next.length - 1);
         writeGuestSession({
           spec: active,
           messages: next,
@@ -411,25 +597,6 @@ export function ScoutChat({
         });
         return next;
       });
-      requestAnimationFrame(() => {
-        document.getElementById("hire-results")?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      });
-    });
-  }
-
-  function trainCohort() {
-    if (!requestId) return;
-    startTransition(async () => {
-      const res = await requestCohortTrainAction(requestId);
-      if (!res.ok) {
-        toast.error(res.message);
-        return;
-      }
-      toast.success("Saved — we'll train toward this stack and alert you.");
-      router.refresh();
     });
   }
 
@@ -441,358 +608,400 @@ export function ScoutChat({
   const lastMsg = messages[lastIndex];
   const activeOptions =
     lastMsg?.role === "assistant" ? (lastMsg.options ?? []) : [];
-  const chips = readyToSearch
-    ? activeOptions.filter((o) => o.value !== "action:search")
-    : activeOptions;
+  const askOpen = lastMsg?.role === "assistant" && !pending && !openMatch;
+  // Same chips the conversation engine sent for this turn. Show me is
+  // `action:search` and only lands when the brief is searchable — do not
+  // invent extra pills here. An empty options list still gets the ladder so
+  // a salary ask is never a dead end.
+  const chips = (() => {
+    if (activeOptions.length > 0) return activeOptions;
+    if (!askOpen || !lastMsg) return [];
+    const ladder = looksLikeSalaryAsk(lastMsg.content)
+      ? displaySalaryChips()
+      : suggestChips(spec, false);
+    if (readyToSearch && !ladder.some((c) => c.value === "action:search")) {
+      return [...ladder, { label: "Show me", value: "action:search" }];
+    }
+    return ladder;
+  })();
+  const talked = messages.some((m) => m.role === "user") || searched;
+  const spoken = detectSpoken(
+    [
+      ...messages.filter((m) => m.role === "user").map((m) => m.content),
+      text,
+    ].join(" "),
+  );
+  const criteria = [
+    { key: "Role", on: Boolean(spec.title?.trim()) || spoken.role },
+    {
+      key: "Years of Experience",
+      on:
+        spec.seniority != null ||
+        spec.minExperience != null ||
+        spoken.experience,
+    },
+    {
+      key: "Location",
+      on: Boolean(spec.locationCity?.trim()) || spoken.location,
+    },
+    { key: "Education Qualification", on: spec.requiresDegree != null || spoken.education },
+    { key: "Skills", on: (spec.mustHaveStack?.length ?? 0) > 0 || spoken.skills },
+    {
+      key: "Availability",
+      on: spec.workMode != null || spec.employmentType != null || spoken.availability,
+    },
+    {
+      key: "Compensation",
+      on: spec.salaryMin != null || spec.salaryMax != null || spoken.compensation,
+    },
+    {
+      key: "ABtalks Recommended",
+      on: (spec.evidencePriority?.length ?? 0) > 0 || spoken.abtalks,
+    },
+  ] as const;
+
+  function resetDesk() {
+    if (requestId) {
+      router.push("/hire");
+      return;
+    }
+    clearGuestSession();
+    clearGuestMatches();
+    setMessages([OPENING]);
+    setSpec({});
+    setSummary("Not started");
+    setReadyToSearch(false);
+    setSearched(false);
+    setMatchCount(null);
+    setSearchTabs([]);
+    setActiveSearchId("");
+    setText("");
+    setDetailsOpen(false);
+    setOpenMatch(null);
+  }
 
   return (
-    <div className="flex flex-col gap-3">
-      <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-        {/* Header — identity, live one-line summary, and the two size controls */}
-        <div className="flex items-center gap-3 border-b px-4 py-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Sparkles className="size-4" aria-hidden="true" />
+    <section className={cn("scout", expanded && "is-expanded")} aria-label="Scout assistant">
+      <div className="scout__bar">
+        <div className="scout__id">
+          <span className="scout__avatar" aria-hidden="true">
+            <Sparkles className="size-4" />
           </span>
-          <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-2 text-sm font-semibold">
-              Scout
-              {readyToSearch && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                  Ready
-                </span>
-              )}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {summary || "Ranks people on verified work, not resumes"}
-            </p>
+          <div className="scout__meta">
+            <span className="scout__name">Scout</span>
+            <span className="scout__status">
+              {summary || "Not started"}
+            </span>
           </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (requestId) {
-                router.push("/hire");
-                return;
-              }
-              clearGuestSession();
-              clearGuestMatches();
-              setMessages([OPENING]);
-              setSpec({});
-              setSummary("Not started");
-              setReadyToSearch(false);
-              setSearched(false);
-              setMatchCount(null);
-              setSearchTabs([]);
-              setActiveSearchId("");
-              setText("");
-              setDetailsOpen(false);
-            }}
-            className={cn(
-              "flex shrink-0 items-center rounded-full border px-3 py-1.5 text-xs font-medium",
-              "transition-colors hover:border-primary hover:text-primary",
-              "focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none",
-            )}
-          >
+        </div>
+        <div className="scout__tools">
+          <button type="button" className="scout-tbtn" onClick={resetDesk}>
             New search
           </button>
-
-          <button
-            type="button"
-            onClick={() => setDetailsOpen((o) => !o)}
-            aria-expanded={detailsOpen}
-            aria-controls="scout-requirement"
-            className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium",
-              "transition-colors hover:border-primary hover:text-primary",
-              "focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none",
-              detailsOpen && "border-primary text-primary",
-            )}
-          >
-            <span className="hidden sm:inline">Requirement</span>
-            <span className="sm:hidden">Spec</span>
-            <ChevronDown
-              className={cn(
-                "size-3.5 transition-transform duration-200",
-                detailsOpen && "rotate-180",
-              )}
-              aria-hidden="true"
-            />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setExpanded((e) => !e)}
-            aria-label={
-              expanded ? "Shrink conversation" : "Expand conversation"
-            }
-            title={expanded ? "Shrink" : "Expand"}
-            className={cn(
-              "flex size-8 shrink-0 items-center justify-center rounded-full border",
-              "transition-colors hover:border-primary hover:text-primary",
-              "focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none",
-            )}
-          >
-            {expanded ? (
-              <Minimize2 className="size-3.5" aria-hidden="true" />
-            ) : (
-              <Maximize2 className="size-3.5" aria-hidden="true" />
-            )}
-          </button>
-        </div>
-
-        {/* Requirement — everything captured so far, read back in plain words */}
-        {detailsOpen && (
-          <div
-            id="scout-requirement"
-            className="border-b bg-muted/40 px-4 py-3.5"
-          >
-            {rows.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                Nothing captured yet — answer the first question and this fills
-                in.
-              </p>
-            ) : (
-              <dl className="grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
-                {rows.map((r) => (
-                  <div key={r.label} className="flex gap-3 text-xs">
-                    <dt className="w-24 shrink-0 text-muted-foreground">
-                      {r.label}
-                    </dt>
-                    <dd className="min-w-0 font-medium break-words">
-                      {r.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-          </div>
-        )}
-
-        {/* Transcript */}
-        <div
-          ref={scrollRef}
-          className={cn(
-            "flex flex-col gap-4 overflow-y-auto p-4 transition-all duration-300",
-            expanded ? "h-[68vh]" : "h-[44vh] min-h-70",
-          )}
-        >
-          {messages.map((m, i) => (
-            <div
-              key={`${m.role}-${i}`}
-              className={cn(
-                "flex gap-2.5",
-                m.role === "user" ? "justify-end" : "justify-start",
-              )}
+          <div className="hire-req" ref={reqMenuRef}>
+            <button
+              type="button"
+              className="scout-tbtn"
+              aria-expanded={detailsOpen}
+              onClick={() => setDetailsOpen((o) => !o)}
             >
-              {m.role === "assistant" && (
-                <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Sparkles className="size-3.5" aria-hidden="true" />
-                </span>
-              )}
-              <div className="flex min-w-0 max-w-[85%] flex-col items-start gap-2">
-                <div
-                  className={cn(
-                    "max-w-full rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap",
-                    m.role === "user"
-                      ? "rounded-br-sm bg-primary text-primary-foreground"
-                      : "rounded-bl-sm bg-muted text-foreground",
-                  )}
-                >
-                  {m.content}
-                </div>
-
-                {i === lastIndex && !pending && chips.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {chips.map((o, oi) => (
+              Requirement
+              <ChevronDown
+                className={cn("size-3.5", detailsOpen && "rotate-180")}
+              />
+            </button>
+            {detailsOpen && (
+              <div className="hire-req__menu" role="menu">
+                <p className="hire-req__label">Requirement</p>
+                {criteria.map((c) => (
+                  <button
+                    key={c.key}
+                    type="button"
+                    className={cn("hire-req__item", c.on && "is-on")}
+                    role="menuitemcheckbox"
+                    aria-checked={c.on}
+                  >
+                    {c.key}
+                    <span className="hire-req__dot" />
+                  </button>
+                ))}
+                {rows.length > 0 && (
+                  <dl className="hire-req__rows">
+                    {rows.map((r) => (
+                      <div key={r.label}>
+                        <dt>{r.label}</dt>
+                        <dd>{r.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+                {recent.length > 0 && (
+                  <div className="hire-req__recent">
+                    <p className="hire-req__label">Pick up where you left off</p>
+                    {recent.map((r) => (
                       <button
-                        key={`${o.value}-${oi}`}
+                        key={r.id}
                         type="button"
-                        disabled={pending}
-                        onClick={() => send(o.value, o.label)}
-                        className={cn(
-                          "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-                          "hover:border-primary hover:bg-primary/5 hover:text-primary",
-                          "focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none",
-                          "disabled:cursor-not-allowed disabled:opacity-50",
-                          o.value.startsWith("skip:")
-                            ? "border-dashed text-muted-foreground"
-                            : "border-border",
-                        )}
+                        className="hire-req__item"
+                        onClick={() => router.push(`/hire/${r.id}`)}
                       >
-                        {o.label}
+                        <span className="truncate">{r.title}</span>
+                        <span className="hire-req__meta">
+                          {r.status} · {r.date}
+                        </span>
                       </button>
                     ))}
                   </div>
                 )}
               </div>
-            </div>
-          ))}
+            )}
+          </div>
+          <button
+            type="button"
+            className={cn("scout-tbtn scout-tbtn--icon", expanded && "is-on")}
+            aria-label={expanded ? "Exit full screen" : "Expand Scout"}
+            onClick={() => setExpanded((e) => !e)}
+          >
+            {expanded ? (
+              <Minimize2 className="size-3.5" />
+            ) : (
+              <Maximize2 className="size-3.5" />
+            )}
+          </button>
+        </div>
+      </div>
 
-          {pending && (
-            <div className="flex gap-2.5">
-              <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Sparkles className="size-3.5" aria-hidden="true" />
-              </span>
-              <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-sm bg-muted px-3.5 py-3">
-                {[0, 150, 300].map((d) => (
-                  <span
-                    key={d}
-                    className="size-1.5 animate-bounce rounded-full bg-muted-foreground/50"
-                    style={{ animationDelay: `${d}ms` }}
-                  />
-                ))}
-              </div>
+      <div className={cn("scout__body", openMatch && "is-open")}>
+        <div ref={scrollRef} className="chat-output" id="hire-results">
+          {!talked && (
+            <div className="scout-empty">
+              <button
+                type="button"
+                className="scout-pill"
+                disabled={pending || (persist && !requestId)}
+                onClick={() => runSearch()}
+              >
+                <Search className="size-3" />
+                Search with what I have
+              </button>
+              <p>
+                Answer the rest for a sharper ranking — I&apos;ll search
+                when we have enough to go on.
+              </p>
             </div>
           )}
+
+          <div className="scout-thread">
+              {messages.map((m, i) => {
+                const isLastAsk =
+                  askOpen && i === lastIndex && m.role === "assistant";
+                return (
+                  <Fragment key={`${m.role}-${i}`}>
+                  <div
+                    className={cn(
+                      "scout-turn",
+                      m.role === "user" && "scout-turn--user",
+                    )}
+                  >
+                    {m.role === "assistant" && (
+                      <span className="scout-mark">
+                        <Sparkles className="size-3" />
+                      </span>
+                    )}
+                    <div className="scout-turn__body">
+                      <p
+                        className={
+                          m.role === "assistant"
+                            ? "scout-ask__q"
+                            : "scout-turn__text"
+                        }
+                      >
+                        {m.content}
+                      </p>
+                      {isLastAsk && (chips.length > 0 || talked) && (
+                        <div className="scout-follow">
+                          {chips.length > 0 && (
+                            <div className="scout-chips">
+                              {chips.map((o, oi) => (
+                                <button
+                                  key={`${o.value}-${oi}`}
+                                  type="button"
+                                  className={cn(
+                                    "scout-chip",
+                                    o.value === "action:search" &&
+                                      "scout-chip--show",
+                                  )}
+                                  disabled={pending}
+                                  onClick={() => send(o.value, chipLabel(o))}
+                                >
+                                  {chipLabel(o)}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {talked && !searched && (
+                            <p className="scout-follow__hint">
+                              Share more details about the candidate
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {m.role === "user" && (
+                      <span className="scout-mark">You</span>
+                    )}
+                  </div>
+                  {searched && resultsPin === i && (
+                    <div className="scout-thread__results">
+                      {!persist && searchTabs.length > 1 && (
+                        <div className="scout-tabs">
+                          <SearchTabs
+                            tabs={searchTabs}
+                            activeId={activeSearchId}
+                            onSelect={(id) => {
+                              setActiveSearchId(id);
+                              setActiveGuestSearch(id);
+                              const tab = searchTabs.find((t) => t.id === id);
+                              setMatchCount(tab?.matches.length ?? 0);
+                              setOpenMatch(null);
+                            }}
+                          />
+                        </div>
+                      )}
+                      {deskMatches.length > 0 && (
+                        <p className="scout-privacy">
+                          Contact stays hidden until you place a request and
+                          the candidate agrees.
+                        </p>
+                      )}
+                      {deskGap && (
+                        <p className="scout-gap">{deskGap}</p>
+                      )}
+                      <MatchResults
+                        desk
+                        matches={deskMatches}
+                        samples={deskSamples}
+                        sampleDemand={{
+                          spec,
+                          requestId,
+                          alreadyRecorded: alertWhenAvailable,
+                        }}
+                        cartCount={
+                          persist ? resultsCartCount : readGuestCart().length
+                        }
+                        onOpen={setOpenMatch}
+                        selectedRef={openMatch?.candidateRef}
+                      />
+                      {persist && requestId && matchCount === 0 && (
+                        <div className="hire-gap">
+                          <GapReport
+                            requestId={requestId}
+                            overallGap={
+                              deskGap?.trim() ||
+                              "No verified matches in the published pool for this requirement yet. Your demand is saved."
+                            }
+                            alertWhenAvailable={alertWhenAvailable}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  </Fragment>
+                );
+              })}
+
+              {pending && (
+                <div className="scout-turn">
+                  <ScoutLoader />
+                  <p className="scout-turn__text scout-loader__label">
+                    Looking through verified work…
+                  </p>
+                </div>
+              )}
+              <div ref={bottomRef} className="scout-thread__end" aria-hidden="true" />
+            </div>
         </div>
 
-        {/* Composer — chips are shortcuts, typing is never taken away, so a
-            recruiter can answer off-script, correct an earlier answer, or ask
-            Scout a question at any point. */}
-        <div className="border-t bg-background/60 p-3">
-          <form
-            className="flex gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              send(text);
-            }}
-          >
-            <Input
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={
-                readyToSearch
-                  ? "Change anything, or ask me something…"
-                  : "Type your answer, or ask me anything…"
-              }
-              disabled={pending}
-              maxLength={2000}
-            />
-            {/* Primary, not outline: once something is typed this is the action
-                  on the screen, and it should look like it. */}
-            <button
-              type="submit"
-              disabled={pending || !text.trim()}
-              className={cn(buttonVariants(), "shrink-0 disabled:opacity-50")}
-            >
-              Send
-            </button>
-          </form>
-        </div>
-      </section>
-
-      {/* Primary action. Once the questions are done the search has already
-          run, so this stops being the way forward and becomes a way back. */}
-      <div className="flex flex-wrap items-center gap-2">
-        {searched ? (
-          <button
-            type="button"
-            onClick={() =>
-              document
-                .getElementById("hire-results")
-                ?.scrollIntoView({ behavior: "smooth", block: "start" })
+        {openMatch && (
+          <CandidateInspector
+            match={openMatch}
+            onClose={() => setOpenMatch(null)}
+            onCartToggle={(inCart) =>
+              setOpenMatch((m) => (m ? { ...m, shortlisted: inCart } : m))
             }
-            className={cn(buttonVariants({ size: "lg" }), "gap-2")}
-          >
-            <Search className="size-4" aria-hidden="true" />
-            {matchCount === 0
-              ? "See the gap report"
-              : `View ${matchCount} matched ${matchCount === 1 ? "profile" : "profiles"}`}
-          </button>
-        ) : (
-          <button
-            type="button"
-            disabled={pending || (persist && !requestId)}
-            // Not `onClick={runSearch}`: React passes the MouseEvent, which
-            // landed in `overrideSpec` and became the guest search's JobSpec.
-            onClick={() => runSearch()}
-            className={cn(
-              buttonVariants({
-                size: "lg",
-                variant: readyToSearch ? "default" : "outline",
-              }),
-              "gap-2 disabled:opacity-50",
-            )}
-          >
-            {pending ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Search className="size-4" aria-hidden="true" />
-            )}
-            {readyToSearch
-              ? "Search verified talent"
-              : "Search with what I have"}
-          </button>
-        )}
-
-        {!readyToSearch && !searched && (
-          <p className="text-xs text-muted-foreground">
-            Answer the rest for a sharper ranking — I&apos;ll search
-            automatically when we&apos;re done.
-          </p>
-        )}
-
-        {persist && searched && matchCount === 0 && (
-          <button
-            type="button"
-            disabled={pending}
-            onClick={trainCohort}
-            className={cn(
-              buttonVariants({ variant: "outline" }),
-              "disabled:opacity-50",
-            )}
-          >
-            Train this cohort for me
-          </button>
+          />
         )}
       </div>
 
-      {!persist && searched && (
-        <section id="hire-results" className="scroll-mt-20 space-y-4">
-          <p className="text-xs font-medium tracking-wide text-primary uppercase">
-            Step 2 · Matched profiles
-          </p>
-          <SearchTabs
-            tabs={searchTabs}
-            activeId={activeSearchId}
-            onSelect={(id) => {
-              setActiveSearchId(id);
-              setActiveGuestSearch(id);
-            }}
-          />
-          <h2 className="font-display text-2xl font-bold tracking-tight">
-            {guestMatches.length > 0
-              ? `${guestMatches.length} matched candidate${guestMatches.length === 1 ? "" : "s"}`
-              : "No matches yet"}
-          </h2>
-          {guestGap && (
-            <p className="text-sm text-muted-foreground">{guestGap}</p>
-          )}
-          {guestMatches.length > 0 ? (
-            <>
-              <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-xs leading-relaxed text-amber-900 dark:text-amber-100">
-                <strong className="font-semibold">Privacy protected.</strong>{" "}
-                Candidates are shown by reference ID. Names and contact stay
-                hidden until you send a request.
-              </p>
-              <MatchResults
-                key={activeSearchId}
-                matches={guestMatches}
-                cartCount={readGuestCart().length}
-                viewAllHref="/hire/matches"
-              />
-            </>
-          ) : (
-            <MatchResults
-              key={`sample-${activeSearchId}`}
-              matches={[]}
-              samples={buildSampleCards(spec)}
-              sampleDemand={{ spec }}
-              cartCount={0}
+      <form
+        className="scout-composer"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (text.trim()) send(text);
+          else runSearch();
+        }}
+      >
+        <div className="scout-composer__row">
+          <div className="scout-field">
+            <label className="sr-only" htmlFor="scout-prompt">
+              Your answer to Scout
+            </label>
+            <textarea
+              id="scout-prompt"
+              ref={promptRef}
+              rows={1}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (text.trim()) send(text);
+                  else runSearch();
+                }
+              }}
+              placeholder="Type your answer, or ask me anything..."
+              disabled={pending}
+              maxLength={2000}
             />
-          )}
-        </section>
-      )}
-    </div>
+          </div>
+          <button
+            type="submit"
+            disabled={pending || (persist && !requestId && !text.trim())}
+            className="scout-send"
+          >
+            {pending ? "…" : "Search"}
+          </button>
+        </div>
+        <ul className="scout-criteria" aria-label="Requirement checklist">
+          {criteria.map((c) => (
+            <li
+              key={c.key}
+              className={cn("scout-criterion", c.on && "is-on")}
+            >
+              <span className="scout-criterion__box" aria-hidden="true">
+                ✓
+              </span>
+              <span>{c.key}</span>
+            </li>
+          ))}
+        </ul>
+      </form>
+    </section>
+  );
+}
+
+function ScoutLoader() {
+  return (
+    <span className="scout-loader" aria-label="Scout is thinking">
+      <span className="scout-loader__orbit" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+        <i />
+      </span>
+      <span className="scout-mark scout-loader__core">
+        <Sparkles className="size-3" />
+      </span>
+    </span>
   );
 }

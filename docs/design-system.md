@@ -124,6 +124,7 @@ hub files when changing the app theme · import `@/lib/*` from middleware.
 | `/` | `LandingHub` + `src/components/landing/hub/*` | Figma rounded marketing landing (plan 061). Page-scoped `--hub-*` tokens, hub fonts (Inter / Instrument Serif / Gemunu Libre / Jacques Francois), own radius and motion. Do not drive this page from product tokens. |
 | `/marketplace` | `MainShell` + `body.marketplace-page` | Near-black ground (`#030712`) |
 | `/hackathon` | `MainShell` + hackathon components | `bg-black` shell |
+| `/hire` desk | `.hire-app` + `src/app/hire/hire-scout.css` | Scout workspace from the v17/v18 HTML: orange primary (`#E05226`) scoped to `.hire-app` only, peach toolbar, in-card side inspector, in-shell Talent Pod. Resume is a dynamic evidence sheet at `/hire/evidence` built from the last search's `MatchCardData` — not a static HTML file. The Sign in / Register dialog is `.hire-auth` so the portaled modal keeps hire tokens instead of the product popover. Product indigo stays everywhere else. Accent is spent on Search / Sign in / Talent Pod. |
 
 ### Also flagged
 

@@ -9,6 +9,8 @@ export type GuestCartItem = {
   candidateRef: string;
   jobRole: string;
   totalScore: number;
+  displayName?: string | null;
+  skills?: string[];
 };
 
 function canUseStorage(): boolean {
@@ -27,18 +29,29 @@ export function normalizeGuestCartItem(raw: unknown): GuestCartItem | null {
     memberId?: unknown;
     jobRole?: unknown;
     totalScore?: unknown;
+    displayName?: unknown;
+    skills?: unknown;
   };
   const jobRole = typeof row.jobRole === "string" ? row.jobRole : "Candidate";
   const totalScore = typeof row.totalScore === "number" ? row.totalScore : 0;
+  const displayName =
+    typeof row.displayName === "string" && row.displayName.trim()
+      ? row.displayName.trim()
+      : null;
+  const skills = Array.isArray(row.skills)
+    ? row.skills.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+    : undefined;
   if (typeof row.candidateRef === "string") {
     if (!decodeCandidateRef(row.candidateRef)) return null;
-    return { candidateRef: row.candidateRef, jobRole, totalScore };
+    return { candidateRef: row.candidateRef, jobRole, totalScore, displayName, skills };
   }
   if (typeof row.memberId === "string" && row.memberId.trim()) {
     return {
       candidateRef: encodeCandidateRef("PROGRAM", row.memberId),
       jobRole,
       totalScore,
+      displayName,
+      skills,
     };
   }
   return null;

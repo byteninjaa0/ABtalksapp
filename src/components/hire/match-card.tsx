@@ -25,10 +25,13 @@ export type MatchCardData = {
    *  `ProgramMember` row that does not exist. */
   programMemberId: string | null;
   /**
-   * Deliberately no name and no employer. A recruiter who can identify a
-   * candidate from this card has no reason to place a request, and the request
-   * is how ABTalks stays in the loop — and how the candidate keeps a say in
-   * being contacted at all.
+   * Given name when the pool has one. Contact (email, LinkedIn, GitHub) still
+   * stays off this card until an introduction is confirmed.
+   */
+  displayName?: string | null;
+  /**
+   * Role family / declared title. Shown under the name, or as the heading
+   * when no name is on the record.
    */
   jobRole: string;
   locationLabel?: string | null;

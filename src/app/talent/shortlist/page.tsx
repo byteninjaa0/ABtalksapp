@@ -46,7 +46,7 @@ export default async function TalentShortlistPage() {
 
   const engagements = await existingEngagements(
     userId,
-    result.data.map((r) => r.memberId),
+    result.data.map((r) => r.userId),
   );
 
   const rows: CartRow[] = result.data.map((r) => ({
@@ -55,8 +55,9 @@ export default async function TalentShortlistPage() {
     jobRole: r.jobRole,
     totalScore: r.totalScore,
     note: r.note,
+    displayName: r.displayName,
     revealedName: r.revealedName,
-    engagementStatus: engagements.get(r.memberId)?.status ?? null,
+    engagementStatus: engagements.get(r.userId)?.status ?? null,
   }));
 
   return (

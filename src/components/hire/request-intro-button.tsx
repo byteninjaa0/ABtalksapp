@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { placeEngagementRequestAction } from "@/app/actions/hire-request-actions";
 import { useHireAuth } from "@/components/hire/hire-auth-provider";
 import { savePendingCheckout } from "@/components/hire/pending-checkout";
+import { markRequested } from "@/components/hire/desk-requested";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ type Props = {
   /** Status of the recruiter's existing live request, if there is one. */
   existingStatus?: string | null;
   publicId: string;
+  className?: string;
 };
 
 export function RequestIntroButton({
@@ -33,6 +35,7 @@ export function RequestIntroButton({
   requestId,
   existingStatus,
   publicId,
+  className,
 }: Props) {
   const router = useRouter();
   const { approved, pending: approvalPending, openAuth } = useHireAuth();
@@ -83,6 +86,7 @@ export function RequestIntroButton({
         return;
       }
       setStatus(res.data.status);
+      markRequested([candidateRef]);
       setOpen(false);
       toast.success(`Request sent for ${publicId}. Our team will pick it up.`);
       router.refresh();
@@ -111,6 +115,7 @@ export function RequestIntroButton({
           // the same disabled-looking grey and nothing invited a click.
           buttonVariants({ variant: "default", size: "lg" }),
           "gap-1.5 shadow-sm",
+          className,
         )}
       >
         <MessageSquarePlus className="size-3.5" aria-hidden="true" />

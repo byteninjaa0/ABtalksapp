@@ -12,6 +12,7 @@ import type { CandidateDossier, EvidenceCoverage } from "@/features/hire/types";
 export type HackathonDossierSet = {
   dossiers: CandidateDossier[];
   coverage: EvidenceCoverage;
+  nameByUser: Map<string, string>;
 };
 
 const EMPTY: HackathonDossierSet = {
@@ -28,6 +29,7 @@ const EMPTY: HackathonDossierSet = {
     },
     note: "No hackathon submissions in the pool yet.",
   },
+  nameByUser: new Map(),
 };
 
 /**
@@ -41,6 +43,7 @@ export async function buildHackathonDossierSet(): Promise<HackathonDossierSet> {
       userId: true,
       user: {
         select: {
+          name: true,
           studentProfile: {
             select: {
               skills: true,
@@ -59,9 +62,12 @@ export async function buildHackathonDossierSet(): Promise<HackathonDossierSet> {
   });
   if (rows.length === 0) return EMPTY;
 
+  const nameByUser = new Map<string, string>();
   const dossiers: CandidateDossier[] = rows.map((row) => {
     const p = row.user.studentProfile;
     const skills = splitSkills(p?.skills ?? []);
+    const given = row.user.name?.trim();
+    if (given) nameByUser.set(row.userId, given);
     return {
       publicId: candidatePublicId(row.userId),
       source: "HACKATHON",
@@ -109,5 +115,6 @@ export async function buildHackathonDossierSet(): Promise<HackathonDossierSet> {
   return {
     dossiers,
     coverage: computeCoverage(dossiers),
+    nameByUser,
   };
 }

@@ -24,7 +24,11 @@ export function ShortlistButton({
   compact = false,
   jobRole,
   totalScore,
+  displayName,
+  skills,
   onToggle,
+  className,
+  podLabel = false,
 }: {
   candidateRef: string;
   /** Set only for US-cohort / program members. */
@@ -32,9 +36,14 @@ export function ShortlistButton({
   initialShortlisted: boolean;
   jobRole?: string;
   totalScore?: number;
+  displayName?: string | null;
+  skills?: string[];
   /** Icon-only, for dense rows. */
   compact?: boolean;
   onToggle?: (inCart: boolean) => void;
+  className?: string;
+  /** Hire desk copy — same cart, different label. */
+  podLabel?: boolean;
 }) {
   const { approved } = useHireAuth();
   const useDb = Boolean(approved && programMemberId);
@@ -51,10 +60,20 @@ export function ShortlistButton({
       candidateRef,
       jobRole: jobRole ?? "Candidate",
       totalScore: totalScore ?? 0,
+      displayName: displayName ?? null,
+      skills,
     });
     setInCart(next);
     onToggle?.(next);
-    toast.success(next ? "Added to cart" : "Removed from cart");
+    toast.success(
+      next
+        ? podLabel
+          ? "Added to Talent Pod"
+          : "Added to cart"
+        : podLabel
+          ? "Removed from Talent Pod"
+          : "Removed from cart",
+    );
   }
 
   function toggle() {
@@ -71,12 +90,24 @@ export function ShortlistButton({
       setInCart(result.data.shortlisted);
       onToggle?.(result.data.shortlisted);
       toast.success(
-        result.data.shortlisted ? "Added to cart" : "Removed from cart",
+        result.data.shortlisted
+          ? podLabel
+            ? "Added to Talent Pod"
+            : "Added to cart"
+          : podLabel
+            ? "Removed from Talent Pod"
+            : "Removed from cart",
       );
     });
   }
 
-  const label = inCart ? "Remove from cart" : "Add to cart";
+  const label = podLabel
+    ? inCart
+      ? "In Talent Pod"
+      : "Add to Talent Pod"
+    : inCart
+      ? "Remove from cart"
+      : "Add to cart";
 
   return (
     <button
@@ -93,6 +124,7 @@ export function ShortlistButton({
         "shrink-0 gap-1.5 disabled:opacity-50",
         inCart &&
           "bg-primary/15 text-primary hover:bg-primary/25 dark:bg-primary/20 dark:hover:bg-primary/30",
+        className,
       )}
     >
       {pending ? (
