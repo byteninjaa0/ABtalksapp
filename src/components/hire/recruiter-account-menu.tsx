@@ -42,7 +42,7 @@ export function RecruiterAccountMenu({
         <Avatar className="hire-account__avatar size-8">
           <AvatarFallback>{initials(account.fullName)}</AvatarFallback>
         </Avatar>
-        <span className="hidden min-w-0 flex-col items-start text-left sm:flex">
+        <span className="hire-account__who">
           <span className="max-w-[140px] truncate font-medium">
             {account.fullName}
           </span>
@@ -51,7 +51,7 @@ export function RecruiterAccountMenu({
           </span>
         </span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="hire-app hire-menu">
+      <DropdownMenuContent align="end" sideOffset={8} className="hire-app hire-menu">
         <DropdownMenuGroup>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col gap-0.5">

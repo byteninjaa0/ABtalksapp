@@ -2120,56 +2120,210 @@ body:has(.hire-app--desk) button.fixed.bottom-4.right-4 {
 }
 
 @media (max-width: 900px) {
-  .hire-journey {
-    display: none;
+  .hire-app__header {
+    height: 52px;
+    padding: 8px 12px;
+    gap: 8px;
   }
-  .hire-rail {
-    display: block;
-    margin: 10px 16px 0;
-    padding: 14px 16px;
-    border-radius: 12px;
-    background: linear-gradient(to bottom, var(--h-peach) 0%, var(--h-surface) 100%);
+
+  .hire-app__nav {
+    gap: 6px;
+    min-width: 0;
   }
-  .hire-workspace {
-    flex-direction: column;
-  }
-  .hire-scout-region {
-    padding: 8px 16px 16px;
-  }
+
   .hire-hbtn > span:not(.hire-hbtn__count):not(.hire-hbtn__icon) {
     display: none;
   }
+
+  .hire-hbtn {
+    height: 32px;
+    padding: 0 10px;
+  }
+
   .hire-theme,
   .hire-register {
     display: none;
   }
-  .scout__bar {
-    display: grid;
-    grid-template-columns: 1fr;
+
+  .hire-signin {
+    height: 32px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+
+  .hire-journey {
+    display: none;
+  }
+
+  .hire-rail {
+    display: block;
+    flex: none;
+    margin: 8px 12px 0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: linear-gradient(to bottom, var(--h-peach) 0%, var(--h-surface) 100%);
+  }
+
+  .hire-workspace {
+    flex-direction: column;
+  }
+
+  .hire-scout-region,
+  .hire-pod-region {
+    padding: 6px 12px 12px;
+  }
+
+  .scout {
+    border-radius: 16px;
+  }
+
+  .scout.is-expanded {
+    inset: 0;
+    border-radius: 0;
+  }
+
+  .scout.is-expanded .scout__bar {
+    border-radius: 0;
+  }
+
+  .hire-app .scout__bar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-height: 0;
     padding: 8px 12px;
     gap: 8px;
+    border-radius: 16px 16px 0 0;
   }
-  .scout__tools {
+
+  .hire-app .scout__tools {
+    width: 100%;
     justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
   }
-  .scout-send {
-    width: auto;
-    padding: 0 18px;
-  }
-  .desk-card__right {
+
+  .hire-app .scout-composer__row {
+    display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: stretch;
     gap: 8px;
   }
+
+  .hire-app .scout-send {
+    width: 100%;
+    height: 44px;
+    font-size: 15px;
+  }
+
+  .scout-tbtn {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .scout-composer {
+    padding: 8px 12px 12px;
+  }
+
+  .scout-composer__row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .scout-send {
+    width: 100%;
+    height: 44px;
+    font-size: 15px;
+  }
+
+  .scout-criteria {
+    flex-wrap: wrap;
+    overflow: visible;
+    gap: 6px 12px;
+    margin: 8px 0 0;
+  }
+
+  .scout-criterion {
+    font-size: 12px;
+  }
+
+  .scout-chip {
+    height: 30px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .desk-card {
+    padding: 14px 16px;
+  }
+
+  .desk-card__head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .desk-card__right {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 12px;
+  }
+
+  .desk-card__score {
+    text-align: left;
+  }
+
+  .desk-card__score b {
+    font-size: 28px;
+    line-height: 32px;
+  }
+
+  .desk-card__cta {
+    justify-content: flex-start;
+  }
+
+  .hire-detail__scroll {
+    padding: 16px 14px 24px;
+  }
+
+  .hire-pod__title {
+    font-size: 22px;
+    line-height: 28px;
+  }
+
+  .hire-pod__main {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    overflow-y: auto;
+  }
+
+  .hire-pod__card {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+  }
+
+  .hire-pod__card .desk-card__score {
+    text-align: left;
+  }
+
   .hire-podbar {
-    left: 12px;
-    right: 12px;
+    left: 10px;
+    right: 10px;
     transform: none;
     width: auto;
     justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
   }
-  .hire-pod__main {
-    grid-template-columns: 1fr;
+
+  .hire-req__menu {
+    width: min(260px, calc(100vw - 24px));
+    right: 0;
   }
 }
 
@@ -3429,6 +3583,7 @@ html.dark .hire-meta--education {
 
 /* Profile menu — portaled, so it carries .hire-app for orange tokens */
 .hire-account {
+  max-height: 40px;
   color: var(--h-ink);
 }
 
@@ -3443,16 +3598,38 @@ html.dark .hire-meta--education {
   box-shadow: 0 0 0 1px var(--h-card-line);
 }
 
+.hire-account__who {
+  display: none;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+@media (min-width: 901px) {
+  .hire-account__who {
+    display: flex;
+  }
+}
+
 .hire-account__sub {
   color: var(--h-gray-500);
 }
 
+/*
+ * .hire-app sets min-height: 100dvh for the desk shell. The menu is portaled
+ * with that class so hire tokens apply — without resetting min-height the
+ * popup becomes a full-viewport column.
+ */
 .hire-app.hire-menu {
   --ring: 14 76% 51%;
-  width: 15.5rem;
-  max-height: 11.5rem;
-  overflow: hidden;
-  padding: 6px;
+  min-height: 0;
+  height: auto;
+  width: 16rem;
+  max-width: calc(100vw - 1.5rem);
+  max-height: none;
+  overflow: visible;
+  padding: 8px;
   background: var(--h-surface);
   color: var(--h-ink);
   border: 1px solid var(--h-card-line);
@@ -3514,117 +3691,30 @@ html.dark .hire-app.hire-menu {
 }
 
 @media (max-width: 640px) {
-  .hire-app__header {
-    padding: 8px 12px;
-    gap: 8px;
-    height: auto;
-    min-height: 52px;
-  }
-
-  .hire-app__nav {
-    gap: 4px;
-    min-width: 0;
-  }
-
-  .hire-register,
-  .hire-theme {
-    display: none;
-  }
-
-  .hire-signin {
-    height: 32px;
-    padding: 0 12px;
-    font-size: 12px;
-  }
-
-  .hire-hbtn {
-    height: 32px;
-    padding: 0 10px;
-  }
-
-  .hire-account span.hidden {
-    display: none !important;
-  }
-
   .hire-app__logo {
     width: 88px;
   }
 
-  .scout__bar {
+  .hire-app__badge {
+    display: none;
+  }
+
+  .hire-app__header {
     padding: 8px 10px;
-    gap: 8px;
-    min-height: 48px;
-    border-radius: 14px 14px 0 0;
-    flex-wrap: wrap;
   }
 
-  .scout__id {
-    flex: 1 1 auto;
-  }
-
-  .scout__tools {
-    flex: 1 0 100%;
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  .scout-tbtn:not(.scout-tbtn--icon) {
-    max-width: 46%;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .hire-signin {
+    padding: 0 10px;
+    font-size: 12px;
   }
 
   .scout__status {
     display: none;
   }
 
-  .scout-tbtn {
-    height: 30px;
-    padding: 0 8px;
-    font-size: 12px;
-  }
-
-  .scout-composer {
-    padding: 8px 12px 12px;
-  }
-
-  .scout-composer__row {
-    gap: 8px;
-  }
-
-  .scout-send {
-    width: auto;
-    min-width: 72px;
-    padding: 0 14px;
-    height: 38px;
-    font-size: 13px;
-  }
-
-  .scout-criteria {
-    gap: 4px 12px;
-    margin: 8px 0 0;
-  }
-
-  .scout-criterion {
-    font-size: 12px;
-  }
-
-  .hire-pod-region {
-    padding: 8px 12px 16px;
-  }
-
-  .hire-pod__title {
-    font-size: 22px;
-    line-height: 28px;
-  }
-
-  .hire-pod__card {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 14px 14px;
-  }
-
-  .hire-pod__card .desk-card__score {
-    text-align: left;
+  .scout__bar {
+    padding: 8px 10px;
+    border-radius: 14px 14px 0 0;
   }
 
   .pod-empty {
@@ -3634,20 +3724,6 @@ html.dark .hire-app.hire-menu {
   .hire-pie__svg {
     width: 148px;
     height: 148px;
-  }
-
-  .hire-detail__scroll {
-    padding: 16px 14px 24px;
-  }
-
-  .hire-metrics {
-    grid-template-columns: 1fr 1fr;
-    gap: 12px 8px;
-  }
-
-  .hire-req__menu {
-    width: min(260px, calc(100vw - 24px));
-    right: -8px;
   }
 
   .hire-plain {
