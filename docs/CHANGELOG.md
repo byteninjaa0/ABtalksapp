@@ -2,6 +2,8 @@
 
 <!-- Reconciled through 2026-08-05 (commit 519cc34) into docs/project-context.md. -->
 
+- 2026-08-24 — hire Scout engine: `askGroqJson` retries `GROQ_API_KEY_2` / `_3` on 429/401; the searchable-brief chip label is "Show me" (`action:search` unchanged).
+
 - 2026-08-21 — hire: after recruiter sign-in, the guest Scout transcript, search tabs and Talent Pod survive — session/matches dual-write to localStorage, MergeGuestCart adopts the brief onto a TalentRequest, persist ScoutChat hydrates the guest copy instead of wiping it.
 
 - 2026-08-20 — hire: empty searches show sample cards built from the recruiter's own spec, with a demand button that sets `TalentRequest.alertWhenAvailable`; `SAMPLE:` refs stay off the track whitelist so they cannot be shortlisted or introduced. Scout can offer its own chips via `offer_options` when the fixed ladder does not cover the question. Plan `docs/plans/081-sample-cards-and-adaptive-chips.md`

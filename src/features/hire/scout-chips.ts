@@ -135,7 +135,7 @@ function seniorityChips(): ScoutChip[] {
  * Chip values are always annual rupees; the period is read from the role rather
  * than the chip, so one set of values serves a salary and a stipend.
  */
-function salaryChips(spec: JobSpec): ScoutChip[] {
+export function salaryChips(spec: JobSpec): ScoutChip[] {
   return isMonthlyContext(spec)
     ? [
         { label: "₹10-20k / month", value: "salary:120000-240000" },
@@ -154,7 +154,7 @@ function salaryChips(spec: JobSpec): ScoutChip[] {
 /** Chips for a brief that can already be searched. */
 function readyChips(): ScoutChip[] {
   return [
-    { label: "Search verified talent", value: "action:search" },
+    { label: "Show me", value: "action:search" },
     { label: "Change the stack", value: "edit:mustHaveStack" },
     { label: "Change the budget", value: "edit:salary" },
     { label: "Start a new search", value: "action:reset" },

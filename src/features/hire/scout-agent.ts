@@ -178,7 +178,7 @@ function fallbackText(spec: JobSpec, action?: "search" | "reset" | null): string
     return "Searching the verified pool now — the cards are on their way.";
   }
   if (searchable(spec)) {
-    return "I have enough to search on — tap Search verified talent, or tell me anything else you want weighted.";
+    return "I have enough to search on — tap Show me, or tell me anything else you want weighted.";
   }
   if (extra.sources.length === 0 && !spec.title?.trim()) {
     const tracks = describeTracks()
@@ -296,7 +296,7 @@ export async function runScoutAgent(args: {
     return {
       spec: seeded,
       text: searchable(seeded)
-        ? "That was Groq hitting its rate limit, not a problem with your brief. Tap Search verified talent — everything you told me is saved."
+        ? "That was Groq hitting its rate limit, not a problem with your brief. Tap Show me — everything you told me is saved."
         : "That was Groq hitting its rate limit. Give it half a minute and send the requirement again.",
       action: null,
       degraded: true,

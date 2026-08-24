@@ -21,8 +21,16 @@ export type GroqJsonResult<T> =
   | { ok: true; data: T }
   | { ok: false; message: string };
 
+export function groqApiKeys(): string[] {
+  return [
+    process.env.GROQ_API_KEY,
+    process.env.GROQ_API_KEY_2,
+    process.env.GROQ_API_KEY_3,
+  ].filter((k): k is string => Boolean(k && k.trim()));
+}
+
 export function groqConfigured(): boolean {
-  return Boolean(process.env.GROQ_API_KEY);
+  return groqApiKeys().length > 0;
 }
 
 /**
@@ -45,8 +53,8 @@ export async function askGroqJson<T>(opts: {
   reasoningEffort?: "low" | "medium" | "high";
   timeoutMs?: number;
 }): Promise<GroqJsonResult<T>> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return { ok: false, message: "AI is not configured." };
+  const keys = groqApiKeys();
+  if (keys.length === 0) return { ok: false, message: "AI is not configured." };
 
   const model = process.env.HIRE_GROQ_MODEL ?? DEFAULT_MODEL;
   const controller = new AbortController();
@@ -55,48 +63,55 @@ export async function askGroqJson<T>(opts: {
     opts.timeoutMs ?? DEFAULT_TIMEOUT_MS,
   );
 
-  try {
-    const res = await fetch(GROQ_URL, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-        "content-type": "application/json",
+  const payload = {
+    model,
+    temperature: opts.temperature ?? 0.4,
+    // gpt-oss reasons before it answers, and that reasoning is billed
+    // against max_tokens. Left at the default the model spent the whole
+    // budget thinking and returned "max completion tokens reached before
+    // generating a valid document" — a 400, not a parse error.
+    reasoning_effort: opts.reasoningEffort ?? "low",
+    max_tokens: opts.maxTokens ?? 1000,
+    messages: [
+      { role: "system", content: opts.system },
+      ...opts.messages,
+    ],
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: opts.schemaName,
+        strict: true,
+        schema: opts.schema,
       },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model,
-        temperature: opts.temperature ?? 0.4,
-        // gpt-oss reasons before it answers, and that reasoning is billed
-        // against max_tokens. Left at the default the model spent the whole
-        // budget thinking and returned "max completion tokens reached before
-        // generating a valid document" — a 400, not a parse error.
-        reasoning_effort: opts.reasoningEffort ?? "low",
-        max_tokens: opts.maxTokens ?? 1000,
-        messages: [
-          { role: "system", content: opts.system },
-          ...opts.messages,
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: opts.schemaName,
-            strict: true,
-            schema: opts.schema,
-          },
-        },
-      }),
-    });
+    },
+  };
 
-    if (!res.ok) {
-      // The body carries the actual reason (bad schema, rate limit, dead key)
-      // and never contains the API key, so it is safe and useful to log.
-      const detail = await res.text().catch(() => "");
+  try {
+    let res: Response | null = null;
+    let lastDetail = "";
+    for (let i = 0; i < keys.length; i += 1) {
+      res = await fetch(GROQ_URL, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${keys[i]}`,
+          "content-type": "application/json",
+        },
+        signal: controller.signal,
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) break;
+      lastDetail = await res.text().catch(() => "");
+      const retryable = res.status === 429 || res.status === 401;
       logger.error("[groq] request failed", {
         status: res.status,
-        detail: detail.slice(0, 300),
+        key: i + 1,
+        detail: lastDetail.slice(0, 300),
       });
-      return { ok: false, message: "AI request failed." };
+      if (!retryable || i === keys.length - 1) {
+        return { ok: false, message: "AI request failed." };
+      }
     }
+    if (!res?.ok) return { ok: false, message: "AI request failed." };
 
     const json = (await res.json()) as {
       choices?: { message?: { content?: string } }[];

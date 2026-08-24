@@ -18,6 +18,7 @@ import {
 import type { StructuredToolInterface } from "@langchain/core/tools";
 
 import { logger } from "@/lib/logger";
+import { groqApiKeys } from "@/lib/groq";
 
 /**
  * The agent loop: model → tools → model, until the model stops calling tools.
@@ -72,7 +73,7 @@ const REASONING_EFFORT = "medium";
 
 function scoutModel(tools: StructuredToolInterface[]) {
   return new ChatGroq({
-    apiKey: process.env.GROQ_API_KEY,
+    apiKey: groqApiKeys()[0] ?? process.env.GROQ_API_KEY,
     model:
       process.env.HIRE_AGENT_MODEL ??
       process.env.HIRE_GROQ_MODEL ??
