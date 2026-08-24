@@ -37,10 +37,19 @@ async function requireApprovedRecruiter(): Promise<
   if (!session?.user?.id) {
     return { ok: false, message: "Sign in as an approved recruiter." };
   }
-  const profile = await prisma.recruiterProfile.findUnique({
-    where: { userId: session.user.id },
-    select: { approved: true },
-  });
+  let profile;
+  try {
+    profile = await prisma.recruiterProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { approved: true },
+    });
+  } catch (error) {
+    logger.error("[hire] requireApprovedRecruiter", { error: String(error) });
+    return {
+      ok: false,
+      message: "Could not reach the server. Try again in a moment.",
+    };
+  }
   if (!profile?.approved) {
     return { ok: false, message: "Recruiter access not approved yet." };
   }
@@ -61,10 +70,19 @@ async function requireRegisteredRecruiter(): Promise<
   if (!session?.user?.id) {
     return { ok: false, message: "Sign in to save this requirement." };
   }
-  const profile = await prisma.recruiterProfile.findUnique({
-    where: { userId: session.user.id },
-    select: { approved: true },
-  });
+  let profile;
+  try {
+    profile = await prisma.recruiterProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { approved: true },
+    });
+  } catch (error) {
+    logger.error("[hire] requireRegisteredRecruiter", { error: String(error) });
+    return {
+      ok: false,
+      message: "Could not reach the server. Try again in a moment.",
+    };
+  }
   if (!profile) {
     return { ok: false, message: "Register as a recruiter first." };
   }
