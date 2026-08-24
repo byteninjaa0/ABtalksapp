@@ -2,6 +2,8 @@
 
 <!-- Reconciled through 2026-08-05 (commit 519cc34) into docs/project-context.md. -->
 
+- 2026-08-24 — hire: cards may show given name; Talent Pod Requested status keys engagements on userId; place-request revalidates /hire and survives a dead DB with a toast instead of a 500.
+
 - 2026-08-24 — hire Scout engine: `askGroqJson` retries `GROQ_API_KEY_2` / `_3` on 429/401; the searchable-brief chip label is "Show me" (`action:search` unchanged).
 
 - 2026-08-21 — hire: after recruiter sign-in, the guest Scout transcript, search tabs and Talent Pod survive — session/matches dual-write to localStorage, MergeGuestCart adopts the brief onto a TalentRequest, persist ScoutChat hydrates the guest copy instead of wiping it.

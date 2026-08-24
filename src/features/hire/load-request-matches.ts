@@ -13,9 +13,8 @@ import type { MatchCardData } from "@/components/hire/match-card";
  *
  * Shared by the requirement page and the full candidate list. It is one place
  * on purpose: the query is scoped to the caller's own request, and it
- * deliberately does not select `fullName` or `company` — a field that was never
- * fetched cannot be leaked by a later change to a card. Duplicating that across
- * two pages is how one copy quietly grows a name.
+ * selects given name for the card heading. Company, email and profile URLs
+ * stay off this query.
  */
 export async function loadRequestMatches(
   requestId: string,
@@ -49,6 +48,7 @@ export async function loadRequestMatches(
           programMember: {
             select: {
               jobRole: true,
+              fullName: true,
               shortlistedBy: {
                 where: { recruiterUserId },
                 select: { id: true },
@@ -68,10 +68,21 @@ export async function loadRequestMatches(
     .map((m) => m.studentUserId)
     .filter((id): id is string => id !== null);
 
-  const [engagements, cartCount] = await Promise.all([
+  const [engagements, cartCount, namedUsers] = await Promise.all([
     existingEngagements(recruiterUserId, candidateUserIds),
     prisma.recruiterShortlistItem.count({ where: { recruiterUserId } }),
+    candidateUserIds.length
+      ? prisma.user.findMany({
+          where: { id: { in: candidateUserIds } },
+          select: { id: true, name: true },
+        })
+      : Promise.resolve([] as { id: string; name: string | null }[]),
   ]);
+  const nameByUser = new Map(
+    namedUsers
+      .filter((u) => u.name && u.name.trim())
+      .map((u) => [u.id, u.name!.trim()]),
+  );
 
   return {
     title: request.title,
@@ -118,6 +129,10 @@ export async function loadRequestMatches(
             ? source
             : "CLAUDE",
         programMemberId: m.programMemberId,
+        displayName:
+          (m.programMember?.fullName?.trim() ||
+            (m.studentUserId ? nameByUser.get(m.studentUserId) : null)) ??
+          null,
         jobRole: rawRole ? tidyRoleLabel(rawRole) : "Candidate",
         score: m.score,
         tier: m.tier,

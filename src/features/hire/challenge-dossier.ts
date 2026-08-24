@@ -24,9 +24,9 @@ import type { CandidateDossier, EvidenceCoverage } from "@/features/hire/types";
  * into the other — the dossier carries a provenance per field, and the coverage
  * it returns says which dimensions this track can produce at all.
  *
- * What it deliberately does not carry, identically to the program builder: name,
- * email, phone, college name, GitHub handle, LinkedIn URL, and the submission
- * URLs themselves. `links` reports that a GitHub exists, never where.
+ * Given name is loaded for the card. Email, phone, college, GitHub handle,
+ * LinkedIn URL, and submission URLs stay off the dossier. `links` reports that
+ * a GitHub exists, never where.
  */
 
 /** How long the challenge runs. The denominator for missions and consistency. */
@@ -37,6 +37,8 @@ export type ChallengeDossierSet = {
   coverage: EvidenceCoverage;
   /** Days elapsed since the candidate started, capped at the track length. */
   dayByUser: Map<string, number>;
+  /** Given name only — never email or profile URLs. */
+  nameByUser: Map<string, string>;
 };
 
 const EMPTY: ChallengeDossierSet = {
@@ -54,6 +56,7 @@ const EMPTY: ChallengeDossierSet = {
     note: "No challenge candidates in the pool yet.",
   },
   dayByUser: new Map(),
+  nameByUser: new Map(),
 };
 
 /** English glue that is never a skill, however it was typed. */
@@ -210,6 +213,7 @@ export async function buildChallengeDossierSet(opts: {
       _count: { select: { submissions: true } },
       user: {
         select: {
+          name: true,
           studentProfile: {
             select: {
               skills: true,
@@ -257,6 +261,7 @@ export async function buildChallengeDossierSet(opts: {
   const quizByUser = new Map(quiz.map((q) => [q.userId, q]));
 
   const dayByUser = new Map<string, number>();
+  const nameByUser = new Map<string, string>();
   const dossiers: CandidateDossier[] = [];
   const now = new Date();
 
@@ -281,6 +286,8 @@ export async function buildChallengeDossierSet(opts: {
       ),
     );
     dayByUser.set(e.userId, elapsed);
+    const given = e.user.name?.trim();
+    if (given) nameByUser.set(e.userId, given);
 
     const activeSpan =
       lastActiveAt && firstActiveAt
@@ -395,5 +402,6 @@ export async function buildChallengeDossierSet(opts: {
         "those dimensions are excluded rather than counted as zero.",
     },
     dayByUser,
+    nameByUser,
   };
 }

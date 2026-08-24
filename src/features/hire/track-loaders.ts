@@ -200,8 +200,7 @@ async function loadChallenge(
       source: d.source,
       candidateRef: d.candidateRef,
       userId: d.userId ?? "",
-      // No name, no employer. There is none to load and none to leak.
-      fullName: "",
+      fullName: (d.userId && set?.nameByUser.get(d.userId)) || "",
       jobRole: d.rawRoleLabel.value,
       company: "",
       yearsExperience: d.yearsExperience.value,
@@ -248,7 +247,7 @@ async function loadHackathon(): Promise<TrackLoad> {
       source: "HACKATHON",
       candidateRef: d.candidateRef,
       userId: d.userId ?? "",
-      fullName: "",
+      fullName: (d.userId && set?.nameByUser.get(d.userId)) || "",
       jobRole: d.rawRoleLabel.value,
       company: "",
       yearsExperience: d.yearsExperience.value,
