@@ -9,6 +9,27 @@
 - 2026-08-24 — hire Scout engine: `askGroqJson` retries `GROQ_API_KEY_2` / `_3` on 429/401; the searchable-brief chip label is "Show me" (`action:search` unchanged).
 
 - 2026-08-21 — hire: after recruiter sign-in, the guest Scout transcript, search tabs and Talent Pod survive — session/matches dual-write to localStorage, MergeGuestCart adopts the brief onto a TalentRequest, persist ScoutChat hydrates the guest copy instead of wiping it.
+- 2026-08-24 — hire desk: profile menu is a short identity + requests + sign-out card (no long list). Journey nodes 1–2–3 pulse on the active step; Scout's thinking state is a bursting star, not an orbit.
+
+- 2026-08-24 — hire desk v18 pass: View details maps mock inspector (metrics, AI summary, score donut, GitHub/LinkedIn platforms) onto real MatchCardData — no company, no fake LeetCode. Shortlist and Saved-for-later cards reuse evidence pills + meta tags from the last search snapshot; empty Saved-for-later uses the same folder animation as Shortlist. Profile menu follows hire peach/orange and drops Open cart. Open requests has Back to Scout. Requirement dropdown asks unmet slots and records employment type. Mobile tightening under 640px.
+
+- 2026-08-24 — hire Talent Pod: tick who to request; already-requested rows show Requested + View details only and are not sent again.
+
+- 2026-08-24 — hire Scout thread: cards pin under the search turn and the pane scrolls to the latest message so a follow-up starts below the cards, not at the top.
+
+- 2026-08-24 — hire desk: match cards show given name with stack under it; Talent Pod shows Requested after a chat intro or Place request (local mark + userId-keyed engagements). Contact stays hidden.
+
+- 2026-08-24 — hire `/hire/[requestId]`: a draft TalentRequest with empty title no longer 500s Zod — blank strings become omitted spec fields.
+
+- 2026-08-24 — hire Scout desk UI: Resume lives only in View more; the next question sits under the last turn; `action:search` renders as a Show me pill when the engine offers it; "Share more details about the candidate" is side copy not a pill; thinking state is shining stars around the Scout mark.
+
+- 2026-08-24 — hire header: Hire badge sits closer to the wordmark and uses the orange chip in both themes. Sign in / Register modal is `.hire-auth` so it follows hire peach/orange instead of the product black/white popover.
+
+- 2026-08-21 — hire desk: Requests dropped from the navbar; Back to Scout on Talent Pod and the inspector; View more stays visible in night mode (inspector no longer starts at opacity 0); Resume opens a dynamic evidence sheet at `/hire/evidence` from fetched MatchCardData, not the static v18 resume.html.
+
+- 2026-08-21 — hire desk night mode: `.hire-app` surface tokens swap under `html.dark` so the Scout card, journey, header and composer follow the theme toggle instead of staying white.
+
+- 2026-08-21 — hire: Scout desk UI on `feat/hire-scout-ui` matches the v17 HTML workspace (journey + orange Scout card + in-thread cards + side inspector). Talent Pod is the cart; View opens evidence (not a static resume) beside chat; Request intro / Sign in / Register stay. Product indigo unchanged outside `.hire-app`.
 
 - 2026-08-20 — hire: empty searches show sample cards built from the recruiter's own spec, with a demand button that sets `TalentRequest.alertWhenAvailable`; `SAMPLE:` refs stay off the track whitelist so they cannot be shortlisted or introduced. Scout can offer its own chips via `offer_options` when the fixed ladder does not cover the question. Plan `docs/plans/081-sample-cards-and-adaptive-chips.md`
 

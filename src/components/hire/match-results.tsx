@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { rememberEvidence } from "@/components/hire/evidence-cache";
 import Link from "next/link";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 import { MatchCard, type MatchCardData } from "@/components/hire/match-card";
+import { DeskMatchCard } from "@/components/hire/desk-match-card";
 import type { SampleDemand } from "@/components/hire/sample-card-notice";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,6 +25,9 @@ export function MatchResults({
   viewAllHref,
   samples,
   sampleDemand,
+  desk = false,
+  onOpen,
+  selectedRef,
 }: {
   matches: MatchCardData[];
   /**
@@ -42,30 +47,45 @@ export function MatchResults({
    */
   samples?: MatchCardData[];
   sampleDemand?: SampleDemand;
+  desk?: boolean;
+  onOpen?: (match: MatchCardData) => void;
+  selectedRef?: string;
 }) {
   // Seeded from the server once, then owned here. Reading it from the prop on
   // every render double-counted: the toggle moved it, and the refresh that
   // followed moved it again.
   const [count, setCount] = useState(cartCount);
+  useEffect(() => {
+    rememberEvidence(matches);
+  }, [matches]);
   const visible = viewAllHref ? matches.slice(0, INITIAL_VISIBLE) : matches;
   const hidden = matches.length - visible.length;
   const showSamples = matches.length === 0 && (samples?.length ?? 0) > 0;
 
   return (
-    <div className="space-y-4">
+    <div className={desk ? "scout-results" : "space-y-4"}>
       {showSamples && (
         <div className="space-y-3">
-          <h3 className="font-display text-lg font-semibold">
+          <h3 className={desk ? "scout-results__h" : "font-display text-lg font-semibold"}>
             What a match would look like
           </h3>
-          <ul className="space-y-4">
+          <ul className={desk ? "scout-results" : "space-y-4"}>
             {samples!.map((m) => (
               <li key={m.candidateRef}>
-                <MatchCard
-                  match={m}
-                  variant="sample"
-                  sampleDemand={sampleDemand}
-                />
+                {desk ? (
+                  <DeskMatchCard
+                    match={m}
+                    selected={selectedRef === m.candidateRef}
+                    onOpen={() => onOpen?.(m)}
+                    sampleDemand={sampleDemand}
+                  />
+                ) : (
+                  <MatchCard
+                    match={m}
+                    variant="sample"
+                    sampleDemand={sampleDemand}
+                  />
+                )}
               </li>
             ))}
           </ul>
@@ -73,16 +93,28 @@ export function MatchResults({
       )}
 
       {visible.length > 0 && (
-        <ul className="space-y-4">
+        <ul className={desk ? "scout-results" : "space-y-4"}>
           {visible.map((m, i) => (
             <li key={m.candidateRef}>
-              <MatchCard
-                match={m}
-                rank={i + 1}
-                onCartToggle={(inCart) =>
-                  setCount((c) => Math.max(0, c + (inCart ? 1 : -1)))
-                }
-              />
+              {desk ? (
+                <DeskMatchCard
+                  match={m}
+                  rank={i + 1}
+                  selected={selectedRef === m.candidateRef}
+                  onOpen={() => onOpen?.(m)}
+                  onCartToggle={(inCart) =>
+                    setCount((c) => Math.max(0, c + (inCart ? 1 : -1)))
+                  }
+                />
+              ) : (
+                <MatchCard
+                  match={m}
+                  rank={i + 1}
+                  onCartToggle={(inCart) =>
+                    setCount((c) => Math.max(0, c + (inCart ? 1 : -1)))
+                  }
+                />
+              )}
             </li>
           ))}
         </ul>
@@ -102,8 +134,8 @@ export function MatchResults({
         </Link>
       )}
 
-      {/* The cart is only worth pointing at once something is in it. */}
-      {count > 0 && (
+      {/* Desk chrome already has the Shortlist bar. Don't duplicate it. */}
+      {!desk && count > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/40 px-4 py-3">
           <p className="text-sm">
             <span className="font-semibold">{count}</span>{" "}

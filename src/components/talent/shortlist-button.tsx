@@ -4,7 +4,12 @@ import { useEffect, useState, useTransition } from "react";
 import { Loader2, ShoppingCart, X } from "lucide-react";
 import { toast } from "sonner";
 import { toggleShortlistAction } from "@/app/actions/talent-actions";
-import { guestCartHas, toggleGuestCart } from "@/components/hire/guest-cart";
+import {
+  cartItemFromMatch,
+  guestCartHas,
+  toggleGuestCart,
+} from "@/components/hire/guest-cart";
+import type { MatchCardData } from "@/components/hire/match-card";
 import { useHireAuth } from "@/components/hire/hire-auth-provider";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,7 +29,12 @@ export function ShortlistButton({
   compact = false,
   jobRole,
   totalScore,
+  displayName,
+  skills,
+  snapshot,
   onToggle,
+  className,
+  podLabel = false,
 }: {
   candidateRef: string;
   /** Set only for US-cohort / program members. */
@@ -32,9 +42,15 @@ export function ShortlistButton({
   initialShortlisted: boolean;
   jobRole?: string;
   totalScore?: number;
+  displayName?: string | null;
+  skills?: string[];
+  snapshot?: MatchCardData;
   /** Icon-only, for dense rows. */
   compact?: boolean;
   onToggle?: (inCart: boolean) => void;
+  className?: string;
+  /** Hire desk copy — same cart, different label. */
+  podLabel?: boolean;
 }) {
   const { approved } = useHireAuth();
   const useDb = Boolean(approved && programMemberId);
@@ -47,14 +63,28 @@ export function ShortlistButton({
   }, [candidateRef, useDb]);
 
   function toggleLocal() {
-    const next = toggleGuestCart({
-      candidateRef,
-      jobRole: jobRole ?? "Candidate",
-      totalScore: totalScore ?? 0,
-    });
+    const next = toggleGuestCart(
+      snapshot
+        ? cartItemFromMatch(snapshot)
+        : {
+            candidateRef,
+            jobRole: jobRole ?? "Candidate",
+            totalScore: totalScore ?? 0,
+            displayName: displayName ?? null,
+            skills,
+          },
+    );
     setInCart(next);
     onToggle?.(next);
-    toast.success(next ? "Added to cart" : "Removed from cart");
+    toast.success(
+      next
+        ? podLabel
+          ? "Added to Shortlist"
+          : "Added to cart"
+        : podLabel
+          ? "Removed from Shortlist"
+          : "Removed from cart",
+    );
   }
 
   function toggle() {
@@ -71,12 +101,24 @@ export function ShortlistButton({
       setInCart(result.data.shortlisted);
       onToggle?.(result.data.shortlisted);
       toast.success(
-        result.data.shortlisted ? "Added to cart" : "Removed from cart",
+        result.data.shortlisted
+          ? podLabel
+            ? "Added to Shortlist"
+            : "Added to cart"
+          : podLabel
+            ? "Removed from Shortlist"
+            : "Removed from cart",
       );
     });
   }
 
-  const label = inCart ? "Remove from cart" : "Add to cart";
+  const label = podLabel
+    ? inCart
+      ? "In Shortlist"
+      : "Add to Shortlist"
+    : inCart
+      ? "Remove from cart"
+      : "Add to cart";
 
   return (
     <button
@@ -93,6 +135,7 @@ export function ShortlistButton({
         "shrink-0 gap-1.5 disabled:opacity-50",
         inCart &&
           "bg-primary/15 text-primary hover:bg-primary/25 dark:bg-primary/20 dark:hover:bg-primary/30",
+        className,
       )}
     >
       {pending ? (

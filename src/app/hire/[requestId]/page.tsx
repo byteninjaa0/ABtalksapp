@@ -3,10 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireRecruiter } from "@/lib/program-auth";
 import { ScoutChat } from "@/components/hire/scout-chat";
-import { MatchResults } from "@/components/hire/match-results";
-import { GapReport } from "@/components/hire/gap-report";
 import { loadRequestMatches } from "@/features/hire/load-request-matches";
-import { buildSampleCards } from "@/features/hire/sample-card";
 import { jobSpecSchema, type JobSpec } from "@/lib/validations/hire";
 
 type Props = { params: Promise<{ requestId: string }> };
@@ -62,8 +59,15 @@ export default async function HireRequestPage({ params }: Props) {
 
   if (!request) notFound();
 
-  const spec: JobSpec = jobSpecSchema.parse({
-    title: request.title,
+  // Prisma stores "" on a draft that has no role yet. jobSpecSchema treats
+  // title as optional, but rejects empty string (min 1). Same for currency.
+  const blank = (s: string | null | undefined) => {
+    const t = s?.trim();
+    return t ? t : undefined;
+  };
+
+  const parsed = jobSpecSchema.safeParse({
+    title: blank(request.title),
     seniority: request.seniority,
     openings: request.openings,
     mustHaveStack: request.mustHaveStack,
@@ -71,7 +75,7 @@ export default async function HireRequestPage({ params }: Props) {
     evidencePriority: request.evidencePriority,
     salaryMin: request.salaryMin,
     salaryMax: request.salaryMax,
-    salaryCurrency: request.salaryCurrency,
+    salaryCurrency: blank(request.salaryCurrency),
     salaryPeriod: request.salaryPeriod === "MONTHLY" ? "MONTHLY" : "ANNUAL",
     workMode: request.workMode,
     locationCity: request.locationCity,
@@ -85,11 +89,8 @@ export default async function HireRequestPage({ params }: Props) {
         ? (request.extra as Record<string, unknown>)
         : undefined,
   });
+  const spec: JobSpec = parsed.success ? parsed.data : {};
 
-  // What this recruiter has already asked about, so a card never offers to
-  // request the same introduction twice.
-  // Cards, cart count and engagement statuses all come from one scoped loader
-  // shared with /hire/[requestId]/candidates.
   const matchData = await loadRequestMatches(requestId, userId);
   const matches = matchData?.matches ?? [];
 
@@ -112,64 +113,16 @@ export default async function HireRequestPage({ params }: Props) {
     .join(" · ");
 
   return (
-    <div className="space-y-10">
-      <ScoutChat
-        persist
-        initialRequestId={request.id}
-        initialMessages={messages}
-        initialSpec={spec}
-        initialSummary={summary || request.title}
-      />
-
-      <section id="hire-results" className="scroll-mt-20 space-y-4">
-        <p className="text-xs font-medium tracking-wide text-primary uppercase">
-          Step 2 · Matched profiles
-        </p>
-        <h2 className="font-display text-2xl font-bold tracking-tight">
-          {matches.length > 0
-            ? `${matches.length} matched candidate${matches.length === 1 ? "" : "s"}`
-            : "No matches yet"}
-        </h2>
-        {matches.length === 0 ? (
-          <>
-            {request.status !== "DRAFT" && (
-              <MatchResults
-                matches={[]}
-                samples={buildSampleCards(spec)}
-                sampleDemand={{
-                  spec,
-                  requestId: request.id,
-                  alreadyRecorded: request.alertWhenAvailable,
-                }}
-                cartCount={0}
-              />
-            )}
-            <GapReport
-              requestId={request.id}
-              overallGap={
-                request.status === "DRAFT"
-                  ? "Search when you're ready — or keep chatting with Scout to refine the spec."
-                  : "No verified matches in the published pool for this requirement yet. Your demand is saved."
-              }
-              alertWhenAvailable={request.alertWhenAvailable}
-            />
-          </>
-        ) : (
-          <>
-            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-xs leading-relaxed text-amber-900 dark:text-amber-100">
-              <strong className="font-semibold">Privacy protected.</strong>{" "}
-              Candidates are shown by reference ID. Names and contact details
-              stay hidden until you place a request and our team confirms the
-              engagement.
-            </p>
-            <MatchResults
-              matches={matches}
-              cartCount={matchData?.cartCount ?? 0}
-              viewAllHref={`/hire/${requestId}/candidates`}
-            />
-          </>
-        )}
-      </section>
-    </div>
+    <ScoutChat
+      persist
+      initialRequestId={request.id}
+      initialMessages={messages}
+      initialSpec={spec}
+      initialSummary={summary || request.title}
+      results={matches}
+      resultsCartCount={matchData?.cartCount ?? 0}
+      alertWhenAvailable={request.alertWhenAvailable}
+      initialSearched={request.status !== "DRAFT" || matches.length > 0}
+    />
   );
 }

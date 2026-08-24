@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { placeBulkEngagementRequestAction } from "@/app/actions/hire-request-actions";
 import { useHireAuth } from "@/components/hire/hire-auth-provider";
 import { savePendingCheckout } from "@/components/hire/pending-checkout";
-import { refPublicId } from "@/features/hire/candidate-ref";
+import { refPublicId, type CandidateSource } from "@/features/hire/candidate-ref";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -19,9 +19,22 @@ export type CartRow = {
   jobRole: string;
   totalScore: number;
   note: string | null;
+  displayName?: string | null;
+  skills?: string[];
   revealedName: string | null;
   /** Live engagement status for this candidate, if one exists. */
   engagementStatus: string | null;
+  source?: CandidateSource;
+  locationLabel?: string | null;
+  yearsExperience?: number;
+  missionsPassed?: number;
+  totalTrackDays?: number | null;
+  certificateIssued?: boolean;
+  rationale?: string | null;
+  workMode?: string | null;
+  educationLevel?: string | null;
+  availabilityUnknown?: boolean;
+  compensationBand?: string | null;
 };
 
 const STATUS_COPY: Record<string, string> = {

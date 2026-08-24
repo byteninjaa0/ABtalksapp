@@ -40,12 +40,13 @@ export function RecruiterAuthDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-h-[90vh] overflow-y-auto sm:max-w-md"
+        className="hire-app hire-auth max-h-[90vh] overflow-y-auto sm:max-w-md"
         showCloseButton
       >
         <DialogHeader>
+          <p className="hire-auth__kicker">ABTalks Hire</p>
           <DialogTitle>
-            {isRegister ? "Register to send the request" : "Sign in"}
+            {isRegister ? "Register to send the request" : "Sign in to hire"}
           </DialogTitle>
           <DialogDescription>
             {isRegister
@@ -57,13 +58,9 @@ export function RecruiterAuthDialog({
         {isRegister ? (
           <>
             <RecruiterRegisterForm />
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="hire-auth__switch">
               Already registered?{" "}
-              <button
-                type="button"
-                onClick={() => setPanel("signin")}
-                className="font-medium text-primary hover:underline"
-              >
+              <button type="button" onClick={() => setPanel("signin")}>
                 Sign in
               </button>
             </p>
@@ -71,13 +68,9 @@ export function RecruiterAuthDialog({
         ) : (
           <>
             <RecruiterLoginForm redirectTo={stayHere} />
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="hire-auth__switch">
               New here?{" "}
-              <button
-                type="button"
-                onClick={() => setPanel("register")}
-                className="font-medium text-primary hover:underline"
-              >
+              <button type="button" onClick={() => setPanel("register")}>
                 Register
               </button>
             </p>

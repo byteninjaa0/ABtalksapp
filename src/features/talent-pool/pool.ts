@@ -72,6 +72,8 @@ export type ShortlistRow = {
   note: string | null;
   shortlistedAt: string;
   displayName: string | null;
+  skills: string[];
+  yearsExperience: number;
   /**
    * The real name, and only once an engagement request for this recruiter and
    * this candidate has reached CONTACT_SHARED. Null everywhere else — the
@@ -470,6 +472,8 @@ export async function getShortlist(
           fullName: true,
           jobRole: true,
           totalScore: true,
+          skills: true,
+          yearsExperience: true,
           cohortId: true,
           status: true,
         },
@@ -509,6 +513,8 @@ export async function getShortlist(
         totalScore: i.member.totalScore,
         note: i.note,
         displayName: i.member.fullName.trim() ? i.member.fullName.trim() : null,
+        skills: i.member.skills,
+        yearsExperience: i.member.yearsExperience,
         revealedName: released.has(i.member.id) ? i.member.fullName : null,
         shortlistedAt: i.createdAt.toISOString(),
       })),

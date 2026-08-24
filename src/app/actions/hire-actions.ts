@@ -25,6 +25,7 @@ import { runScoutTurn } from "@/features/hire/scout-conversation";
 import { searchCandidates } from "@/features/hire/search-candidates";
 import { persistableSource } from "@/features/hire/track-loaders";
 import { explainMatches } from "@/features/hire/explain-matches";
+import { toPublicMatch } from "@/features/hire/to-public-match";
 
 type ActionOk<T> = { ok: true; data: T };
 type ActionErr = { ok: false; message: string };
@@ -398,21 +399,33 @@ export async function runMatchAction(
 
     if (persistable.length > 0) {
       await prisma.talentRequestMatch.createMany({
-        data: persistable.map((m) => ({
-          requestId: req.id,
-          source: persistableSource(m.source)!,
-          // Null for anyone outside the cohort — the column is a foreign key to
-          // ProgramMember, and a challenge candidate has no row there.
-          programMemberId: m.programMemberId,
-          studentUserId: m.userId,
-          score: m.score,
-          tier: m.tier as TalentMatchTier,
-          scoreBreakdown: m.scoreBreakdown as unknown as Prisma.InputJsonValue,
-          evidence: m.evidence as unknown as Prisma.InputJsonValue,
-          rationale: m.rationale,
-          gaps: m.gaps,
-          availabilityUnknown: m.availabilityUnknown,
-        })),
+        data: persistable.map((m) => {
+          const card = toPublicMatch(m, {
+            coverageNote: search.data.coverage.note,
+            highlightSkills: spec.mustHaveStack,
+          });
+          return {
+            requestId: req.id,
+            source: persistableSource(m.source)!,
+            // Null for anyone outside the cohort — the column is a foreign key to
+            // ProgramMember, and a challenge candidate has no row there.
+            programMemberId: m.programMemberId,
+            studentUserId: m.userId,
+            score: m.score,
+            tier: m.tier as TalentMatchTier,
+            scoreBreakdown: m.scoreBreakdown as unknown as Prisma.InputJsonValue,
+            // Public evidence only — CandidateEvidence still carries company.
+            evidence: {
+              ...card.evidence,
+              locationLabel: card.locationLabel ?? null,
+              compensationBand: card.compensationBand ?? null,
+              compensationDeclared: card.compensationDeclared ?? false,
+            } as unknown as Prisma.InputJsonValue,
+            rationale: m.rationale,
+            gaps: m.gaps,
+            availabilityUnknown: m.availabilityUnknown,
+          };
+        }),
       });
     }
 
