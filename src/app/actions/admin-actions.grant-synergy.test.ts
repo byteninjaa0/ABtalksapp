@@ -14,6 +14,7 @@ const createAdminAction = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/admin-auth", () => ({ requireAdmin, isAdminEmail }));
 vi.mock("@/lib/db", () => ({
   prisma: { $transaction: transaction },
+  writeClient: () => ({ $transaction: transaction }),
 }));
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("next/server", () => ({ after: vi.fn() }));
@@ -33,6 +34,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   requireAdmin.mockResolvedValue({ userId: "admin-1", email: "admin@x.com" });
   isAdminEmail.mockResolvedValue(false);
+  createSynergyEvent.mockResolvedValue({ id: "grant-evt-1" });
   transaction.mockImplementation(async (fn: (client: ReturnType<typeof tx>) => unknown) =>
     fn(tx()),
   );
@@ -105,6 +107,7 @@ describe("grantSynergyAction write path", () => {
         reason: "Campus ambassador bonus",
         createdByAdminId: "admin-1",
       },
+      select: { id: true },
     });
     expect(updateUser).toHaveBeenCalledWith({
       where: { id: "u1" },
