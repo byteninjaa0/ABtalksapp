@@ -25,6 +25,7 @@ vi.mock("@/lib/db", () => ({
   prisma: {
     $transaction: transaction,
   },
+  writeClient: () => ({ $transaction: transaction }),
 }));
 
 import { redeemItem } from "@/features/marketplace/redeem-item";

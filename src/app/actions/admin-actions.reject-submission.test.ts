@@ -24,6 +24,7 @@ vi.mock("@/lib/admin-auth", () => ({
 }));
 vi.mock("@/lib/db", () => ({
   prisma: { $transaction: transaction },
+  writeClient: () => ({ $transaction: transaction }),
 }));
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("next/server", () => ({ after: vi.fn() }));
@@ -186,6 +187,7 @@ describe("rejectSubmissionAction debit clamp + ledger", () => {
         reason:
           "Clamped synergy to 0 after reject removed submission points that were already spent.",
       },
+      select: { id: true },
     });
   });
 

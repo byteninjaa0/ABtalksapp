@@ -108,7 +108,6 @@ describe("getNotificationsForUser", () => {
     expect(challenge.items.map((i) => i.key)).toEqual([
       "admin:a1",
       "admin:a2",
-      "campus-ambassador:onboarding",
     ]);
   });
 
@@ -172,36 +171,29 @@ describe("getNotificationsForUser", () => {
     ]);
     notificationReadFindMany.mockResolvedValue([
       { notificationKey: "admin:n1" },
-      { notificationKey: "campus-ambassador:onboarding" },
     ]);
 
     const feed = await getNotificationsForUser("u1");
     expect(feed.items).toHaveLength(5);
-    // campus-ambassador publishedAt is 2026-08-20T00:00Z — between n1 and n2.
     expect(feed.items.map((i) => i.key)).toEqual([
       "admin:n1",
-      "campus-ambassador:onboarding",
       "admin:n2",
       "admin:n3",
       "admin:n4",
+      "admin:n5",
     ]);
     expect(feed.items[0]?.isRead).toBe(true);
-    expect(feed.items[1]?.isRead).toBe(true);
-    expect(feed.items[2]?.isRead).toBe(false);
-    // n1 + campus ambassador are read → 3 unread in the capped feed.
-    expect(feed.unreadCount).toBe(3);
-    expect(feed.items.map((i) => i.key)).not.toContain("admin:n5");
+    expect(feed.items[1]?.isRead).toBe(false);
+    expect(feed.unreadCount).toBe(4);
     expect(feed.items.map((i) => i.key)).not.toContain("admin:n6");
   });
 
-  it("includes the campus ambassador notice when challenge-enrolled and feed has room", async () => {
+  it("returns an empty feed when there are no admin or derived notices", async () => {
     enrollmentFindFirst.mockResolvedValue({ id: "enr-1" });
     notificationFindMany.mockResolvedValue([]);
 
     const feed = await getNotificationsForUser("u1");
-    expect(feed.items.map((i) => i.key)).toEqual([
-      "campus-ambassador:onboarding",
-    ]);
-    expect(feed.unreadCount).toBe(1);
+    expect(feed.items).toEqual([]);
+    expect(feed.unreadCount).toBe(0);
   });
 });

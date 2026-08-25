@@ -14,6 +14,7 @@ vi.mock("@/lib/db", () => ({
     $transaction: transaction,
     studentProfile: { findUnique: findUniqueProfile },
   },
+  writeClient: () => ({ $transaction: transaction }),
 }));
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("next/server", () => ({ after: vi.fn() }));
