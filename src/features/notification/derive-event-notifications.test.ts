@@ -185,34 +185,18 @@ describe("deriveEventNotifications", () => {
     expect(started.map((n) => n.key)).not.toContain("cohort:cohort-1:enrolling");
   });
 
-  it("emits Campus Ambassador onboarding only for challenge-enrolled users", () => {
-    const now = new Date("2026-08-20T12:00:00.000Z");
-
-    const without = deriveEventNotifications({
-      now,
-      enrollingCohorts: [],
-      programEnabled: false,
-      ...emptyMembership,
-    });
-    expect(without.map((n) => n.key)).not.toContain(
-      "campus-ambassador:onboarding",
-    );
-
+  it("does not emit a derived Campus Ambassador notice (off-site flow)", () => {
+    // After the off-site CA redirect, derive-event no longer synthesizes an
+    // onboarding notice — challenge enrollment alone must not invent one.
     const withEnrollment = deriveEventNotifications({
-      now,
+      now: new Date("2026-08-20T12:00:00.000Z"),
       enrollingCohorts: [],
       programEnabled: false,
       ...emptyMembership,
       hasChallengeEnrollment: true,
     });
-    const item = withEnrollment.find(
-      (n) => n.key === "campus-ambassador:onboarding",
+    expect(withEnrollment.map((n) => n.key)).not.toContain(
+      "campus-ambassador:onboarding",
     );
-    expect(item).toMatchObject({
-      title: "Complete Campus Ambassador onboarding",
-      href: "https://abtalksca.netlify.app/",
-      category: "CHALLENGE",
-      publishedAt: "2026-08-20T00:00:00.000Z",
-    });
   });
 });

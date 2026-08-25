@@ -27,6 +27,7 @@ vi.mock("@/lib/db", () => ({
     $transaction: transaction,
     user: { findUnique: findUniqueUser },
   },
+  writeClient: () => ({ $transaction: transaction }),
 }));
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("next/server", () => ({ after }));
@@ -216,6 +217,7 @@ describe("resetProgressAction debit clamp + ledger", () => {
         reason:
           "Clamped synergy to 0 after reset removed submission points that were already spent.",
       },
+      select: { id: true },
     });
   });
 

@@ -12,6 +12,7 @@ const createSynergyEvent = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/admin-auth", () => ({ requireAdmin }));
 vi.mock("@/lib/db", () => ({
   prisma: { $transaction: transaction },
+  writeClient: () => ({ $transaction: transaction }),
 }));
 
 import { updateRedemptionStatusAction } from "@/app/actions/admin-redemption-actions";

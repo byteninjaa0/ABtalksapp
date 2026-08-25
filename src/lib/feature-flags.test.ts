@@ -1,9 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  hireChallengePool,
+  hireOpenCohortIds,
   isChatbotEnabled,
   isHackathonPreviewEnabled,
+  isHireProPreviewEnabled,
   isOtpDevBypassEnabled,
   isOtpVerificationRequired,
+  isRecruiterAuthEnabled,
   otpDevCode,
 } from "@/lib/feature-flags";
 
@@ -42,5 +46,40 @@ describe("feature flags", () => {
     expect(otpDevCode()).toBe("1234");
     process.env.OTP_DEV_CODE = "9999";
     expect(otpDevCode()).toBe("9999");
+  });
+
+  it("keeps recruiter auth and hire Pro preview off unless explicitly true", () => {
+    delete process.env.ENABLE_RECRUITER_AUTH;
+    delete process.env.HIRE_PRO_PREVIEW;
+    expect(isRecruiterAuthEnabled()).toBe(false);
+    expect(isHireProPreviewEnabled()).toBe(false);
+
+    process.env.ENABLE_RECRUITER_AUTH = "1";
+    process.env.HIRE_PRO_PREVIEW = "yes";
+    expect(isRecruiterAuthEnabled()).toBe(false);
+    expect(isHireProPreviewEnabled()).toBe(false);
+
+    process.env.ENABLE_RECRUITER_AUTH = "true";
+    process.env.HIRE_PRO_PREVIEW = "true";
+    expect(isRecruiterAuthEnabled()).toBe(true);
+    expect(isHireProPreviewEnabled()).toBe(true);
+  });
+
+  it("parses hire open-cohort and challenge-pool env knobs", () => {
+    delete process.env.HIRE_OPEN_COHORT_IDS;
+    expect(hireOpenCohortIds()).toBeNull();
+    process.env.HIRE_OPEN_COHORT_IDS = "all";
+    expect(hireOpenCohortIds()).toBe("all");
+    process.env.HIRE_OPEN_COHORT_IDS = " c1, c2 , ";
+    expect(hireOpenCohortIds()).toEqual(["c1", "c2"]);
+
+    delete process.env.HIRE_CHALLENGE_POOL;
+    expect(hireChallengePool()).toEqual({ enabled: false, minDays: 10 });
+    process.env.HIRE_CHALLENGE_POOL = "true";
+    expect(hireChallengePool()).toEqual({ enabled: true, minDays: 10 });
+    process.env.HIRE_CHALLENGE_POOL = "15";
+    expect(hireChallengePool()).toEqual({ enabled: true, minDays: 15 });
+    process.env.HIRE_CHALLENGE_POOL = "false";
+    expect(hireChallengePool()).toEqual({ enabled: false, minDays: 10 });
   });
 });
