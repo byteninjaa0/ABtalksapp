@@ -9,6 +9,10 @@ import { recordLegalConsents } from "@/features/legal/record-consent";
 import { recordNewsletterOptIn } from "@/features/legal/record-newsletter-optin";
 import { logger } from "@/lib/logger";
 import { verifyRecruiterOtp } from "@/features/recruiter-auth/otp";
+import {
+  NEWSLETTER_PREF_COOKIE,
+  newsletterOptInFromPrefCookie,
+} from "@/lib/newsletter-pref";
 //auth is the full config with PrismaAdapter and real Credentials authorize. Used everywhere else.
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -116,13 +120,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email ?? null,
           source: "oauth_signup",
         });
-        // Login page writes abtalks_newsletter_pref before OAuth starts.
+        // Login page writes NEWSLETTER_PREF_COOKIE before OAuth starts.
         // Default true if the cookie is missing (e.g. old clients).
         let newsletterOptIn = true;
         try {
-          const pref = (await cookies()).get("abtalks_newsletter_pref")?.value;
-          if (pref === "0") newsletterOptIn = false;
-          if (pref === "1") newsletterOptIn = true;
+          const pref = (await cookies()).get(NEWSLETTER_PREF_COOKIE)?.value;
+          newsletterOptIn = newsletterOptInFromPrefCookie(pref);
         } catch {
           // cookies() can throw outside a request context — keep default.
         }
