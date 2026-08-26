@@ -3,8 +3,11 @@ import {
   hireChallengePool,
   hireOpenCohortIds,
   isChatbotEnabled,
+  isDualWriteEnabled,
   isHackathonPreviewEnabled,
   isHireProPreviewEnabled,
+  isNewCredentialRepoEnabled,
+  isNewPointsRepoEnabled,
   isOtpDevBypassEnabled,
   isOtpVerificationRequired,
   isRecruiterAuthEnabled,
@@ -63,6 +66,29 @@ describe("feature flags", () => {
     process.env.HIRE_PRO_PREVIEW = "true";
     expect(isRecruiterAuthEnabled()).toBe(true);
     expect(isHireProPreviewEnabled()).toBe(true);
+  });
+
+  it("keeps 078 Phase 6 points/credential switches and dual-write off unless true", () => {
+    delete process.env.ENABLE_NEW_POINTS;
+    delete process.env.ENABLE_NEW_CREDENTIAL;
+    delete process.env.ENABLE_DUAL_WRITE;
+    expect(isNewPointsRepoEnabled()).toBe(false);
+    expect(isNewCredentialRepoEnabled()).toBe(false);
+    expect(isDualWriteEnabled()).toBe(false);
+
+    process.env.ENABLE_NEW_POINTS = "1";
+    process.env.ENABLE_NEW_CREDENTIAL = "yes";
+    process.env.ENABLE_DUAL_WRITE = "TRUE";
+    expect(isNewPointsRepoEnabled()).toBe(false);
+    expect(isNewCredentialRepoEnabled()).toBe(false);
+    expect(isDualWriteEnabled()).toBe(false);
+
+    process.env.ENABLE_NEW_POINTS = "true";
+    process.env.ENABLE_NEW_CREDENTIAL = "true";
+    process.env.ENABLE_DUAL_WRITE = "true";
+    expect(isNewPointsRepoEnabled()).toBe(true);
+    expect(isNewCredentialRepoEnabled()).toBe(true);
+    expect(isDualWriteEnabled()).toBe(true);
   });
 
   it("parses hire open-cohort and challenge-pool env knobs", () => {

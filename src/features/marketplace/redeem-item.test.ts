@@ -8,8 +8,9 @@ const {
   findUniqueUser,
   updateManyProfile,
   createRedemption,
-  findUniqueOrThrowUser,
   createSynergyEvent,
+  getBalance,
+  dualWritePoints,
 } = vi.hoisted(() => ({
   transaction: vi.fn(),
   findUniqueItem: vi.fn(),
@@ -17,15 +18,21 @@ const {
   findUniqueUser: vi.fn(),
   updateManyProfile: vi.fn(),
   createRedemption: vi.fn(),
-  findUniqueOrThrowUser: vi.fn(),
   createSynergyEvent: vi.fn(),
+  getBalance: vi.fn(),
+  dualWritePoints: vi.fn(),
 }));
 
 vi.mock("@/lib/db", () => ({
-  prisma: {
-    $transaction: transaction,
-  },
   writeClient: () => ({ $transaction: transaction }),
+}));
+
+vi.mock("@/repositories/points", () => ({
+  getBalance,
+}));
+
+vi.mock("@/repositories/dual-write", () => ({
+  dualWritePoints,
 }));
 
 import { redeemItem } from "@/features/marketplace/redeem-item";
@@ -36,7 +43,6 @@ function tx() {
     user: {
       updateMany: updateManyUser,
       findUnique: findUniqueUser,
-      findUniqueOrThrow: findUniqueOrThrowUser,
     },
     studentProfile: { updateMany: updateManyProfile },
     redemption: { create: createRedemption },
@@ -46,6 +52,7 @@ function tx() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  dualWritePoints.mockResolvedValue(undefined);
   transaction.mockImplementation(async (fn: (client: ReturnType<typeof tx>) => unknown) =>
     fn(tx()),
   );
@@ -94,7 +101,7 @@ describe("redeemItem", () => {
     expect(updateManyUser).not.toHaveBeenCalled();
   });
 
-  it("uses conditional User.synergyPoints debit and reports insufficient balance", async () => {
+  it("uses conditional User.synergyPoints debit and reports insufficient via getBalance", async () => {
     findUniqueItem.mockResolvedValue({
       id: "item-1",
       title: "Mug",
@@ -102,7 +109,8 @@ describe("redeemItem", () => {
       active: true,
     });
     updateManyUser.mockResolvedValue({ count: 0 });
-    findUniqueUser.mockResolvedValue({ synergyPoints: 40 });
+    getBalance.mockResolvedValue(40);
+    findUniqueUser.mockResolvedValue({ id: "user-1" });
 
     await expect(redeemItem(input)).resolves.toEqual({
       ok: false,
@@ -114,10 +122,29 @@ describe("redeemItem", () => {
       where: { id: "user-1", synergyPoints: { gte: 100 } },
       data: { synergyPoints: { decrement: 100 } },
     });
+    expect(getBalance).toHaveBeenCalledWith("user-1", expect.any(Object));
     expect(createRedemption).not.toHaveBeenCalled();
   });
 
-  it("debits the account wallet, mirrors StudentProfile, and writes a REDEEM ledger row", async () => {
+  it("returns not_found when debit fails and the user row is gone", async () => {
+    findUniqueItem.mockResolvedValue({
+      id: "item-1",
+      title: "Mug",
+      costSP: 100,
+      active: true,
+    });
+    updateManyUser.mockResolvedValue({ count: 0 });
+    getBalance.mockResolvedValue(0);
+    findUniqueUser.mockResolvedValue(null);
+
+    await expect(redeemItem(input)).resolves.toEqual({
+      ok: false,
+      reason: "not_found",
+      message: "Account not found",
+    });
+  });
+
+  it("debits the account wallet, dual-writes points, and returns getBalance", async () => {
     findUniqueItem.mockResolvedValue({
       id: "item-1",
       title: "Mug",
@@ -127,8 +154,8 @@ describe("redeemItem", () => {
     updateManyUser.mockResolvedValue({ count: 1 });
     updateManyProfile.mockResolvedValue({ count: 1 });
     createRedemption.mockResolvedValue({ id: "red-1" });
-    findUniqueOrThrowUser.mockResolvedValue({ synergyPoints: 25 });
     createSynergyEvent.mockResolvedValue({ id: "evt-1" });
+    getBalance.mockResolvedValue(25);
 
     await expect(redeemItem(input)).resolves.toEqual({
       ok: true,
@@ -160,6 +187,17 @@ describe("redeemItem", () => {
         reason: "Redeemed Mug (redemptionId=red-1)",
       },
     });
+    expect(dualWritePoints).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        userId: "user-1",
+        amount: -100,
+        sourceType: "REDEMPTION",
+        sourceId: "red-1",
+        idempotencyKey: "redeem:red-1",
+      }),
+    );
+    expect(getBalance).toHaveBeenCalledWith("user-1", expect.any(Object));
     expect(transaction).toHaveBeenCalledWith(expect.any(Function), {
       maxWait: 5000,
       timeout: 10000,

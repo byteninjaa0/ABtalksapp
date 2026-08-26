@@ -10,6 +10,8 @@ import {
   HACKATHON_VARIANT_LABELS,
   HACKATHON_VARIANT_TEMPLATES,
   certificateDomainLabel,
+  certificateTypeFromCredentialTitle,
+  domainForCertificateType,
   parseHackathonVariant,
 } from "@/features/certificate/constants";
 
@@ -79,5 +81,25 @@ describe("hackathon placement variants", () => {
     });
     expect(HACKATHON_VARIANT_FILE_SLUGS.second).toBe("2nd");
     expect(HACKATHON_VARIANT_FILE_SLUGS.third).toBe("3rd");
+  });
+});
+
+describe("credential title ↔ certificate type", () => {
+  it("accepts Phase 2g CertificateType titles only", () => {
+    expect(certificateTypeFromCredentialTitle("HACKATHON")).toBe(
+      CertificateType.HACKATHON,
+    );
+    expect(certificateTypeFromCredentialTitle("CLAUDE_CHALLENGE")).toBe(
+      CertificateType.CLAUDE_CHALLENGE,
+    );
+    expect(certificateTypeFromCredentialTitle("ViCoDathon 2026")).toBeNull();
+    expect(certificateTypeFromCredentialTitle("")).toBeNull();
+  });
+
+  it("derives Claude domain for challenge certs and null otherwise", () => {
+    expect(domainForCertificateType(CertificateType.CLAUDE_CHALLENGE)).toBe(
+      Domain.CLAUDE,
+    );
+    expect(domainForCertificateType(CertificateType.HACKATHON)).toBeNull();
   });
 });

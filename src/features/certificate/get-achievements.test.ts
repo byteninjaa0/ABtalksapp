@@ -1,13 +1,12 @@
 import { CertificateStatus, CertificateType } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const findMany = vi.hoisted(() => vi.fn());
+const listForUser = vi.hoisted(() => vi.fn());
 const ensureClaudeCertificate = vi.hoisted(() => vi.fn());
+const loggerError = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/db", () => ({
-  prisma: {
-    certificate: { findMany },
-  },
+vi.mock("@/repositories/credentials", () => ({
+  listForUser,
 }));
 
 vi.mock("@/lib/date-utils", () => ({
@@ -15,7 +14,7 @@ vi.mock("@/lib/date-utils", () => ({
 }));
 
 vi.mock("@/lib/logger", () => ({
-  logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
+  logger: { error: loggerError, info: vi.fn(), warn: vi.fn() },
 }));
 
 vi.mock("@/features/certificate/issue-certificate", () => ({
@@ -30,12 +29,14 @@ beforeEach(() => {
 });
 
 describe("getAchievements", () => {
-  it("maps hackathon certs to Participated + team/brief stats", async () => {
-    findMany.mockResolvedValue([
+  it("maps hackathon credentials to Participated + team/brief stats", async () => {
+    listForUser.mockResolvedValue([
       {
-        id: "row_hk",
-        certificateId: "ABT-HK-23456",
+        credentialId: "ABT-HK-23456",
+        userId: "user_1",
         type: CertificateType.HACKATHON,
+        title: CertificateType.HACKATHON,
+        recipientName: "Ada",
         status: CertificateStatus.ISSUED,
         issuedAt: new Date("2026-08-09T12:00:00Z"),
         metadata: { teamName: "Team Ada", problemTitle: "Brief A" },
@@ -44,7 +45,7 @@ describe("getAchievements", () => {
 
     await expect(getAchievements("user_1")).resolves.toEqual([
       {
-        key: "row_hk",
+        key: "ABT-HK-23456",
         title: "ViCoDathon 2026",
         subtitle: "India's AI Vibe Coding Hackathon",
         certificateId: "ABT-HK-23456",
@@ -58,14 +59,17 @@ describe("getAchievements", () => {
       },
     ]);
     expect(ensureClaudeCertificate).toHaveBeenCalledWith("user_1");
+    expect(listForUser).toHaveBeenCalledWith("user_1");
   });
 
   it("falls back solo/empty brief and marks revoked", async () => {
-    findMany.mockResolvedValue([
+    listForUser.mockResolvedValue([
       {
-        id: "row_revoked",
-        certificateId: "ABT-HK-ABCDE",
+        credentialId: "ABT-HK-ABCDE",
+        userId: "user_1",
         type: CertificateType.HACKATHON,
+        title: CertificateType.HACKATHON,
+        recipientName: "Solo",
         status: CertificateStatus.REVOKED,
         issuedAt: new Date("2026-08-09T12:00:00Z"),
         metadata: {},
@@ -74,6 +78,7 @@ describe("getAchievements", () => {
 
     const views = await getAchievements("user_1");
     expect(views[0]).toMatchObject({
+      key: "ABT-HK-ABCDE",
       statusLabel: "Participated",
       status: "REVOKED",
       stats: [
@@ -84,11 +89,13 @@ describe("getAchievements", () => {
   });
 
   it("maps placement awards to Winner/Top 5 labels and Placement stat", async () => {
-    findMany.mockResolvedValue([
+    listForUser.mockResolvedValue([
       {
-        id: "row_win",
-        certificateId: "ABT-HK-WINNR",
+        credentialId: "ABT-HK-WINNR",
+        userId: "user_1",
         type: CertificateType.HACKATHON,
+        title: CertificateType.HACKATHON,
+        recipientName: "Ada",
         status: CertificateStatus.ISSUED,
         issuedAt: new Date("2026-08-13T18:30:00Z"),
         metadata: {
@@ -98,9 +105,11 @@ describe("getAchievements", () => {
         },
       },
       {
-        id: "row_top5",
-        certificateId: "ABT-HK-TOP5X",
+        credentialId: "ABT-HK-TOP5X",
+        userId: "user_1",
         type: CertificateType.HACKATHON,
+        title: CertificateType.HACKATHON,
+        recipientName: "Five",
         status: CertificateStatus.ISSUED,
         issuedAt: new Date("2026-08-13T18:30:00Z"),
         metadata: {
@@ -132,11 +141,13 @@ describe("getAchievements", () => {
 
   it("maps Claude challenge days/streak and survives ensureClaude failure", async () => {
     ensureClaudeCertificate.mockRejectedValue(new Error("issue failed"));
-    findMany.mockResolvedValue([
+    listForUser.mockResolvedValue([
       {
-        id: "row_cc",
-        certificateId: "ABT-CC-23456",
-        type: CertificateType.CLAUDE_CHALLENGE,
+        credentialId: "ABT-CC-23456",
+        userId: "user_1",
+        type: "COMPLETION",
+        title: CertificateType.CLAUDE_CHALLENGE,
+        recipientName: "Claude Grad",
         status: CertificateStatus.ISSUED,
         issuedAt: new Date("2026-08-01T12:00:00Z"),
         metadata: { daysCompleted: 60, longestStreak: 12 },
@@ -153,5 +164,29 @@ describe("getAchievements", () => {
       ],
       status: "COMPLETED",
     });
+  });
+
+  it("skips credentials whose title is not a CertificateType", async () => {
+    listForUser.mockResolvedValue([
+      {
+        credentialId: "ABT-XX-23456",
+        userId: "user_1",
+        type: "OTHER",
+        title: "not-a-certificate-type",
+        recipientName: "X",
+        status: CertificateStatus.ISSUED,
+        issuedAt: new Date("2026-08-01T12:00:00Z"),
+        metadata: {},
+      },
+    ]);
+
+    await expect(getAchievements("user_1")).resolves.toEqual([]);
+    expect(loggerError).toHaveBeenCalledWith(
+      "Skipping credential with unmapped certificate title",
+      expect.objectContaining({
+        credentialId: "ABT-XX-23456",
+        title: "not-a-certificate-type",
+      }),
+    );
   });
 });
