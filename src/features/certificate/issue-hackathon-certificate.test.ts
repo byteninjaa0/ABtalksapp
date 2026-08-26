@@ -7,12 +7,16 @@ const {
   findManyCertificates,
   createCertificate,
   generateCertificateId,
+  transaction,
+  dualWriteCredential,
 } = vi.hoisted(() => ({
   findUniqueParticipant: vi.fn(),
   findFirstCertificate: vi.fn(),
   findManyCertificates: vi.fn(),
   createCertificate: vi.fn(),
   generateCertificateId: vi.fn(),
+  transaction: vi.fn(),
+  dualWriteCredential: vi.fn(),
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -24,6 +28,7 @@ vi.mock("@/lib/db", () => ({
       create: createCertificate,
     },
   },
+  writeClient: () => ({ $transaction: transaction }),
 }));
 
 vi.mock("@/lib/logger", () => ({
@@ -32,6 +37,10 @@ vi.mock("@/lib/logger", () => ({
 
 vi.mock("@/features/certificate/generate-certificate-id", () => ({
   generateCertificateId,
+}));
+
+vi.mock("@/repositories/dual-write", () => ({
+  dualWriteCredential,
 }));
 
 import {
@@ -79,6 +88,12 @@ function participant(overrides?: {
 beforeEach(() => {
   vi.clearAllMocks();
   generateCertificateId.mockResolvedValue("ABT-HK-23456");
+  dualWriteCredential.mockResolvedValue(undefined);
+  transaction.mockImplementation(async (fn: (tx: {
+    certificate: { create: typeof createCertificate };
+  }) => unknown) =>
+    fn({ certificate: { create: createCertificate } }),
+  );
 });
 
 describe("ensureHackathonCertificate", () => {
@@ -114,6 +129,10 @@ describe("ensureHackathonCertificate", () => {
       data: { certificateId: "ABT-HK-EXIST", alreadyIssued: true },
     });
     expect(createCertificate).not.toHaveBeenCalled();
+    expect(dualWriteCredential).toHaveBeenCalledWith(
+      expect.any(Object),
+      "ABT-HK-EXIST",
+    );
   });
 
   it("rejects blank participant names before issuing", async () => {
@@ -156,6 +175,10 @@ describe("ensureHackathonCertificate", () => {
         }),
         select: { certificateId: true },
       }),
+    );
+    expect(dualWriteCredential).toHaveBeenCalledWith(
+      expect.any(Object),
+      "ABT-HK-23456",
     );
   });
 });
@@ -210,6 +233,10 @@ describe("ensureHackathonAwardCertificate", () => {
       data: { certificateId: "ABT-HK-WIN", alreadyIssued: true },
     });
     expect(createCertificate).not.toHaveBeenCalled();
+    expect(dualWriteCredential).toHaveBeenCalledWith(
+      expect.any(Object),
+      "ABT-HK-WIN",
+    );
   });
 
   it("issues a top5 award even when participation and winner rows already exist", async () => {
@@ -255,6 +282,10 @@ describe("ensureHackathonAwardCertificate", () => {
           }),
         }),
       }),
+    );
+    expect(dualWriteCredential).toHaveBeenCalledWith(
+      expect.any(Object),
+      "ABT-HK-TOP5X",
     );
   });
 });

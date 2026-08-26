@@ -11,6 +11,8 @@ export default defineConfig({
       "src/features/hire/score-candidate.test.ts",
       "src/features/hire/scout-agent.test.ts",
       "src/features/hire/visibility.test.ts",
+      // Hand-rolled assert runner (`npm run test:078-dual-write`).
+      "src/repositories/dual-write.test.ts",
     ],
     setupFiles: ["./vitest.setup.ts"],
   },

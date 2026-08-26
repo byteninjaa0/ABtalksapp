@@ -7,6 +7,8 @@ const findUniqueCertificate = vi.hoisted(() => vi.fn());
 const createCertificate = vi.hoisted(() => vi.fn());
 const generateCertificateId = vi.hoisted(() => vi.fn());
 const loggerError = vi.hoisted(() => vi.fn());
+const transaction = vi.hoisted(() => vi.fn());
+const dualWriteCredential = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/db", () => ({
   prisma: {
@@ -17,6 +19,7 @@ vi.mock("@/lib/db", () => ({
       create: createCertificate,
     },
   },
+  writeClient: () => ({ $transaction: transaction }),
 }));
 
 vi.mock("@/lib/logger", () => ({
@@ -27,10 +30,20 @@ vi.mock("@/features/certificate/generate-certificate-id", () => ({
   generateCertificateId,
 }));
 
+vi.mock("@/repositories/dual-write", () => ({
+  dualWriteCredential,
+}));
+
 import { ensureClaudeCertificate } from "@/features/certificate/issue-certificate";
 
 beforeEach(() => {
   vi.clearAllMocks();
+  dualWriteCredential.mockResolvedValue(undefined);
+  transaction.mockImplementation(async (fn: (tx: {
+    certificate: { create: typeof createCertificate };
+  }) => unknown) =>
+    fn({ certificate: { create: createCertificate } }),
+  );
 });
 
 describe("ensureClaudeCertificate eligibility", () => {
@@ -91,6 +104,10 @@ describe("ensureClaudeCertificate eligibility", () => {
       data: { certificateId: "ABT-CL-W2N3R", alreadyIssued: true },
     });
     expect(generateCertificateId).not.toHaveBeenCalled();
+    expect(dualWriteCredential).toHaveBeenCalledWith(
+      expect.any(Object),
+      "ABT-CL-W2N3R",
+    );
   });
 
   it("requires a non-empty profile name before issuing", async () => {
@@ -155,5 +172,9 @@ describe("ensureClaudeCertificate eligibility", () => {
       },
       select: { certificateId: true },
     });
+    expect(dualWriteCredential).toHaveBeenCalledWith(
+      expect.any(Object),
+      "ABT-CL-W2N3R",
+    );
   });
 });

@@ -1,19 +1,20 @@
-import { CertificateStatus, CertificateType, Domain } from "@prisma/client";
+import { CertificateStatus, CertificateType } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const findUnique = vi.hoisted(() => vi.fn());
+const getByPublicId = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/db", () => ({
-  prisma: {
-    certificate: { findUnique },
-  },
+vi.mock("@/repositories/credentials", () => ({
+  getByPublicId,
 }));
 
 vi.mock("@/lib/date-utils", () => ({
   formatDateIST: vi.fn(() => "09 Aug 2026"),
 }));
 
-import { getPublicCertificate } from "@/features/certificate/get-certificate";
+import {
+  getPublicCertificate,
+  publicCertificateFromCredential,
+} from "@/features/certificate/get-certificate";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -22,19 +23,21 @@ beforeEach(() => {
 describe("getPublicCertificate", () => {
   it("returns null for invalid or missing IDs", async () => {
     expect(await getPublicCertificate("not-a-cert")).toBeNull();
-    expect(findUnique).not.toHaveBeenCalled();
+    expect(getByPublicId).not.toHaveBeenCalled();
 
-    findUnique.mockResolvedValue(null);
+    getByPublicId.mockResolvedValue(null);
     expect(await getPublicCertificate("ABT-HK-23456")).toBeNull();
+    expect(getByPublicId).toHaveBeenCalledWith("ABT-HK-23456");
   });
 
   it("maps hackathon metadata to Participated + team/brief details", async () => {
-    findUnique.mockResolvedValue({
-      certificateId: "ABT-HK-23456",
-      recipientName: "Ada Lovelace",
+    getByPublicId.mockResolvedValue({
+      credentialId: "ABT-HK-23456",
+      userId: "user_1",
       type: CertificateType.HACKATHON,
+      title: CertificateType.HACKATHON,
+      recipientName: "Ada Lovelace",
       status: CertificateStatus.ISSUED,
-      domain: null,
       issuedAt: new Date("2026-08-09T12:00:00Z"),
       metadata: {
         teamName: "Team Ada",
@@ -60,12 +63,13 @@ describe("getPublicCertificate", () => {
   });
 
   it("maps placement award metadata to Winner label + variant", async () => {
-    findUnique.mockResolvedValue({
-      certificateId: "ABT-HK-W2N3R",
-      recipientName: "Ada Lovelace",
+    getByPublicId.mockResolvedValue({
+      credentialId: "ABT-HK-W2N3R",
+      userId: "user_1",
       type: CertificateType.HACKATHON,
+      title: CertificateType.HACKATHON,
+      recipientName: "Ada Lovelace",
       status: CertificateStatus.ISSUED,
-      domain: null,
       issuedAt: new Date("2026-08-13T18:30:00Z"),
       metadata: {
         teamName: "Team Ada",
@@ -85,12 +89,13 @@ describe("getPublicCertificate", () => {
   });
 
   it("falls back solo/empty brief and marks revoked certificates", async () => {
-    findUnique.mockResolvedValue({
-      certificateId: "ABT-HK-ABCDE",
-      recipientName: "Solo Dev",
+    getByPublicId.mockResolvedValue({
+      credentialId: "ABT-HK-ABCDE",
+      userId: "user_1",
       type: CertificateType.HACKATHON,
+      title: CertificateType.HACKATHON,
+      recipientName: "Solo Dev",
       status: CertificateStatus.REVOKED,
-      domain: null,
       issuedAt: new Date("2026-08-09T12:00:00Z"),
       metadata: {},
     });
@@ -108,12 +113,13 @@ describe("getPublicCertificate", () => {
   });
 
   it("maps Claude challenge fields including track label", async () => {
-    findUnique.mockResolvedValue({
-      certificateId: "ABT-CC-23456",
+    getByPublicId.mockResolvedValue({
+      credentialId: "ABT-CC-23456",
+      userId: "user_1",
+      type: "COMPLETION",
+      title: CertificateType.CLAUDE_CHALLENGE,
       recipientName: "Claude Grad",
-      type: CertificateType.CLAUDE_CHALLENGE,
       status: CertificateStatus.ISSUED,
-      domain: Domain.CLAUDE,
       issuedAt: new Date("2026-08-01T12:00:00Z"),
       metadata: { daysCompleted: 60, longestStreak: 12 },
     });
@@ -130,5 +136,22 @@ describe("getPublicCertificate", () => {
       ],
       isRevoked: false,
     });
+  });
+});
+
+describe("publicCertificateFromCredential", () => {
+  it("returns null when Credential.title is not a CertificateType", () => {
+    expect(
+      publicCertificateFromCredential({
+        credentialId: "ABT-XX-23456",
+        userId: "user_1",
+        type: "OTHER",
+        title: "garbage",
+        recipientName: "X",
+        status: CertificateStatus.ISSUED,
+        issuedAt: new Date(),
+        metadata: {},
+      }),
+    ).toBeNull();
   });
 });
