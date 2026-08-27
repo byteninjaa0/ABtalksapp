@@ -1,12 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const findUnique = vi.hoisted(() => vi.fn());
+const findUniqueStudent = vi.hoisted(() => vi.fn());
+const findUniqueCandidate = vi.hoisted(() => vi.fn());
 const random = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/db", () => ({
   prisma: {
-    studentProfile: { findUnique },
+    candidateProfile: { findUnique: findUniqueCandidate },
   },
+}));
+
+vi.mock("@/repositories/legacy/student-profile", () => ({
+  studentProfile: { findUnique: findUniqueStudent },
 }));
 
 import { generateUniqueReferralCode } from "@/features/registration/generate-referral-code";
@@ -19,22 +24,39 @@ beforeEach(() => {
 });
 
 describe("generateUniqueReferralCode", () => {
-  it("returns a 6-char code when the first candidate is free", async () => {
-    findUnique.mockResolvedValue(null);
+  it("returns a 6-char code when both tables are free", async () => {
+    findUniqueStudent.mockResolvedValue(null);
+    findUniqueCandidate.mockResolvedValue(null);
 
     await expect(generateUniqueReferralCode()).resolves.toBe("AAAAAA");
-    expect(findUnique).toHaveBeenCalledWith({
+    expect(findUniqueStudent).toHaveBeenCalledWith({
       where: { referralCode: "AAAAAA" },
       select: { id: true },
     });
+    expect(findUniqueCandidate).toHaveBeenCalledWith({
+      where: { referralCode: "AAAAAA" },
+      select: { userId: true },
+    });
   });
 
-  it("retries on collisions and throws after 10 exhausted attempts", async () => {
-    findUnique.mockResolvedValue({ id: "taken" });
+  it("retries when CandidateProfile already holds the code", async () => {
+    findUniqueStudent.mockResolvedValue(null);
+    findUniqueCandidate.mockResolvedValue({ userId: "other" });
 
     await expect(generateUniqueReferralCode()).rejects.toThrow(
       /unique referral code/,
     );
-    expect(findUnique).toHaveBeenCalledTimes(10);
+    expect(findUniqueStudent).toHaveBeenCalledTimes(10);
+    expect(findUniqueCandidate).toHaveBeenCalledTimes(10);
+  });
+
+  it("retries on StudentProfile collisions and throws after 10 exhausted attempts", async () => {
+    findUniqueStudent.mockResolvedValue({ id: "taken" });
+    findUniqueCandidate.mockResolvedValue(null);
+
+    await expect(generateUniqueReferralCode()).rejects.toThrow(
+      /unique referral code/,
+    );
+    expect(findUniqueStudent).toHaveBeenCalledTimes(10);
   });
 });

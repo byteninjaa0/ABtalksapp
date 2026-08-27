@@ -6,6 +6,7 @@ import {
   isDualWriteEnabled,
   isHackathonPreviewEnabled,
   isHireProPreviewEnabled,
+  isNewCandidateRepoEnabled,
   isNewCredentialRepoEnabled,
   isNewPointsRepoEnabled,
   isOtpDevBypassEnabled,
@@ -68,26 +69,32 @@ describe("feature flags", () => {
     expect(isHireProPreviewEnabled()).toBe(true);
   });
 
-  it("keeps 078 Phase 6 points/credential switches and dual-write off unless true", () => {
+  it("keeps 078 Phase 6 points/credential/candidate switches and dual-write off unless true", () => {
     delete process.env.ENABLE_NEW_POINTS;
     delete process.env.ENABLE_NEW_CREDENTIAL;
+    delete process.env.ENABLE_NEW_CANDIDATE;
     delete process.env.ENABLE_DUAL_WRITE;
     expect(isNewPointsRepoEnabled()).toBe(false);
     expect(isNewCredentialRepoEnabled()).toBe(false);
+    expect(isNewCandidateRepoEnabled()).toBe(false);
     expect(isDualWriteEnabled()).toBe(false);
 
     process.env.ENABLE_NEW_POINTS = "1";
     process.env.ENABLE_NEW_CREDENTIAL = "yes";
+    process.env.ENABLE_NEW_CANDIDATE = "TRUE";
     process.env.ENABLE_DUAL_WRITE = "TRUE";
     expect(isNewPointsRepoEnabled()).toBe(false);
     expect(isNewCredentialRepoEnabled()).toBe(false);
+    expect(isNewCandidateRepoEnabled()).toBe(false);
     expect(isDualWriteEnabled()).toBe(false);
 
     process.env.ENABLE_NEW_POINTS = "true";
     process.env.ENABLE_NEW_CREDENTIAL = "true";
+    process.env.ENABLE_NEW_CANDIDATE = "true";
     process.env.ENABLE_DUAL_WRITE = "true";
     expect(isNewPointsRepoEnabled()).toBe(true);
     expect(isNewCredentialRepoEnabled()).toBe(true);
+    expect(isNewCandidateRepoEnabled()).toBe(true);
     expect(isDualWriteEnabled()).toBe(true);
   });
 
