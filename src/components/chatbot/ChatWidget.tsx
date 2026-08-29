@@ -33,6 +33,30 @@ type Session = {
 };
 
 const SESSION_KEY = "abtalks_chatbot_sessions";
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+const SWEEP_INTERVAL_MS = 60 * 1000;
+
+function isExpired(session: Session, now: number): boolean {
+  // A non-numeric updatedAt (hand-edited or truncated storage) would make every
+  // comparison NaN and keep the row forever — treat it as expired instead.
+  return !Number.isFinite(session.updatedAt) || now - session.updatedAt > SESSION_TTL_MS;
+}
+
+// Drops sessions idle for more than SESSION_TTL_MS. Returns the SAME object
+// reference when nothing expired, so setSessions bails out of the re-render and
+// the persist effect does not rewrite localStorage on every sweep.
+function pruneExpired(
+  sessions: Record<string, Session>,
+  now: number,
+): Record<string, Session> {
+  const kept: Record<string, Session> = {};
+  let dropped = false;
+  for (const [id, session] of Object.entries(sessions)) {
+    if (isExpired(session, now)) dropped = true;
+    else kept[id] = session;
+  }
+  return dropped ? kept : sessions;
+}
 
 // Use existing categories/questions as shortcuts to send text.
 const QUICK_QUESTIONS = QUICK_QUESTION_IDS.map((id) => {
@@ -80,9 +104,11 @@ export function ChatWidget() {
       const saved = localStorage.getItem(SESSION_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as Record<string, Session>;
-        setSessions(parsed);
-        const sortedIds = Object.keys(parsed).sort((a, b) => parsed[b].updatedAt - parsed[a].updatedAt);
+        // Filter before anything reaches state, so expired sessions never enter React.
+        const live = pruneExpired(parsed, Date.now());
+        const sortedIds = Object.keys(live).sort((a, b) => live[b].updatedAt - live[a].updatedAt);
         if (sortedIds.length > 0) {
+          setSessions(live);
           setCurrentSessionId(sortedIds[0]); // Load most recent session
         } else {
           startNewSession();
@@ -104,6 +130,30 @@ export function ChatWidget() {
       console.warn("localStorage unavailable for chat sessions", e);
     }
   }, [sessions]);
+
+  // Mirror sessions into a ref so the sweep can read them without re-arming the interval.
+  const sessionsRef = useRef(sessions);
+  useEffect(() => {
+    sessionsRef.current = sessions;
+  }, [sessions]);
+
+  // A tab left open across a day (or a laptop resuming from sleep) must not keep
+  // dead sessions alive until the next reload.
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const current = sessionsRef.current;
+      const live = pruneExpired(current, Date.now());
+      if (live === current) return; // nothing expired — no state write, no storage write
+      setSessions(live);
+      const ids = Object.keys(live).sort((a, b) => live[b].updatedAt - live[a].updatedAt);
+      if (ids.length > 0) {
+        setCurrentSessionId((cur) => (cur && live[cur] ? cur : ids[0]));
+      } else {
+        startNewSession();
+      }
+    }, SWEEP_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -143,6 +193,7 @@ export function ChatWidget() {
     
     setSessions(prev => {
       const session = prev[currentSessionId];
+      if (!session) return prev;
       // Generate a title based on the first user message
       const title = session.messages.filter(m => m.isUser).length === 0 
         ? text.slice(0, 30) + (text.length > 30 ? "..." : "")
@@ -189,6 +240,7 @@ export function ChatWidget() {
     // Add placeholder streaming message
     setSessions(prev => {
       const s = prev[currentSessionId];
+      if (!s) return prev;
       return {
         ...prev,
         [currentSessionId]: {
@@ -204,6 +256,7 @@ export function ChatWidget() {
       // (Anthropic API strictly requires the first message to be 'user')
       // Anthropic API requires alternating user/assistant turns, starting with 'user'
       const session = sessions[currentSessionId];
+      if (!session) return;
       let history: { role: string; content: string }[] = [];
       let nextExpectedRole = 'user';
 
@@ -304,6 +357,7 @@ export function ChatWidget() {
       // Finalize message
       setSessions(prev => {
         const s = prev[currentSessionId];
+        if (!s) return prev;
         return {
           ...prev,
           [currentSessionId]: {
@@ -318,6 +372,7 @@ export function ChatWidget() {
       // Fallback update
       setSessions(prev => {
         const s = prev[currentSessionId];
+        if (!s) return prev;
         return {
           ...prev,
           [currentSessionId]: {
@@ -348,7 +403,8 @@ export function ChatWidget() {
         const botMsg: Message = { id: generateId(), text: renderMenuText(), isUser: false, timestamp: Date.now() };
         setSessions(prev => {
           const s = prev[currentSessionId];
-          return { ...prev, [currentSessionId]: { ...s, messages: [...s.messages, userMsg, botMsg] } };
+          if (!s) return prev;
+          return { ...prev, [currentSessionId]: { ...s, messages: [...s.messages, userMsg, botMsg], updatedAt: Date.now() } };
         });
       }
       return;
@@ -363,7 +419,8 @@ export function ChatWidget() {
         const botMsg: Message = { id: generateId(), text: localMatch.answer, isUser: false, timestamp: Date.now(), showFeedback: true };
         setSessions(prev => {
           const s = prev[currentSessionId];
-          return { ...prev, [currentSessionId]: { ...s, messages: [...s.messages, userMsg, botMsg] } };
+          if (!s) return prev;
+          return { ...prev, [currentSessionId]: { ...s, messages: [...s.messages, userMsg, botMsg], updatedAt: Date.now() } };
         });
       }
       return;
