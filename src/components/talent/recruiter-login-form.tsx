@@ -118,8 +118,8 @@ export function RecruiterLoginForm({ redirectTo }: { redirectTo: string }) {
 
       {devCode && (
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
-          <strong className="font-semibold">Development only.</strong> No mail
-          provider is configured, so the code is shown here instead of emailed:{" "}
+          <strong className="font-semibold">Development only.</strong> This environment shows the code instead of
+            emailing it:{" "}
           <span className="font-mono text-sm font-bold tracking-widest">
             {devCode}
           </span>

@@ -3,6 +3,7 @@ import "server-only";
 import { createHash, randomInt, timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { isRecruiterOtpDevEnabled } from "@/lib/feature-flags";
 
 const CODE_LENGTH = 6;
 const TTL_MINUTES = 10;
@@ -43,13 +44,20 @@ export function normaliseEmail(email: string): string {
 /**
  * The dev escape hatch: show the code instead of emailing it.
  *
- * Both conditions, always. A deployed environment that happens to be missing
- * the mail key must not start handing out other people's sign-in codes, so
- * the NODE_ENV check is the one that actually protects this — the missing key
- * only decides whether it is *needed*.
+ * Both conditions, always, and NODE_ENV is the one that protects anything. A
+ * deployed environment must not start handing out other people's sign-in codes
+ * because someone set an env var, so production is refused here regardless of
+ * the flag — the flag only decides whether a developer wants the shortcut.
+ *
+ * The second condition used to be `!BREVO_API_KEY`, on the reasoning that a
+ * missing mail provider meant the code had nowhere else to go. That stopped
+ * being true when Brevo was configured: local testing then emailed a real code
+ * on every attempt and spent the transactional quota on developers. Whether
+ * mail works and whether a developer wants the code on screen are unrelated,
+ * and the old condition answered the second by asking the first.
  */
 export function otpDevFallbackEnabled(): boolean {
-  return process.env.NODE_ENV !== "production" && !process.env.BREVO_API_KEY;
+  return process.env.NODE_ENV !== "production" && isRecruiterOtpDevEnabled();
 }
 
 /** The live seat for this email, or null. Seats are matched exactly, lowercased. */
