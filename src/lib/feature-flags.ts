@@ -47,6 +47,24 @@ export function otpDevCode(): string {
 }
 
 /**
+ * Show the recruiter's sign-in code on screen instead of emailing it.
+ *
+ * Opt-in, and only ever half the condition — `otpDevFallbackEnabled` also
+ * requires a non-production NODE_ENV, and that is the half that protects
+ * anything. This flag only says whether a developer *wants* the shortcut.
+ *
+ * It exists because the old condition was "no mail provider is configured",
+ * which stopped being true the moment Brevo was wired up: local testing then
+ * sent a real email for every attempt and spent the transactional quota on
+ * developers. Whether mail is configured and whether a developer wants to read
+ * the code off their own screen are unrelated questions, and the old condition
+ * answered the second by asking the first.
+ */
+export function isRecruiterOtpDevEnabled(): boolean {
+  return process.env.RECRUITER_OTP_DEV === "true";
+}
+
+/**
  * Whether phone OTP verification is required.
  * Under `next dev` (`NODE_ENV=development`) OTP is skipped so local registration
  * and profile testing need no code. Production / production-mode builds keep
