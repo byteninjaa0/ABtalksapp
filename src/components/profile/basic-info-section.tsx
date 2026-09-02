@@ -7,6 +7,7 @@ import { saveBasicInfoAction } from "@/app/actions/candidate-profile-actions";
 import { PERSONA_LABELS } from "@/lib/candidate-vocab";
 import { useSectionSave } from "./use-section-save";
 import { useProfileWizard } from "./wizard-context";
+import { useLocationFields } from "./location-fields";
 import {
   PwField,
   PwInput,
@@ -39,10 +40,22 @@ export function BasicInfoSection({
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<BasicInfoValues>({ defaultValues: initial });
 
   const summary = watch("summary") ?? "";
+
+  const { cityField, stateField, countryField } = useLocationFields({
+    city: watch("locationCity"),
+    region: watch("locationRegion"),
+    countryCode: watch("countryCode"),
+    onCityChange: (v) => setValue("locationCity", v, { shouldDirty: true }),
+    onRegionChange: (v) =>
+      setValue("locationRegion", v, { shouldDirty: true }),
+    onCountryCodeChange: (v) =>
+      setValue("countryCode", v, { shouldDirty: true }),
+  });
 
   useEffect(() => {
     setDirty(isDirty);
@@ -97,38 +110,12 @@ export function BasicInfoSection({
             ))}
           </PwSelect>
         </PwField>
-        <PwField label="City" htmlFor="bi-city">
-          <PwInput
-            id="bi-city"
-            placeholder="e.g. Noida"
-            autoComplete="address-level2"
-            {...register("locationCity")}
-          />
-        </PwField>
-        <PwField label="State / region" htmlFor="bi-region">
-          <PwInput
-            id="bi-region"
-            placeholder="e.g. Uttar Pradesh"
-            autoComplete="address-level1"
-            {...register("locationRegion")}
-          />
-        </PwField>
+        {cityField}
+        {stateField}
       </PwRow>
 
       <PwRow cols={2}>
-        <PwField
-          label="Country code"
-          htmlFor="bi-country"
-          helper="2 letters, e.g. IN"
-        >
-          <PwInput
-            id="bi-country"
-            maxLength={2}
-            placeholder="IN"
-            className="uppercase"
-            {...register("countryCode")}
-          />
-        </PwField>
+        {countryField}
         <PwField
           label="Headline"
           htmlFor="bi-headline"
