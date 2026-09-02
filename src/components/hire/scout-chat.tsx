@@ -16,7 +16,6 @@ import {
   Search,
   Sparkles,
 } from "lucide-react";
-import { suggestChips } from "@/features/hire/scout-chips";
 import { toast } from "sonner";
 import {
   runMatchAction,
@@ -132,24 +131,9 @@ const EVIDENCE_LABEL: Record<string, string> = {
   interview: "Communication",
 };
 
-function looksLikeSalaryAsk(text: string): boolean {
-  return /\b(salary|budget|compensation|lpa|ctc|stipend|pay range|package)\b/i.test(
-    text,
-  );
-}
-
 /** Display-only. Engine chip label can stay "Search verified talent". */
 function chipLabel(o: Option): string {
   return o.value === "action:search" ? "Show me" : o.label;
-}
-
-function displaySalaryChips(): Option[] {
-  return [
-    { label: "₹5-10 LPA", value: "salary:500000-1000000" },
-    { label: "₹10-20 LPA", value: "salary:1000000-2000000" },
-    { label: "₹20-35 LPA", value: "salary:2000000-3500000" },
-    { label: "Not decided", value: "skip:salary" },
-  ];
 }
 
 /** Juicebox-style: ticks go green as the recruiter types, not only after Scout stores the spec. */
@@ -636,20 +620,26 @@ export function ScoutChat({
   const activeOptions =
     lastMsg?.role === "assistant" ? (lastMsg.options ?? []) : [];
   const askOpen = lastMsg?.role === "assistant" && !pending && !openMatch;
-  // Same chips the conversation engine sent for this turn. Show me is
-  // `action:search` and only lands when the brief is searchable — do not
-  // invent extra pills here. An empty options list still gets the ladder so
-  // a salary ask is never a dead end.
+  // Exactly what the engine sent for this turn, and nothing invented here.
+  //
+  // There used to be a second ladder on this side: any Scout message mentioning
+  // a budget grew four salary pills, and anything else fell back to the server
+  // ladder. Between the two, every single turn arrived wearing buttons, and the
+  // product read as a form — which is what made a recruiter who had already
+  // stated their requirement wait to be asked four more things. Scout asks in
+  // words now; buttons appear only when it deliberately offered a closed set.
+  //
+  // "Show me" is the exception and it is an action, not a question: while the
+  // brief can be searched, the way to see cards is always one tap away.
   const chips = (() => {
-    if (activeOptions.length > 0) return activeOptions;
-    if (!askOpen || !lastMsg) return [];
-    const ladder = looksLikeSalaryAsk(lastMsg.content)
-      ? displaySalaryChips()
-      : suggestChips(spec, false);
-    if (readyToSearch && !ladder.some((c) => c.value === "action:search")) {
-      return [...ladder, { label: "Show me", value: "action:search" }];
+    const search = { label: "Show me", value: "action:search" };
+    if (activeOptions.length > 0) {
+      return readyToSearch && !activeOptions.some((c) => c.value === search.value)
+        ? [...activeOptions, search]
+        : activeOptions;
     }
-    return ladder;
+    if (!askOpen || !lastMsg) return [];
+    return readyToSearch ? [search] : [];
   })();
   const talked = messages.some((m) => m.role === "user") || searched;
   const spoken = detectSpoken(

@@ -263,7 +263,254 @@ const STACK_STOP = new Set([
   "able",
   "work",
   "working",
+  "manager",
+  "managers",
+  "management",
+  "director",
+  "directors",
+  "president",
+  "founder",
+  "executive",
+  "officer",
+  "associate",
+  "consultant",
+  "consultants",
+  "employee",
+  "staff",
+  "svp",
+  "avp",
+  "vp",
+  "savp",
+  "evp",
+  "ceo",
+  "cto",
+  "cfo",
+  "coo",
+  "head",
+  "lead",
+  "leads",
 ]);
+
+/**
+ * Job titles, seniority and corporate ranks. The model has filed these as
+ * must-have skills ("senior manager, 10+ years" → SVP, EXL), which then required
+ * every candidate to *list* those tokens as skills and emptied the board.
+ */
+const TITLE_STACK_TOKENS = new Set([
+  "manager",
+  "managers",
+  "management",
+  "director",
+  "directors",
+  "president",
+  "founder",
+  "executive",
+  "officer",
+  "associate",
+  "consultant",
+  "consultants",
+  "employee",
+  "staff",
+  "intern",
+  "internship",
+  "svp",
+  "avp",
+  "vp",
+  "savp",
+  "evp",
+  "ceo",
+  "cto",
+  "cfo",
+  "coo",
+  "cmo",
+  "cro",
+  "head",
+  "lead",
+  "leads",
+  "senior",
+  "junior",
+  "mid",
+  "engineer",
+  "engineers",
+  "developer",
+  "developers",
+  "analyst",
+  "analysts",
+]);
+
+/** 2–3 letter tokens that really are skills, not companies or ranks. */
+const KNOWN_SHORT_SKILLS = new Set([
+  "go",
+  "c",
+  "r",
+  "js",
+  "ts",
+  "sql",
+  "aws",
+  "gcp",
+  "html",
+  "css",
+  "nlp",
+  "api",
+  "php",
+  "k8s",
+  "ml",
+  "ai",
+  "ui",
+  "ux",
+  "db",
+  "ci",
+  "cd",
+  "s3",
+  "jwt",
+  "git",
+  "sap",
+  "etl",
+  "bi",
+  "os",
+  "c#",
+  "c++",
+  "qt",
+]);
+
+function stackTokenKey(token: string): string {
+  return token.trim().toLowerCase().replace(/[^a-z0-9+#]+/g, "");
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Did the recruiter actually type this token (or a common spelling of it)?
+ */
+function stackTokenNamedIn(words: string, token: string): boolean {
+  const raw = token.trim().toLowerCase();
+  if (!raw) return false;
+  const key = stackTokenKey(raw);
+  const variants = new Set<string>([raw, key]);
+  if (raw.endsWith(".js")) variants.add(raw.slice(0, -3));
+  if (raw.endsWith("js") && raw.length > 2) variants.add(raw.slice(0, -2));
+  const aliases: Record<string, string[]> = {
+    postgresql: ["postgres", "psql"],
+    postgres: ["postgresql"],
+    nodejs: ["node"],
+    node: ["nodejs", "node.js"],
+    javascript: ["js"],
+    typescript: ["ts"],
+    reactjs: ["react"],
+    golang: ["go"],
+  };
+  for (const a of aliases[key] ?? []) variants.add(a);
+  const hay = words.toLowerCase();
+  for (const v of variants) {
+    if (!v) continue;
+    const escaped = escapeRegExp(v);
+    const re = /^[a-z0-9]+$/i.test(v)
+      ? new RegExp(`\\b${escaped}\\b`, "i")
+      : new RegExp(escaped, "i");
+    if (re.test(hay)) return true;
+  }
+  return false;
+}
+
+/**
+ * Could this token be a skill at all?
+ *
+ * Job titles and short unknown acronyms are not skills. "SVP" and "EXL"
+ * fail; "python", "SQL", "C++" pass. A recruiter who names a rare library of
+ * four or more letters still gets it through.
+ */
+export function isPlausibleSkillToken(token: string): boolean {
+  const raw = token.trim().toLowerCase();
+  if (!raw || raw.length > 40) return false;
+  if (STACK_STOP.has(raw) || TITLE_STACK_TOKENS.has(raw)) return false;
+  const key = stackTokenKey(raw);
+  if (!key || TITLE_STACK_TOKENS.has(key)) return false;
+  if (KNOWN_SHORT_SKILLS.has(raw) || KNOWN_SHORT_SKILLS.has(key)) return true;
+  if (key.length >= 4) return true;
+  return /[#+\.]/.test(raw);
+}
+
+export type StackRejection = {
+  field: "mustHaveStack" | "niceToHaveStack";
+  value: string;
+  reason: string;
+};
+
+/**
+ * Keep only skills the recruiter named, and that are actually skills.
+ *
+ * When `requireNamed` is false (a stored spec, no message on hand), title-shaped
+ * and company-shaped tokens still drop so a persisted "SVP, EXL" cannot
+ * wipe the next Show-me.
+ */
+export function corroborateStack(
+  tokens: string[],
+  recruiterWords: string,
+  field: "mustHaveStack" | "niceToHaveStack" = "mustHaveStack",
+  opts?: { requireNamed?: boolean },
+): { kept: string[]; rejected: StackRejection[] } {
+  const requireNamed = opts?.requireNamed ?? recruiterWords.trim().length > 0;
+  const kept: string[] = [];
+  const rejected: StackRejection[] = [];
+  for (const raw of tokens) {
+    const token = String(raw).trim();
+    if (!token) continue;
+    if (!isPlausibleSkillToken(token)) {
+      rejected.push({
+        field,
+        value: token.slice(0, 60),
+        reason: "That is a job title or company, not a skill. I did not filter on it.",
+      });
+      continue;
+    }
+    if (requireNamed && !stackTokenNamedIn(recruiterWords, token)) {
+      rejected.push({
+        field,
+        value: token.slice(0, 60),
+        reason: `The recruiter did not name "${token}" as a skill.`,
+      });
+      continue;
+    }
+    if (!kept.some((k) => stackTokenKey(k) === stackTokenKey(token))) {
+      kept.push(token);
+    }
+  }
+  return { kept, rejected };
+}
+
+/** Drop invented / title-shaped must-haves from a spec. */
+export function sanitizeSpecStack(
+  spec: JobSpec,
+  recruiterWords?: string,
+): JobSpec {
+  const words = recruiterWords ?? "";
+  const requireNamed = words.trim().length > 0;
+  const must = corroborateStack(spec.mustHaveStack ?? [], words, "mustHaveStack", {
+    requireNamed,
+  }).kept;
+  const nice = corroborateStack(
+    spec.niceToHaveStack ?? [],
+    words,
+    "niceToHaveStack",
+    { requireNamed },
+  ).kept;
+  const mustSame =
+    must.length === (spec.mustHaveStack?.length ?? 0) &&
+    must.every((t, i) => stackTokenKey(t) === stackTokenKey(spec.mustHaveStack?.[i] ?? ""));
+  const niceSame =
+    nice.length === (spec.niceToHaveStack?.length ?? 0) &&
+    nice.every((t, i) => stackTokenKey(t) === stackTokenKey(spec.niceToHaveStack?.[i] ?? ""));
+  if (mustSame && niceSame) return spec;
+  return {
+    ...spec,
+    mustHaveStack: must,
+    ...(spec.niceToHaveStack != null || nice.length
+      ? { niceToHaveStack: nice }
+      : {}),
+  };
+}
 
 /**
  * Stack tokens the recruiter actually named — "know langchain", "in mern stack",
@@ -333,6 +580,8 @@ export function applyObviousAnswers(spec: JobSpec, msg: string): JobSpec {
     if (/\bfull[\s-]?stack\b/i.test(text)) next.title = "Full-stack developer";
     else if (/\bfront[\s-]?end\b/i.test(text)) next.title = "Frontend engineer";
     else if (/\bback[\s-]?end\b/i.test(text)) next.title = "Backend engineer";
+    else if (/\bsenior\s+managers?\b/i.test(text)) next.title = "Senior Manager";
+    else if (/\bmanagers?\b/i.test(text)) next.title = "Manager";
   }
 
   const statedStack = extractStatedStack(text);

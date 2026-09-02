@@ -43,19 +43,32 @@ function suite(name: string, fn: () => void) {
 
 console.log("\nrecruiter visibility gate");
 
-suite("the gate requires searchable, not-withdrawn, not-deleted", () => {
+suite("a profile is discoverable by default; explicit safety overrides still apply", () => {
   const g = searchableUserWhere() as {
     deletedAt: null;
-    visibility: { is: { searchableByRecruiters: boolean; withdrawnAt: null } };
+    AND: Array<Record<string, unknown>>;
   };
   assert(g.deletedAt === null, "deleted users must be excluded");
+  const serialized = JSON.stringify(g);
   assert(
-    g.visibility.is.searchableByRecruiters === true,
-    "searchableByRecruiters must be required true",
+    serialized.includes('"candidateProfile":{"isNot":null}'),
+    "a canonical candidate profile must qualify for recruiter discovery",
   );
   assert(
-    g.visibility.is.withdrawnAt === null,
-    "a withdrawn candidate must be excluded even if the flag is still true",
+    serialized.includes('"studentProfile":{"isNot":null}'),
+    "a legacy ABTalks profile must qualify during the migration",
+  );
+  assert(
+    serialized.includes('"visibility":{"is":null}'),
+    "a missing visibility row must default to discoverable",
+  );
+  assert(
+    serialized.includes('"withdrawnAt":null'),
+    "a withdrawn candidate must be excluded",
+  );
+  assert(
+    !serialized.includes("searchableByRecruiters"),
+    "a closed historical flag is not a hide — only withdrawnAt is",
   );
 });
 

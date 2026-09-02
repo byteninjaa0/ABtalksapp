@@ -18,9 +18,9 @@ export type ExplainResult = {
  * What the pool looked like when this search ran.
  *
  * Without it the gap paragraph could only say "no matches", which reads as a
- * fault of the platform. "Five people opted in, three are still below the
+ * fault of the platform. "Five people are discoverable, three are still below the
  * evidence bar" is the same fact with the reason attached — and the reason is
- * what tells the owner whether to run a consent drive or a training push.
+ * what tells the owner whether to improve profile coverage or run a training push.
  */
 export type ExplainContext = {
   totalEligible: number;

@@ -13,10 +13,9 @@ import type {
  *
  * `CandidateVisibility` hangs off `User`, so this one fragment applies
  * identically to every track — AI cohort, 60-day challenge, Claude, hackathon,
- * and whatever ships next. That is the whole point of it living here: the
- * previous arrangement gated program members on
- * `ProgramMember.recruiterVisibilityConsentAt` and gated the other three tracks
- * on nothing at all, which is not a gate, it is a gap.
+ * and whatever ships next. A completed ABTalks profile is discoverable by
+ * default. The only hide is `withdrawnAt`; a closed historical
+ * `searchableByRecruiters` flag is not a withdrawal.
  *
  * Deliberately NOT behind `ENABLE_NEW_TALENT`. That flag decides where
  * candidate *data* is read from; this decides who may be shown at all, and the
@@ -29,7 +28,25 @@ import type {
 export function searchableUserWhere(): Prisma.UserWhereInput {
   return {
     deletedAt: null,
-    visibility: { is: { searchableByRecruiters: true, withdrawnAt: null } },
+    AND: [
+      // CandidateProfile is canonical. StudentProfile keeps pre-078 profiles
+      // discoverable while their canonical mirror is created lazily.
+      {
+        OR: [
+          { candidateProfile: { isNot: null } },
+          { studentProfile: { isNot: null } },
+        ],
+      },
+      // Absence of a row, or a row that was never withdrawn, is discoverable.
+      // `searchableByRecruiters: false` on a historical Phase-2b row is not a
+      // withdrawal — those people sit on Claude / SE / DS / AI and must appear.
+      {
+        OR: [
+          { visibility: { is: null } },
+          { visibility: { is: { withdrawnAt: null } } },
+        ],
+      },
+    ],
   };
 }
 
@@ -158,14 +175,22 @@ export function visibleProgramMemberWhere(): Prisma.ProgramMemberWhereInput {
 
 function buildUserGate(f: CandidateSearchFilters): Prisma.UserWhereInput {
   return {
-    deletedAt: null,
-    visibility: {
-      is: {
-        searchableByRecruiters: true,
-        withdrawnAt: null,
-        ...(f.minAssessmentScore && { showAssessmentScores: true }),
-      },
-    },
+    AND: [
+      searchableUserWhere(),
+      ...(f.minAssessmentScore
+        ? [
+            {
+              visibility: {
+                is: {
+                  searchableByRecruiters: true,
+                  withdrawnAt: null,
+                  showAssessmentScores: true,
+                },
+              },
+            },
+          ]
+        : []),
+    ],
     ...(f.completedProgramIds?.length && {
       programEnrollments: {
         some: {

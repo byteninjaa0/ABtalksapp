@@ -26,6 +26,7 @@ import {
 import {
   EVIDENCE_KEYS,
   asRoleTitle,
+  corroborateStack,
   formatSpecSalary,
   isMonthlyContext,
   parseMoney,
@@ -192,15 +193,50 @@ function applyUpdateBrief(
       .filter((s) => s.length > 0 && s.length <= 60)
       .slice(0, 12);
 
+  // Same two-key rule as pool filters: the model proposes, the recruiter's
+  // words decide. Without this, "senior manager, 10+ years" was stored as
+  // must-have skills SVP and EXL — a title and a company — and the search
+  // required every candidate to list those as skills, so the board came back
+  // empty next to a sample card.
   const must = cleanStack(args.mustHaveStack);
   if (must.length) {
-    next.mustHaveStack = must;
-    applied.mustHaveStack = must;
+    const { kept, rejected: stackRejected } = corroborateStack(
+      must,
+      ctx.recruiterWords,
+      "mustHaveStack",
+    );
+    rejected.push(...stackRejected);
+    next.mustHaveStack = kept;
+    if (kept.length) applied.mustHaveStack = kept;
+  } else {
+    const priorMust = next.mustHaveStack ?? [];
+    const { kept } = corroborateStack(
+      priorMust,
+      ctx.recruiterWords,
+      "mustHaveStack",
+    );
+    next.mustHaveStack = kept;
+    if (priorMust.length > kept.length) applied.mustHaveStack = kept;
   }
   const nice = cleanStack(args.niceToHaveStack);
   if (nice.length) {
-    next.niceToHaveStack = nice;
-    applied.niceToHaveStack = nice;
+    const { kept, rejected: stackRejected } = corroborateStack(
+      nice,
+      ctx.recruiterWords,
+      "niceToHaveStack",
+    );
+    rejected.push(...stackRejected);
+    next.niceToHaveStack = kept;
+    if (kept.length) applied.niceToHaveStack = kept;
+  } else {
+    const priorNice = next.niceToHaveStack ?? [];
+    const { kept } = corroborateStack(
+      priorNice,
+      ctx.recruiterWords,
+      "niceToHaveStack",
+    );
+    next.niceToHaveStack = kept;
+    if (priorNice.length > kept.length) applied.niceToHaveStack = kept;
   }
 
   const evidence = (args.evidencePriority ?? [])
@@ -254,6 +290,17 @@ function applyUpdateBrief(
     applied.experience = `${next.minExperience}-${next.maxExperience} years`;
   }
 
+  if (args.requiresDegree != null) {
+    next.requiresDegree = args.requiresDegree;
+    applied.requiresDegree = args.requiresDegree;
+  }
+
+  if (args.openToWork != null) {
+    const prior = (next.extra ?? {}) as Record<string, unknown>;
+    next.extra = { ...prior, openToWork: args.openToWork };
+    applied.openToWork = args.openToWork;
+  }
+
   // Money: the model quoted the recruiter, `parseMoney` decides. Seniority is
   // read from the spec AFTER the update above, so "intern, 20k" in one message
   // is correctly monthly.
@@ -296,21 +343,23 @@ function applyUpdateBrief(
   // arguments, got that, and told the recruiter "all previous details cleared"
   // — a state change that had not happened. Nothing is worse than a tool that
   // looks like it worked.
+  // Every field here is re-sent to the model on every remaining hop of the
+  // turn, so the payload is kept to what changes a decision. It used to carry
+  // `canSearchNow` and `readyToSearch` — the same boolean twice — beside a
+  // sentence of instructions, on a plan with an 8,000 tokens-per-minute
+  // ceiling. A tool result is not the place to repeat the system prompt.
   const changed = Object.keys(applied).length > 0;
-  const canSearch = searchable(ctx.spec);
   return {
     applied,
-    rejected,
-    ...(canSearch
-      ? { canSearchNow: true, next: "You have enough to search. If they asked for candidates, call search_pool now instead of asking for more." }
-      : {}),
+    ...(rejected.length ? { rejected } : {}),
     ...(changed
       ? {}
       : {
           note: "Nothing was changed — no values were passed. This tool only ADDS to the brief; it cannot clear it. Use reset_brief to start over.",
         }),
-    stillMissing: stillMissing(ctx.spec),
-    readyToSearch: searchable(ctx.spec),
+    ...(searchable(ctx.spec)
+      ? { readyToSearch: true, next: "Enough to search. Call search_pool now." }
+      : { readyToSearch: false, stillMissing: stillMissing(ctx.spec) }),
   };
 }
 
@@ -432,7 +481,7 @@ export function createScoutTools(
     {
       name: "update_brief",
       description:
-        "Record what the recruiter stated about the role — title, seniority, skills, budget, work mode, notice, experience. This is the common case: \"senior backend engineer, python and postgres, 25 LPA, remote\" is four stated facts, not a question. salaryText must be the recruiter's own words for the money and nothing else (\"20k\", \"25 LPA\", \"1.2 crore\") — never a figure you computed, and never a whole sentence. Pass only what they actually said; a value they did not state is omitted, not guessed. Anything returned under `rejected` was NOT applied — tell the recruiter, using the reason given, and never restate it as accepted.",
+        "Record what the recruiter stated about the role — title, seniority, skills, degree requirement, actively-looking requirement, budget, work mode, notice, experience. This is the common case: \"senior backend engineer, python and postgres, 25 LPA, remote\" is four stated facts, not a question. salaryText must be the recruiter's own words for the money and nothing else (\"20k\", \"25 LPA\", \"1.2 crore\") — never a figure you computed, and never a whole sentence. Pass only what they actually said; a value they did not state is omitted, not guessed. Anything returned under `rejected` was NOT applied — tell the recruiter, using the reason given, and never restate it as accepted.",
       schema: updateBriefArgsSchema,
     },
   );
@@ -486,7 +535,7 @@ export function createScoutTools(
     {
       name: "offer_options",
       description:
-        "Call this when you ask something the standard quick replies do not cover. The recruiter can always type instead. Pass 2–4 short labels with a value for each — ordinary answers, never action: / edit: / skip: / salary: prefixes.",
+        "Rarely needed. Only for a question whose answer is a genuinely closed set of 2-4 choices and that you cannot proceed without — a work mode, a yes/no. Never for a question with many possible answers (a role, a stack, a budget): ask those in plain words and let them type. Pass 2-4 short labels with a value for each — ordinary answers, never action: / edit: / skip: / salary: prefixes.",
       schema: offerOptionsArgsSchema,
     },
   );

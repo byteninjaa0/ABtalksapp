@@ -26,6 +26,7 @@ import {
   isSearchableBrief,
   resolveSources,
 } from "@/features/hire/pool-brief";
+import { sanitizeSpecStack } from "@/features/hire/spec-fields";
 import {
   guestCartWithoutMerged,
   normalizeGuestCartItem,
@@ -49,7 +50,7 @@ function baseMember(over: Partial<ScoreableMember> = {}): ScoreableMember {
     id: "m1",
     userId: "u1",
     fullName: "Ada Example",
-    jobRole: "Engineer",
+    jobRole: "Backend Engineer",
     company: "Acme",
     yearsExperience: 3,
     skills: ["Python", "SQL", "TypeScript"],
@@ -61,7 +62,6 @@ function baseMember(over: Partial<ScoreableMember> = {}): ScoreableMember {
     commitDayCount: 18,
     projectScores: [82, 90],
     interview: { overall: 80, comm: 78, tech: 85, problem: 77 },
-    hasVisibilityConsent: true,
     cohortPublished: true,
     status: "ENROLLED",
     availability: null,
@@ -113,16 +113,6 @@ console.log("score-candidate tests");
   assert(r.score >= 40, `score=${r.score}`);
   assert(r.availabilityUnknown === true, "no availability → unknown");
   ok("baseline scores and availabilityUnknown");
-}
-
-{
-  const r = scoreCandidate(
-    baseMember({ hasVisibilityConsent: false }),
-    baseSpec,
-  );
-  assert(r.hardFiltered, "no consent → hard filter");
-  assert(r.score === 0, "hard filter score 0");
-  ok("consent hard filter");
 }
 
 {
@@ -190,6 +180,160 @@ console.log("score-candidate tests");
   );
   assert(blocked.hardFiltered, "explicit openToWork filter hard-filters");
   ok("explicit openToWork filter");
+}
+
+{
+  const roleMismatch = scoreCandidate(
+    baseMember({ jobRole: "Data Analyst" }),
+    baseSpec,
+  );
+  assert(roleMismatch.hardFiltered, "a stated role is an exact filter");
+  assert(
+    roleMismatch.gaps.some((g) => /role mismatch/i.test(g)),
+    "role mismatch is visible",
+  );
+
+  const roleNotStated = scoreCandidate(
+    baseMember({ jobRole: "" }),
+    baseSpec,
+  );
+  assert(
+    !roleNotStated.hardFiltered,
+    "a blank role is an unknown, not a contradiction",
+  );
+  assert(
+    roleNotStated.gaps.some((g) => /role not declared/i.test(g)),
+    "an undeclared role is shown as a gap",
+  );
+
+  const student = scoreCandidate(baseMember({ jobRole: "B.Tech Student" }), baseSpec);
+  assert(!student.hardFiltered, "a student is not a conflicting profession");
+
+  const savp = scoreCandidate(
+    baseMember({
+      jobRole: "SAVP",
+      yearsExperience: 13,
+      yearsExperienceKnown: true,
+      skills: ["Python", "Excel"],
+    }),
+    {
+      title: "Senior Manager",
+      seniority: "SENIOR",
+      minExperience: 10,
+    },
+  );
+  assert(!savp.hardFiltered, "SAVP is management, not a role mismatch");
+
+  const invented = {
+    title: "Senior Manager",
+    mustHaveStack: ["SVP", "EXL"],
+    minExperience: 10,
+  };
+  const pool = [
+    baseMember({
+      jobRole: "SAVP",
+      yearsExperience: 13,
+      yearsExperienceKnown: true,
+      skills: ["Python", "Excel"],
+    }),
+  ];
+  const cleaned = sanitizeSpecStack(invented);
+  assert((cleaned.mustHaveStack?.length ?? 0) === 0, "SVP/EXL are not skills");
+  const shown = pickSearchMatches(rankCandidates(pool, cleaned), cleaned);
+  assert(shown.length === 1, "senior-manager search still returns the SAVP");
+  assert(!shown[0]!.hardFiltered, "and they are not hard-filtered");
+
+  const tooJunior = scoreCandidate(
+    baseMember({ yearsExperience: 1 }),
+    { ...baseSpec, minExperience: 3, maxExperience: 5 },
+  );
+  assert(tooJunior.hardFiltered, "a stated experience below the minimum filters");
+
+  const yearsUnknown = scoreCandidate(
+    baseMember({ yearsExperience: 0, yearsExperienceKnown: false }),
+    { ...baseSpec, minExperience: 10, maxExperience: 20 },
+  );
+  assert(
+    !yearsUnknown.hardFiltered,
+    "an unstated experience is not below the minimum, it is unknown",
+  );
+  assert(
+    yearsUnknown.gaps.some((g) => /not stated/i.test(g)),
+    "unstated experience is shown as a gap",
+  );
+
+  const seniorityOnly = scoreCandidate(
+    baseMember({ yearsExperience: 1 }),
+    { title: "Backend engineer", seniority: "SENIOR" },
+  );
+  assert(
+    !seniorityOnly.hardFiltered,
+    "seniority is shorthand for ranking, never a silent experience floor",
+  );
+
+  const degreeNotVerified = scoreCandidate(
+    baseMember(),
+    { ...baseSpec, requiresDegree: true },
+  );
+  assert(
+    !degreeNotVerified.hardFiltered,
+    "education level is not collected — requiring it must not empty the pool",
+  );
+  assert(
+    degreeNotVerified.gaps.some((g) => /degree not verified/i.test(g)),
+    "an unverified degree is shown as a gap",
+  );
+
+  const missingRemotePreference = scoreCandidate(
+    baseMember({ availability: null }),
+    { ...baseSpec, workMode: "REMOTE" },
+  );
+  assert(
+    !missingRemotePreference.hardFiltered,
+    "unknown availability is confirmed at outreach, not excluded",
+  );
+  assert(
+    missingRemotePreference.gaps.some((g) => /availability not shared/i.test(g)),
+    "unknown availability is shown as a gap",
+  );
+
+  const wrongWorkMode = scoreCandidate(
+    baseMember({
+      availability: {
+        openToWork: true,
+        expectedSalaryMin: null,
+        expectedSalaryMax: null,
+        salaryCurrency: "INR",
+        noticePeriodDays: null,
+        preferredWorkMode: "ONSITE",
+        preferredCities: [],
+        openToRelocate: false,
+      },
+    }),
+    { ...baseSpec, workMode: "REMOTE" },
+  );
+  assert(
+    wrongWorkMode.hardFiltered,
+    "a KNOWN work-mode preference that conflicts still filters",
+  );
+
+  const anyCityAndFlexible = scoreCandidate(
+    baseMember({
+      availability: {
+        openToWork: true,
+        expectedSalaryMin: null,
+        expectedSalaryMax: null,
+        salaryCurrency: "INR",
+        noticePeriodDays: null,
+        preferredWorkMode: "ONSITE",
+        preferredCities: ["Mumbai"],
+        openToRelocate: false,
+      },
+    }),
+    { ...baseSpec, workMode: "FLEXIBLE", locationCity: "Any" },
+  );
+  assert(!anyCityAndFlexible.hardFiltered, "flexible / any-city are not filters");
+  ok("hard filters fire on known contradictions, gaps on unknowns");
 }
 
 {

@@ -26,6 +26,7 @@ import { runScoutTurn } from "@/features/hire/scout-conversation";
 import { searchCandidates } from "@/features/hire/search-candidates";
 import { persistableSource } from "@/features/hire/track-loaders";
 import { explainMatches } from "@/features/hire/explain-matches";
+import { sanitizeSpecStack } from "@/features/hire/spec-fields";
 import { toPublicMatch } from "@/features/hire/to-public-match";
 import { PROGRAM_AI_COHORT_BASE } from "@/features/program/constants";
 
@@ -359,7 +360,7 @@ export async function runMatchAction(
     });
     if (!req) return { ok: false, message: "Request not found." };
 
-    const spec = dbToSpec(req);
+    const spec = sanitizeSpecStack(dbToSpec(req));
     const search = await searchCandidates(spec, { limit: 20 });
     if (!search.ok) return search;
 

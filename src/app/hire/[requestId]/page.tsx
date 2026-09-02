@@ -8,6 +8,18 @@ import { jobSpecSchema, type JobSpec } from "@/lib/validations/hire";
 
 type Props = { params: Promise<{ requestId: string }> };
 
+/**
+ * Scout's turn is a blocking Server Action, and these pages host it.
+ *
+ * A turn is now up to ~11s of model time (see `deadlineMs` in scout-agent.ts —
+ * OpenAI is slower per hop than Groq was) plus the pool query behind a search.
+ * Vercel's default function budget is 10s, which would cut the action off
+ * mid-search and hand the recruiter a 504 instead of cards. Server Actions
+ * inherit the route's `maxDuration`, so it belongs here rather than on the
+ * component that calls them.
+ */
+export const maxDuration = 60;
+
 export const metadata: Metadata = {
   title: "Scout search | ABTalks Hire",
 };

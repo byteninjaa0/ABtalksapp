@@ -55,9 +55,9 @@ export type PoolGateResult =
  *    evidence-so-far is real evidence. `/talent` keeps its published-only gate
  *    untouched — see `assertPoolAccess` in features/talent-pool/pool.ts.
  *
- * Consent is *not* configurable here and never will be. It is enforced in
- * `memberEligibilityWhere` on every query, with no override, no admin bypass
- * and no demo exception.
+ * Recruiter discoverability is not configured here. Every candidate query
+ * applies the shared profile-level gate in `repositories/talent`, where a
+ * profile is visible by default unless it has an explicit safety override.
  */
 export async function resolvePoolCohorts(): Promise<PoolGateResult> {
   const openIds = hireOpenCohortIds();
@@ -125,8 +125,8 @@ export type EligibleCandidate = {
  * the client, and anything the search would not have shown must not become an
  * engagement request just because someone can construct the string. So every
  * ref is re-tested against the same conditions its own pool applies — program
- * members against status and consent, challenge participants against the flag
- * and the evidence floor.
+ * members against status and shared profile visibility, challenge participants
+ * against the flag and the evidence floor.
  *
  * Unknown or ineligible refs are dropped rather than erroring: a shortlist
  * placed the moment a cohort closes is a race, not an attack, and the caller

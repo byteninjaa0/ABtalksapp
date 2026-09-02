@@ -57,6 +57,7 @@ export async function buildHackathonDossierSet(): Promise<HackathonDossierSet> {
         ? declared(tidyRoleLabel(p.role))
         : derived("Hackathon builder"),
       yearsExperience: declared(p.yearsExperience ?? 0),
+      yearsExperienceStated: p.yearsExperience != null,
       education: declared({
         level: null,
         university: null,

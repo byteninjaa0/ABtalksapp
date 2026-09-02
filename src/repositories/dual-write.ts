@@ -937,8 +937,9 @@ function submittedAll(): Required<CandidateIdentitySubmitted> {
 
 /**
  * Upsert CandidateProfile (+ profile-owned education/experience/skills) from
- * the legacy StudentProfile already written in this transaction. Does not
- * touch CandidateVisibility or challenge domain.
+ * the legacy StudentProfile already written in this transaction. Creating a
+ * profile also creates the default recruiter-discoverability row; it is not a
+ * candidate opt-in. Challenge domain remains untouched.
  *
  * On update, only submitted fields overwrite CandidateProfile. Untouched
  * scalars keep richer CP values (e.g. 2a ProgramMember LinkedIn). Referral
@@ -1035,6 +1036,7 @@ export async function dualWriteCandidateIdentity(
       },
       update,
     });
+    await ensureCandidateVisibility(tx, userId);
 
     if (fields.education) {
       await syncProfileOwnedEducation(tx, userId, sp);

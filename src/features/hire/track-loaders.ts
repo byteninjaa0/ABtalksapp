@@ -70,7 +70,7 @@ export type TrackLoad = {
   slug: string;
   members: ScoreableMember[];
   coverage: EvidenceCoverage;
-  /** Consenting people held back by the evidence floor — the honest denominator. */
+  /** Discoverable people held back by the evidence floor — the honest denominator. */
   belowEvidenceFloor: number;
   cohortName: string | null;
   stage: "PUBLISHED" | "OPEN_MIDCOHORT" | null;
@@ -139,6 +139,7 @@ async function loadProgram(): Promise<TrackLoad> {
         jobRole: identity?.jobRole ?? "",
         company: identity?.company ?? "",
         yearsExperience: d.yearsExperience.value,
+      yearsExperienceKnown: d.yearsExperienceStated ?? false,
         skills: d.declaredSkills.value,
         missionPoints: legacy?.missionPoints ?? 0,
         missionsPassed: d.evidence.missionsPassed.value,
@@ -148,9 +149,7 @@ async function loadProgram(): Promise<TrackLoad> {
         commitDayCount: d.evidence.commitDays.value,
         projectScores: d.evidence.projectScores.value,
         interview: d.evidence.interview.value,
-        // The policy query already enforced both; re-stating them keeps the pure
-        // scorer's own hard filters meaningful when it is called directly.
-        hasVisibilityConsent: true,
+        // The shared policy query already enforced recruiter visibility.
         cohortPublished: true,
         status: legacy?.status ?? "ENROLLED",
         availability: d.availability,
@@ -204,6 +203,7 @@ async function loadChallenge(
       jobRole: d.rawRoleLabel.value,
       company: "",
       yearsExperience: d.yearsExperience.value,
+      yearsExperienceKnown: d.yearsExperienceStated ?? false,
       skills: d.declaredSkills.value,
       missionPoints: 0,
       missionsPassed: d.evidence.missionsPassed.value,
@@ -213,10 +213,7 @@ async function loadChallenge(
       commitDayCount: d.evidence.commitDays.value,
       projectScores: d.evidence.projectScores.value,
       interview: d.evidence.interview.value,
-      // Neither gate applies here. Consent to be *contacted* is asked at the
-      // introduction, and there is no cohort to publish — the work is done and
-      // recorded either way.
-      hasVisibilityConsent: true,
+      // There is no cohort publication state for the completed work here.
       cohortPublished: true,
       status: "ENROLLED",
       availability: d.availability,
@@ -251,6 +248,7 @@ async function loadHackathon(): Promise<TrackLoad> {
       jobRole: d.rawRoleLabel.value,
       company: "",
       yearsExperience: d.yearsExperience.value,
+      yearsExperienceKnown: d.yearsExperienceStated ?? false,
       skills: d.declaredSkills.value,
       missionPoints: 0,
       missionsPassed: d.evidence.missionsPassed.value,
@@ -260,7 +258,6 @@ async function loadHackathon(): Promise<TrackLoad> {
       commitDayCount: d.evidence.commitDays.value,
       projectScores: [],
       interview: null,
-      hasVisibilityConsent: true,
       cohortPublished: true,
       status: "ENROLLED",
       availability: d.availability,

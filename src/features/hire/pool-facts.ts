@@ -1,17 +1,21 @@
 import "server-only";
 
 import { logger } from "@/lib/logger";
-import { hireChallengePool } from "@/lib/feature-flags";
-import { buildChallengeDossierSet } from "@/features/hire/challenge-dossier";
 import type { JobSpec } from "@/lib/validations/hire";
 import { searchCandidates } from "@/features/hire/search-candidates";
-import { buildDossierSet } from "@/features/hire/dossier";
+import { loadTrack, mergeTrackLoads } from "@/features/hire/track-loaders";
+import { enabledTracks } from "@/features/hire/track-registry";
 import {
-  clearsEvidenceFloor,
-  memberEligibilityWhere,
-  resolvePoolCohorts,
-} from "@/features/hire/pool-policy";
-import { ROLE_FAMILY_LABEL, type RoleFamily } from "@/features/hire/role-family";
+  ROLE_FAMILY_LABEL,
+  roleFamilyFor,
+  type RoleFamily,
+} from "@/features/hire/role-family";
+
+/**
+ * Rows pulled per track before counting. Matches the search's own ceiling, so
+ * the two cannot disagree about how big the pool is.
+ */
+const POOL_SCAN_CAP = 600;
 
 /**
  * What Scout is allowed to know about the pool.
@@ -28,9 +32,9 @@ export type PoolSnapshot = {
   cohortNames: string[];
   cohortDay: number | null;
   ofDays: number;
-  /** Consenting members who clear the evidence floor — the searchable pool. */
+  /** Discoverable members who clear the evidence floor — the searchable pool. */
   eligibleCount: number;
-  /** Consenting members held back by the floor. */
+  /** Discoverable members held back by the floor. */
   belowFloorCount: number;
   topSkills: { skill: string; count: number }[];
   workingLanguages: { language: string; count: number }[];
@@ -68,87 +72,85 @@ export async function poolSnapshot(): Promise<PoolSnapshot> {
   }
 
   try {
-    const gate = await resolvePoolCohorts();
-
-    // The snapshot has to span exactly what the search spans. Counting only the
-    // cohort while the shortlist returns 300 challenge candidates is the kind
-    // of small lie plan 089 was written to stop — and returning early on a
-    // closed cohort would have reported an empty pool while one was open.
-    const flag = hireChallengePool();
-    const [set, challenge] = await Promise.all([
-      gate.ok
-        ? buildDossierSet(memberEligibilityWhere(gate.cohorts.map((c) => c.id)))
-        : null,
-      flag.enabled
-        ? buildChallengeDossierSet({ minDays: flag.minDays })
-        : null,
-    ]);
-
-    if (!set && !challenge) {
-      snapshotCache = { at: Date.now(), value: EMPTY_SNAPSHOT };
-      return EMPTY_SNAPSHOT;
-    }
-    const programDossiers = set?.dossiers ?? [];
-    const programUserIds = new Set(
-      programDossiers.map((d) => d.userId).filter((id): id is string => Boolean(id)),
-    );
-
-    // Everyone the search will actually consider — the floor demotes, it does
-    // not exclude (see searchCandidates). A snapshot counting fewer people than
-    // the shortlist shows is the kind of small lie that costs trust.
-    const eligible = [
-      ...programDossiers,
-      ...(challenge?.dossiers ?? []).filter(
-        (d) => !d.userId || !programUserIds.has(d.userId),
+    // ── The same loaders the search uses, not a second opinion. ─────────────
+    //
+    // This function used to query the AI Cohort and the challenge tracks by
+    // hand, from before `loadTrack` existed. `searchCandidates` meanwhile walks
+    // `enabledTracks()`, so the hackathon pool was searchable and invisible
+    // here — and a recruiter asking "how many candidates do you have?" was told
+    // "there are no candidates available, no cohort is open to hiring yet"
+    // seconds before a search returned nineteen of them. The doc comment above
+    // has always promised these figures come from the search's own code paths;
+    // now they do, and a new track in the registry is counted the day it is
+    // added rather than the day someone remembers this file.
+    const loads = await Promise.all(
+      enabledTracks().map((t) =>
+        loadTrack(t.slug, { minEvidenceDays: 0, limit: POOL_SCAN_CAP }),
       ),
-    ];
-    const withEvidence = programDossiers.filter((d) =>
-      clearsEvidenceFloor(d.evidence.missionsPassed.value),
     );
+    const merged = mergeTrackLoads(loads);
+    const members = merged.members;
+
+    if (members.length === 0) {
+      const value = { ...EMPTY_SNAPSHOT, belowFloorCount: merged.belowEvidenceFloor };
+      snapshotCache = { at: Date.now(), value };
+      return value;
+    }
 
     const skillCounts = new Map<string, number>();
     const languageCounts = new Map<string, number>();
     const familyCounts = new Map<RoleFamily, number>();
     const bandCounts = new Map<string, number>();
 
-    for (const d of eligible) {
-      for (const raw of d.declaredSkills.value) {
+    for (const m of members) {
+      for (const raw of m.skills) {
         const skill = raw.trim().toLowerCase();
         if (skill) skillCounts.set(skill, (skillCounts.get(skill) ?? 0) + 1);
       }
-      for (const lang of d.evidence.workingLanguages.value) {
+      for (const lang of m.dossier?.evidence.workingLanguages.value ?? []) {
         languageCounts.set(lang, (languageCounts.get(lang) ?? 0) + 1);
       }
-      const family = d.roleFamily.value;
+      // The dossier's own bucket where there is one — it already folds in the
+      // track and the skills for the ~80% of profiles carrying no job title.
+      const family = m.dossier?.roleFamily.value ?? roleFamilyFor(m.jobRole);
       familyCounts.set(family, (familyCounts.get(family) ?? 0) + 1);
-      const years = d.yearsExperience.value;
-      const band = years <= 1 ? "0–1 yrs" : years <= 3 ? "2–3 yrs" : years <= 6 ? "4–6 yrs" : "7+ yrs";
+      // An unstated figure is not "0–1 yrs". Counting it as one told a
+      // recruiter the pool was junior when the truth is that nobody said.
+      const stated = m.yearsExperienceKnown !== false;
+      const years = m.yearsExperience;
+      const band = !stated
+        ? "not stated"
+        : years <= 1
+          ? "0–1 yrs"
+          : years <= 3
+            ? "2–3 yrs"
+            : years <= 6
+              ? "4–6 yrs"
+              : "7+ yrs";
       bandCounts.set(band, (bandCounts.get(band) ?? 0) + 1);
     }
 
     const byCountDesc = <T>(m: Map<T, number>) =>
       [...m.entries()].sort((a, b) => b[1] - a[1]);
 
+    const cohortNames = [
+      ...new Set(
+        loads
+          .map((l) => l.cohortName)
+          .filter((n): n is string => Boolean(n && n.trim())),
+      ),
+    ];
+    const withDay = members.find((m) => m.cohortDay > 0);
+
     const value: PoolSnapshot = {
-      hasPool: eligible.length > 0,
-      stage: gate.ok ? (gate.cohorts[0]?.stage ?? null) : null,
-      cohortNames: [
-        ...new Set([
-          ...(gate.ok ? gate.cohorts.map((c) => c.name) : []),
-          ...(challenge && challenge.dossiers.length > 0
-            ? ["60-Day Challenge"]
-            : []),
-        ]),
-      ],
-      cohortDay: programDossiers[0]
-        ? (set?.cohortDayByMember.get(programDossiers[0].programMemberId ?? "") ??
-          null)
-        : null,
-      ofDays: programDossiers[0]?.evidence.cohortProgress.value.ofDays ?? 31,
-      eligibleCount: eligible.length,
-      // Program members only. Challenge candidates clear their own floor in the
-      // query that loads them, so none of them is being held back.
-      belowFloorCount: programDossiers.length - withEvidence.length,
+      hasPool: true,
+      stage: merged.stage,
+      cohortNames,
+      cohortDay: withDay?.cohortDay ?? null,
+      ofDays:
+        withDay?.dossier?.evidence.cohortProgress.value.ofDays ?? 31,
+      eligibleCount: members.length,
+      belowFloorCount: merged.belowEvidenceFloor,
       topSkills: byCountDesc(skillCounts)
         .slice(0, 12)
         .map(([skill, count]) => ({ skill, count })),
@@ -164,12 +166,7 @@ export async function poolSnapshot(): Promise<PoolSnapshot> {
         band,
         count,
       })),
-      coverageNote:
-        challenge && challenge.dossiers.length > 0
-          ? challenge.coverage.note
-          : withEvidence.length > 0 && set
-            ? set.coverage.note
-            : "No candidate has cleared the evidence bar yet.",
+      coverageNote: merged.coverage.note,
     };
 
     snapshotCache = { at: Date.now(), value };

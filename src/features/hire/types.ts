@@ -88,6 +88,15 @@ export type CandidateDossier = {
   roleFamily: Fact<RoleFamily>;
   rawRoleLabel: Fact<string>;
   yearsExperience: Fact<number>;
+  /**
+   * Did the candidate actually give us this figure?
+   *
+   * `yearsExperience` is 0 both for a genuine fresher and for a profile that
+   * left the field blank, and scoring cannot tell those apart from the number
+   * alone. Absent means "assume stated" so a hand-built member in a test still
+   * behaves the way it always did.
+   */
+  yearsExperienceStated?: boolean;
   education: Fact<{
     level: string | null;
     university: string | null;
@@ -200,6 +209,12 @@ export type ScoreableMember = {
   jobRole: string;
   company: string;
   yearsExperience: number;
+  /**
+   * False when the candidate never told us. A stated minimum then becomes a
+   * gap on the card instead of a hard exclusion — see `evaluateHardFilters`.
+   * Absent is treated as true.
+   */
+  yearsExperienceKnown?: boolean;
   skills: string[];
   missionPoints: number;
   cleanPassCount: number;
@@ -207,7 +222,6 @@ export type ScoreableMember = {
   commitDayCount: number;
   projectScores: number[];
   interview: CandidateEvidence["interview"];
-  hasVisibilityConsent: boolean;
   cohortPublished: boolean;
   status: "ENROLLED" | "COMPLETED" | string;
   availability: AvailabilitySnapshot;

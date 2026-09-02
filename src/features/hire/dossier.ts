@@ -300,6 +300,7 @@ export async function buildDossierSet(
       roleFamily: derived(roleFamilyFor(m.jobRole)),
       rawRoleLabel: declared(tidyRoleLabel(m.jobRole)),
       yearsExperience: declared(m.yearsExperience ?? 0),
+      yearsExperienceStated: m.yearsExperience != null,
       education: declared({
         level: m.education,
         university: m.university,

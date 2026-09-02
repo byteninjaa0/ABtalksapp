@@ -1,6 +1,7 @@
 import "server-only";
 
 import { ChatGroq } from "@langchain/groq";
+import { ChatOpenAI } from "@langchain/openai";
 import {
   Annotation,
   END,
@@ -71,9 +72,94 @@ export const RECURSION_LIMIT = 12;
  */
 const REASONING_EFFORT = "medium";
 
-function scoutModel(tools: StructuredToolInterface[]) {
+/**
+ * Which vendor backs Scout, and why it is no longer Groq by default.
+ *
+ * Groq's free tier is 8,000 tokens per MINUTE for the whole organisation. A
+ * two-hop search turn is ~12,000, so a recruiter typing at a normal pace 429s
+ * against a ceiling that no amount of prompt trimming clears — the limit is not
+ * the prompt, it is the plan. OpenAI's key is metered rather than capped, and
+ * it is already in this deployment for the interview room.
+ *
+ * `gpt-4.1-mini`, deliberately NOT the `gpt-4o` the interview judge uses. Two
+ * reasons and both matter:
+ *
+ *   1. OpenAI meters rate limits PER MODEL, so a recruiter searching all
+ *      afternoon cannot eat the budget a graded interview needs. A candidate's
+ *      score must never depend on how busy the hiring desk is.
+ *   2. Scout routes a short message to one of eight tools under a fixed prompt.
+ *      That is the same shape of work the helper chatbot does, and it picked
+ *      the mini tier for the same reason (see lib/chatbot/providers.ts) — a
+ *      fraction of the cost for a job the mini tier does just as well.
+ *
+ * `HIRE_AGENT_PROVIDER` = `openai` | `groq` forces one. Unset resolves by key,
+ * preferring OpenAI, so a deployment holding both is not silently rate-limited.
+ * Mirrors `resolveInterviewLLM` in features/interview/agent/llm/registry.ts —
+ * one place decides, and it decides from configuration, never from input.
+ */
+export const DEFAULT_OPENAI_AGENT_MODEL = "gpt-4.1-mini";
+
+type Vendor = "openai" | "groq";
+
+export function resolveVendor(): Vendor | null {
+  const configured = (process.env.HIRE_AGENT_PROVIDER ?? "").trim().toLowerCase();
+  if (configured === "openai") return process.env.OPENAI_API_KEY ? "openai" : null;
+  if (configured === "groq") return groqApiKeys().length > 0 ? "groq" : null;
+  if (configured) {
+    logger.warn("[scout-graph] unknown HIRE_AGENT_PROVIDER, autodetecting", {
+      configured,
+    });
+  }
+  if (process.env.OPENAI_API_KEY) return "openai";
+  return groqApiKeys().length > 0 ? "groq" : null;
+}
+
+/**
+ * The keys to try, in order. Groq rotates across three; OpenAI is one metered
+ * key, so the list is one long and the rotation loop is a no-op for it.
+ */
+function keysFor(vendor: Vendor): string[] {
+  return vendor === "openai"
+    ? [process.env.OPENAI_API_KEY!].filter(Boolean)
+    : groqApiKeys();
+}
+
+/**
+ * Is this the kind of failure another API key would survive?
+ *
+ * 429 is a per-key, per-minute ceiling and 401 is a dead key — both are answered
+ * by trying the next key. A timeout, an aborted request or a malformed call are
+ * properties of the request, and retrying them on a second key just spends the
+ * second key too.
+ */
+function rotatable(error: unknown): boolean {
+  const name = error instanceof Error ? error.name : "";
+  if (name === "AbortError" || /abort/i.test(name)) return false;
+  const s = String(error);
+  return (
+    /RateLimit|429/i.test(name) ||
+    /\b429\b|rate limit/i.test(s) ||
+    /\b401\b|invalid api key|expired_api_key/i.test(s)
+  );
+}
+
+function scoutModel(
+  tools: StructuredToolInterface[],
+  vendor: Vendor,
+  apiKey: string,
+) {
+  if (vendor === "openai") {
+    return new ChatOpenAI({
+      apiKey,
+      model: process.env.HIRE_AGENT_MODEL ?? DEFAULT_OPENAI_AGENT_MODEL,
+      temperature: 0.2,
+      // No reasoning stage to pay for here, so this is the answer budget alone
+      // and two sentences plus a tool call fit inside it comfortably.
+      maxTokens: 800,
+    }).bindTools(tools);
+  }
   return new ChatGroq({
-    apiKey: groqApiKeys()[0] ?? process.env.GROQ_API_KEY,
+    apiKey,
     model:
       process.env.HIRE_AGENT_MODEL ??
       process.env.HIRE_GROQ_MODEL ??
@@ -96,23 +182,68 @@ function scoutModel(tools: StructuredToolInterface[]) {
 export function buildScoutGraph(
   system: string,
   tools: StructuredToolInterface[],
+  /** True once the turn has done the only thing left worth a hop. */
+  done?: () => boolean,
 ) {
-  const model = scoutModel(tools);
+  // Every key configured, not just the first.
+  //
+  // `askGroqJson` has rotated across GROQ_API_KEY / _2 / _3 since it was
+  // written; this graph read `groqApiKeys()[0]` and stopped. So the whole agent
+  // — the surface a recruiter actually talks to — ran on one key's 8000
+  // tokens-per-minute while two more sat unused, and a three-hop turn 429'd
+  // against a ceiling the product had already paid to raise. On OpenAI the list
+  // is one key long and this loop simply never rotates.
+  const vendor = resolveVendor() ?? "groq";
+  const keys = keysFor(vendor);
+  const models = new Map<number, ReturnType<typeof scoutModel>>();
+  const modelFor = (i: number) => {
+    const cached = models.get(i);
+    if (cached) return cached;
+    const made = scoutModel(tools, vendor, keys[i]!);
+    models.set(i, made);
+    return made;
+  };
+
   let hops = 0;
 
   async function agent(state: ScoutGraphState) {
     hops++;
-    const res = await model.invoke([
-      new SystemMessage(system),
-      ...state.messages,
-    ]);
-    return { messages: [res] };
+    const messages = [new SystemMessage(system), ...state.messages];
+    let last: unknown = null;
+    for (let i = 0; i < keys.length; i += 1) {
+      try {
+        return { messages: [await modelFor(i).invoke(messages)] };
+      } catch (error) {
+        last = error;
+        if (!rotatable(error) || i === keys.length - 1) throw error;
+        logger.warn("[scout-graph] key exhausted, rotating", {
+          key: i + 1,
+          of: keys.length,
+          hop: hops,
+        });
+      }
+    }
+    throw last;
   }
 
   function shouldContinue(state: ScoutGraphState): "tools" | typeof END {
     const last = state.messages.at(-1);
     const calls = (last as AIMessage | undefined)?.tool_calls ?? [];
     return calls.length > 0 ? "tools" : END;
+  }
+
+  /**
+   * Stop the loop the moment the turn's work is finished.
+   *
+   * The hop this removes is the one that kept 429ing. A search turn ran
+   * update_brief → search_pool → "and here is a sentence about it", and that
+   * third hop re-sent the system prompt, the history AND both tool results —
+   * ~6,200 tokens against an 8,000/minute ceiling — to produce a sentence the
+   * engine already writes deterministically when the model goes quiet. Paying a
+   * third of a turn's budget for words we do not use is how the budget ran out.
+   */
+  function afterTools(): "agent" | typeof END {
+    return done?.() ? END : "agent";
   }
 
   const graph = new StateGraph(ScoutState)
@@ -123,7 +254,10 @@ export function buildScoutGraph(
       tools: "tools",
       [END]: END,
     })
-    .addEdge("tools", "agent")
+    .addConditionalEdges("tools", afterTools, {
+      agent: "agent",
+      [END]: END,
+    })
     .compile();
 
   return { graph, hopCount: () => hops };
@@ -150,8 +284,14 @@ export async function runScoutGraph(opts: {
   history: { role: "user" | "assistant"; content: string }[];
   userMessage: string;
   deadlineMs: number;
+  /**
+   * Called after each tool batch. Return true when nothing the model could say
+   * next is worth another hop — the caller then writes the closing sentence
+   * itself. See `afterTools`.
+   */
+  done?: () => boolean;
 }): Promise<ScoutGraphRun> {
-  const { graph, hopCount } = buildScoutGraph(opts.system, opts.tools);
+  const { graph, hopCount } = buildScoutGraph(opts.system, opts.tools, opts.done);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), opts.deadlineMs);
 
@@ -170,8 +310,17 @@ export async function runScoutGraph(opts: {
       { recursionLimit: RECURSION_LIMIT, signal: controller.signal },
     );
 
+    // ONLY the model's own words. The last message is not always an AIMessage:
+    // when the loop stops itself after a tool batch (see `afterTools`) it is a
+    // ToolMessage, and a ToolMessage's `content` is a string too — so reading
+    // `.content` off whatever came last sent a recruiter the raw JSON of
+    // `search_pool`, instructions to the model and all. Anything that is not an
+    // assistant turn is no text, and the caller writes the sentence instead.
     const last = out.messages.at(-1);
-    const text = typeof last?.content === "string" ? last.content.trim() : "";
+    const text =
+      last?.getType() === "ai" && typeof last.content === "string"
+        ? last.content.trim()
+        : "";
     return { ok: true, text, hops: hopCount() };
   } catch (error) {
     const aborted = controller.signal.aborted;
@@ -207,3 +356,6 @@ export async function runScoutGraph(opts: {
     clearTimeout(timer);
   }
 }
+
+/** Exported for the evals — the retry rule, without a model or a network. */
+export const __test = { rotatable };

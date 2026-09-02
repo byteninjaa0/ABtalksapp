@@ -157,6 +157,17 @@ suite("registration dual-writes CandidateProfile", () => {
   assert(!src.includes("domain: input.domain"), "does not copy domain into identity write");
 });
 
+suite("candidate identity writes establish default recruiter discoverability", () => {
+  const src = source("src/repositories/dual-write.ts");
+  const start = src.indexOf("export async function dualWriteCandidateIdentity");
+  const end = src.indexOf("export async function dualWriteCredential", start);
+  const fn = src.slice(start, end);
+  assert(
+    fn.includes("ensureCandidateVisibility(tx, userId)"),
+    "creating a candidate profile must create the platform-default visibility row",
+  );
+});
+
 suite("profile update dual-writes CandidateProfile", () => {
   const src = source("src/features/profile/update-profile.ts");
   assert(src.includes("dualWriteCandidateIdentity"), "helper called");

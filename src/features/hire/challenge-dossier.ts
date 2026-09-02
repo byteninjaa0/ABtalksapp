@@ -146,6 +146,24 @@ export function yearsFor(
 }
 
 /**
+ * Did this profile give us anything to compute years FROM?
+ *
+ * `yearsFor` cannot answer it: it returns 0 for a fresher who told us zero and
+ * for the ~2,400 profiles that never filled the field in. Scoring needs the
+ * difference — a stated minimum must exclude the first and only flag the
+ * second, or one word from a recruiter deletes the whole pool.
+ */
+export function yearsStated(
+  declaredYears: number | null,
+  graduationYear: number | null,
+  now = new Date(),
+): boolean {
+  if (declaredYears != null && declaredYears >= 0) return true;
+  if (graduationYear == null) return false;
+  return now.getFullYear() - graduationYear > 0;
+}
+
+/**
  * A role bucket for someone who never stated a role.
  *
  * Only 550 of 3,004 profiles carry a job title, so `roleFamilyFor` returns
@@ -273,6 +291,11 @@ export async function buildChallengeDossierSet(opts: {
       rawRoleLabel: p.role ? declared(tidyRoleLabel(p.role)) : derived("Not stated"),
       yearsExperience: declared(
         yearsFor(p.yearsExperience ?? null, p.graduationYear ?? null, now),
+      ),
+      yearsExperienceStated: yearsStated(
+        p.yearsExperience ?? null,
+        p.graduationYear ?? null,
+        now,
       ),
       education: declared({
         level: null,

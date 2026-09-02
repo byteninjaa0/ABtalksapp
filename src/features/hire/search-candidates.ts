@@ -4,6 +4,7 @@ import { logger } from "@/lib/logger";
 import type { JobSpec } from "@/lib/validations/hire";
 import { pickSearchMatches, rankCandidates } from "@/features/hire/score-candidate";
 import { readPoolExtra } from "@/features/hire/pool-brief";
+import { sanitizeSpecStack } from "@/features/hire/spec-fields";
 import { estimateCompensation } from "@/features/hire/compensation";
 import { enabledTracks, isKnownTrack } from "@/features/hire/track-registry";
 import {
@@ -28,7 +29,7 @@ export type SearchCandidatesResult =
         /** Near-miss / hard-filtered, for gap analysis only (not shortlist). */
         nearMisses: ScoredCandidate[];
         totalEligible: number;
-        /** Consenting members held back by the evidence floor — the honest
+        /** Discoverable members held back by the evidence floor — the honest
          *  denominator behind a thin shortlist. */
         belowEvidenceFloor: number;
         coverage: EvidenceCoverage;
@@ -65,6 +66,7 @@ export async function searchCandidates(
   opts?: { limit?: number },
 ): Promise<SearchCandidatesResult> {
   try {
+    spec = sanitizeSpecStack(spec);
     const extra = readPoolExtra(spec);
 
     // Which tracks to search, from the registry rather than a fixed set of

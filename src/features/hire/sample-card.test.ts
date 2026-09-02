@@ -14,6 +14,7 @@ import {
   applyObviousAnswers,
   briefDelta,
   extractStatedStack,
+  sanitizeSpecStack,
 } from "@/features/hire/spec-fields";
 import {
   createScoutToolContext,
@@ -203,13 +204,11 @@ suite("agent chips win when present", () => {
   assert(!chips.some((c) => c.value === "action:search"), "not the ladder");
 });
 
-suite("fixed set is used when the agent offered nothing", () => {
+suite("nothing is offered when the agent offered nothing", () => {
+  // The ladder used to fill this silence with a row of stack buttons, unasked.
+  // A brief that cannot be searched yet gets a typed question instead.
   const chips = suggestChips({ title: "backend engineer" }, false);
-  assert(chips.some((c) => /Python/.test(c.label)), "stack ladder");
-  assert(
-    chips.some((c) => c.value === "skip:mustHaveStack"),
-    "exit still there",
-  );
+  assert(chips.length === 0, "no ladder");
 });
 
 suite("a ready brief keeps change-stack when the agent also offered chips", () => {
@@ -224,14 +223,15 @@ suite("a ready brief keeps change-stack when the agent also offered chips", () =
   assert(!chips.some((c) => c.value === "action:search"), "search stays a button");
 });
 
-suite("a ready brief still asking seniority does not jump to Change the stack", () => {
+suite("a ready brief offers actions, never a half-finished question", () => {
   const chips = suggestChips(
     { title: "full stack developer", mustHaveStack: ["mern"] },
     true,
   );
-  assert(chips.some((c) => c.value === "MID"), "seniority chips");
+  assert(!chips.some((c) => c.value === "MID"), "no unasked seniority ladder");
   assert(chips.some((c) => c.value === "edit:mustHaveStack"), "change stack stays");
   assert(chips.some((c) => c.value === "action:search"), "search still offered");
+  assert(chips.some((c) => c.value === "action:reset"), "and a way to start over");
 });
 
 suite("mid + remote is captured without the model", () => {
@@ -308,6 +308,30 @@ suite("only 3 candidates is not a stack token", () => {
   assert(extractStatedStack("i want only 3 candidates").length === 0, "empty");
 });
 
+suite("senior manager, 10+ years is a role, not a stack", () => {
+  const next = applyObviousAnswers({}, "senior manager, 10+ years");
+  assert(next.title === "Senior Manager", `title ${next.title}`);
+  assert(next.seniority === "SENIOR", `seniority ${next.seniority}`);
+  assert(next.minExperience === 10, `years ${next.minExperience}`);
+  assert(
+    (next.mustHaveStack?.length ?? 0) === 0,
+    `no stack, got ${JSON.stringify(next.mustHaveStack)}`,
+  );
+  const sanitized = sanitizeSpecStack(
+    { title: "Senior Manager", mustHaveStack: ["SVP", "EXL"] },
+    "senior manager, 10+ years",
+  );
+  assert(
+    (sanitized.mustHaveStack?.length ?? 0) === 0,
+    "SVP/EXL dropped even from a stored spec",
+  );
+  const stored = sanitizeSpecStack({ mustHaveStack: ["SVP", "EXL"] });
+  assert(
+    (stored.mustHaveStack?.length ?? 0) === 0,
+    "Show-me of a persisted SVP/EXL spec still strips them",
+  );
+});
+
 suite("stating a role is not asking to see cards", () => {
   assert(
     !agent.wantsToSeeCards(
@@ -351,7 +375,7 @@ suite("only 3 candidates does not wipe the stack", () => {
 
 async function replayUserChat() {
   console.log("\nuser transcript replay");
-  agent.resetGroqCooling();
+  agent.resetCooling();
   const ready: JobSpec = {
     title: "Full-stack developer",
     mustHaveStack: ["mern"],
@@ -384,7 +408,7 @@ async function replayUserChat() {
   }
 
   try {
-    agent.markGroqCooling();
+    agent.markCooling();
     const turn = await runScoutTurn({
       priorSpec: ready,
       history: [],
@@ -409,7 +433,7 @@ async function replayUserChat() {
   }
 
   try {
-    agent.resetGroqCooling();
+    agent.resetCooling();
     const turn = await runScoutTurn({
       priorSpec: ready,
       history: [],
@@ -428,7 +452,7 @@ async function replayUserChat() {
       `  ✗ ok-now-give-me searches a ready brief without Groq\n      ${(e as Error).message}`,
     );
   } finally {
-    agent.resetGroqCooling();
+    agent.resetCooling();
   }
 }
 

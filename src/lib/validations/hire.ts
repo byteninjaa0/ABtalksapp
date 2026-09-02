@@ -127,6 +127,8 @@ export const updateBriefArgsSchema = z.object({
   noticePeriodDays: z.number().min(0).max(180).nullish(),
   minExperience: z.number().min(0).max(50).nullish(),
   maxExperience: z.number().min(0).max(50).nullish(),
+  requiresDegree: z.boolean().nullish(),
+  openToWork: z.boolean().nullish(),
   salaryText: z.string().max(120).nullish(),
 });
 

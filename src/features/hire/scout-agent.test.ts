@@ -21,6 +21,11 @@ import {
 import { __test as explain } from "@/features/hire/explain-matches";
 import { __test as agent } from "@/features/hire/scout-agent";
 import {
+  resolveVendor,
+  __test as graphTest,
+} from "@/features/hire/scout-graph";
+const graph = { ...graphTest, resolveVendor };
+import {
   applyPoolBrief,
   briefTouched,
   confirmPoolBrief,
@@ -162,6 +167,63 @@ suite("a sentence is not a job title", () => {
   });
   assert(!ctx.spec.title, "title not stored");
   assert((r.rejected as unknown[]).length === 1, "and it is reported");
+});
+
+suite("invented SVP/EXL stack is refused on a senior-manager brief", () => {
+  const ctx = createScoutToolContext("senior manager, 10+ years", {});
+  const r = tools.applyUpdateBrief(ctx, {
+    ...blankArgs(),
+    title: "Senior Manager",
+    seniority: "SENIOR",
+    minExperience: 10,
+    mustHaveStack: ["SVP", "EXL"],
+  });
+  assert(ctx.spec.title === "Senior Manager", "title applied");
+  assert(ctx.spec.seniority === "SENIOR", "seniority applied");
+  assert(ctx.spec.minExperience === 10, "years applied");
+  assert(
+    (ctx.spec.mustHaveStack?.length ?? 0) === 0,
+    `no invented stack, got ${JSON.stringify(ctx.spec.mustHaveStack)}`,
+  );
+  const rejected = (r.rejected as { value: string }[]) ?? [];
+  assert(
+    rejected.some((x) => /svp/i.test(x.value)) &&
+      rejected.some((x) => /exl/i.test(x.value)),
+    `both tokens rejected, got ${JSON.stringify(rejected)}`,
+  );
+});
+
+suite("a named skill still lands as must-have stack", () => {
+  const ctx = createScoutToolContext("senior backend, python and sql", {});
+  tools.applyUpdateBrief(ctx, {
+    ...blankArgs(),
+    title: "Backend engineer",
+    mustHaveStack: ["Python", "SQL"],
+  });
+  assert(
+    (ctx.spec.mustHaveStack ?? []).some((s) => /python/i.test(s)),
+    "python kept",
+  );
+  assert(
+    (ctx.spec.mustHaveStack ?? []).some((s) => /sql/i.test(s)),
+    "sql kept",
+  );
+});
+
+suite("a leftover invented stack is pruned when the title updates", () => {
+  const ctx = createScoutToolContext("senior manager, 10+ years", {
+    mustHaveStack: ["SVP", "EXL"],
+  });
+  tools.applyUpdateBrief(ctx, {
+    ...blankArgs(),
+    title: "Senior Manager",
+    seniority: "SENIOR",
+    minExperience: 10,
+  });
+  assert(
+    (ctx.spec.mustHaveStack?.length ?? 0) === 0,
+    `stale SVP/EXL dropped, got ${JSON.stringify(ctx.spec.mustHaveStack)}`,
+  );
 });
 
 suite("a candidate city is refused, the rest of the message still lands", () => {
@@ -359,17 +421,21 @@ suite("stillMissing names the search gate, not a wish list", () => {
   // job title after the recruiter said "nothing just give me the 5 students".
   const ready = createScoutToolContext("x", { title: "backend engineer" });
   const r1 = tools.applyUpdateBrief(ready, blankArgs()) as {
-    stillMissing: string[];
-    canSearchNow?: boolean;
+    stillMissing?: string[];
+    readyToSearch?: boolean;
   };
-  assert(r1.stillMissing.length === 0, "nothing missing once a search is possible");
-  assert(r1.canSearchNow === true, "and the model is told so");
+  // Omitted entirely, not sent as an empty array: every field in this payload is
+  // re-sent to the model on every remaining hop of the turn.
+  assert(r1.stillMissing === undefined, "nothing missing once a search is possible");
+  assert(r1.readyToSearch === true, "and the model is told so, once");
 
   const empty = createScoutToolContext("x", {});
   const r2 = tools.applyUpdateBrief(empty, blankArgs()) as {
     stillMissing: string[];
+    readyToSearch?: boolean;
   };
   assert(r2.stillMissing.length === 1, "an empty brief names one gate, not four");
+  assert(r2.readyToSearch === false, "and is told it cannot search yet");
 });
 
 suite("the recruiter's words beat the model's wrong guess", () => {
@@ -442,6 +508,126 @@ suite("a question or a statement is not a request for people", () => {
   ]) {
     assert(!agent.wantsCandidates(m), `should NOT be a request: "${m}"`);
   }
+});
+
+suite("Scout never speaks JSON", () => {
+  // A recruiter was shown the raw search_pool payload — instructions to the
+  // model included — because the loop ended on a ToolMessage and a
+  // ToolMessage's content is a string like any other.
+  const leaked =
+    '{"queued":true,"done":true,"next":"Stop calling tools and tell the recruiter","searching":{"tracks":[]}}';
+  assert(agent.looksLikeToolPayload(leaked), "a tool payload is caught");
+  assert(agent.looksLikeToolPayload('[{"a":1}]'), "an array payload too");
+  assert(
+    !agent.looksLikeToolPayload("Searching the verified pool now — cards on their way."),
+    "a real sentence is not a payload",
+  );
+  assert(
+    !agent.looksLikeToolPayload("{not json at all"),
+    "an unparseable brace is prose, not a payload",
+  );
+});
+
+suite("the vendor is resolved from configuration, never from input", () => {
+  const saved = {
+    provider: process.env.HIRE_AGENT_PROVIDER,
+    openai: process.env.OPENAI_API_KEY,
+    groq: process.env.GROQ_API_KEY,
+  };
+  const set = (k: string, v: string | undefined) => {
+    if (v == null) delete process.env[k];
+    else process.env[k] = v;
+  };
+  try {
+    // Autodetect prefers OpenAI: a deployment holding both keys must not be
+    // silently pinned to the 8000-TPM free tier.
+    set("HIRE_AGENT_PROVIDER", undefined);
+    set("OPENAI_API_KEY", "sk-test");
+    set("GROQ_API_KEY", "gsk-test");
+    assert(graph.resolveVendor() === "openai", "openai preferred on autodetect");
+
+    set("OPENAI_API_KEY", undefined);
+    assert(graph.resolveVendor() === "groq", "groq when it is the only key");
+
+    // An explicit choice with no key behind it is nothing, not a silent
+    // fallback to the other vendor — the operator asked for something specific.
+    set("HIRE_AGENT_PROVIDER", "openai");
+    assert(graph.resolveVendor() === null, "no key means no vendor");
+
+    set("OPENAI_API_KEY", "sk-test");
+    assert(graph.resolveVendor() === "openai", "forced openai");
+    set("HIRE_AGENT_PROVIDER", "groq");
+    assert(graph.resolveVendor() === "groq", "forced groq beats a present openai key");
+
+    set("GROQ_API_KEY", undefined);
+    set("HIRE_AGENT_PROVIDER", undefined);
+    set("OPENAI_API_KEY", undefined);
+    assert(graph.resolveVendor() === null, "no keys at all is null, not a crash");
+  } finally {
+    set("HIRE_AGENT_PROVIDER", saved.provider);
+    set("OPENAI_API_KEY", saved.openai);
+    set("GROQ_API_KEY", saved.groq);
+  }
+});
+
+suite("a busy key is retried on the next key; a timeout is not", () => {
+  // The graph read groqApiKeys()[0] and stopped, so the whole agent ran on one
+  // key's 8000 TPM while GROQ_API_KEY_2 and _3 sat unused.
+  assert(graph.rotatable(new Error("429 rate limit reached")), "429 rotates");
+  assert(graph.rotatable(new Error("401 invalid api key")), "a dead key rotates");
+  const aborted = new Error("aborted");
+  aborted.name = "AbortError";
+  assert(!graph.rotatable(aborted), "a timeout does not spend a second key");
+  assert(!graph.rotatable(new Error("400 bad request")), "nor does a bad request");
+});
+
+suite("stating a requirement IS asking to see people", () => {
+  // The bug this closes: "senior manager with 10 years of experience" was
+  // answered with a question and four tap-options, and no cards — the recruiter
+  // then typed "Search now" and was told to tap a button instead.
+  const before = {};
+  const after: JobSpec = {
+    title: "Senior manager",
+    seniority: "SENIOR",
+    minExperience: 10,
+  };
+  assert(
+    agent.shouldSearchNow("senior manager with 10 years of experience", before, after, false),
+    "a stated requirement searches",
+  );
+  assert(agent.wantsToSeeCards("Search now"), "'Search now' is a request to search");
+  assert(agent.wantsToSeeCards("search"), "so is a bare 'search'");
+  assert(agent.wantsToSeeCards("go"), "and a bare 'go'");
+});
+
+suite("but a question, a refusal and an empty brief still do not search", () => {
+  const filled: JobSpec = { title: "Backend engineer" };
+  assert(
+    !agent.shouldSearchNow("how many students do you have", {}, filled, false),
+    "a pool question is answered, not searched",
+  );
+  assert(
+    !agent.shouldSearchNow("who is the prime minister of india", {}, filled, false),
+    "trivia is neither",
+  );
+  assert(
+    !agent.shouldSearchNow("senior backend engineer", {}, filled, true),
+    "a request we must partly refuse is answered first",
+  );
+  assert(
+    !agent.shouldSearchNow("hello there", {}, {}, false),
+    "an empty brief has nothing to search",
+  );
+  assert(
+    !agent.shouldSearchNow("thanks", filled, filled, false),
+    "small talk that adds nothing does not re-search",
+  );
+});
+
+suite("briefMoved sees every stated field, not just the four it reads back", () => {
+  assert(agent.briefMoved({}, { minExperience: 10 }), "experience counts");
+  assert(agent.briefMoved({}, { salaryMax: 2500000 }), "budget counts");
+  assert(!agent.briefMoved({ title: "X" }, { title: "X" }), "nothing new is nothing new");
 });
 
 suite("the engine seeds the brief from plain words", () => {
@@ -556,9 +742,8 @@ console.log("\nfallbacks");
 suite("an empty brief is told what it can search", () => {
   const t = agent.fallbackText({});
   assert(t.length > 20, "says something");
-  // Named from the registry's ENABLED tracks, so this must not assert a
-  // specific one: the challenge tracks sit behind HIRE_CHALLENGE_POOL and are
-  // off in a bare test environment. What matters is that it names real ones.
+  // Named from the registry's ENABLED tracks. What matters is that it
+  // names real ones.
   const labels = describeTracks().map((d) => d.label);
   assert(labels.length > 0, "some track is enabled");
   assert(
@@ -576,31 +761,30 @@ suite("a searchable brief is told it can search", () => {
 
 console.log("\nchip suggestions");
 
-suite("a designer is not offered Java + Spring", () => {
-  const chips = suggestChips({ title: "UI/UX designer" }, false);
-  assert(chips.some((c) => /Figma/.test(c.label)), "design chips");
-  assert(!chips.some((c) => /Spring/.test(c.label)), "no backend chips");
-});
-
-suite("an intern is offered monthly bands", () => {
-  const chips = suggestChips(
-    { title: "intern", mustHaveStack: ["python"], seniority: "INTERN" },
-    false,
+// The ladder is gone. A recruiter who states a requirement gets cards and a
+// typed question, not a row of buttons answering something they never asked —
+// which is how a search for a management role came back offering backend
+// stacks.
+suite("an unfinished brief is not answered with a button ladder", () => {
+  assert(suggestChips({ title: "UI/UX designer" }, false).length === 0, "no ladder");
+  assert(
+    suggestChips({ title: "backend engineer" }, false).length === 0,
+    "no stack ladder",
   );
-  assert(chips.some((c) => /month/.test(c.label)), "monthly");
-});
-
-suite("a senior is offered annual bands", () => {
-  const chips = suggestChips(
-    { title: "backend", mustHaveStack: ["python"], seniority: "SENIOR" },
-    false,
+  assert(
+    suggestChips(
+      { title: "intern", mustHaveStack: ["python"], seniority: "INTERN" },
+      false,
+    ).length === 0,
+    "no salary ladder",
   );
-  assert(chips.some((c) => /LPA/.test(c.label)), "annual");
 });
 
-suite("every stack chip has a way past it", () => {
-  const chips = suggestChips({ title: "backend engineer" }, false);
-  assert(chips.some((c) => c.value === "skip:mustHaveStack"), "an exit exists");
+suite("only the agent's own options are offered", () => {
+  const asked = [{ label: "Remote", value: "REMOTE" }, { label: "Onsite", value: "ONSITE" }];
+  const chips = suggestChips({ title: "backend engineer" }, false, asked);
+  assert(chips.length === 2, "exactly what Scout asked");
+  assert(chips.every((c) => /Remote|Onsite/.test(c.label)), "and nothing else");
 });
 
 suite("a searchable brief offers the search", () => {
@@ -629,7 +813,6 @@ const member = (userId: string): ScoreableMember => ({
   commitDayCount: 0,
   projectScores: [],
   interview: null,
-  hasVisibilityConsent: true,
   cohortPublished: true,
   status: "ENROLLED",
   availability: {

@@ -10,6 +10,7 @@ import { runScoutTurn } from "@/features/hire/scout-conversation";
 import { searchCandidates } from "@/features/hire/search-candidates";
 import { explainMatches } from "@/features/hire/explain-matches";
 import { toPublicMatch } from "@/features/hire/to-public-match";
+import { sanitizeSpecStack } from "@/features/hire/spec-fields";
 import type { MatchCardData } from "@/components/hire/match-card";
 import type { JobSpec } from "@/lib/validations/hire";
 
@@ -103,12 +104,13 @@ export async function runGuestMatchAction(
   if (!parsed.success) return { ok: false, message: "Invalid requirement." };
 
   try {
-    const search = await searchCandidates(parsed.data.spec, { limit: 20 });
+    const spec = sanitizeSpecStack(parsed.data.spec);
+    const search = await searchCandidates(spec, { limit: 20 });
     if (!search.ok) return search;
     const explained = await explainMatches(
       search.data.matches,
       search.data.nearMisses,
-      parsed.data.spec,
+      spec,
       {
         totalEligible: search.data.totalEligible,
         belowEvidenceFloor: search.data.belowEvidenceFloor,
@@ -122,7 +124,7 @@ export async function runGuestMatchAction(
         matches: explained.matches.map((m) =>
           toPublicMatch(m, {
             coverageNote: search.data.coverage.note,
-            highlightSkills: parsed.data.spec.mustHaveStack,
+            highlightSkills: spec.mustHaveStack,
           }),
         ),
         overallGap: explained.overallGap,

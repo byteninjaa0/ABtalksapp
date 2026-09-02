@@ -158,19 +158,21 @@ export function hireOpenCohortIds(): string[] | "all" | null {
  * who tried the challenge for a weekend is worse for the business than a short
  * list. Ten is the default; the value tunes it.
  *
- * `HIRE_CHALLENGE_POOL=10` (or any integer), `=true` for the default floor.
- * Unset — the default — means `/hire` behaves exactly as it does today.
+ * `HIRE_CHALLENGE_POOL=10` (or any integer) sets the floor; `=true` is the
+ * default floor of 10. `=false` turns the challenge tracks off. Unset means
+ * on — recruiters search Claude, SE, DS and AI the same way they search the
+ * cohort and the hackathon.
  */
 export function hireChallengePool(): { enabled: boolean; minDays: number } {
   const raw = process.env.HIRE_CHALLENGE_POOL?.trim();
-  if (!raw || raw.toLowerCase() === "false") {
+  if (raw && raw.toLowerCase() === "false") {
     return { enabled: false, minDays: 10 };
   }
-  const parsed = Number.parseInt(raw, 10);
+  const parsed = raw ? Number.parseInt(raw, 10) : NaN;
   if (Number.isFinite(parsed) && parsed > 0) {
     return { enabled: true, minDays: parsed };
   }
-  return { enabled: raw.toLowerCase() === "true", minDays: 10 };
+  return { enabled: true, minDays: 10 };
 }
 
 /**
