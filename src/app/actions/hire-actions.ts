@@ -26,7 +26,6 @@ import { runScoutTurn } from "@/features/hire/scout-conversation";
 import { searchCandidates } from "@/features/hire/search-candidates";
 import { persistableSource } from "@/features/hire/track-loaders";
 import { explainMatches } from "@/features/hire/explain-matches";
-import { sanitizeSpecStack } from "@/features/hire/spec-fields";
 import { toPublicMatch } from "@/features/hire/to-public-match";
 import { PROGRAM_AI_COHORT_BASE } from "@/features/program/constants";
 
@@ -360,7 +359,7 @@ export async function runMatchAction(
     });
     if (!req) return { ok: false, message: "Request not found." };
 
-    const spec = sanitizeSpecStack(dbToSpec(req));
+    const spec = dbToSpec(req);
     const search = await searchCandidates(spec, { limit: 20 });
     if (!search.ok) return search;
 
@@ -406,6 +405,8 @@ export async function runMatchAction(
           const card = toPublicMatch(m, {
             coverageNote: search.data.coverage.note,
             highlightSkills: spec.mustHaveStack,
+            // Behind a session and an approved recruiter profile.
+            viewer: "recruiter",
           });
           return {
             requestId: req.id,
@@ -421,6 +422,14 @@ export async function runMatchAction(
             // Public evidence only — CandidateEvidence still carries company.
             evidence: {
               ...card.evidence,
+              // The confidence-adjusted rank, frozen with the row.
+              //
+              // `score` above is role fit, and the read path orders by it — so
+              // without this a saved request came back sorted by raw match and
+              // lost the ranking, exactly as the live list did. Stored in the
+              // evidence blob rather than a new column: this needs no schema
+              // change, and `loadRequestMatches` re-sorts on it.
+              rankKey: m.rankKey ?? m.score,
               locationLabel: card.locationLabel ?? null,
               compensationBand: card.compensationBand ?? null,
               compensationDeclared: card.compensationDeclared ?? false,

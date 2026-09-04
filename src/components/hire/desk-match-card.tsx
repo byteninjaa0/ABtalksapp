@@ -2,7 +2,6 @@
 
 import type { MouseEvent } from "react";
 import { ChevronRight, UserRound } from "lucide-react";
-import { refPublicId } from "@/features/hire/candidate-ref";
 import { RequestIntroButton } from "@/components/hire/request-intro-button";
 import { DeskShortlistButton } from "@/components/hire/desk-shortlist-button";
 import { ShortlistButton } from "@/components/talent/shortlist-button";
@@ -10,6 +9,7 @@ import {
   SampleCardNotice,
   type SampleDemand,
 } from "@/components/hire/sample-card-notice";
+import { CareerTimeline } from "@/components/hire/career-timeline";
 import type { MatchCardData } from "@/components/hire/match-card";
 import { isLockedPreview } from "@/features/hire/locked-preview";
 import {
@@ -54,8 +54,9 @@ export function DeskMatchCard({
   const preview = isLockedPreview(match) ? match.preview : null;
   const { upgradeOpen, openUpgrade, dismissUpgrade } = useUpgradePrompt();
   const e = match.evidence ?? {};
-  const publicId = refPublicId(match.candidateRef);
   const skills = e.skills ?? [];
+  const professionalExperience = match.professionalExperience ?? [];
+  const isProfessional = professionalExperience.length > 0;
 
   // The card is the click target, not just the "View more details" link.
   // Everything interactive inside it — the two shortlist buttons, the intro
@@ -205,33 +206,39 @@ export function DeskMatchCard({
           <span className="desk-card__avatar" aria-hidden="true">
             <UserRound className="size-7" />
           </span>
-          <div>
+          <div className="min-w-0">
             <p className="desk-card__role">
               {match.displayName || match.jobRole}
               {rank === 1 && <span className="desk-card__top">Top match</span>}
             </p>
-            {(skills.length > 0 || match.displayName) && (
-              <p className="desk-card__stack">
-                {skills.length > 0
-                  ? skills.slice(0, 6).join(" · ")
-                  : match.jobRole}
-              </p>
+            {match.displayName && (
+              <p className="desk-card__headline">{match.jobRole}</p>
             )}
             <p className="desk-card__ref">
-              {[match.locationLabel, publicId].filter(Boolean).join(" · ")}
+              {match.locationLabel}
             </p>
           </div>
         </div>
         <div className="desk-card__right">
-          <div className="desk-card__score">
-            <div>
-              <b>{match.score}</b>
-              {match.tier !== "STRONG" && (
+          {!isProfessional && (
+            <div className="desk-card__score">
+              <div>
+                <b>{match.score}</b>
+              </div>
+              <span>role fit out of 100</span>
+              {match.evidenceLabel && (
+                <span
+                  className="desk-card__partial"
+                  title={match.evidenceReasons?.join(" · ")}
+                >
+                  Evidence: {match.evidenceLabel}
+                </span>
+              )}
+              {!match.evidenceLabel && match.tier !== "STRONG" && (
                 <span className="desk-card__partial">{match.tier}</span>
               )}
             </div>
-            <span>out of 100</span>
-          </div>
+          )}
           <DeskShortlistButton
             candidateRef={match.candidateRef}
             jobRole={match.jobRole}
@@ -240,6 +247,16 @@ export function DeskMatchCard({
         </div>
       </header>
 
+      {isProfessional ? (
+        <CareerTimeline experiences={professionalExperience} />
+      ) : (
+        <p className="desk-card__evidence-first">
+          <strong>Evidence-first profile.</strong> No professional history is
+          shown; this match is ranked on verified ABTalks work and declared
+          skills.
+        </p>
+      )}
+
       <div className="desk-card__facts">
         {buildCardPills(match).map((pill) => (
           <span key={pill.key} className={pill.className}>
@@ -247,8 +264,6 @@ export function DeskMatchCard({
           </span>
         ))}
       </div>
-
-      {match.rationale && <p className="desk-card__why">{match.rationale}</p>}
 
       <div className="desk-card__cta">
         <button type="button" className="desk-ghost" onClick={onOpen}>
@@ -271,7 +286,6 @@ export function DeskMatchCard({
         <RequestIntroButton
           candidateRef={match.candidateRef}
           existingStatus={match.engagementStatus ?? null}
-          publicId={publicId}
           className="desk-request"
         />
       </div>

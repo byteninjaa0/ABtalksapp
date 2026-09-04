@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ExternalLink, Info } from "lucide-react";
-import { refPublicId, type CandidateSource } from "@/features/hire/candidate-ref";
+import { type CandidateSource } from "@/features/hire/candidate-ref";
 import { COMPENSATION_DISCLAIMER } from "@/features/hire/compensation";
 import { buttonVariants } from "@/components/ui/button";
 import { RequestIntroButton } from "@/components/hire/request-intro-button";
@@ -14,6 +14,7 @@ import {
 import { ShortlistButton } from "@/components/talent/shortlist-button";
 import { cn } from "@/lib/utils";
 import { SKILL_PILL_CAP } from "@/components/hire/hire-card-facts";
+import type { ProfessionalExperience } from "@/components/hire/career-timeline";
 
 /** One ranking dimension as the inspector chart reads it. Null ≠ 0. */
 export type PublicScoreSlice = {
@@ -39,6 +40,38 @@ export type MatchCardData = {
   /** Which track the evidence came from. Decides the wording of the counts:
    *  the cohort passes graded missions, the challenge submits daily work. */
   source?: CandidateSource;
+  /**
+   * Platform standing, 0-100 — how live and how proven this candidate is,
+   * independent of whether they match the requirement.
+   *
+   * Data only. It NEVER crosses a match band (see `tiebreak` in
+   * features/hire/rank.ts), so it explains the order within a group of
+   * equivalent candidates and must never be rendered as a quality score for
+   * the match itself.
+   */
+  standing?: number;
+  /**
+   * Which standing signals this candidate actually earned, for the badges.
+   *
+   * Deliberately a list rather than one boolean: "verified" was going to carry
+   * five different claims at once — evidence checked, recently active,
+   * certified, in cohort, shipped — and a single badge asserting all five
+   * would be exactly the kind of unsupported claim this codebase keeps having
+   * to remove. Each mark stands on its own field.
+   */
+  standingMarks?: string[];
+  /**
+   * Confidence-adjusted rank from the engine. **Sort on this, not on `score`.**
+   *
+   * `score` is role fit — how well they meet the requirement. It deliberately
+   * ignores how much of that requirement we could verify, so ordering by it
+   * puts a barely-evidenced high scorer above a thoroughly-evidenced one.
+   */
+  rankKey?: number;
+  /** How complete the evidence behind `score` is. Shown beside it, never merged. */
+  evidenceLabel?: "Verified" | "Partial" | "Thin";
+  /** Specific, checkable reasons the evidence is not complete. */
+  evidenceReasons?: string[];
   /** Program members only. Its absence is what hides the cart and the member
    *  profile link, so a challenge candidate cannot reach a page built around a
    *  `ProgramMember` row that does not exist. */
@@ -48,6 +81,11 @@ export type MatchCardData = {
    * stays off this card until an introduction is confirmed.
    */
   displayName?: string | null;
+  /**
+   * Recruiter-safe employment history, supplied live rather than from a frozen
+   * match snapshot. It is omitted for guest cards and profiles without it.
+   */
+  professionalExperience?: ProfessionalExperience[];
   /**
    * Role family / declared title. Shown under the name, or as the heading
    * when no name is on the record.
@@ -211,7 +249,6 @@ function RealMatchCard({
   const e = match.evidence ?? {};
   const isTop = rank === 1;
   const strong = match.tier === "STRONG";
-  const publicId = refPublicId(match.candidateRef);
   const track = trackMeta(match.source);
   const isChallenge = track.kind === "challenge";
   const isHackathon = track.kind === "hackathon";
@@ -266,7 +303,7 @@ function RealMatchCard({
             )}
           </div>
           <p className="mt-0.5 text-base text-muted-foreground">
-            {[match.locationLabel, publicId].filter(Boolean).join(" · ")}
+            {match.locationLabel}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3">
@@ -442,7 +479,6 @@ function RealMatchCard({
         <RequestIntroButton
           candidateRef={match.candidateRef}
           existingStatus={match.engagementStatus ?? null}
-          publicId={publicId}
         />
       </div>
 
@@ -523,7 +559,6 @@ function RealMatchCard({
               label="Est. compensation"
               value={match.compensationBand ?? "—"}
             />
-            <Stat label="Reference" value={publicId} />
           </dl>
 
           <p className="text-sm leading-relaxed text-muted-foreground">
@@ -565,17 +600,6 @@ function RealMatchCard({
                   );
                 })}
               </div>
-            </div>
-          )}
-
-          {match.rationale && (
-            <div>
-              <p className="text-sm tracking-wide text-muted-foreground uppercase">
-                Why this ranking
-              </p>
-              <p className="mt-1 text-base leading-relaxed text-foreground/90">
-                {match.rationale}
-              </p>
             </div>
           )}
 

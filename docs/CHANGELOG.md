@@ -50,6 +50,7 @@ _(Cleared 2026-08-24 — the 17 entries that were under this heading were folded
 reconciled against `3b040d8`. The un-headed block above (2026-08-06 → 2026-08-20) was logged outside this
 heading and was never reconciled; its facts were folded into the same pass, but the lines were left in place
 rather than deleted without authorization. Cursor appends new lines below.)_
+- 2026-09-02 [rule] Scout rebuilt (plan 107): intake returns a quoted-span delta, a reducer applies it, matching uses three constraint levels so UNCLEAR never excludes, match and confidence are separate numbers, and poolSnapshot shares search's loaders.
 - 2026-09-02 [rule|env] Scout search-first (plan 106): hard filters fire on contradictions not absence; HIRE_AGENT_PROVIDER / HIRE_AGENT_MODEL (default gpt-4.1-mini) so Scout does not share the interview gpt-4o bucket.
 - 2026-09-02 [rule] /hire searches every track by default (Claude, 60-day SE/DS/AI, AI Cohort, hackathon); HIRE_CHALLENGE_POOL=false is the off switch; discoverability hides only withdrawnAt, not a closed historical searchableByRecruiters flag.
 - 2026-09-02 [rule] Scout must-have stack is corroborated against recruiter words; job-title and company tokens (SVP, EXL, manager) are not skills, so a senior-manager search cannot empty the board on invented stack.

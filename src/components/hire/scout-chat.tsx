@@ -301,6 +301,8 @@ export function ScoutChat({
   );
   const { setDesk, view, inspect, clearInspect } = useHireDesk();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const topMatchRef = useRef<HTMLLIElement>(null);
+  const scrolledTopMatchRef = useRef<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const criteriaRef = useRef<HTMLUListElement>(null);
@@ -323,6 +325,17 @@ export function ScoutChat({
   const deskMatches =
     persist && (results?.length ?? 0) > 0 ? (results ?? []) : guestMatches;
   const deskGap = persist && (results?.length ?? 0) > 0 ? null : guestGap;
+  // A completed search is a distinct presentation even when its candidate
+  // list happens to be identical to the previous one. `resultsPin` changes for
+  // every run, and activeSearchId changes when a recruiter opens an older tab.
+  const topMatchScrollKey =
+    deskMatches.length > 0 && resultsPin != null
+      ? [
+          persist ? requestId ?? "request" : activeSearchId || "guest",
+          resultsPin,
+          deskMatches.map((match) => match.candidateRef).join(","),
+        ].join(":")
+      : null;
   // An empty desk gets one of two things. With the Pro preview on, blurred
   // example profiles showing the format Pro fills in; otherwise the original
   // spec-shaped sample card. Both carry `SampleCardNotice`, which is what keeps
@@ -414,6 +427,30 @@ export function ScoutChat({
     expanded,
     detailsOpen,
   ]);
+
+  // A search used to land at the bottom of all of its cards, leaving the best
+  // result above the viewport. Let the ordinary chat-scroll happen first, then
+  // take the recruiter directly to the highest-ranked real card. The key keeps
+  // this a one-time jump per search/tab rather than fighting manual scrolling.
+  useEffect(() => {
+    if (!topMatchScrollKey || scrolledTopMatchRef.current === topMatchScrollKey) {
+      return;
+    }
+    const root = scrollRef.current;
+    const topMatch = topMatchRef.current;
+    if (!root || !topMatch) return;
+    const frame = window.requestAnimationFrame(() => {
+      const offset = 12;
+      const rootBox = root.getBoundingClientRect();
+      const matchBox = topMatch.getBoundingClientRect();
+      root.scrollTo({
+        top: root.scrollTop + matchBox.top - rootBox.top - offset,
+        behavior: "smooth",
+      });
+      scrolledTopMatchRef.current = topMatchScrollKey;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [topMatchScrollKey]);
 
   useEffect(() => {
     if (!detailsOpen) return;
@@ -1013,6 +1050,7 @@ export function ScoutChat({
                         }
                         onOpen={setOpenMatch}
                         selectedRef={openMatch?.candidateRef}
+                        topMatchRef={topMatchRef}
                       />
                       {persist && requestId && matchCount === 0 && (
                         <div className="hire-gap">

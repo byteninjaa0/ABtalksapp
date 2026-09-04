@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type Ref } from "react";
 import { rememberEvidence } from "@/components/hire/evidence-cache";
 import Link from "next/link";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 import { MatchCard, type MatchCardData } from "@/components/hire/match-card";
+import { orderCards } from "@/features/hire/card-order";
 import { DeskMatchCard } from "@/components/hire/desk-match-card";
 import { VirtualCandidateCard } from "@/components/hire/virtual-candidate-card";
 import type { SampleDemand } from "@/components/hire/sample-card-notice";
@@ -29,6 +30,7 @@ export function MatchResults({
   desk = false,
   onOpen,
   selectedRef,
+  topMatchRef,
 }: {
   matches: MatchCardData[];
   /**
@@ -51,17 +53,34 @@ export function MatchResults({
   desk?: boolean;
   onOpen?: (match: MatchCardData) => void;
   selectedRef?: string;
+  /** The Scout chat uses this to land on the highest-ranked real result. */
+  topMatchRef?: Ref<HTMLLIElement>;
 }) {
   // Seeded from the server once, then owned here. Reading it from the prop on
   // every render double-counted: the toggle moved it, and the refresh that
   // followed moved it again.
   const [count, setCount] = useState(cartCount);
+  // Cards arrive from three places — a live search, the guest session store and
+  // persisted requests — so the order has to be re-established here. What it
+  // must NOT be re-established on is `score`.
+  //
+  // `score` is role fit: how well the candidate meets the requirement, ignoring
+  // how much of it we could actually verify. The engine ranks on `rankKey`, the
+  // confidence-adjusted key (see `rankCandidates107`), which is what keeps a
+  // thoroughly-evidenced 85 above a barely-evidenced 88. Sorting by `score`
+  // here silently threw that away and undid the whole ranking on arrival.
+  //
+  // Fall back to `score` only for cards that predate `rankKey` — old persisted
+  // rows and stored guest sessions — so an upgrade does not blank the list.
+  const rankedMatches = useMemo(() => orderCards(matches), [matches]);
   useEffect(() => {
-    rememberEvidence(matches);
-  }, [matches]);
-  const visible = viewAllHref ? matches.slice(0, INITIAL_VISIBLE) : matches;
-  const hidden = matches.length - visible.length;
-  const showSamples = matches.length === 0 && (samples?.length ?? 0) > 0;
+    rememberEvidence(rankedMatches);
+  }, [rankedMatches]);
+  const visible = viewAllHref
+    ? rankedMatches.slice(0, INITIAL_VISIBLE)
+    : rankedMatches;
+  const hidden = rankedMatches.length - visible.length;
+  const showSamples = rankedMatches.length === 0 && (samples?.length ?? 0) > 0;
 
   return (
     <div className={desk ? "scout-results" : "space-y-4"}>
@@ -104,7 +123,10 @@ export function MatchResults({
       {visible.length > 0 && (
         <ul className={desk ? "scout-results" : "space-y-4"}>
           {visible.map((m, i) => (
-            <li key={m.candidateRef}>
+            <li
+              key={m.candidateRef}
+              ref={desk && i === 0 ? topMatchRef : undefined}
+            >
               {desk ? (
                 <DeskMatchCard
                   match={m}

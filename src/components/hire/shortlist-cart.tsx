@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { placeBulkEngagementRequestAction } from "@/app/actions/hire-request-actions";
 import { useHireAuth } from "@/components/hire/hire-auth-provider";
 import { savePendingCheckout } from "@/components/hire/pending-checkout";
-import { refPublicId, type CandidateSource } from "@/features/hire/candidate-ref";
+import { type CandidateSource } from "@/features/hire/candidate-ref";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -142,7 +142,6 @@ export function ShortlistCart({ rows }: { rows: CartRow[] }) {
         {rows.map((r) => {
           const requested = Boolean(r.engagementStatus);
           const checked = selected.has(r.candidateRef);
-          const publicId = refPublicId(r.candidateRef);
           return (
             <li
               key={r.candidateRef}
@@ -156,7 +155,7 @@ export function ShortlistCart({ rows }: { rows: CartRow[] }) {
                 checked={checked}
                 disabled={requested || pending}
                 onChange={() => toggle(r.candidateRef)}
-                aria-label={`Select ${publicId}`}
+                aria-label={`Select ${r.revealedName ?? r.displayName ?? r.jobRole}`}
                 className="size-4 shrink-0 accent-[var(--color-primary)] disabled:opacity-40"
               />
               <div className="min-w-0 flex-1">
@@ -165,11 +164,11 @@ export function ShortlistCart({ rows }: { rows: CartRow[] }) {
                     href={`/talent/members/${r.memberId}`}
                     className="font-medium hover:underline"
                   >
-                    {r.revealedName ?? publicId}
+                    {r.revealedName ?? r.displayName ?? r.jobRole}
                   </Link>
                 ) : (
                   <span className="font-medium">
-                    {r.revealedName ?? publicId}
+                    {r.revealedName ?? r.displayName ?? r.jobRole}
                   </span>
                 )}
                 <p className="text-xs text-muted-foreground">

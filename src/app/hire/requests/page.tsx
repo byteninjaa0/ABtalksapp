@@ -40,7 +40,6 @@ export default async function HireRequestsPage() {
     take: 50,
     select: {
       id: true,
-      candidatePublicId: true,
       status: true,
       note: true,
       createdAt: true,
@@ -158,7 +157,9 @@ export default async function HireRequestsPage() {
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <h3 className="font-display text-base font-semibold">
-                      {identity?.fullName ?? e.candidatePublicId}
+                      {identity?.fullName ??
+                        e.candidate.studentProfile?.role ??
+                        "Candidate"}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {member?.jobRole ??

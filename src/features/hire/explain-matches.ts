@@ -84,16 +84,31 @@ const EXPLAIN_SCHEMA: Record<string, unknown> = {
  * checking against it rejected honest rationales for citing a real figure the
  * template happened to leave out.
  */
+function evidencePayload(m: ScoredCandidate): unknown {
+  if (m.verdicts && m.verdicts.length > 0) {
+    return m.verdicts.flatMap((v) => v.evidence);
+  }
+  return {
+    skills: m.evidence.skills,
+    missionsPassed: m.evidence.missionsPassed,
+    missionsAttempted: m.evidence.missionsAttempted,
+    cleanPassCount: m.evidence.cleanPassCount,
+    commitDayCount: m.evidence.commitDayCount,
+    workingLanguages: m.evidence.workingLanguages,
+    yearsExperience: m.evidence.yearsExperience,
+    projectScores: m.evidence.projectScores,
+  };
+}
+
 function groundedFigures(m: ScoredCandidate): Set<string> {
   // Deliberately excludes id and fullName — a cuid carries arbitrary digits
   // and would whitelist almost anything.
   const source = JSON.stringify({
     score: m.score,
-    tier: m.tier,
-    evidence: m.evidence,
+    match: m.match,
+    confidence: m.confidence,
+    evidence: evidencePayload(m),
     gaps: m.gaps,
-    // The public id is digits the model is *told* to quote. Without it here the
-    // guard rejects every rationale for citing the label we asked it to use.
     publicId: refPublicId(m.candidateRef),
   });
   return new Set(source.match(/\d+/g) ?? []);
@@ -167,28 +182,25 @@ export async function explainMatches(
   const base = explainMatchesDeterministic(matches, nearMisses, spec, context);
   if (matches.length === 0) return base;
 
-  const { askGroqJson, groqConfigured } = await import("@/lib/groq");
-  if (!groqConfigured()) return base;
+  const { askJson } = await import("@/lib/hire-llm");
 
   try {
     const payload = {
       role: spec.title,
       mustHaveStack: spec.mustHaveStack,
-      // No name goes to the model, so no name can come back in a rationale
-      // that a recruiter then reads. It refers to candidates by public id.
       matches: matches.map((m) => ({
         id: m.candidateRef,
         publicId: refPublicId(m.candidateRef),
-        score: m.score,
-        tier: m.tier,
-        evidence: m.evidence,
+        match: m.match ?? m.score,
+        confidence: m.confidence ?? null,
+        evidence: evidencePayload(m),
         gaps: m.gaps,
         availabilityUnknown: m.availabilityUnknown,
       })),
       nearMissCount: nearMisses.length,
     };
 
-    const ai = await askGroqJson<{
+    const ai = await askJson<{
       rationales: { id: string; rationale: string }[];
       overallGap: string;
     }>({
@@ -198,18 +210,19 @@ Rules:
 - Refer to each candidate by their publicId (e.g. AB-1234). You are not given names and must never invent one.
 - Provenance matters and must be worded correctly. Missions passed, first-attempt passes, commit days, project scores and interview scores are VERIFIED by the platform — state them as fact. Skills, job role and years of experience are SELF-DECLARED — write them as "declared" or "says they know". Never present a declared skill as proven.
 - "missionsPassed" is the number of missions they actually completed. Never quote "missionPoints" — it includes days waived to everyone at enrolment and overstates the work.
-- Cite ONLY fields present in the JSON you are given. Never invent a score, a number, a project, a skill or an employer.
+- Cite ONLY the evidence objects you are given. Each has field, value, sourceLabel. Never invent a score, a number, a project, a skill or an employer.
+- Quote sourceLabel when you claim verified work ("Day 14 mission", "Databricks Assessment").
+- Two or three sentences per candidate. Say what the evidence shows, then what is missing.
 - Every figure you write must appear verbatim in the payload. If you cannot support a claim, leave it out.
 - Two or three sentences per candidate. Say what the evidence shows, then what is missing.
 - Where availabilityUnknown is true, say salary, notice and location are unconfirmed.
 - Never promise a hire, predict performance, or compare candidates as people.
 - "overallGap" is one short paragraph on what this shortlist does and does not cover.
 - In "overallGap", never use an absolute quantifier — no "all", "every", "none of them", "nobody". You cannot verify a claim about everybody. Write "the 6 shown here" or "most of this shortlist" instead.`,
-      messages: [{ role: "user", content: JSON.stringify(payload) }],
+      user: JSON.stringify(payload),
       schemaName: "match_rationales",
       schema: EXPLAIN_SCHEMA,
       maxTokens: 2000,
-      temperature: 0.3,
     });
     if (!ai.ok) return base;
 
@@ -256,7 +269,11 @@ function buildRationale(m: ScoredCandidate, spec: JobSpec): string {
   // Public id, not the name: this string is rendered to recruiters and stored
   // on the match row, so it must not carry identity.
   parts.push(
-    `${refPublicId(m.candidateRef)} scores ${m.score}/100 (${m.tier}) for ${spec.title ?? "this role"}.`,
+    `${refPublicId(m.candidateRef)} scores match ${m.match ?? m.score}/100` +
+      (m.confidence != null
+        ? ` (confidence ${Math.round(m.confidence * 100)})`
+        : ` (${m.tier})`) +
+      ` for ${spec.title ?? "this role"}.`,
   );
   if (e.skills.length) {
     parts.push(`Declared skills: ${e.skills.slice(0, 8).join(", ")}.`);
@@ -324,21 +341,49 @@ function buildOverallGap(
   }
   if (matches.length === 0 && nearMisses.length > 0) {
     const sample = nearMisses[0]!;
+    // Say what actually excluded them.
+    //
+    // This branch used to blame the stack unconditionally — "No strong matches
+    // for your stack… train a cohort toward this stack" — which became wrong
+    // the moment an explicit location or work-mode requirement could empty the
+    // primary list. A recruiter who wrote "Pune only" was told their *stack*
+    // was the problem. `excludedReason` is set by rank.ts from the criterion
+    // that actually fired, so quote that where there is one.
+    const reasons = [
+      ...new Set(
+        nearMisses
+          .map((m) => m.excludedReason)
+          .filter((r): r is string => Boolean(r)),
+      ),
+    ];
+    const because = reasons.length
+      ? reasons.slice(0, 2).join("; ")
+      : `must-have: ${stack}`;
     return (
-      `No strong matches for ${stack}. Closest profile: ${refPublicId(sample.candidateRef)} ` +
+      `No exact matches — every candidate found is ruled out by a requirement ` +
+      `you set (${because}). Closest profile: ${refPublicId(sample.candidateRef)} ` +
       `(score ${sample.score}) — ${sample.gaps.slice(0, 3).join("; ") || "see gaps"}.${poolNote} ` +
-      `Save this demand and we can train a cohort toward this stack.`
+      `Relax that requirement to see them ranked, or save this demand and we can ` +
+      `source toward it.`
     );
   }
   const coverage = context?.coverageNote ? ` ${context.coverageNote}` : "";
+  const excludedNote =
+    nearMisses.length > 0
+      ? ` ${nearMisses.length} candidate(s) excluded by your requirements${
+          nearMisses[0]?.excludedReason
+            ? ` (${nearMisses[0].excludedReason})`
+            : ""
+        }.`
+      : "";
   const partial = matches.filter((m) => m.tier === "PARTIAL").length;
   if (partial > 0) {
     return (
-      `Found ${matches.length} candidate(s); ${partial} are partial.${poolNote}${coverage} ` +
+      `Found ${matches.length} candidate(s); ${partial} are partial.${poolNote}${coverage}${excludedNote} ` +
       `Review gaps on each card — confirm availability offline before outreach.`
     );
   }
-  return `Found ${matches.length} candidate(s) ranked by verified ABTalks evidence.${poolNote}${coverage}`;
+  return `Found ${matches.length} candidate(s) ranked by verified ABTalks evidence.${poolNote}${coverage}${excludedNote}`;
 }
 
 /** Exported for the evals — the two guards that decide what a recruiter reads. */

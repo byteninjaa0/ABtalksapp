@@ -22,8 +22,10 @@ import {
 import { readPoolExtra } from "@/features/hire/pool-brief";
 import { trackLabels } from "@/features/hire/track-registry";
 import { runScoutAgent } from "@/features/hire/scout-agent";
-import { readOfferedChips, suggestChips, type ScoutChip } from "@/features/hire/scout-chips";
-import { searchable, type ScoutToolDeps } from "@/features/hire/scout-tools";
+import {
+  searchableSpec,
+  searchSpecFromJob,
+} from "@/features/hire/reduce-spec";
 
 export type ChatMessage = {
   role: "user" | "assistant";
@@ -429,19 +431,29 @@ function isChipValue(spec: JobSpec, msg: string): boolean {
   const m = msg.trim();
   if (/^(skip|salary|action|edit):/i.test(m)) return true;
   if (enumChipSlot(m)) return true;
-  return suggestChips(spec, searchable(spec), readOfferedChips(spec)).some(
-    (c) => c.value === m,
-  );
+  const offered = readOfferedChips(spec);
+  return offered.some((c) => c.value === m);
 }
 
-/**
- * Stash (or clear) the chips offered this turn so the next tap can be
- * recognised without the model. Lives on `spec.extra`, which already carries
- * pool filters and skipped slots — one JSON column, no schema change.
- */
+function readOfferedChips(spec: JobSpec): { label: string; value: string }[] {
+  const raw = (spec.extra as { offeredChips?: unknown } | null | undefined)
+    ?.offeredChips;
+  if (!Array.isArray(raw)) return [];
+  const chips: { label: string; value: string }[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") continue;
+    const label = (row as { label?: unknown }).label;
+    const value = (row as { value?: unknown }).value;
+    if (typeof label === "string" && label && typeof value === "string" && value) {
+      chips.push({ label, value });
+    }
+  }
+  return chips;
+}
+
 function withOfferedChips(
   spec: JobSpec,
-  chips: ScoutChip[] | null | undefined,
+  chips: { label: string; value: string }[] | null | undefined,
 ): JobSpec {
   const extra = { ...(spec.extra ?? {}) } as Record<string, unknown>;
   if (chips && chips.length > 0) extra.offeredChips = chips;
@@ -464,20 +476,26 @@ function turnFor(
   extra?: {
     action?: "search" | "reset" | null;
     notice?: string | null;
-    offeredChips?: ScoutChip[] | null;
+    offeredChips?: { label: string; value: string }[] | null;
+    verdictsByCandidate?: ScoutTurn["verdictsByCandidate"];
+    scoresByCandidate?: ScoutTurn["scoresByCandidate"];
+    excluded?: ScoutTurn["excluded"];
   },
 ): ScoutTurn {
-  const ready = searchable(spec);
+  const ready = searchableSpec(searchSpecFromJob(spec));
   const agentChips = extra?.offeredChips ?? null;
   return {
     spec: withOfferedChips(spec, agentChips),
     nextQuestion: text.trim() ? text.trim().slice(0, 500) : null,
-    options: suggestChips(spec, ready, agentChips).slice(0, 12),
+    options: (agentChips ?? []).slice(0, 12),
     allowFreeText: true,
     readyToSearch: ready,
     summary: summarize(spec),
     action: extra?.action ?? null,
     notice: extra?.notice ?? null,
+    verdictsByCandidate: extra?.verdictsByCandidate,
+    scoresByCandidate: extra?.scoresByCandidate,
+    excluded: extra?.excluded,
   };
 }
 
@@ -490,27 +508,6 @@ function checked(turn: ScoutTurn, fallback: ScoutTurn): ScoutTurn {
   });
   return fallback;
 }
-
-/**
- * Row access for the agent's tools.
- *
- * Imported lazily so this module — and therefore both Server Actions — do not
- * pull the whole search stack into scope on a turn that never touches it. A chip
- * tap must not pay for Prisma.
- */
-const toolDeps: ScoutToolDeps = {
-  poolSnapshot: async () => {
-    const { poolSnapshot } = await import("@/features/hire/pool-facts");
-    return poolSnapshot() as unknown as Promise<Record<string, unknown>>;
-  },
-  previewMatch: async (spec) => {
-    const { previewMatch } = await import("@/features/hire/pool-facts");
-    return previewMatch(spec) as unknown as Promise<Record<
-      string,
-      unknown
-    > | null>;
-  },
-};
 
 export async function runScoutTurn(args: {
   priorSpec: JobSpec;
@@ -529,18 +526,17 @@ export async function runScoutTurn(args: {
     if (direct) return checked(direct, unchanged);
   }
 
-  // 2 — the agent. It reads the message, decides, and acts only through tools.
+  // 2 — extract → reduce → decide. The model cannot act.
   const out = await runScoutAgent({
     priorSpec,
     history: args.history,
     userMessage: msg,
-    deps: toolDeps,
   });
 
   return checked(
     turnFor(out.spec, out.text, {
       action: out.action,
-      offeredChips: out.offeredChips,
+      offeredChips: out.options,
     }),
     unchanged,
   );

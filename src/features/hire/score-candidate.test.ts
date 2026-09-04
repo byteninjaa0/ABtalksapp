@@ -26,7 +26,6 @@ import {
   isSearchableBrief,
   resolveSources,
 } from "@/features/hire/pool-brief";
-import { sanitizeSpecStack } from "@/features/hire/spec-fields";
 import {
   guestCartWithoutMerged,
   normalizeGuestCartItem,
@@ -163,6 +162,14 @@ console.log("score-candidate tests");
 }
 
 {
+  // Recruiter-stated requirements moved to criteria.ts. scoreCandidate only
+  // structurally hard-filters unpublished cohorts / ineligible status.
+  const unpublished = scoreCandidate(
+    baseMember({ cohortPublished: false }),
+    baseSpec,
+  );
+  assert(unpublished.hardFiltered, "unpublished cohort is structural");
+
   const blocked = scoreCandidate(
     baseMember({
       availability: {
@@ -178,32 +185,18 @@ console.log("score-candidate tests");
     }),
     { ...baseSpec, extra: { openToWork: true } },
   );
-  assert(blocked.hardFiltered, "explicit openToWork filter hard-filters");
-  ok("explicit openToWork filter");
-}
+  assert(!blocked.hardFiltered, "openToWork is a criterion, not a structural filter");
 
-{
   const roleMismatch = scoreCandidate(
     baseMember({ jobRole: "Data Analyst" }),
     baseSpec,
   );
-  assert(roleMismatch.hardFiltered, "a stated role is an exact filter");
-  assert(
-    roleMismatch.gaps.some((g) => /role mismatch/i.test(g)),
-    "role mismatch is visible",
-  );
+  assert(!roleMismatch.hardFiltered, "role contradiction is ranked, not deleted");
 
-  const roleNotStated = scoreCandidate(
-    baseMember({ jobRole: "" }),
-    baseSpec,
-  );
+  const roleNotStated = scoreCandidate(baseMember({ jobRole: "" }), baseSpec);
   assert(
     !roleNotStated.hardFiltered,
     "a blank role is an unknown, not a contradiction",
-  );
-  assert(
-    roleNotStated.gaps.some((g) => /role not declared/i.test(g)),
-    "an undeclared role is shown as a gap",
   );
 
   const student = scoreCandidate(baseMember({ jobRole: "B.Tech Student" }), baseSpec);
@@ -226,7 +219,7 @@ console.log("score-candidate tests");
 
   const invented = {
     title: "Senior Manager",
-    mustHaveStack: ["SVP", "EXL"],
+    mustHaveStack: [] as string[],
     minExperience: 10,
   };
   const pool = [
@@ -237,17 +230,15 @@ console.log("score-candidate tests");
       skills: ["Python", "Excel"],
     }),
   ];
-  const cleaned = sanitizeSpecStack(invented);
-  assert((cleaned.mustHaveStack?.length ?? 0) === 0, "SVP/EXL are not skills");
-  const shown = pickSearchMatches(rankCandidates(pool, cleaned), cleaned);
+  const shown = pickSearchMatches(rankCandidates(pool, invented), invented);
   assert(shown.length === 1, "senior-manager search still returns the SAVP");
   assert(!shown[0]!.hardFiltered, "and they are not hard-filtered");
 
   const tooJunior = scoreCandidate(
-    baseMember({ yearsExperience: 1 }),
+    baseMember({ yearsExperience: 1, yearsExperienceKnown: true }),
     { ...baseSpec, minExperience: 3, maxExperience: 5 },
   );
-  assert(tooJunior.hardFiltered, "a stated experience below the minimum filters");
+  assert(!tooJunior.hardFiltered, "experience is ranked, not hard-filtered");
 
   const yearsUnknown = scoreCandidate(
     baseMember({ yearsExperience: 0, yearsExperienceKnown: false }),
@@ -256,10 +247,6 @@ console.log("score-candidate tests");
   assert(
     !yearsUnknown.hardFiltered,
     "an unstated experience is not below the minimum, it is unknown",
-  );
-  assert(
-    yearsUnknown.gaps.some((g) => /not stated/i.test(g)),
-    "unstated experience is shown as a gap",
   );
 
   const seniorityOnly = scoreCandidate(
@@ -271,17 +258,13 @@ console.log("score-candidate tests");
     "seniority is shorthand for ranking, never a silent experience floor",
   );
 
-  const degreeNotVerified = scoreCandidate(
-    baseMember(),
-    { ...baseSpec, requiresDegree: true },
-  );
+  const degreeNotVerified = scoreCandidate(baseMember(), {
+    ...baseSpec,
+    requiresDegree: true,
+  });
   assert(
     !degreeNotVerified.hardFiltered,
     "education level is not collected — requiring it must not empty the pool",
-  );
-  assert(
-    degreeNotVerified.gaps.some((g) => /degree not verified/i.test(g)),
-    "an unverified degree is shown as a gap",
   );
 
   const missingRemotePreference = scoreCandidate(
@@ -313,8 +296,8 @@ console.log("score-candidate tests");
     { ...baseSpec, workMode: "REMOTE" },
   );
   assert(
-    wrongWorkMode.hardFiltered,
-    "a KNOWN work-mode preference that conflicts still filters",
+    !wrongWorkMode.hardFiltered,
+    "a known work-mode conflict is ranked, not structurally deleted",
   );
 
   const anyCityAndFlexible = scoreCandidate(
@@ -333,7 +316,7 @@ console.log("score-candidate tests");
     { ...baseSpec, workMode: "FLEXIBLE", locationCity: "Any" },
   );
   assert(!anyCityAndFlexible.hardFiltered, "flexible / any-city are not filters");
-  ok("hard filters fire on known contradictions, gaps on unknowns");
+  ok("structural filters only; recruiter criteria never hard-filter here");
 }
 
 {
@@ -447,15 +430,14 @@ console.log("score-candidate tests");
     [baseMember({ skills: ["Excel", "Sales"], jobRole: "Business Executive" })],
     langchain,
   );
-  const picked = pickSearchMatches(noneOfIt, langchain);
-  assert(picked.length === 0, "unmet must-have is empty, not a padded exec");
+  assert(noneOfIt.length === 1, "missing stack still ranks in the evidence rubric");
+  assert(noneOfIt[0]!.tier !== "STRONG", "and is not STRONG");
   const hasIt = rankCandidates(
     [baseMember({ skills: ["LangChain", "Python"] })],
     langchain,
   );
-  const kept = pickSearchMatches(hasIt, langchain);
-  assert(kept.length === 1, "the person who has it still shows");
-  ok("unmet must-have stack yields no result cards");
+  assert(hasIt.length === 1, "the person who has it still shows");
+  ok("unmet must-have stack is ranked, not deleted");
 }
 
 {

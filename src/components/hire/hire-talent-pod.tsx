@@ -16,7 +16,7 @@ import {
 } from "@/components/hire/desk-requested";
 import { readGuestCart, toggleGuestCart } from "@/components/hire/guest-cart";
 import { savePendingCheckout } from "@/components/hire/pending-checkout";
-import { decodeCandidateRef, refPublicId } from "@/features/hire/candidate-ref";
+import { decodeCandidateRef } from "@/features/hire/candidate-ref";
 import type { CartRow } from "@/components/hire/shortlist-cart";
 import { hydrateMatch } from "@/components/hire/evidence-cache";
 import { MatchMetaTags, MatchPills } from "@/components/hire/hire-card-facts";
@@ -265,7 +265,6 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
               </div>
             ) : (
               rows.map((row) => {
-                const publicId = refPublicId(row.candidateRef);
                 const asked = isAsked(row, requested);
                 const checked = selected.has(row.candidateRef);
                 const match = cartRowToMatch(row);
@@ -292,7 +291,7 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
                           checked={checked}
                           disabled={pending}
                           onChange={() => toggle(row.candidateRef)}
-                          aria-label={`Select ${row.displayName || publicId}`}
+                          aria-label={`Select ${row.displayName || row.jobRole}`}
                         />
                       ) : (
                         <span className="desk-card__avatar" aria-hidden="true">
@@ -304,7 +303,6 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
                           {row.displayName || row.revealedName || row.jobRole}
                         </p>
                         {stack && <p className="desk-card__stack">{stack}</p>}
-                        <p className="hire-pod__ref">{publicId}</p>
                         <MatchMetaTags match={match} />
                       </div>
                     </div>
@@ -315,9 +313,6 @@ export function HireTalentPod({ serverRows }: { serverRows: CartRow[] }) {
                       <span>out of 100</span>
                     </div>
                     <MatchPills match={match} compact />
-                    {match.rationale && (
-                      <p className="desk-card__why">{match.rationale}</p>
-                    )}
                     <div className="hire-pod__actions">
                       <button
                         type="button"

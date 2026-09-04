@@ -355,3 +355,39 @@ export function mergeTrackLoads(loads: TrackLoad[]): {
     stage: ordered.find((l) => l.stage)?.stage ?? null,
   };
 }
+
+/**
+ * Canonical skill vocabulary for stage 4. Loaded once per process and
+ * memoised. Empty on failure — `normalize.ts` then falls back to the curated
+ * map. A read of the taxonomy table, not of candidate data.
+ */
+let aliasCache: { at: number; value: import("@/features/hire/normalize").SkillAliasRow[] } | null =
+  null;
+const ALIAS_TTL_MS = 5 * 60_000;
+
+export async function loadSkillAliases(): Promise<
+  import("@/features/hire/normalize").SkillAliasRow[]
+> {
+  if (aliasCache && Date.now() - aliasCache.at < ALIAS_TTL_MS) {
+    return aliasCache.value;
+  }
+  try {
+    const { prisma } = await import("@/lib/db");
+    const rows = await prisma.skill.findMany({
+      where: { isActive: true },
+      select: { slug: true, name: true, aliases: true },
+    });
+    const value = rows.map((r) => ({
+      slug: r.slug,
+      name: r.name,
+      aliases: r.aliases,
+    }));
+    aliasCache = { at: Date.now(), value };
+    return value;
+  } catch (error) {
+    logger.error("[hire] loadSkillAliases failed", {
+      error: String(error).slice(0, 200),
+    });
+    return aliasCache?.value ?? [];
+  }
+}

@@ -61,10 +61,145 @@ export const jobSpecSchema = z.object({
 
 export type JobSpec = z.infer<typeof jobSpecSchema>;
 
+export const criterionKindSchema = z.enum([
+  "skill",
+  "role",
+  "experience",
+  "seniority",
+  "education",
+  "availability",
+  "compensation",
+  "location",
+  "evidence",
+  "other",
+]);
+
+export type CriterionKind = z.infer<typeof criterionKindSchema>;
+
+/** Typed payload; which fields are live depends on `kind`. All nullable so a
+ *  strict JSON-schema call can list every key. */
+export const criterionValueSchema = z.object({
+  token: z.string().trim().max(80).nullable(),
+  title: z.string().trim().max(200).nullable(),
+  min: z.number().min(0).max(100_000_000).nullable(),
+  max: z.number().min(0).max(100_000_000).nullable(),
+  level: z.string().trim().max(80).nullable(),
+  workMode: z.string().trim().max(40).nullable(),
+  openToWork: z.boolean().nullable(),
+  city: z.string().trim().max(80).nullable(),
+  currency: z.string().trim().max(3).nullable(),
+  minMissions: z.number().min(0).max(60).nullable(),
+  minCommitDays: z.number().min(0).max(60).nullable(),
+  minCleanPassPct: z.number().min(0).max(100).nullable(),
+  text: z.string().trim().max(200).nullable(),
+});
+
+export type CriterionValue = z.infer<typeof criterionValueSchema>;
+
+export const criterionSchema = z.object({
+  id: z.string().trim().min(1).max(80),
+  kind: criterionKindSchema,
+  label: z.string().trim().min(1).max(200),
+  weight: z.enum(["must", "nice"]),
+  absolute: z.boolean(),
+  value: criterionValueSchema,
+  demotedReason: z.string().max(240).optional(),
+});
+
+export type Criterion = z.infer<typeof criterionSchema>;
+
+export const searchSpecFiltersSchema = z.object({
+  tracks: z.array(z.string().trim().min(1).max(40)).max(8),
+  minEvidenceDays: z.number().int().min(1).max(60).nullable(),
+  resultLimit: z.number().int().min(1).max(25).nullable(),
+});
+
+export const searchSpecSchema = z.object({
+  statedAs: z.string().max(2000),
+  filters: searchSpecFiltersSchema,
+  criteria: z.array(criterionSchema).max(40),
+});
+
+export type SearchSpec = z.infer<typeof searchSpecSchema>;
+
+const criterionDraftSchema = criterionSchema.omit({ id: true });
+
+export const searchSpecDeltaSchema = z.object({
+  addCriteria: z
+    .array(
+      z.object({
+        criterion: criterionDraftSchema,
+        sourceText: z.string().min(1).max(400),
+      }),
+    )
+    .max(20),
+  updateCriteria: z
+    .array(
+      z.object({
+        id: z.string().min(1).max(80),
+        patch: criterionDraftSchema.partial(),
+        sourceText: z.string().min(1).max(400),
+      }),
+    )
+    .max(20),
+  removeCriteria: z
+    .array(
+      z.object({
+        id: z.string().min(1).max(80),
+        sourceText: z.string().min(1).max(400),
+      }),
+    )
+    .max(20),
+  filtersPatch: z
+    .object({
+      patch: searchSpecFiltersSchema.partial(),
+      sourceText: z.string().min(1).max(400),
+    })
+    .nullable(),
+  clarify: z
+    .object({
+      question: z.string().min(1).max(400),
+      options: z.array(z.string().min(1).max(80)).max(6),
+    })
+    .nullable(),
+});
+
+export type SearchSpecDelta = z.infer<typeof searchSpecDeltaSchema>;
+
+export const evidenceSourceSchema = z.enum([
+  "candidate_profile",
+  "challenge_project",
+  "assessment",
+  "interview",
+  "program_mission",
+  "hackathon",
+]);
+
+export const hireEvidenceSchema = z.object({
+  field: z.string().min(1).max(80),
+  value: z.string().max(200),
+  source: evidenceSourceSchema,
+  sourceLabel: z.string().max(120),
+  occurredAt: z.string().max(40).optional(),
+});
+
+export const criterionVerdictSchema = z.object({
+  criterionId: z.string().min(1).max(80),
+  verdict: z.enum(["MET", "UNCLEAR", "NOT_MET"]),
+  fit: z.number().min(0).max(1).nullable(),
+  confidence: z.number().min(0).max(1),
+  evidence: z.array(hireEvidenceSchema).max(8),
+});
+
+export type HireEvidence = z.infer<typeof hireEvidenceSchema>;
+export type CriterionVerdict = z.infer<typeof criterionVerdictSchema>;
+
 export const scoutOptionSchema = z.object({
   label: z.string().min(1).max(120),
   value: z.string().min(1).max(120),
 });
+
+export type ScoutOption = z.infer<typeof scoutOptionSchema>;
 
 /** Phase A structured response from Scout conversation model. */
 export const scoutTurnSchema = z.object({
@@ -88,6 +223,26 @@ export const scoutTurnSchema = z.object({
    * asked. Rendered above the question rather than glued onto it.
    */
   notice: z.string().max(700).nullable().optional(),
+  verdictsByCandidate: z
+    .record(z.string(), z.array(criterionVerdictSchema))
+    .optional(),
+  scoresByCandidate: z
+    .record(
+      z.string(),
+      z.object({
+        match: z.number(),
+        confidence: z.number(),
+      }),
+    )
+    .optional(),
+  excluded: z
+    .array(
+      z.object({
+        candidateRef: z.string().min(1),
+        reason: z.string().min(1).max(240),
+      }),
+    )
+    .optional(),
 });
 
 export type ScoutTurn = z.infer<typeof scoutTurnSchema>;

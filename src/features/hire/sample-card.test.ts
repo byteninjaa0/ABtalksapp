@@ -1,25 +1,18 @@
 /**
- * Sample cards + adaptive chips — run with:
+ * Sample cards — run with:
  *   npm run test:sample
  *
- * `--conditions=react-server` is what lets this import `server-only` modules
- * (`scout-tools`) the way an RSC build does. No network, no database.
+ * `--conditions=react-server` is what lets this import `server-only` modules.
  */
 import { buildSampleCards } from "@/features/hire/sample-card";
 import { buildLockedPreviewCards } from "@/features/hire/locked-preview";
 import { decodeCandidateRef } from "@/features/hire/candidate-ref";
 import { isKnownTrack } from "@/features/hire/track-registry";
-import { suggestChips } from "@/features/hire/scout-chips";
 import {
   applyObviousAnswers,
   briefDelta,
   extractStatedStack,
-  sanitizeSpecStack,
 } from "@/features/hire/spec-fields";
-import {
-  createScoutToolContext,
-  __test as tools,
-} from "@/features/hire/scout-tools";
 import { __test as agent } from "@/features/hire/scout-agent";
 import { runScoutTurn } from "@/features/hire/scout-conversation";
 import { guestCartProgramIds } from "@/components/hire/guest-cart";
@@ -139,101 +132,6 @@ suite("count > 1 only rotates the stated skills", () => {
   assert(cards[0]!.jobRole === cards[1]!.jobRole, "same role");
 });
 
-console.log("\noffer_options");
-
-suite("offer_options rejects 1 option", () => {
-  const ctx = createScoutToolContext("which evidence", {});
-  const r = tools.applyOfferOptions(ctx, {
-    options: [{ label: "Missions", value: "missions" }],
-  });
-  assert(r.offered === false, "rejected");
-  assert(ctx.offeredChips === null, "nothing stored");
-});
-
-suite("offer_options rejects 5 options", () => {
-  const ctx = createScoutToolContext("which evidence", {});
-  const r = tools.applyOfferOptions(ctx, {
-    options: [
-      { label: "A", value: "a" },
-      { label: "B", value: "b" },
-      { label: "C", value: "c" },
-      { label: "D", value: "d" },
-      { label: "E", value: "e" },
-    ],
-  });
-  assert(r.offered === false, "rejected");
-});
-
-suite("offer_options rejects a protocol value", () => {
-  const ctx = createScoutToolContext("search now?", {});
-  const r = tools.applyOfferOptions(ctx, {
-    options: [
-      { label: "Search", value: "action:search" },
-      { label: "Skip", value: "skip:salary" },
-      { label: "Edit", value: "edit:mustHaveStack" },
-    ],
-  });
-  assert(r.offered === false, "rejected");
-  assert(ctx.offeredChips === null, "nothing stored");
-});
-
-suite("offer_options accepts 3 valid options", () => {
-  const ctx = createScoutToolContext("which evidence", {});
-  const r = tools.applyOfferOptions(ctx, {
-    options: [
-      { label: "Code correctness", value: "missions" },
-      { label: "Projects", value: "projects" },
-      { label: "Communication", value: "interview" },
-    ],
-  });
-  assert(r.offered === true, "accepted");
-  assert(ctx.offeredChips?.length === 3, "three stored");
-  assert(ctx.offeredChips?.[0]?.value === "missions", "first value");
-});
-
-console.log("\nchips");
-
-suite("agent chips win when present", () => {
-  const agent = [
-    { label: "Code correctness", value: "missions" },
-    { label: "Projects", value: "projects" },
-  ];
-  const chips = suggestChips(pythonSpec, false, agent);
-  assert(chips.length === 2, `got ${chips.length}`);
-  assert(chips[0]?.value === "missions", "agent first");
-  assert(!chips.some((c) => c.value === "action:search"), "not the ladder");
-});
-
-suite("nothing is offered when the agent offered nothing", () => {
-  // The ladder used to fill this silence with a row of stack buttons, unasked.
-  // A brief that cannot be searched yet gets a typed question instead.
-  const chips = suggestChips({ title: "backend engineer" }, false);
-  assert(chips.length === 0, "no ladder");
-});
-
-suite("a ready brief keeps change-stack when the agent also offered chips", () => {
-  const agent = [
-    { label: "Missions", value: "missions" },
-    { label: "Projects", value: "projects" },
-  ];
-  const chips = suggestChips(pythonSpec, true, agent);
-  assert(chips.some((c) => c.value === "missions"), "agent chips");
-  assert(chips.some((c) => c.value === "edit:mustHaveStack"), "change stack");
-  assert(chips.some((c) => c.value === "edit:salary"), "change budget");
-  assert(!chips.some((c) => c.value === "action:search"), "search stays a button");
-});
-
-suite("a ready brief offers actions, never a half-finished question", () => {
-  const chips = suggestChips(
-    { title: "full stack developer", mustHaveStack: ["mern"] },
-    true,
-  );
-  assert(!chips.some((c) => c.value === "MID"), "no unasked seniority ladder");
-  assert(chips.some((c) => c.value === "edit:mustHaveStack"), "change stack stays");
-  assert(chips.some((c) => c.value === "action:search"), "search still offered");
-  assert(chips.some((c) => c.value === "action:reset"), "and a way to start over");
-});
-
 suite("mid + remote is captured without the model", () => {
   const prior: JobSpec = {
     title: "full stack developer",
@@ -317,19 +215,6 @@ suite("senior manager, 10+ years is a role, not a stack", () => {
     (next.mustHaveStack?.length ?? 0) === 0,
     `no stack, got ${JSON.stringify(next.mustHaveStack)}`,
   );
-  const sanitized = sanitizeSpecStack(
-    { title: "Senior Manager", mustHaveStack: ["SVP", "EXL"] },
-    "senior manager, 10+ years",
-  );
-  assert(
-    (sanitized.mustHaveStack?.length ?? 0) === 0,
-    "SVP/EXL dropped even from a stored spec",
-  );
-  const stored = sanitizeSpecStack({ mustHaveStack: ["SVP", "EXL"] });
-  assert(
-    (stored.mustHaveStack?.length ?? 0) === 0,
-    "Show-me of a persisted SVP/EXL spec still strips them",
-  );
 });
 
 suite("stating a role is not asking to see cards", () => {
@@ -346,10 +231,6 @@ suite("stating a role is not asking to see cards", () => {
   assert(
     agent.wantsToSeeCards("ok now give me"),
     "bare give-me is a search once a brief exists",
-  );
-  assert(
-    agent.wantsCandidates("now give me the list of candidate"),
-    "existing people-request still matches",
   );
 });
 
@@ -375,7 +256,6 @@ suite("only 3 candidates does not wipe the stack", () => {
 
 async function replayUserChat() {
   console.log("\nuser transcript replay");
-  agent.resetCooling();
   const ready: JobSpec = {
     title: "Full-stack developer",
     mustHaveStack: ["mern"],
@@ -408,33 +288,7 @@ async function replayUserChat() {
   }
 
   try {
-    agent.markCooling();
-    const turn = await runScoutTurn({
-      priorSpec: ready,
-      history: [],
-      userMessage: "why at capacity",
-    });
-    assert(turn.action !== "search", "not a search");
-    assert(
-      /rate limit/i.test(turn.nextQuestion ?? ""),
-      `should explain the limit: ${turn.nextQuestion}`,
-    );
-    assert(
-      !/give it a few seconds and send that again/i.test(turn.nextQuestion ?? ""),
-      "must not repeat the stuck retry line",
-    );
-    passed++;
-    console.log("  ✓ a follow-up during cooldown does not hit Groq again");
-  } catch (e) {
-    failed++;
-    console.log(
-      `  ✗ a follow-up during cooldown does not hit Groq again\n      ${(e as Error).message}`,
-    );
-  }
-
-  try {
-    agent.resetCooling();
-    const turn = await runScoutTurn({
+      const turn = await runScoutTurn({
       priorSpec: ready,
       history: [],
       userMessage: "ok now give me",
@@ -452,8 +306,7 @@ async function replayUserChat() {
       `  ✗ ok-now-give-me searches a ready brief without Groq\n      ${(e as Error).message}`,
     );
   } finally {
-    agent.resetCooling();
-  }
+    }
 }
 
 replayUserChat().then(() => {

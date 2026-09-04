@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { COMPENSATION_DISCLAIMER } from "@/features/hire/compensation";
-import { refPublicId, type CandidateSource } from "@/features/hire/candidate-ref";
+import { type CandidateSource } from "@/features/hire/candidate-ref";
 import {
   recallEvidence,
 } from "@/components/hire/evidence-cache";
@@ -32,7 +32,6 @@ function firstAttempt(e: MatchCardData["evidence"]): string | null {
 }
 
 function evidenceBlurb(match: MatchCardData): string {
-  if (match.rationale?.trim()) return match.rationale.trim();
   const e = match.evidence ?? {};
   const bits: string[] = [];
   if (typeof e.missionsPassed === "number") {
@@ -113,16 +112,8 @@ export function EvidenceResume({ lookup }: { lookup: string }) {
       <main className="hire-sheet">
         <BackToScout />
         <p className="hire-sheet__missing">
-          No candidate matches the reference
-          {lookup ? (
-            <>
-              {" "}
-              <b>{lookup}</b>
-            </>
-          ) : (
-            " provided"
-          )}
-          . Run a search in Scout, then open Resume from the card.
+          No candidate matches that selection. Run a search in Scout, then open
+          Resume from the card.
         </p>
       </main>
     );
@@ -130,7 +121,6 @@ export function EvidenceResume({ lookup }: { lookup: string }) {
 
   const e = match.evidence ?? {};
   const sample = match.candidateRef.startsWith("SAMPLE:");
-  const publicId = refPublicId(match.candidateRef);
   const track = trackLabel(match.source);
   const isChallenge =
     match.source === "CLAUDE" || match.source === "CHALLENGE_60";
@@ -154,7 +144,7 @@ export function EvidenceResume({ lookup }: { lookup: string }) {
           <p className="hire-sheet__sub">
             {sample
               ? "Sample profile — not a person in the pool"
-              : [match.locationLabel, publicId, track]
+              : [match.locationLabel, track]
                   .filter(Boolean)
                   .join(" · ")}
           </p>
@@ -237,7 +227,6 @@ export function EvidenceResume({ lookup }: { lookup: string }) {
           v={(e.workingLanguages ?? []).join(" · ") || null}
         />
         <Cell k="Est. compensation" v={match.compensationBand ?? null} />
-        <Cell k="Reference" v={sample ? null : publicId} />
       </div>
 
       <section className="hire-sheet__section">

@@ -26,7 +26,6 @@ type Props = {
   requestId?: string;
   /** Status of the recruiter's existing live request, if there is one. */
   existingStatus?: string | null;
-  publicId: string;
   className?: string;
 };
 
@@ -34,7 +33,6 @@ export function RequestIntroButton({
   candidateRef,
   requestId,
   existingStatus,
-  publicId,
   className,
 }: Props) {
   const router = useRouter();
@@ -88,7 +86,7 @@ export function RequestIntroButton({
       setStatus(res.data.status);
       markRequested([candidateRef]);
       setOpen(false);
-      toast.success(`Request sent for ${publicId}. Our team will pick it up.`);
+      toast.success("Request sent. Our team will pick it up.");
       router.refresh();
     });
   }
@@ -162,7 +160,7 @@ export function RequestIntroButton({
           Cancel
         </button>
         <p className="text-xs text-muted-foreground">
-          {publicId} stays anonymous until our team confirms.
+          Candidate details stay anonymous until our team confirms.
         </p>
       </div>
     </div>

@@ -131,6 +131,78 @@ export type ProgramCandidateRow = Prisma.ProgramMemberGetPayload<{
   hasResume: boolean;
 };
 
+/**
+ * A compact employment-history row suitable for an approved recruiter card.
+ * It deliberately carries no description, URL, or location; those do not help
+ * a first-pass shortlist and make this DTO needlessly sensitive.
+ */
+export type RecruiterExperienceSummary = {
+  title: string;
+  companyName: string | null;
+  startedOn: string | null;
+  endedOn: string | null;
+  isCurrent: boolean;
+};
+
+/**
+ * Read the current candidate-profile timeline for recruiter cards.
+ *
+ * This is intentionally separate from the evidence-track loaders: a
+ * professional can have an excellent work history without it changing their
+ * evidence score, and a fresher needs no history to be a valid match. The
+ * current-employer visibility setting is applied here, at the only read seam.
+ */
+export async function loadRecruiterExperienceSummaries(
+  userIds: string[],
+): Promise<Map<string, RecruiterExperienceSummary[]>> {
+  const ids = [...new Set(userIds.filter(Boolean))];
+  if (ids.length === 0) return new Map();
+
+  const rows = await prisma.candidateProfile.findMany({
+    where: { userId: { in: ids } },
+    select: {
+      userId: true,
+      experience: {
+        orderBy: [{ isCurrent: "desc" }, { startedOn: "desc" }],
+        take: 3,
+        select: {
+          title: true,
+          companyName: true,
+          startedOn: true,
+          endedOn: true,
+          isCurrent: true,
+        },
+      },
+      user: {
+        select: { visibility: { select: { showCurrentEmployer: true } } },
+      },
+    },
+  });
+
+  return new Map(
+    rows.map((profile) => {
+      const showCurrentEmployer =
+        profile.user.visibility?.showCurrentEmployer ?? true;
+      const history = profile.experience
+        .filter((experience) => experience.title.trim())
+        .map((experience) => ({
+          title: experience.title.trim(),
+          // A hidden current employer is still a useful current role. Past
+          // roles stay visible because this is specifically a current-employer
+          // consent setting.
+          companyName:
+            experience.isCurrent && !showCurrentEmployer
+              ? null
+              : experience.companyName.trim() || null,
+          startedOn: experience.startedOn.toISOString().slice(0, 10),
+          endedOn: experience.endedOn?.toISOString().slice(0, 10) ?? null,
+          isCurrent: experience.isCurrent,
+        }));
+      return [profile.userId, history];
+    }),
+  );
+}
+
 function withLegacyLinkFlags(
   row: Prisma.ProgramMemberGetPayload<{ select: typeof PROGRAM_CANDIDATE_SELECT }>,
   extras?: { linkedinUrl?: string | null; githubUsername?: string | null; resumeUrl?: string | null },

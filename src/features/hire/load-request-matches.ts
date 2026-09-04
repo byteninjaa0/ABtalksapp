@@ -2,10 +2,13 @@ import "server-only";
 
 import { prisma } from "@/lib/db";
 import {
+  loadRecruiterExperienceSummaries,
   listProgramMemberLabels,
   listUserDisplayNames,
 } from "@/repositories/hire";
 import { filterSearchableUserIds } from "@/repositories/talent";
+import { listCandidateAvailability } from "@/repositories/candidate";
+import { activeAvailability } from "@/features/hire/availability-access";
 import { encodeCandidateRef } from "@/features/hire/candidate-ref";
 import { existingEngagements } from "@/features/hire/contact-access";
 import { estimateCompensation, formatBandLpa } from "@/features/hire/compensation";
@@ -76,6 +79,19 @@ export async function loadRequestMatches(
   );
   const candidateUserIds = visibleMatches.map((m) => m.candidateUserId);
 
+  // Availability is read LIVE, never from the frozen evidence blob.
+  //
+  // Same reasoning the compensation comment below already records, and the same
+  // reasoning as the searchability re-filter above: `TalentRequestMatch.evidence`
+  // is a snapshot, and `docs/legal/hire-availability-privacy-note.md` promises
+  // that turning open-to-work off removes a candidate from availability-filtered
+  // results *immediately*. A city frozen into a row last month is exactly the
+  // disclosure that promise forbids, so the stored `locationLabel` is ignored
+  // and the label is rebuilt from what is true right now — or dropped.
+  const liveAvailability = await listCandidateAvailability(
+    candidateUserIds,
+  ).catch(() => new Map());
+
   // Professional name / role / shortlist state still live on ProgramMember.
   // Loaded from the provenance id in a separate query rather than through a
   // relation, because the match row no longer has one — the candidate is the
@@ -88,13 +104,14 @@ export async function loadRequestMatches(
     ),
   ];
 
-  const [engagements, cartCount, nameByUser, members] = await Promise.all([
+  const [engagements, cartCount, nameByUser, members, experienceByUser] = await Promise.all([
     existingEngagements(recruiterUserId, candidateUserIds),
     prisma.recruiterShortlistItem.count({ where: { recruiterUserId } }),
     listUserDisplayNames(candidateUserIds),
     listProgramMemberLabels(provenanceMemberIds, {
       shortlistedByRecruiterUserId: recruiterUserId,
     }),
+    loadRecruiterExperienceSummaries(candidateUserIds),
   ]);
   const memberById = new Map(members.map((m) => [m.id, m]));
   return {
@@ -125,10 +142,19 @@ export async function loadRequestMatches(
           evidence.interviewProblem = iv.problem;
         }
       }
-      const storedLocation =
-        typeof raw.locationLabel === "string" && raw.locationLabel.trim()
-          ? raw.locationLabel.trim()
+      const storedRankKey =
+        typeof raw.rankKey === "number" && Number.isFinite(raw.rankKey)
+          ? raw.rankKey
           : null;
+      const live = activeAvailability(
+        liveAvailability.get(m.candidateUserId) ?? null,
+      );
+      const storedLocation =
+        live?.preferredCities
+          .map((c) => c.trim())
+          .filter(Boolean)
+          .slice(0, 2)
+          .join(" · ") || null;
       const source = m.source === "PROGRAM" ? "PROGRAM" : m.source;
       const isProgram = source === "PROGRAM";
       const member = m.programMemberId
@@ -169,13 +195,19 @@ export async function loadRequestMatches(
         programMemberId: m.programMemberId,
         displayName:
           (member?.fullName?.trim() || nameByUser.get(m.candidateUserId)) ?? null,
+        professionalExperience:
+          experienceByUser.get(m.candidateUserId) ?? undefined,
         jobRole: rawRole ? tidyRoleLabel(rawRole) : "Candidate",
         locationLabel: storedLocation,
         score: m.score,
+        rankKey: storedRankKey ?? m.score,
         tier: m.tier,
         rationale: m.rationale,
         gaps: m.gaps,
-        availabilityUnknown: m.availabilityUnknown,
+        // Live, not frozen — same reason as `storedLocation` above. A stored
+        // `false` would keep asserting "availability shared" after the
+        // candidate withdrew.
+        availabilityUnknown: live == null,
         shortlisted: (member?.shortlistedBy?.length ?? 0) > 0,
         engagementStatus: engagements.get(m.candidateUserId)?.status ?? null,
         scores: pickPublicScores(m.scoreBreakdown),

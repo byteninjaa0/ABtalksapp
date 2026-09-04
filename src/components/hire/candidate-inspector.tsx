@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, ExternalLink } from "lucide-react";
-import { refPublicId, type CandidateSource } from "@/features/hire/candidate-ref";
+import { type CandidateSource } from "@/features/hire/candidate-ref";
 import { isLockedPreview } from "@/features/hire/locked-preview";
 import {
   LockedField,
@@ -20,6 +20,7 @@ import {
 import { ShortlistButton } from "@/components/talent/shortlist-button";
 import { HireScoreChart } from "@/components/hire/hire-score-chart";
 import { skillTint, trackLabel } from "@/components/hire/hire-card-facts";
+import { CareerTimeline } from "@/components/hire/career-timeline";
 import type { MatchCardData } from "@/components/hire/match-card";
 import { cn } from "@/lib/utils";
 
@@ -82,7 +83,6 @@ export function CandidateInspector({
   onCartToggle?: (inCart: boolean) => void;
 }) {
   const e = match.evidence ?? {};
-  const publicId = refPublicId(match.candidateRef);
   const sample = match.candidateRef.startsWith("SAMPLE:");
   const preview = isLockedPreview(match) ? match.preview : null;
   const { upgradeOpen, openUpgrade, dismissUpgrade } = useUpgradePrompt();
@@ -111,6 +111,7 @@ export function CandidateInspector({
     ? e.projectScores.join(" / ")
     : null;
   const resumeHref = evidenceResumeHref(match.candidateRef);
+  const professionalExperience = match.professionalExperience ?? [];
 
   useEffect(() => {
     rememberEvidence([match]);
@@ -157,7 +158,7 @@ export function CandidateInspector({
               ) : sample ? (
                 "Sample profile — not a person in the pool"
               ) : (
-                [match.jobRole, e.workMode, match.locationLabel, publicId]
+                [match.jobRole, e.workMode, match.locationLabel]
                   .filter(Boolean)
                   .join(" · ")
               )}
@@ -235,6 +236,13 @@ export function CandidateInspector({
           )}
         </div>
 
+        {professionalExperience.length > 0 && (
+          <CareerTimeline
+            experiences={professionalExperience}
+            heading="Professional experience"
+          />
+        )}
+
         {!sample && (
           <Link
             href={resumeHref}
@@ -301,7 +309,6 @@ export function CandidateInspector({
                 : null
             }
           />
-          <Metric k="Reference" v={sample ? null : publicId} />
         </div>
         {match.compensationBand && !match.compensationDeclared && (
           <p className="hire-detail__note">{COMPENSATION_DISCLAIMER}</p>
@@ -311,19 +318,6 @@ export function CandidateInspector({
           ABTalks. Experience, skills and role are self-declared. Compensation
           and availability are shown only when the candidate shared them.
         </p>
-
-        <section className="hire-detail__section">
-          <h3 className="hire-detail__h">AI candidate summary</h3>
-          {match.rationale ? (
-            <p className="hire-detail__p hire-detail__p--summary">
-              {match.rationale}
-            </p>
-          ) : (
-            <p className="hire-detail__p is-empty">
-              Resume analysis has not been recorded for this candidate yet.
-            </p>
-          )}
-        </section>
 
         {!sample && match.scores && (
           <section className="hire-detail__section">
@@ -373,13 +367,6 @@ export function CandidateInspector({
           </section>
         )}
 
-        {match.rationale && (
-          <section className="hire-detail__section">
-            <h3 className="hire-detail__h">Why this ranking</h3>
-            <p className="hire-detail__p">{match.rationale}</p>
-          </section>
-        )}
-
         {match.gaps.length > 0 && (
           <section className="hire-detail__section">
             <h3 className="hire-detail__h">Gaps</h3>
@@ -420,7 +407,6 @@ export function CandidateInspector({
               <RequestIntroButton
                 candidateRef={match.candidateRef}
                 existingStatus={match.engagementStatus ?? null}
-                publicId={publicId}
                 className="desk-request"
               />
             </>

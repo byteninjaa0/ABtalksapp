@@ -210,9 +210,8 @@ export type ScoreableMember = {
   company: string;
   yearsExperience: number;
   /**
-   * False when the candidate never told us. A stated minimum then becomes a
-   * gap on the card instead of a hard exclusion — see `evaluateHardFilters`.
-   * Absent is treated as true.
+   * False when the candidate never told us. Absent is treated as true so a
+   * hand-built member in a test still behaves the way it always did.
    */
   yearsExperienceKnown?: boolean;
   skills: string[];
@@ -278,6 +277,32 @@ export type ScoredCandidate = {
   jobRole: string;
   company: string;
   score: number;
+  /** 0–100 how good the evidence we have looks. Separate from confidence. */
+  match?: number;
+  /** 0–1 how much of the requirement we could actually check. */
+  confidence?: number;
+  verdicts?: import("@/lib/validations/hire").CriterionVerdict[];
+  /**
+   * Weighted mean of per-verdict confidence — proven versus claimed, for the
+   * criteria we could judge. Ranks BELOW match, never into it.
+   */
+  evidenceStrength?: number;
+  /** Platform standing, 0–100. Tie-break within a match band only. */
+  standing?: number;
+  /**
+   * The engine's final position in the result, as a descending ordinal.
+   *
+   * Not a score — the position. It exists because the surface re-sorts, and
+   * the engine's order depends on `evidenceStrength` and `standing`, which the
+   * card does not carry. Exporting the position rather than the sort score is
+   * what makes the screen reproduce the ranking by construction instead of by
+   * two comparators agreeing. Higher is better.
+   */
+  rankKey?: number;
+  evidenceLabel?: "Verified" | "Partial" | "Thin";
+  evidenceReasons?: string[];
+  standingDetail?: import("@/features/hire/standing").StandingResult | null;
+  excludedReason?: string;
   tier: MatchTier;
   scoreBreakdown: ScoreBreakdown;
   evidence: CandidateEvidence;

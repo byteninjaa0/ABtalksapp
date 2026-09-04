@@ -1,9 +1,4 @@
 import { encodeCandidateRef } from "@/features/hire/candidate-ref";
-import {
-  ROLE_FAMILY_LABEL,
-  roleFamilyFor,
-  type RoleFamily,
-} from "@/features/hire/role-family";
 import type { JobSpec } from "@/lib/validations/hire";
 import type {
   EvidenceCoverage,
@@ -250,29 +245,8 @@ function tierFor(
 }
 
 /**
- * Role buckets that do not CONTRADICT a stated role — they are the absence of
- * one.
- *
- * `jobRole` is free text the member typed, and most of the platform never typed
- * anything: `roleFamilyFor` returns OTHER, and a student on a student platform
- * says STUDENT. Treating either as a conflict is what emptied the board — asked
- * for a "senior manager" every single candidate came back "Role mismatch:
- * requires Management", because nobody had declared a management title, not
- * because anybody had declared a different one.
- */
-const UNSPECIFIC_ROLE = new Set<RoleFamily>(["OTHER", "STUDENT"]);
-
-/**
- * Hard filters + availability. Does not score — used before weighting.
- * Members failing hard filters get hardFiltered=true and score 0.
- *
- * The rule the whole function obeys: **a hard filter fires only on a fact we
- * KNOW and that contradicts the requirement.** Missing data is not a
- * contradiction. Role, years of experience, degree level and availability are
- * blank on most of this pool, and hard-filtering on a blank field produced the
- * failure this exists to stop — a real search returning zero cards over data
- * nobody ever filled in. Anything unknown becomes a `softReasons` entry, which
- * the card shows as a gap and the recruiter can judge for themselves.
+ * Structural eligibility only. Recruiter-stated requirements are evaluated in
+ * `criteria.ts` and never hard-exclude on missing data.
  */
 export function evaluateHardFilters(
   member: ScoreableMember,
@@ -280,145 +254,19 @@ export function evaluateHardFilters(
 ): {
   ok: boolean;
   reasons: string[];
-  /** Unknowns, not contradictions. Shown on the card; never exclude. */
   softReasons: string[];
   missingMust: string[];
 } {
   const reasons: string[] = [];
-  const softReasons: string[] = [];
-
   if (!member.cohortPublished) {
     reasons.push("Cohort results not published");
   }
   if (member.status !== "ENROLLED" && member.status !== "COMPLETED") {
     reasons.push(`Status ${member.status} not eligible`);
   }
-
   const must = spec.mustHaveStack ?? [];
   const missingMust = must.filter((m) => !stackTokensMatch(member.skills, m));
-  // Must-have stack is a soft-hard hybrid: missing must-haves do not hard-exclude
-  // so PARTIAL near-misses can power the gap report. They block STRONG via tierFor.
-
-  // The role used to be presentation-only: "backend engineer" and "data
-  // analyst" searched the same people unless the recruiter separately named
-  // skills. Scout already captures a title as a structured field; use the
-  // shared role taxonomy to make that stated requirement a real gate. An
-  // unrecognised title is not guessed at — no taxonomy match means it stays a
-  // label until we can support it precisely.
-  const requestedRole = roleFamilyFor(spec.title);
-  if (requestedRole !== "OTHER") {
-    const candidateRole = roleFamilyFor(member.jobRole);
-    if (UNSPECIFIC_ROLE.has(candidateRole)) {
-      // Nothing to contradict. Say so on the card and let the evidence rank.
-      softReasons.push(
-        `${ROLE_FAMILY_LABEL[requestedRole]} role not declared on the profile`,
-      );
-    } else if (candidateRole !== requestedRole) {
-      reasons.push(
-        `Role mismatch: requires ${ROLE_FAMILY_LABEL[requestedRole]}`,
-      );
-    }
-  }
-
-  // Experience was previously a ranking hint. That let someone outside an
-  // explicitly requested range appear as a lower-scoring card, which is not an
-  // exact match. An explicitly stated minimum or maximum is a filter — but only
-  // against a figure the candidate actually gave us. `yearsFor` returns 0 for
-  // "never told us", so an unqualified minimum excluded everybody who had left
-  // the field blank, which on this pool is nearly everybody.
-  const experience = strictExperienceBand(spec);
-  const yearsStated =
-    member.yearsExperienceKnown !== false && member.yearsExperience > 0;
-  if (experience.min != null && member.yearsExperience < experience.min) {
-    if (yearsStated) {
-      reasons.push(`Experience below required ${experience.min}+ years`);
-    } else {
-      softReasons.push(
-        `Years of experience not stated — ${experience.min}+ years unverified`,
-      );
-    }
-  }
-  if (
-    experience.max != null &&
-    yearsStated &&
-    member.yearsExperience > experience.max
-  ) {
-    reasons.push(`Experience above required ${experience.max} years`);
-  }
-
-  // Education level is null on every challenge and hackathon dossier by design
-  // — we never collected it. Enforcing it as a filter did not select for
-  // graduates, it deleted the pool.
-  if (spec.requiresDegree && !member.dossier?.education.value.level?.trim()) {
-    softReasons.push("Degree not verified on the profile");
-  }
-
-  const avail = member.availability;
-  const extra = (spec.extra ?? {}) as Record<string, unknown>;
-  const salaryCap =
-    spec.salaryMax != null &&
-    !(spec.salaryMin === 0 && spec.salaryMax === 0);
-  const needsAvailability =
-    extra.openToWork === true ||
-    salaryCap ||
-    (spec.noticePeriodDays != null && spec.noticePeriodDays < 180) ||
-    (spec.workMode != null && spec.workMode !== "FLEXIBLE") ||
-    Boolean(spec.locationCity?.trim() && spec.locationCity !== "Any");
-
-  // Unknown availability is not a refusal. Most candidates have never opened
-  // the availability form, so requiring it turned "remote" — one word from the
-  // recruiter — into a filter that removed the entire pool. The card carries
-  // the gap and the recruiter confirms at outreach, which is what they do
-  // anyway.
-  if (!avail && needsAvailability) {
-    softReasons.push("Availability not shared for a stated requirement");
-  }
-  if (avail) {
-    if (extra.openToWork === true && !avail.openToWork) {
-      reasons.push("Not open to work");
-    }
-    if (
-      salaryCap &&
-      spec.salaryMax != null &&
-      avail.expectedSalaryMin != null &&
-      avail.expectedSalaryMin > spec.salaryMax
-    ) {
-      reasons.push("Expected salary above budget");
-    }
-    if (
-      spec.noticePeriodDays != null &&
-      avail.noticePeriodDays != null &&
-      avail.noticePeriodDays > spec.noticePeriodDays
-    ) {
-      reasons.push("Notice period too long");
-    }
-    if (
-      spec.workMode &&
-      spec.workMode !== "FLEXIBLE" &&
-      avail.preferredWorkMode &&
-      avail.preferredWorkMode !== "FLEXIBLE" &&
-      avail.preferredWorkMode !== spec.workMode
-    ) {
-      reasons.push("Work mode mismatch");
-    }
-    if (
-      spec.locationCity &&
-      spec.locationCity !== "Any" &&
-      !avail.openToRelocate &&
-      avail.preferredCities.length > 0
-    ) {
-      const city = normToken(spec.locationCity);
-      const hit = avail.preferredCities.some(
-        (c) =>
-          normToken(c) === city ||
-          normToken(c).includes(city) ||
-          city.includes(normToken(c)),
-      );
-      if (!hit) reasons.push("Location mismatch");
-    }
-  }
-
-  return { ok: reasons.length === 0, reasons, softReasons, missingMust };
+  return { ok: reasons.length === 0, reasons, softReasons: [], missingMust };
 }
 
 /**
@@ -440,39 +288,6 @@ const SENIORITY_BAND: Record<string, { min: number; max: number }> = {
   SENIOR: { min: 5, max: 12 },
   LEAD: { min: 8, max: 25 },
 };
-
-/**
- * A stated experience requirement as a hard range.
- *
- * `0–50` is Scout's "evidence only" sentinel, so it deliberately means no
- * experience filter. With a single stated minimum, retain only the minimum —
- * the old scoring helper invents a ten-year upper bound to shape a score, which
- * would be wrong to enforce as a recruiter requirement.
- */
-function strictExperienceBand(spec: JobSpec): {
-  min: number | null;
-  max: number | null;
-} {
-  if (
-    spec.minExperience != null &&
-    spec.maxExperience != null &&
-    spec.minExperience === 0 &&
-    spec.maxExperience >= 50
-  ) {
-    return { min: null, max: null };
-  }
-  if (spec.minExperience != null || spec.maxExperience != null) {
-    return {
-      min: spec.minExperience ?? null,
-      max: spec.maxExperience ?? null,
-    };
-  }
-  // Seniority is the recruiter's shorthand, not a number they committed to.
-  // Turning "senior" into a silent 5-year floor excluded people the recruiter
-  // never ruled out — it still shapes the RANKING through
-  // `effectiveExperienceBand`, which is where a shorthand belongs.
-  return { min: null, max: null };
-}
 
 /**
  * The experience band to score against.

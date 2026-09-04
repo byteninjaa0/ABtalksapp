@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, UserRound } from "lucide-react";
 import { toast } from "sonner";
-import { decodeCandidateRef, refPublicId } from "@/features/hire/candidate-ref";
+import { decodeCandidateRef } from "@/features/hire/candidate-ref";
 import { useHireDesk } from "@/components/hire/hire-desk-context";
 import {
   DESK_SHORTLIST_EVENT,
@@ -185,7 +185,6 @@ export function HireSavedLater() {
               </div>
             ) : (
               rows.map((row) => {
-                const publicId = refPublicId(row.candidateRef);
                 const onShortlist = guestCartHas(row.candidateRef);
                 const match = savedToMatch(row);
                 const stack =
@@ -205,7 +204,6 @@ export function HireSavedLater() {
                           {match.displayName || row.jobRole}
                         </p>
                         {stack && <p className="desk-card__stack">{stack}</p>}
-                        <p className="hire-pod__ref">{publicId}</p>
                         <MatchMetaTags match={match} />
                       </div>
                     </div>
@@ -218,9 +216,6 @@ export function HireSavedLater() {
                       </div>
                     )}
                     <MatchPills match={match} compact />
-                    {match.rationale && (
-                      <p className="desk-card__why">{match.rationale}</p>
-                    )}
                     <div className="hire-pod__actions">
                       <button
                         type="button"

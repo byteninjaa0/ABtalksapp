@@ -3,6 +3,10 @@ import type {
   PublicScoreSlice,
 } from "@/components/hire/match-card";
 import type { ScoredCandidate } from "@/features/hire/types";
+import {
+  visibleAvailability,
+  type AvailabilityViewer,
+} from "@/features/hire/availability-access";
 import { formatBandLpa } from "@/features/hire/compensation";
 import { ROLE_FAMILY_LABEL } from "@/features/hire/role-family";
 
@@ -155,6 +159,17 @@ export function toPublicMatch(
     shortlisted?: boolean;
     coverageNote?: string | null;
     highlightSkills?: string[];
+    /**
+     * Who is going to read this card. **Defaults to `"guest"` on purpose.**
+     *
+     * Guest Scout at `/hire` is public and unauthenticated, and it called this
+     * mapper with exactly the same arguments as the signed-in desk — so a
+     * candidate's preferred city and work mode were rendered to anyone who
+     * opened the page, against a privacy note that says approved recruiters
+     * only. Failing closed means a new call site leaks nothing until it says
+     * who is looking.
+     */
+    viewer?: AvailabilityViewer;
   },
 ): MatchCardData {
   const dossier = match.dossier;
@@ -163,7 +178,14 @@ export function toPublicMatch(
   const interview = match.evidence.interview;
   const links = dossier?.links.value;
   const edu = dossier?.education.value;
-  const availability = dossier?.availability;
+  // One line carries both halves of the privacy rule: an approved recruiter
+  // only, and only while the candidate is actually open to work. Everything
+  // downstream reads `availability`, so neither check can be forgotten by a
+  // field added later.
+  const availability = visibleAvailability(
+    dossier?.availability ?? null,
+    opts?.viewer ?? "guest",
+  );
   // The candidate's OWN stated salary expectation is never shown to a recruiter.
   //
   // It lives on `CandidatePreference.expectedSalary*`, which the 078 schema marks
@@ -195,11 +217,22 @@ export function toPublicMatch(
     // on the dossier, so nothing here is passed off as the candidate's claim.
     jobRole: declaredRole(match),
     locationLabel: locationLabel(availability?.preferredCities),
-    score: match.score,
+    score: match.match ?? match.score,
+    // Ranking context, not a quality score. `standing` orders equivalents; it
+    // cannot move anyone across a match band, so the UI must never present it
+    // as "how good a match this is".
+    standing: match.standing,
+    standingMarks: match.standingDetail?.used,
+    rankKey: match.rankKey,
+    evidenceLabel: match.evidenceLabel,
+    evidenceReasons: match.evidenceReasons,
     tier: match.tier,
     rationale: match.rationale ?? null,
     gaps: match.gaps,
-    availabilityUnknown: match.availabilityUnknown,
+    // Truthful for this viewer: "we have nothing we can use or show you here".
+    // A withdrawn row and a guest viewer both land on unknown, which is what
+    // the card's "confirm at outreach" line should say in both cases.
+    availabilityUnknown: availability == null,
     shortlisted: opts?.shortlisted ?? false,
     engagementStatus: null,
     scores: pickPublicScores(match.scoreBreakdown),

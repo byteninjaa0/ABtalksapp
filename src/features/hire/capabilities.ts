@@ -2,11 +2,17 @@
  * What Scout can actually filter on — and what it must admit it cannot.
  *
  * A recruiter asked for "profiles who are in US" and Scout replied "Noted — US
- * location it is." No candidate on the platform has ever shared a location, so
- * that was a promise the search could never keep, and the recruiter had no way
- * to know. Accepting an unsupported filter is worse than refusing it: the
- * shortlist that comes back looks like an answer to the question that was
- * asked.
+ * location it is", which the search could not keep and the recruiter had no way
+ * to check. Accepting an unsupported filter is worse than refusing it: the
+ * shortlist that comes back looks like an answer to the question that was asked.
+ *
+ * The opposite failure is just as bad and this file caused it. The location
+ * entry claimed "nobody in the pool has shared a city" — a hard-coded fact that
+ * stopped being true, and that contradicted `criteria.ts`, which evaluates
+ * cities against opted-in `preferredCities` and `openToRelocate`. Scout refused
+ * a filter it was in fact applying. Nothing in this list may assert a
+ * *quantity* about the pool: state the capability, and let the search report
+ * the numbers.
  *
  * Every gap here is a fact about the data, not a limitation of the model, so
  * this list is the honest one and it lives in exactly one place.
@@ -53,13 +59,44 @@ export const UNSUPPORTED_FILTERS: UnsupportedFilter[] = [
       "I don't filter people by gender, age, caste, religion or marital status, and I won't approximate it another way.",
   },
   {
-    // Cities and countries we have no track for. India / US are routed to
-    // the challenge vs cohort pools in pool-brief.ts — they must not land here.
+    /**
+     * Where a candidate *currently lives* — as opposed to where they have said
+     * they are willing to work.
+     *
+     * These are different questions and only the second is answerable. The
+     * only location data on this platform is opted-in willingness
+     * (`CandidatePreference.preferredLocations` / `willingToRelocate`); a
+     * candidate's actual residence is on their private profile and is never
+     * read on a recruiter path. Answering "who lives in Pune" from
+     * "who is willing to work in Pune" would be a quiet substitution the
+     * recruiter has no way to detect, so it is refused precisely instead.
+     */
+    id: "current_residence",
+    match:
+      /\b(currently|presently|right now)\s+(based|living|located|residing)\b|\b(who|candidates?|people|profiles?)\s+(who\s+)?(live|lives|living|reside|residing)\s+in\b|\bbased out of\b|\bhome ?town\b|\blocal (?:to|candidates)\b|\bnearby\b/i,
+    reply:
+      "I can't tell you where someone currently lives — we don't collect it, and I won't guess it from anything else.",
+    instead:
+      "I can match on the cities a candidate has said they're willing to work in, and on whether they're open to relocating.",
+  },
+  {
+    /**
+     * Places we have no pool for at all.
+     *
+     * Deliberately NOT a list of Indian cities any more. This entry used to
+     * match nine of them plus "relocat" and "onsite in", and told the recruiter
+     * "nobody in the pool has shared a city" — a hard-coded claim that was both
+     * unverified and, by the time `criteria.ts` grew a location evaluator,
+     * false. Scout was refusing a filter the engine then quietly applied.
+     *
+     * India / US route to the challenge vs cohort pools in pool-brief.ts and
+     * must not land here.
+     */
     id: "candidate_location",
     match:
-      /\b(in|from|based in|located in|living in)\s+(the\s+)?(uk|canada|europe|australia|singapore|uae|dubai)\b|\b(bangalore|bengaluru|delhi|ncr|mumbai|hyderabad|pune|chennai|noida|gurgaon)\b|\b(relocat|onsite in|nearby|local candidates)\b/i,
+      /\b(in|from|based in|located in|living in|hiring in)\s+(the\s+)?(uk|united kingdom|canada|europe|australia|singapore|uae|dubai|germany|japan)\b/i,
     reply:
-      "I can't filter by that city — nobody in the pool has shared a city. I can search the India tracks or the US cohort.",
+      "I don't have a candidate pool in that country — the tracks I can search are in India, plus the US cohort.",
     instead:
       "Say India or US, or name the track (Claude challenge, cohort, hackathon).",
   },

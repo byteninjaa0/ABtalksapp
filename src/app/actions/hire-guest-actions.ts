@@ -10,7 +10,6 @@ import { runScoutTurn } from "@/features/hire/scout-conversation";
 import { searchCandidates } from "@/features/hire/search-candidates";
 import { explainMatches } from "@/features/hire/explain-matches";
 import { toPublicMatch } from "@/features/hire/to-public-match";
-import { sanitizeSpecStack } from "@/features/hire/spec-fields";
 import type { MatchCardData } from "@/components/hire/match-card";
 import type { JobSpec } from "@/lib/validations/hire";
 
@@ -104,7 +103,7 @@ export async function runGuestMatchAction(
   if (!parsed.success) return { ok: false, message: "Invalid requirement." };
 
   try {
-    const spec = sanitizeSpecStack(parsed.data.spec);
+    const spec = parsed.data.spec;
     const search = await searchCandidates(spec, { limit: 20 });
     if (!search.ok) return search;
     const explained = await explainMatches(
@@ -125,6 +124,9 @@ export async function runGuestMatchAction(
           toPublicMatch(m, {
             coverageNote: search.data.coverage.note,
             highlightSkills: spec.mustHaveStack,
+            // Public and unauthenticated. Opted-in availability is withheld
+            // here by the privacy note, not by anything the caller remembers.
+            viewer: "guest",
           }),
         ),
         overallGap: explained.overallGap,
