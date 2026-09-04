@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Fragment,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -13,7 +12,6 @@ import {
   ChevronDown,
   Maximize2,
   Minimize2,
-  Search,
   Sparkles,
 } from "lucide-react";
 import { suggestChips } from "@/features/hire/scout-chips";
@@ -27,6 +25,8 @@ import {
   sendGuestScoutMessageAction,
 } from "@/app/actions/hire-guest-actions";
 import { MatchResults } from "@/components/hire/match-results";
+import { DeskCardSkeleton } from "@/components/hire/desk-card-skeleton";
+import { ScoutUnderstood } from "@/components/hire/scout-understood";
 import { CandidateInspector } from "@/components/hire/candidate-inspector";
 import { GapReport } from "@/components/hire/gap-report";
 import { useHireDesk } from "@/components/hire/hire-desk-context";
@@ -102,6 +102,19 @@ const OPENING: Msg = {
   ],
 };
 
+/**
+ * Starting points, not answers.
+ *
+ * These are the five roles the opening turn used to offer as chips. As chips
+ * they were a multiple-choice question; as examples they fill the composer and
+ * wait to be edited, which is the difference between being asked and being
+ * helped. Each one is a whole query, so it also teaches the input's range.
+ */
+const EXAMPLE_QUERIES = [
+  "Backend engineer, Python, 2+ years",
+  "AI engineer in Delhi, 3+ years",
+];
+
 const SENIORITY_LABEL: Record<string, string> = {
   INTERN: "Intern",
   JUNIOR: "Junior",
@@ -131,6 +144,22 @@ const EVIDENCE_LABEL: Record<string, string> = {
   consistency: "Consistency",
   interview: "Communication",
 };
+
+/**
+ * Status text while a search runs.
+ *
+ * These are timed, not reported: `runMatchAction` is a single call and exposes
+ * no progress events. Each line is therefore something the call genuinely does
+ * in every ordering — never a claim that a particular step has finished. The
+ * timings only pace the reading; the last line holds until the call returns.
+ */
+const SEARCH_STAGES = [
+  "Reading your requirement…",
+  "Matching verified candidates…",
+  "Ranking on evidence…",
+] as const;
+const SEARCH_STAGE_AT = [0, 900, 2100] as const;
+const REPLY_LABEL = "Thinking it through…";
 
 function looksLikeSalaryAsk(text: string): boolean {
   return /\b(salary|budget|compensation|lpa|ctc|stipend|pay range|package)\b/i.test(
@@ -298,6 +327,9 @@ export function ScoutChat({
   const [readyToSearch, setReadyToSearch] = useState(false);
   const [text, setText] = useState("");
   const [pending, startTransition] = useTransition();
+  /** Which kind of work `pending` covers — a one-line reply, or a full search. */
+  const [phase, setPhase] = useState<"reply" | "search">("reply");
+  const [stage, setStage] = useState(0);
   const [searched, setSearched] = useState(
     initialSearched || (results?.length ?? 0) > 0,
   );
@@ -307,6 +339,25 @@ export function ScoutChat({
   const [searchTabs, setSearchTabs] = useState<GuestSearchTab[]>([]);
   const [activeSearchId, setActiveSearchId] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(false);
+  /** The full turn record, collapsed by default. Available, not in the way. */
+  const [historyOpen, setHistoryOpen] = useState(false);
+  /**
+   * Ghost text sitting behind the cursor after a criterion is tapped.
+   * `prefix` is the label written into the field; the hint clears the moment
+   * what is typed stops being exactly that label.
+   */
+  const [hint, setHint] = useState<{ prefix: string; text: string } | null>(
+    null,
+  );
+  /**
+   * Once a search has run the card is folded to the query that produced it,
+   * because the candidates are what the recruiter came for. `reopened` is
+   * them asking for the full copilot back; scrolling into the list clears it.
+   */
+  const [reopened, setReopened] = useState(false);
+  const shellRef = useRef<HTMLElement>(null);
+  /** Folded unless the recruiter asked for the copilot back, or Scout is busy. */
+  const condensed = searched && !reopened && !pending;
   const [expanded, setExpanded] = useState(false);
   const [openMatch, setOpenMatch] = useState<MatchCardData | null>(null);
   /** Cards sit under this message index so a later turn starts below them. */
@@ -315,6 +366,10 @@ export function ScoutChat({
       ? Math.max(0, (initialMessages.length || 1) - 1)
       : null,
   );
+  /** Criteria keys already acknowledged once, so a tick animates only on the
+   *  turn it actually goes green — not on every later re-render. */
+  const seenCriteriaRef = useRef<Set<string>>(new Set());
+  const [justOn, setJustOn] = useState<string[]>([]);
   const { setDesk, view, inspect, clearInspect } = useHireDesk();
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -370,14 +425,20 @@ export function ScoutChat({
     clearInspect();
   }, [inspect, clearInspect]);
 
+  /** Hoisted above the desk effect: the chrome needs it to lay itself out. */
+  const talked = messages.some((m) => m.role === "user") || searched;
+
   useEffect(() => {
     if (view === "pod") return;
     setDesk({
       step: searched ? 2 : 1,
+      // Once true this never goes back to false except through a desk reset,
+      // so the workspace cannot flicker back to its landing layout mid-search.
+      started: talked,
       matchCount,
       gap: deskGap,
     });
-  }, [searched, matchCount, deskGap, setDesk, view]);
+  }, [searched, talked, matchCount, deskGap, setDesk, view]);
 
   useEffect(() => {
     if (hydratedRef.current) return;
@@ -431,6 +492,99 @@ export function ScoutChat({
     detailsOpen,
   ]);
 
+  /**
+   * Collapse and expand at a measured height.
+   *
+   * The card's parts are removed from layout when it folds, so there is no
+   * intrinsic height to interpolate between. The previous height is kept and
+   * replayed on the element for one transition, then handed back to the
+   * stylesheet. Only a change of fold state animates, so ordinary reflows
+   * inside the card (a new chip row, a longer line) are not caught up in it.
+   */
+  const foldHeightRef = useRef<number | null>(null);
+  /** Height mid-flight when a transition is cut short by the next toggle. */
+  const interruptedRef = useRef<number | null>(null);
+  const wasCondensedRef = useRef(condensed);
+  useLayoutEffect(() => {
+    const el = shellRef.current;
+    const changed = wasCondensedRef.current !== condensed;
+    wasCondensedRef.current = condensed;
+    if (!el || !searched) {
+      foldHeightRef.current = null;
+      return;
+    }
+    const to = el.offsetHeight;
+    // Toggling again mid-transition should carry on from where the card
+    // actually is, not from where the last one finished; otherwise it jumps to
+    // the old resting height first and the movement reads as a stutter.
+    const from = interruptedRef.current ?? foldHeightRef.current;
+    interruptedRef.current = null;
+    foldHeightRef.current = to;
+    if (!changed || from == null || from === to) return;
+
+    el.style.overflow = "hidden";
+    el.style.height = `${from}px`;
+    // Force the start height to be committed before the target is set.
+    void el.offsetHeight;
+    el.style.transition = "height var(--dur-state) var(--ease-slide)";
+    el.style.height = `${to}px`;
+    const done = () => {
+      el.style.height = "";
+      el.style.transition = "";
+      el.style.overflow = "";
+    };
+    // transitionend bubbles. A chip or button inside the card finishing its own
+    // 180ms hover would otherwise end the card's transition a third of the way
+    // through, drop the inline height and snap the rest of the way. Only this
+    // element's own height counts.
+    const onEnd = (e: TransitionEvent) => {
+      if (e.target !== el || e.propertyName !== "height") return;
+      el.removeEventListener("transitionend", onEnd);
+      done();
+    };
+    el.addEventListener("transitionend", onEnd);
+    // A transition that never fires (interrupted by a tab switch, or a height
+    // that resolves to the same value) must not leave the card pinned.
+    const failsafe = window.setTimeout(done, 1600);
+    return () => {
+      window.clearTimeout(failsafe);
+      el.removeEventListener("transitionend", onEnd);
+      if (el.style.height) interruptedRef.current = el.offsetHeight;
+      done();
+    };
+  }, [condensed, searched]);
+
+  /**
+   * Re-fold when the recruiter scrolls into the list.
+   *
+   * The fold is the default once a search has run, so this only undoes a
+   * manual expand. It deliberately does not expand on the way back up: at the
+   * top the results are what should be on screen, and a card that reopened by
+   * itself was the reason half the viewport went back to being Scout.
+   */
+  useEffect(() => {
+    if (!searched || !reopened) return;
+    const region = shellRef.current?.closest(".hire-scout-region");
+    if (!region) return;
+    const onScroll = () => {
+      if (region.scrollTop > 120) setReopened(false);
+    };
+    region.addEventListener("scroll", onScroll, { passive: true });
+    return () => region.removeEventListener("scroll", onScroll);
+  }, [searched, reopened]);
+
+  // Contextual loading. The stage index only advances while a search is the
+  // thing being waited on; a one-line reply keeps a single calm label.
+  // The stage resets where the phase is set, not here — a setState in this
+  // effect would just cascade a render for a value the caller already knows.
+  useEffect(() => {
+    if (!pending || phase !== "search") return;
+    const timers = SEARCH_STAGE_AT.slice(1).map((at, i) =>
+      window.setTimeout(() => setStage(i + 1), at),
+    );
+    return () => timers.forEach((t) => window.clearTimeout(t));
+  }, [pending, phase]);
+
   useEffect(() => {
     if (!detailsOpen) return;
     function onPointer(e: MouseEvent) {
@@ -471,6 +625,9 @@ export function ScoutChat({
     const shown = label?.trim() || message;
     setMessages((m) => [...m, { role: "user", content: shown }]);
     setText("");
+    setHint(null);
+    setPhase("reply");
+    setStage(0);
     startTransition(async () => {
       if (persist) {
         const res = await sendScoutMessageAction({
@@ -498,6 +655,8 @@ export function ScoutChat({
         // chat; if we kicked search off after it, the first brief never
         // wrote matches and the new page said "No matches yet".
         if (res.data.action === "search") {
+          setPhase("search");
+          setStage(0);
           const match = await runMatchAction({
             requestId: res.data.requestId,
           });
@@ -568,6 +727,8 @@ export function ScoutChat({
       return;
     }
     const active = overrideSpec ?? spec;
+    setPhase("search");
+    setStage(0);
     startTransition(async () => {
       if (persist) {
         const res = await runMatchAction({ requestId: requestId! });
@@ -576,6 +737,7 @@ export function ScoutChat({
           return;
         }
         setSearched(true);
+        setReopened(false);
         setMatchCount(res.data.matchCount);
         setMessages((m) => {
           const next: Msg[] = [
@@ -636,6 +798,34 @@ export function ScoutChat({
   const activeOptions =
     lastMsg?.role === "assistant" ? (lastMsg.options ?? []) : [];
   const askOpen = lastMsg?.role === "assistant" && !pending && !openMatch;
+  /**
+   * The one Scout line that is still live.
+   *
+   * The thread is no longer the interface, so only the newest assistant turn is
+   * on screen — as interpretation of the query, above the workspace. Everything
+   * else is intact in `messages`, behind the history disclosure, and is still
+   * sent to the agent as context.
+   */
+  const lede =
+    [...messages].reverse().find((m) => m.role === "assistant") ?? null;
+  /**
+   * The transcript, minus the turn nobody saw.
+   *
+   * `OPENING` seeds `messages` so the agent has an opening line in its context,
+   * but the workspace never renders it — showing it in the history put a
+   * question at the top that the recruiter was never asked and did not answer.
+   */
+  const transcript = messages.filter(
+    (m, i) => !(i === 0 && m.role === "assistant" && m.content === OPENING.content),
+  );
+  /**
+   * Everything before the line currently on screen.
+   *
+   * The disclosure counts and shows only these, and sits above the latest
+   * message rather than under it: what is folded away happened *before* what
+   * you are reading, so that is where the reader expects the handle to be.
+   */
+  const priorTurns = lede ? transcript.filter((m) => m !== lede) : transcript;
   // Same chips the conversation engine sent for this turn. Show me is
   // `action:search` and only lands when the brief is searchable — do not
   // invent extra pills here. An empty options list still gets the ladder so
@@ -651,7 +841,6 @@ export function ScoutChat({
     }
     return ladder;
   })();
-  const talked = messages.some((m) => m.role === "user") || searched;
   const spoken = detectSpoken(
     [
       ...messages.filter((m) => m.role === "user").map((m) => m.content),
@@ -705,22 +894,57 @@ export function ScoutChat({
   useEffect(() => {
     const list = criteriaRef.current;
     if (!list) return;
+    // Only where the strip still scrolls — the phone breakpoint. Once it wraps
+    // every criterion is already visible, and scrolling a non-scrolling list
+    // just nudges the page under someone who is typing.
+    if (list.scrollWidth <= list.clientWidth) return;
     const ticked = list.querySelectorAll<HTMLLIElement>(".scout-criterion.is-on");
     const last = ticked[ticked.length - 1];
     if (!last) return;
     last.scrollIntoView({ behavior: "smooth", inline: "end", block: "nearest" });
   }, [tickSignature]);
 
-  const REQUIREMENT_ASK: Record<(typeof criteria)[number]["key"], string> = {
-    Role: "Let's cover the role — what are you hiring for?",
-    "Years of Experience": "What years of experience should they have?",
-    Location: "Which city should they be in, or is remote fine?",
-    "Education Qualification": "Do they need a degree?",
-    Skills: "Which skills are must-haves?",
-    Availability: "Remote, hybrid or onsite?",
-    Compensation: "What's the budget for this role?",
-    "Type of Employment": "Full-time, part-time, internship or contract?",
-    "ABtalks Recommended": "Should we rank on ABTalks verified evidence first?",
+  /**
+   * Play the acknowledgement, once, on the tick that just landed.
+   *
+   * The strip renders only met criteria, so a newly detected requirement mounts
+   * already green and the neutral→green moment is never seen. Marking just the
+   * newly-on keys replays it from grey — which is the whole point of ticking as
+   * the recruiter types rather than after the turn is parsed.
+   */
+  const onKeys = criteria
+    .filter((c) => c.on)
+    .map((c) => c.key)
+    .join("|");
+  useEffect(() => {
+    const keys = onKeys ? onKeys.split("|") : [];
+    const fresh = keys.filter((k) => !seenCriteriaRef.current.has(k));
+    if (fresh.length === 0) return;
+    fresh.forEach((k) => seenCriteriaRef.current.add(k));
+    setJustOn(fresh);
+    const timer = window.setTimeout(() => setJustOn([]), 420);
+    return () => window.clearTimeout(timer);
+  }, [onKeys]);
+
+  /**
+   * What a value for this criterion tends to look like.
+   *
+   * Tapping a criterion no longer sends anything. It writes "Role: " into the
+   * composer and shows one of these behind the cursor, so the recruiter answers
+   * in their own words in the one field they were already using. The typed
+   * result is an ordinary free-text message, which is what the agent has always
+   * parsed best.
+   */
+  const REQUIREMENT_HINT: Record<(typeof criteria)[number]["key"], string> = {
+    Role: "UI/UX designer, backend engineer, data analyst…",
+    "Years of Experience": "3+ years, fresher, senior…",
+    Location: "Bangalore, Delhi NCR, remote…",
+    "Education Qualification": "B.Tech, MCA, no degree needed…",
+    Skills: "Python, React, PyTorch…",
+    Availability: "remote, hybrid, immediate joiner…",
+    Compensation: "12 to 18 LPA, 40k per month…",
+    "Type of Employment": "full-time, internship, contract…",
+    "ABtalks Recommended": "rank on verified project quality…",
   };
 
   const EMP_FILTERS = [
@@ -734,7 +958,17 @@ export function ScoutChat({
   function pickRequirement(key: (typeof criteria)[number]["key"], already: boolean) {
     setDetailsOpen(false);
     if (already || pending) return;
-    send(REQUIREMENT_ASK[key]);
+    const prefix = `${key}: `;
+    setText(prefix);
+    setHint({ prefix, text: REQUIREMENT_HINT[key] });
+    const field = promptRef.current;
+    if (field) {
+      field.focus();
+      // Caret after the label, not before it.
+      requestAnimationFrame(() =>
+        field.setSelectionRange(prefix.length, prefix.length),
+      );
+    }
   }
 
   function pickEmployment(value: (typeof EMP_FILTERS)[number]["value"]) {
@@ -747,6 +981,12 @@ export function ScoutChat({
     }
     setDetailsOpen(false);
     send(row.prompt);
+  }
+
+  /** Load an example into the composer. Deliberately does not send. */
+  function applyExample(query: string) {
+    setText(query);
+    promptRef.current?.focus();
   }
 
   function resetDesk() {
@@ -767,21 +1007,84 @@ export function ScoutChat({
     setText("");
     setDetailsOpen(false);
     setOpenMatch(null);
+    setHint(null);
   }
 
-  // The strip is feedback, not a form. Nine grey labels under an empty composer
-  // tell the recruiter nothing and cost the field a row of height, so the strip
-  // only appears once something has actually been captured, and only shows what
-  // was captured. `criteria` itself stays whole — the Requirement menu still
-  // lists all nine with their on/off state.
-  const metCriteria = criteria.filter((c) => c.on);
-  const stripOpen = metCriteria.length > 0;
-  const stripItemsRef = useRef(metCriteria);
-  if (stripOpen) stripItemsRef.current = metCriteria;
-  const stripItems = stripOpen ? metCriteria : stripItemsRef.current;
+  // The strip shows all nine criteria from the first render, muted until each
+  // one is captured.
+  //
+  // It used to render only `criteria.filter(c => c.on)` and stay collapsed
+  // until one was — the idea being that grey labels under an empty composer
+  // said nothing. In practice the opposite was true: a recruiter could not see
+  // what Scout was even trying to collect, and the row appearing mid-typing
+  // moved the composer under their hands. Showing the whole list makes the
+  // strip a legible target, and its height is now constant, so nothing shifts
+  // as ticks land.
+  //
+  // `is-open` is permanent for the same reason: the slot animates
+  // grid-template-rows between 0fr and 1fr, and there is no longer a state
+  // where the strip should be closed.
+  const stripItems = criteria;
+  /**
+   * The strip appears when there is something to interpret.
+   *
+   * On an untouched desk it is nine grey labels under an empty field, which
+   * says nothing and pushes the composer off centre. It opens on the first
+   * keystroke, which is also the first moment it can be right, and once
+   * anything has been captured it stays open so the row never flickers
+   * between turns.
+   */
+  const stripOpen = text.trim().length > 0 || criteria.some((c) => c.on);
+
+  /** What the recruiter actually asked for, to show on the folded card. */
+  const lastAsk = [...messages].reverse().find((m) => m.role === "user");
+  const queryLabel = lastAsk?.content.trim() || summary || "your search";
+
+  const loadingLabel =
+    phase === "search"
+      ? (SEARCH_STAGES[Math.min(stage, SEARCH_STAGES.length - 1)] as string)
+      : REPLY_LABEL;
 
   return (
-    <section className={cn("scout", expanded && "is-expanded")} aria-label="Scout assistant">
+    <>
+      <section
+      className={cn(
+        "scout",
+        expanded && "is-expanded",
+        // Landing: the query is the page. The composer leaves the bottom of
+        // the card and centres with the heading, and Scout's identity drops
+        // back to a line of text. Everything else about the desk is unchanged.
+        !talked && "is-landing",
+        // Once results exist Scout stops being the page and becomes the bar
+        // above it: fixed height, stuck to the top, still fully conversational.
+        searched && "is-compact",
+        condensed && "is-condensed",
+      )}
+      ref={shellRef}
+      aria-label="Scout assistant"
+    >
+
+      {/* Folded: the search, not the conversation. Tapping it brings the whole
+          copilot back without moving the results underneath. */}
+      {searched && (
+        <button
+          type="button"
+          className="scout__folded"
+          hidden={!condensed}
+          onClick={() => setReopened(true)}
+        >
+          <span className="scout-mark scout-mark--id" aria-hidden="true">
+            <Sparkles className="size-3" />
+          </span>
+          <span className="scout__folded-q">{queryLabel}</span>
+          {matchCount != null && (
+            <span className="scout__folded-meta">
+              {matchCount} {matchCount === 1 ? "match" : "matches"}
+            </span>
+          )}
+          <ChevronDown className="size-4 scout__folded-caret" aria-hidden="true" />
+        </button>
+      )}
       <div className="scout__bar">
         <div className="scout__id">
           <span className="scout__avatar" aria-hidden="true">
@@ -888,181 +1191,129 @@ export function ScoutChat({
               </div>
             )}
           </div>
-          <button
-            type="button"
-            className={cn("scout-tbtn scout-tbtn--icon", expanded && "is-on")}
-            aria-label={expanded ? "Exit full screen" : "Expand Scout"}
-            onClick={() => setExpanded((e) => !e)}
-          >
-            {expanded ? (
+          {/* The same corner button, reversed once results exist.
+              Full screen is the right offer while Scout is the page; once the
+              candidates are the page it would cover the very list it sits
+              above, so it folds the card down to the query instead, which is
+              the gesture that actually matters there. */}
+          {searched ? (
+            <button
+              type="button"
+              className="scout-tbtn scout-tbtn--icon"
+              aria-label="Collapse Scout to the search bar"
+              title="Collapse"
+              onClick={() => setReopened(false)}
+            >
               <Minimize2 className="size-3.5" />
-            ) : (
-              <Maximize2 className="size-3.5" />
-            )}
-          </button>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={cn("scout-tbtn scout-tbtn--icon", expanded && "is-on")}
+              aria-label={expanded ? "Exit full screen" : "Expand Scout"}
+              onClick={() => setExpanded((e) => !e)}
+            >
+              {expanded ? (
+                <Minimize2 className="size-3.5" />
+              ) : (
+                <Maximize2 className="size-3.5" />
+              )}
+            </button>
+          )}
         </div>
       </div>
 
       <div className={cn("scout__body", openMatch && "is-open")}>
         <div ref={scrollRef} className="chat-output" id="hire-results">
           {!talked && (
-            <div className="scout-empty">
-              <button
-                type="button"
-                className="scout-pill"
-                disabled={pending || (persist && !requestId)}
-                onClick={() => runSearch()}
-              >
-                <Search className="size-3" />
-                Search with what I have
-              </button>
-              <p>
-                Answer the rest for a sharper ranking — I&apos;ll search
-                when we have enough to go on.
-              </p>
+            <div className="scout-hero">
+              <h2 className="scout-hero__h">Who are you hiring?</h2>
             </div>
           )}
 
-          <div className="scout-thread">
-              {messages.map((m, i) => {
-                const isLastAsk =
-                  askOpen && i === lastIndex && m.role === "assistant";
-                return (
-                  <Fragment key={`${m.role}-${i}`}>
-                  <div
-                    className={cn(
-                      "scout-turn",
-                      m.role === "user" && "scout-turn--user",
-                    )}
+          {/* Scout's latest line reads as interpretation of the query, not as
+              a message in a thread. It keeps every ability it had — asking for
+              something missing included — but an ask arrives as guidance above
+              the workspace rather than as a question the recruiter owes an
+              answer to. */}
+          {talked && lede && (
+            <div className="scout-lede">
+              {priorTurns.length > 0 && (
+                <div className="scout-lede__prior">
+                  <button
+                    type="button"
+                    className="scout-history__toggle"
+                    aria-expanded={historyOpen}
+                    onClick={() => setHistoryOpen((o) => !o)}
                   >
-                    {m.role === "assistant" && (
-                      <span className="scout-mark">
-                        <Sparkles className="size-3" />
-                      </span>
-                    )}
-                    <div className="scout-turn__body">
-                      <p
-                        className={
-                          m.role === "assistant"
-                            ? "scout-ask__q"
-                            : "scout-turn__text"
-                        }
-                      >
-                        {m.content}
-                      </p>
-                      {isLastAsk && (chips.length > 0 || talked) && (
-                        <div className="scout-follow">
-                          {chips.length > 0 && (
-                            <div className="scout-chips">
-                              {chips.map((o, oi) => (
-                                <button
-                                  key={`${o.value}-${oi}`}
-                                  type="button"
-                                  className={cn(
-                                    "scout-chip",
-                                    o.value === "action:search" &&
-                                      "scout-chip--show",
-                                  )}
-                                  disabled={pending}
-                                  onClick={() => send(o.value, chipLabel(o))}
-                                >
-                                  {chipLabel(o)}
-                                </button>
-                              ))}
-                            </div>
+                    <ChevronDown
+                      className={cn("size-3.5", historyOpen && "rotate-180")}
+                    />
+                    {historyOpen
+                      ? "Hide conversation"
+                      : `Conversation (${priorTurns.length})`}
+                  </button>
+                  {historyOpen && (
+                    <ol
+                      className="scout-history"
+                      aria-label="Earlier in this conversation"
+                    >
+                      {priorTurns.map((m, i) => (
+                        <li
+                          key={`${m.role}-${i}`}
+                          className={cn(
+                            "scout-history__row",
+                            m.role === "user" && "is-user",
                           )}
-                          {talked && !searched && (
-                            <p className="scout-follow__hint">
-                              Share more details about the candidate
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    {m.role === "user" && (
-                      <span className="scout-mark">You</span>
-                    )}
-                  </div>
-                  {searched && resultsPin === i && (
-                    <div className="scout-thread__results">
-                      {!persist && searchTabs.length > 1 && (
-                        <div className="scout-tabs">
-                          <SearchTabs
-                            tabs={searchTabs}
-                            activeId={activeSearchId}
-                            onSelect={(id) => {
-                              setActiveSearchId(id);
-                              setActiveGuestSearch(id);
-                              const tab = searchTabs.find((t) => t.id === id);
-                              setMatchCount(tab?.matches.length ?? 0);
-                              setOpenMatch(null);
-                            }}
-                          />
-                        </div>
-                      )}
-                      {deskMatches.length > 0 && (
-                        <p className="scout-privacy">
-                          Contact stays hidden until you place a request and
-                          the candidate agrees.
-                        </p>
-                      )}
-                      {deskGap && (
-                        <p className="scout-gap">{deskGap}</p>
-                      )}
-                      <MatchResults
-                        desk
-                        matches={deskMatches}
-                        samples={deskSamples}
-                        sampleDemand={{
-                          spec,
-                          requestId,
-                          alreadyRecorded: alertWhenAvailable,
-                        }}
-                        cartCount={
-                          persist ? resultsCartCount : readGuestCart().length
-                        }
-                        onOpen={setOpenMatch}
-                        selectedRef={openMatch?.candidateRef}
-                      />
-                      {persist && requestId && matchCount === 0 && (
-                        <div className="hire-gap">
-                          <GapReport
-                            requestId={requestId}
-                            overallGap={
-                              deskGap?.trim() ||
-                              "No verified matches in the published pool for this requirement yet. Your demand is saved."
-                            }
-                            alertWhenAvailable={alertWhenAvailable}
-                          />
-                        </div>
-                      )}
-                    </div>
+                        >
+                          <span className="scout-history__who">
+                            {m.role === "user" ? "You" : "Scout"}
+                          </span>
+                          <p className="scout-history__text">{m.content}</p>
+                        </li>
+                      ))}
+                    </ol>
                   )}
-                  </Fragment>
-                );
-              })}
-
-              {pending && (
-                <div className="scout-turn">
-                  <ScoutLoader />
-                  <p className="scout-turn__text scout-loader__label">
-                    Looking through verified work…
-                  </p>
                 </div>
               )}
-              <div ref={bottomRef} className="scout-thread__end" aria-hidden="true" />
+
+              <div className="scout-lede__row">
+                <span className="scout-mark scout-mark--id" aria-hidden="true">
+                  <Sparkles className="size-3" />
+                </span>
+                <div className="scout-lede__body">
+                  <p className="scout-lede__text">{lede.content}</p>
+                  {askOpen && chips.length > 0 && (
+                    <div className="scout-chips">
+                      {chips.map((o, oi) => (
+                        <button
+                          key={`${o.value}-${oi}`}
+                          type="button"
+                          className={cn(
+                            "scout-chip",
+                            o.value === "action:search" && "scout-chip--show",
+                          )}
+                          disabled={pending}
+                          onClick={() => send(o.value, chipLabel(o))}
+                        >
+                          {chipLabel(o)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+          )}
+
+
+          <div
+            ref={bottomRef}
+            className="scout-thread__end"
+            aria-hidden="true"
+          />
         </div>
 
-        {openMatch && (
-          <CandidateInspector
-            match={openMatch}
-            onClose={() => setOpenMatch(null)}
-            onCartToggle={(inCart) =>
-              setOpenMatch((m) => (m ? { ...m, shortlisted: inCart } : m))
-            }
-          />
-        )}
       </div>
 
       <form
@@ -1076,14 +1327,28 @@ export function ScoutChat({
         <div className="scout-composer__row">
           <div className="scout-field">
             <label className="sr-only" htmlFor="scout-prompt">
-              Your answer to Scout
+              Describe who you are hiring
             </label>
+            <div className="scout-field__box">
+            {hint && text === hint.prefix && (
+              /* Mirrors the textarea's own metrics so the hint lands exactly
+                 where the next character will. The typed label is repeated
+                 transparently to push the hint along; only the grey half is
+                 ever seen. */
+              <span className="scout-ghost" aria-hidden="true">
+                <span className="scout-ghost__typed">{text}</span>
+                <span className="scout-ghost__hint">{hint.text}</span>
+              </span>
+            )}
             <textarea
               id="scout-prompt"
               ref={promptRef}
               rows={1}
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => {
+                setText(e.target.value);
+                if (hint && e.target.value !== hint.prefix) setHint(null);
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -1091,10 +1356,14 @@ export function ScoutChat({
                   else runSearch();
                 }
               }}
-              placeholder="Type your answer, or ask me anything..."
+              /* No placeholder by request — the field reads empty. The
+                 accessible name comes from aria-label below, so screen readers
+                 still get one. */
+              placeholder=""
               disabled={pending}
               maxLength={2000}
             />
+            </div>
           </div>
           <button
             type="submit"
@@ -1104,29 +1373,198 @@ export function ScoutChat({
             {pending ? "…" : "Search"}
           </button>
         </div>
+          {/* Suggestions sit under the field, not above it: anything above
+              pushes the composer off the optical centre, and an example is
+              only useful once you have seen where it lands. */}
+          {!talked && (
+            <ul className="scout-hero__examples" aria-label="Example searches">
+              {EXAMPLE_QUERIES.map((q) => (
+                <li key={q}>
+                  <button
+                    type="button"
+                    className="scout-example"
+                    onClick={() => applyExample(q)}
+                  >
+                    {q}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
         <div className={cn("scout-criteria-slot", stripOpen && "is-open")}>
           <div className="scout-criteria-slot__clip">
-            {stripItems.length > 0 && (
-              <ul
-                className="scout-criteria"
-                aria-label="Requirements captured"
-                aria-hidden={!stripOpen}
-                ref={criteriaRef}
-              >
-                {stripItems.map((c) => (
-                  <li key={c.key} className="scout-criterion is-on">
-                    <span className="scout-criterion__box" aria-hidden="true">
-                      ✓
-                    </span>
-                    <span>{c.key}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <ul
+              className="scout-criteria"
+              aria-label="Requirements"
+              ref={criteriaRef}
+            >
+              {stripItems.map((c) => (
+                <li
+                  key={c.key}
+                  className={cn(
+                    "scout-criterion",
+                    c.on && "is-on",
+                    justOn.includes(c.key) && "is-fresh",
+                  )}
+                >
+                  {/* The tick is drawn for every item so the row does not
+                      re-measure when one turns on; `.scout-criterion` already
+                      carries the muted colour and `.is-on` the green.
+
+                      An unset one is also a button: it is a refinement the
+                      recruiter may take, not a question they owe an answer
+                      to. It routes through the same `pickRequirement` the
+                      Requirement menu uses, so the agent protocol is
+                      untouched. */}
+                  {c.on ? (
+                    <>
+                      <span
+                        className="scout-criterion__box"
+                        aria-hidden="true"
+                      >
+                        &#10003;
+                      </span>
+                      <span>{c.key}</span>
+                      <span className="sr-only">, captured</span>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className="scout-criterion__add"
+                      disabled={pending}
+                      onClick={() => pickRequirement(c.key, false)}
+                    >
+                      <span
+                        className="scout-criterion__box"
+                        aria-hidden="true"
+                      >
+                        &#10003;
+                      </span>
+                      <span>{c.key}</span>
+                      <span className="sr-only">
+                        {" "}
+                       , not set. Add it to sharpen the ranking.
+                      </span>
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </form>
     </section>
+
+      {/* The results are the page, not a panel inside the chat.
+          They live beside the Scout card rather than in it, so the region
+          scrolls through candidates while the card stays put at the top.
+          Nothing about the cards, the ranking or the actions changed; only
+          which element they hang off. */}
+      {(searched || openMatch) && (
+        <div className={cn("scout-results-page", openMatch && "is-open")}>
+          <div className="scout-results-page__list">
+        {searched && (
+          <div className="scout-thread__results">
+            {!persist && searchTabs.length > 1 && (
+              <div className="scout-tabs">
+                <SearchTabs
+                  tabs={searchTabs}
+                  activeId={activeSearchId}
+                  onSelect={(id) => {
+                    setActiveSearchId(id);
+                    setActiveGuestSearch(id);
+                    const tab = searchTabs.find((t) => t.id === id);
+                    setMatchCount(tab?.matches.length ?? 0);
+                    setOpenMatch(null);
+                  }}
+                />
+              </div>
+            )}
+            {deskMatches.length > 0 && (
+              <p className="scout-privacy">
+                Contact stays hidden until you place a request and the
+                candidate agrees.
+              </p>
+            )}
+            {/* The lede already carries this sentence when it is the newest
+                turn; printing it twice reads as the interface stuttering. */}
+            {deskGap && deskGap !== lede?.content && (
+              <p className="scout-gap">{deskGap}</p>
+            )}
+            {pending && phase === "search" ? (
+              <DeskCardSkeleton
+                count={Math.min(2, Math.max(1, matchCount ?? 2))}
+              />
+            ) : (
+              <MatchResults
+                desk
+                matches={deskMatches}
+                samples={deskSamples}
+                sampleDemand={{
+                  spec,
+                  requestId,
+                  alreadyRecorded: alertWhenAvailable,
+                }}
+                cartCount={persist ? resultsCartCount : readGuestCart().length}
+                onOpen={setOpenMatch}
+                selectedRef={openMatch?.candidateRef}
+              />
+            )}
+            {/* A search that returns nobody and cannot describe a sample
+                either, because the brief has no role and no stack, would
+                otherwise leave the results area completely blank. */}
+            {!pending &&
+              deskMatches.length === 0 &&
+              deskSamples.length === 0 && (
+                <p className="scout-noresults">
+                  Nothing to rank yet. Add a role or a skill above and search
+                  again.
+                </p>
+              )}
+            {persist && requestId && matchCount === 0 && !pending && (
+              <div className="hire-gap">
+                <GapReport
+                  requestId={requestId}
+                  overallGap={
+                    deskGap?.trim() ||
+                    "No verified matches in the published pool for this requirement yet. Your demand is saved."
+                  }
+                  alertWhenAvailable={alertWhenAvailable}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {pending && phase === "search" && rows.length > 0 && (
+          <ScoutUnderstood rows={rows} onEdit={() => setDetailsOpen(true)} />
+        )}
+
+        {pending && (
+          <div className="scout-turn">
+            <ScoutLoader />
+            <p
+              key={loadingLabel}
+              className="scout-turn__text scout-loader__label"
+            >
+              {loadingLabel}
+            </p>
+          </div>
+        )}
+          </div>
+        {openMatch && (
+          <CandidateInspector
+            match={openMatch}
+            onClose={() => setOpenMatch(null)}
+            onCartToggle={(inCart) =>
+              setOpenMatch((m) => (m ? { ...m, shortlisted: inCart } : m))
+            }
+          />
+        )}
+        </div>
+      )}
+    </>
   );
 }
 
