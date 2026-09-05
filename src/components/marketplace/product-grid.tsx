@@ -5,9 +5,15 @@ type Props = {
   items: CatalogItem[];
   balance: number;
   defaultPhone: string;
+  defaultName: string;
 };
 
-export function ProductGrid({ items, balance, defaultPhone }: Props) {
+export function ProductGrid({
+  items,
+  balance,
+  defaultPhone,
+  defaultName,
+}: Props) {
   return (
     <div
       id="products"
@@ -19,6 +25,7 @@ export function ProductGrid({ items, balance, defaultPhone }: Props) {
           item={item}
           balance={balance}
           defaultPhone={defaultPhone}
+          defaultName={defaultName}
         />
       ))}
     </div>

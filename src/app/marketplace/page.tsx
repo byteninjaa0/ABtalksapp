@@ -54,6 +54,7 @@ export default async function MarketplacePage() {
             contact?.hackathonParticipant?.phone ??
             ""
           }
+          defaultName={candidate?.fullName?.trim() || session.user.name || ""}
         />
       </main>
     </div>

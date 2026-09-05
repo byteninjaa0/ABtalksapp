@@ -7,9 +7,15 @@ type Props = {
   item: CatalogItem;
   balance: number;
   defaultPhone: string;
+  defaultName: string;
 };
 
-export function ProductCard({ item, balance, defaultPhone }: Props) {
+export function ProductCard({
+  item,
+  balance,
+  defaultPhone,
+  defaultName,
+}: Props) {
   // Items priced at 0 SP aren't priced yet — show as "Revealing Soon".
   const revealSoon = item.costSP <= 0;
 
@@ -60,6 +66,7 @@ export function ProductCard({ item, balance, defaultPhone }: Props) {
                 balance={balance}
                 imagePath={item.imagePath}
                 defaultPhone={defaultPhone}
+                defaultName={defaultName}
               />
             </div>
           </>
