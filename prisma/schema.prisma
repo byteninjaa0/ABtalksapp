@@ -1074,6 +1074,24 @@ model TalentRequest {
   /// Free-form extras Scout captured; never used for matching.
   extra                    Json?
   alertWhenAvailable       Boolean                   @default(false)
+  /// The recruiter's own label for this piece of work, e.g. "Senior Backend
+  /// Engineer - Delhi NCR". Distinct from `title`, which is the role being
+  /// hired for: two searches for the same role are otherwise indistinguishable
+  /// in a list. Nullable so existing rows need no invented value; the UI falls
+  /// back to `title` when it is null.
+  name                     String?
+  /// When this recruiter last opened the request.
+  ///
+  /// This is what `TalentRequestMatch.firstSeenAt` is compared against to draw
+  /// the "new since your last visit" badge - firstSeenAt alone has nothing to
+  /// measure from. A request has exactly one recruiter today
+  /// (`recruiterUserId`), so one column is enough; if organisation-wide
+  /// projects arrive this must become a per-(recruiter, request) row.
+  lastViewedAt             DateTime?
+  /// Filed away by the recruiter. Deliberately NOT a TalentRequestStatus value:
+  /// status says where the request is in its lifecycle, this says the recruiter
+  /// put it aside, and a timestamp also records when.
+  archivedAt               DateTime?
   createdAt                DateTime                  @default(now())
   updatedAt                DateTime                  @updatedAt
   recruiter                User                      @relation(fields: [recruiterUserId], references: [id], onDelete: Cascade)
@@ -1099,6 +1117,18 @@ model TalentRequestMessage {
   @@index([requestId, createdAt])
 }
 
+/// A recruiter's triage verdict on ONE match.
+///
+/// Deliberately narrow: three values, about a candidate's fit for this search.
+/// It is not the hiring pipeline - `PipelineStage` on TalentListItem owns that
+/// once a candidate is on a talent list. Keeping them apart is a decision
+/// pending sign-off; see docs/plans/113-A-schema-review-sohail.md, question 1.
+enum TalentMatchDecision {
+  UNDECIDED
+  SHORTLISTED
+  REJECTED
+}
+
 /// Scored candidate snapshot frozen at match time for auditability.
 ///
 /// Keyed on `candidateUserId`, because a candidate is a person and not a cohort
@@ -1121,10 +1151,25 @@ model TalentRequestMatch {
   gaps                String[]              @default([])
   availabilityUnknown Boolean               @default(true)
   source              TalentCandidateSource @default(PROGRAM)
+  /// The first time this candidate appeared on this request.
+  ///
+  /// `createdAt` cannot serve: the match run used to delete every row and
+  /// recreate it, so createdAt meant "last run". The run is an upsert now
+  /// (see runMatchAction) and this column is never written on update, which is
+  /// what makes "new since your last visit" answerable.
+  firstSeenAt         DateTime              @default(now())
+  /// When the recruiter first opened this candidate on this request. Null IS
+  /// the meaning "not yet viewed", so it is nullable with no default.
+  viewedAt            DateTime?
+  decision            TalentMatchDecision   @default(UNDECIDED)
   createdAt           DateTime              @default(now())
   request             TalentRequest         @relation(fields: [requestId], references: [id], onDelete: Cascade)
   candidate           User                  @relation("CandidateMatches", fields: [candidateUserId], references: [id], onDelete: Cascade)
 
+  /// A candidate appears at most once per request. This is what the match run
+  /// upserts on, and it is the one part of this migration that can FAIL on
+  /// existing data - check for duplicate pairs before applying.
+  @@unique([requestId, candidateUserId])
   @@index([requestId, score(sort: Desc)])
   @@index([candidateUserId])
 }
