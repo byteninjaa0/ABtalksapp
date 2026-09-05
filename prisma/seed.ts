@@ -424,6 +424,8 @@ type MarketplaceItemJson = {
   costSP: number;
   imagePath?: string;
   sortOrder: number;
+  /** Omitted for items with no size, which is most of the catalog. */
+  sizeOptions?: string[];
 };
 
 export async function seedMarketplaceItems() {
@@ -442,6 +444,7 @@ export async function seedMarketplaceItems() {
         costSP: entry.costSP,
         imagePath: entry.imagePath ?? null,
         sortOrder: entry.sortOrder,
+        sizeOptions: entry.sizeOptions ?? [],
         active: true,
       },
       update: {
@@ -450,6 +453,9 @@ export async function seedMarketplaceItems() {
         costSP: entry.costSP,
         imagePath: entry.imagePath ?? null,
         sortOrder: entry.sortOrder,
+        // Set on update too, so dropping "sizeOptions" from the JSON actually
+        // clears them rather than leaving a stale list on the row.
+        sizeOptions: entry.sizeOptions ?? [],
         active: true,
       },
     });

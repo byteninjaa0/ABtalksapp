@@ -67,6 +67,7 @@ export function ProductCard({
                 imagePath={item.imagePath}
                 defaultPhone={defaultPhone}
                 defaultName={defaultName}
+                sizeOptions={item.sizeOptions}
               />
             </div>
           </>

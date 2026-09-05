@@ -19,6 +19,7 @@ export async function redeemItemAction(formData: FormData) {
     pincode: formData.get("pincode"),
     country: formData.get("country"),
     recipientPhone: formData.get("recipientPhone"),
+    selectedSize: formData.get("selectedSize") ?? undefined,
   });
   if (!parsed.success) {
     return {

@@ -8,6 +8,8 @@ export type AdminRedemptionRow = {
   studentName: string;
   email: string;
   itemTitle: string;
+  /** Null for items with no size, and for redemptions predating sizes. */
+  selectedSize: string | null;
   costSP: number;
   status: RedemptionStatus;
   shippingAddress: string;
@@ -30,6 +32,7 @@ export async function getRedemptions(filter: {
       updatedAt: true,
       costSP: true,
       itemTitle: true,
+      selectedSize: true,
       status: true,
       shippingAddress: true,
       recipientPhone: true,
@@ -51,6 +54,7 @@ export async function getRedemptions(filter: {
     studentName: r.user.studentProfile?.fullName?.trim() || r.user.email,
     email: r.user.email,
     itemTitle: r.itemTitle,
+    selectedSize: r.selectedSize,
     costSP: r.costSP,
     status: r.status,
     shippingAddress: r.shippingAddress,
