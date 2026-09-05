@@ -11,11 +11,22 @@ import { existingEngagements } from "@/features/hire/contact-access";
 import { estimateCompensation, formatBandLpa } from "@/features/hire/compensation";
 import { roleFamilyFor, tidyRoleLabel } from "@/features/hire/role-family";
 import type { MatchTier } from "@/features/hire/types";
+import type { TalentMatchDecision } from "@prisma/client";
 import type { MatchCardData } from "@/components/hire/match-card";
 import {
   pickPublicEvidence,
   pickPublicScores,
 } from "@/features/hire/to-public-match";
+
+/**
+ * What the recruiter has already done with a match, as opposed to how the
+ * match scored. Preserved across match runs by the upsert in `runMatchAction`.
+ */
+export type MatchState = {
+  firstSeenAt: Date;
+  viewedAt: Date | null;
+  decision: TalentMatchDecision;
+};
 
 /**
  * Matches for one requirement, ready to render, for one recruiter.
@@ -30,17 +41,32 @@ export async function loadRequestMatches(
   recruiterUserId: string,
 ): Promise<{
   title: string;
+  // The recruiter's own label for the request; null on every row created
+  // before the persistence migration, hence the `title` fallback at the call
+  // site rather than here.
+  name: string | null;
   status: string;
   alertWhenAvailable: boolean;
-  matches: MatchCardData[];
+  // When the recruiter last opened this request. The only thing a match's
+  // `firstSeenAt` can be compared against to answer "new since I was here"
+  // (T-045). Returned, not yet rendered.
+  lastViewedAt: Date | null;
+  archivedAt: Date | null;
+  // Per-match triage state travels alongside the card data rather than inside
+  // `MatchCardData`, so the card component's props are unchanged until the
+  // T-045 / T-042 UI lands and its shape is decided.
+  matches: (MatchCardData & MatchState)[];
   cartCount: number;
 } | null> {
   const request = await prisma.talentRequest.findFirst({
     where: { id: requestId, recruiterUserId },
     select: {
       title: true,
+      name: true,
       status: true,
       alertWhenAvailable: true,
+      lastViewedAt: true,
+      archivedAt: true,
       mustHaveStack: true,
       matches: {
         orderBy: { score: "desc" },
@@ -55,6 +81,9 @@ export async function loadRequestMatches(
           gaps: true,
           availabilityUnknown: true,
           evidence: true,
+          firstSeenAt: true,
+          viewedAt: true,
+          decision: true,
         },
       },
     },
@@ -99,10 +128,13 @@ export async function loadRequestMatches(
   const memberById = new Map(members.map((m) => [m.id, m]));
   return {
     title: request.title,
+    name: request.name,
     status: request.status,
     alertWhenAvailable: request.alertWhenAvailable,
+    lastViewedAt: request.lastViewedAt,
+    archivedAt: request.archivedAt,
     cartCount,
-    matches: visibleMatches.map((m): MatchCardData => {
+    matches: visibleMatches.map((m): MatchCardData & MatchState => {
       const raw =
         m.evidence && typeof m.evidence === "object"
           ? (m.evidence as Record<string, unknown>)
@@ -189,6 +221,9 @@ export async function loadRequestMatches(
           ? request.mustHaveStack
           : undefined,
         evidence,
+        firstSeenAt: m.firstSeenAt,
+        viewedAt: m.viewedAt,
+        decision: m.decision,
       };
     }),
   };

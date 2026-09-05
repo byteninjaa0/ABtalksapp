@@ -375,10 +375,6 @@ export async function runMatchAction(
       },
     );
 
-    await prisma.talentRequestMatch.deleteMany({
-      where: { requestId: req.id },
-    });
-
     // A track the DB enum does not know yet cannot be stored. It is still shown
     // and still ranked — only the persisted copy is skipped — and it is logged,
     // because the fix is a one-line enum migration and silence would hide it.
@@ -399,38 +395,64 @@ export async function runMatchAction(
       });
     }
 
-    if (persistable.length > 0) {
-      await prisma.talentRequestMatch.createMany({
-        data: persistable.map((m) => {
-          const card = toPublicMatch(m, {
-            coverageNote: search.data.coverage.note,
-            highlightSkills: spec.mustHaveStack,
-          });
-          return {
-            requestId: req.id,
-            source: persistableSource(m.source)!,
-            // The candidate is the person. Every track has one of these.
-            candidateUserId: m.userId,
-            // Provenance: which cohort row the evidence came from, where there
-            // was one. Not a key, not a foreign key, never looked up by.
-            programMemberId: m.programMemberId,
-            score: m.score,
-            tier: m.tier as TalentMatchTier,
-            scoreBreakdown: m.scoreBreakdown as unknown as Prisma.InputJsonValue,
-            // Public evidence only — CandidateEvidence still carries company.
-            evidence: {
-              ...card.evidence,
-              locationLabel: card.locationLabel ?? null,
-              compensationBand: card.compensationBand ?? null,
-              compensationDeclared: card.compensationDeclared ?? false,
-            } as unknown as Prisma.InputJsonValue,
-            rationale: m.rationale,
-            gaps: m.gaps,
-            availabilityUnknown: m.availabilityUnknown,
-          };
-        }),
+    const rows = persistable.map((m) => {
+      const card = toPublicMatch(m, {
+        coverageNote: search.data.coverage.note,
+        highlightSkills: spec.mustHaveStack,
       });
-    }
+      return {
+        requestId: req.id,
+        source: persistableSource(m.source)!,
+        // The candidate is the person. Every track has one of these.
+        candidateUserId: m.userId,
+        // Provenance: which cohort row the evidence came from, where there
+        // was one. Not a key, not a foreign key, never looked up by.
+        programMemberId: m.programMemberId,
+        score: m.score,
+        tier: m.tier as TalentMatchTier,
+        scoreBreakdown: m.scoreBreakdown as unknown as Prisma.InputJsonValue,
+        // Public evidence only — CandidateEvidence still carries company.
+        evidence: {
+          ...card.evidence,
+          locationLabel: card.locationLabel ?? null,
+          compensationBand: card.compensationBand ?? null,
+          compensationDeclared: card.compensationDeclared ?? false,
+        } as unknown as Prisma.InputJsonValue,
+        rationale: m.rationale,
+        gaps: m.gaps,
+        availabilityUnknown: m.availabilityUnknown,
+      };
+    });
+
+    // T-044: a match run must not forget what the recruiter already did.
+    //
+    // This used to delete every row for the request and recreate it, which made
+    // firstSeenAt / viewedAt / decision impossible to keep: every run handed
+    // back a brand-new row. Now rows for candidates who dropped out of the
+    // results are deleted, and the survivors are upserted with an `update`
+    // branch that touches ONLY the scoring fields. The three state columns are
+    // absent from `update` on purpose — that omission is the whole feature.
+    //
+    // One $transaction([...]) batch rather than an interactive callback, so
+    // this stays on `prisma` exactly as before and needs no direct Neon
+    // endpoint. (Review sheet question 5 asks whether writeClient() is wanted
+    // here; keeping the current client means that answer changes nothing else.)
+    const keptCandidateIds = rows.map((row) => row.candidateUserId);
+    await prisma.$transaction([
+      prisma.talentRequestMatch.deleteMany({
+        where:
+          keptCandidateIds.length > 0
+            ? { requestId: req.id, candidateUserId: { notIn: keptCandidateIds } }
+            : { requestId: req.id },
+      }),
+      ...rows.map(({ requestId, candidateUserId, ...scoring }) =>
+        prisma.talentRequestMatch.upsert({
+          where: { requestId_candidateUserId: { requestId, candidateUserId } },
+          create: { requestId, candidateUserId, ...scoring },
+          update: scoring,
+        }),
+      ),
+    ]);
 
     // Always promote to ACTIVE so demand board sees the requirement
     const status =
