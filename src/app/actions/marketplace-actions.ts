@@ -11,7 +11,13 @@ export async function redeemItemAction(formData: FormData) {
   }
   const parsed = redeemItemSchema.safeParse({
     itemId: formData.get("itemId"),
-    shippingAddress: formData.get("shippingAddress"),
+    recipientName: formData.get("recipientName"),
+    addressLine1: formData.get("addressLine1"),
+    addressLine2: formData.get("addressLine2") ?? undefined,
+    city: formData.get("city"),
+    state: formData.get("state"),
+    pincode: formData.get("pincode"),
+    country: formData.get("country"),
     recipientPhone: formData.get("recipientPhone"),
   });
   if (!parsed.success) {

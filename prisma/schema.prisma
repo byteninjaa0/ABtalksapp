@@ -476,14 +476,34 @@ model MarketplaceItem {
 }
 
 model Redemption {
-  id              String           @id @default(cuid())
-  userId          String
-  itemId          String
-  costSP          Int
-  itemTitle       String
-  status          RedemptionStatus @default(PENDING)
+  id       String           @id @default(cuid())
+  userId   String
+  itemId   String
+  costSP   Int
+  itemTitle String
+  status   RedemptionStatus @default(PENDING)
+
+  /// The address as one printable block. Still the only field guaranteed to be
+  /// populated: redemptions made before the structured fields existed have this
+  /// and nothing else, so admin UI and shipping labels read THIS, not the parts.
+  /// New redemptions compose it from the structured columns below.
   shippingAddress String
   recipientPhone  String
+
+  /// Structured address, captured since the redeem dialog replaced its free-form
+  /// textarea. Nullable because legacy rows have no parts to fill them with —
+  /// they are not optional for new writes, which always set every one except
+  /// `addressLine2`. `state` is a name from `src/data/india-locations.ts`;
+  /// `city` is free text (no city list is complete) and `country` is "India",
+  /// the only destination we ship to today.
+  recipientName String?
+  addressLine1  String?
+  addressLine2  String?
+  city          String?
+  state         String?
+  pincode       String?
+  country       String?
+
   trackingNote    String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt

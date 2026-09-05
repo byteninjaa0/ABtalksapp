@@ -1,6 +1,10 @@
 import { RedemptionStatus, PointsSourceType } from "@prisma/client";
 import { writeClient } from "@/lib/db";
 import { applyPointsChange, getBalance, withLegacyPointsMirrorFlush } from "@/repositories/points";
+import {
+  composeShippingAddress,
+  type RedeemItemInput,
+} from "@/lib/validations/marketplace";
 import { randomUUID } from "node:crypto";
 
 export type RedeemResult =
@@ -11,12 +15,9 @@ export type RedeemResult =
       message: string;
     };
 
-export async function redeemItem(input: {
-  userId: string;
-  itemId: string;
-  shippingAddress: string;
-  recipientPhone: string;
-}): Promise<RedeemResult> {
+export async function redeemItem(
+  input: RedeemItemInput & { userId: string },
+): Promise<RedeemResult> {
   return withLegacyPointsMirrorFlush(() =>
     writeClient().$transaction(
     async (tx) => {
@@ -81,8 +82,17 @@ export async function redeemItem(input: {
           costSP: item.costSP,
           itemTitle: item.title,
           status: RedemptionStatus.PENDING,
-          shippingAddress: input.shippingAddress.trim(),
-          recipientPhone: input.recipientPhone.trim(),
+          // Zod has already trimmed every part; the printable block is derived
+          // here so it can never disagree with the columns beside it.
+          shippingAddress: composeShippingAddress(input),
+          recipientName: input.recipientName,
+          addressLine1: input.addressLine1,
+          addressLine2: input.addressLine2,
+          city: input.city,
+          state: input.state,
+          pincode: input.pincode,
+          country: input.country,
+          recipientPhone: input.recipientPhone,
         },
         select: { id: true },
       });
