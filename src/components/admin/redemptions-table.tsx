@@ -204,7 +204,14 @@ export function RedemptionsTable({ rows, status }: Props) {
               <article key={row.id} className="rounded-xl border bg-card p-4 text-sm">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-medium">{row.itemTitle}</p>
+                    <p className="font-medium">
+                      {row.itemTitle}
+                      {row.selectedSize ? (
+                        <Badge variant="outline" className="ml-2 align-middle">
+                          Size {row.selectedSize}
+                        </Badge>
+                      ) : null}
+                    </p>
                     <p className="text-xs text-muted-foreground">{row.studentName}</p>
                   </div>
                   <Badge className={cn("border-0", statusBadgeClass(row.status))}>
@@ -249,7 +256,14 @@ export function RedemptionsTable({ rows, status }: Props) {
                       <p className="font-medium">{row.studentName}</p>
                       <p className="text-xs text-muted-foreground">{row.email}</p>
                     </TableCell>
-                    <TableCell>{row.itemTitle}</TableCell>
+                    <TableCell>
+                      <p>{row.itemTitle}</p>
+                      {row.selectedSize ? (
+                        <Badge variant="outline" className="mt-1">
+                          Size {row.selectedSize}
+                        </Badge>
+                      ) : null}
+                    </TableCell>
                     <TableCell>{row.costSP}</TableCell>
                     <TableCell>
                       <Badge className={cn("border-0", statusBadgeClass(row.status))}>

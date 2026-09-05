@@ -23,7 +23,13 @@ export async function redeemItem(
     async (tx) => {
       const item = await tx.marketplaceItem.findUnique({
         where: { id: input.itemId },
-        select: { id: true, title: true, costSP: true, active: true },
+        select: {
+          id: true,
+          title: true,
+          costSP: true,
+          active: true,
+          sizeOptions: true,
+        },
       });
       if (!item)
         return {
@@ -44,6 +50,31 @@ export async function redeemItem(
           reason: "inactive",
           message: "This item isn't available for redemption yet.",
         };
+
+      // Checked against the item's own list rather than the schema, and BEFORE
+      // any points move — the client is told which sizes exist, so it must not
+      // be the one deciding whether the answer is acceptable.
+      if (item.sizeOptions.length > 0) {
+        if (!input.selectedSize) {
+          return {
+            ok: false,
+            reason: "validation",
+            message: "Select a size before redeeming.",
+          };
+        }
+        if (!item.sizeOptions.includes(input.selectedSize)) {
+          return {
+            ok: false,
+            reason: "validation",
+            message: `Size ${input.selectedSize} isn't available for this item.`,
+          };
+        }
+      }
+      // An item with no sizes ignores anything sent, rather than failing the
+      // redemption: a page loaded before sizes were removed would otherwise
+      // break for a reason the student cannot see or fix.
+      const selectedSize =
+        item.sizeOptions.length > 0 ? input.selectedSize : null;
 
       const redemptionId = randomUUID();
       const reason = `Redeemed ${item.title} (redemptionId=${redemptionId})`;
@@ -81,6 +112,7 @@ export async function redeemItem(
           itemId: item.id,
           costSP: item.costSP,
           itemTitle: item.title,
+          selectedSize,
           status: RedemptionStatus.PENDING,
           // Zod has already trimmed every part; the printable block is derived
           // here so it can never disagree with the columns beside it.

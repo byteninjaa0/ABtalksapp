@@ -7,6 +7,8 @@ export type CatalogItem = {
   description: string;
   costSP: number;
   imagePath: string | null;
+  /** Empty for items with no size — the dialog then shows no size control. */
+  sizeOptions: string[];
 };
 
 export async function getCatalog(): Promise<CatalogItem[]> {
@@ -19,6 +21,7 @@ export async function getCatalog(): Promise<CatalogItem[]> {
       description: true,
       costSP: true,
       imagePath: true,
+      sizeOptions: true,
     },
     orderBy: [{ costSP: "desc" }, { sortOrder: "asc" }],
   });

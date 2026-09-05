@@ -11,6 +11,7 @@ type Props = {
   imagePath: string | null;
   defaultPhone: string;
   defaultName: string;
+  sizeOptions: string[];
 };
 
 export function RedeemButton({
@@ -20,6 +21,7 @@ export function RedeemButton({
   balance,
   defaultPhone,
   defaultName,
+  sizeOptions,
 }: Props) {
   const [open, setOpen] = useState(false);
   const shortfall = costSP - balance;
@@ -54,6 +56,7 @@ export function RedeemButton({
         balance={balance}
         defaultPhone={defaultPhone}
         defaultName={defaultName}
+        sizeOptions={sizeOptions}
       />
     </>
   );

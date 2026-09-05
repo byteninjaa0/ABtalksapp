@@ -86,6 +86,16 @@ export const redeemItemSchema = z.object({
     .trim()
     .min(7, "Enter a valid phone")
     .max(20, "Enter a valid phone"),
+  // Shape only. Whether a size is REQUIRED, and whether this particular one is
+  // allowed, depends on the item — `redeemItem` decides that against the item's
+  // own `sizeOptions` in the same transaction that reads the item, because a
+  // static schema here cannot know which item is being redeemed.
+  selectedSize: z
+    .string()
+    .trim()
+    .max(20, "Invalid size")
+    .optional()
+    .transform((value) => (value && value.length > 0 ? value : null)),
 });
 
 export type RedeemItemInput = z.infer<typeof redeemItemSchema>;

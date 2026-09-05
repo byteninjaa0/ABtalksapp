@@ -468,6 +468,19 @@ model MarketplaceItem {
   imagePath   String?
   active      Boolean      @default(true)
   sortOrder   Int          @default(0)
+
+  /// Sizes the student must pick from when redeeming, e.g.
+  /// ["S", "M", "L", "XL", "XXL"] on the Classic Tee. Empty — the default, and
+  /// the case for most of the catalog — means the item has no size and the
+  /// redeem dialog shows no size control.
+  ///
+  /// Seeded from `prisma/content/marketplace.json`, so adding sizes to another
+  /// item is a JSON edit plus `npm run db:seed:marketplace`, not a migration.
+  /// `redeemItem` validates the chosen size against THIS list at redeem time
+  /// and `Redemption.selectedSize` stores the answer, so changing the list
+  /// later never rewrites or invalidates an order already placed.
+  sizeOptions String[]     @default([])
+
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   redemptions Redemption[]
@@ -481,6 +494,13 @@ model Redemption {
   itemId   String
   costSP   Int
   itemTitle String
+
+  /// The size chosen at redeem time, or null when the item has none (and for
+  /// every redemption predating sizes). Copied from the item's `sizeOptions`
+  /// rather than referencing them, for the same reason `itemTitle` and `costSP`
+  /// are copied: the order must still read correctly after the catalog moves on.
+  selectedSize String?
+
   status   RedemptionStatus @default(PENDING)
 
   /// The address as one printable block. Still the only field guaranteed to be

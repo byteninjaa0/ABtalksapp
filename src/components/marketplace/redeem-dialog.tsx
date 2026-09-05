@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Radio } from "@base-ui/react/radio";
+import { RadioGroup } from "@base-ui/react/radio-group";
 import { toast } from "sonner";
 import { redeemItemAction } from "@/app/actions/marketplace-actions";
 import { CityCombobox } from "@/components/marketplace/city-combobox";
@@ -42,6 +44,8 @@ type Props = {
   balance: number;
   defaultPhone: string;
   defaultName: string;
+  /** Empty for items with no size; non-empty makes the choice mandatory. */
+  sizeOptions: string[];
 };
 
 // The dialog portals out of the page's `dark` wrapper, so every field states
@@ -68,10 +72,13 @@ export function RedeemDialog({
   balance,
   defaultPhone,
   defaultName,
+  sizeOptions,
 }: Props) {
   const router = useRouter();
   const { setPoints } = useSynergy();
   const [pending, startTransition] = useTransition();
+  const requiresSize = sizeOptions.length > 0;
+  const [selectedSize, setSelectedSize] = useState("");
   const [recipientName, setRecipientName] = useState(defaultName);
   const [addressLine1, setAddressLine1] = useState("");
   const [addressLine2, setAddressLine2] = useState("");
@@ -85,6 +92,7 @@ export function RedeemDialog({
     if (next) {
       setRecipientName(defaultName);
       setRecipientPhone(defaultPhone);
+      setSelectedSize("");
       setError(null);
     }
     onOpenChange(next);
@@ -121,8 +129,16 @@ export function RedeemDialog({
     e.preventDefault();
     setError(null);
 
+    // The server re-checks this against the item's own list; catching it here
+    // just saves a round trip and points at the field.
+    if (requiresSize && !selectedSize) {
+      setError("Select a size before redeeming.");
+      return;
+    }
+
     const formData = new FormData();
     formData.set("itemId", itemId);
+    if (selectedSize) formData.set("selectedSize", selectedSize);
     formData.set("recipientName", recipientName);
     formData.set("addressLine1", addressLine1);
     formData.set("addressLine2", addressLine2);
@@ -190,6 +206,35 @@ export function RedeemDialog({
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Chips rather than a dropdown: five short values, and the audience
+              is mostly on phones, where this is one tap instead of three. */}
+          {requiresSize ? (
+            <div className="space-y-2">
+              <span id="size-label" className={`${LABEL_CLASS} block`}>
+                Size
+              </span>
+              <RadioGroup
+                aria-labelledby="size-label"
+                value={selectedSize}
+                onValueChange={(value) =>
+                  setSelectedSize(typeof value === "string" ? value : "")
+                }
+                className="flex flex-wrap gap-2"
+              >
+                {sizeOptions.map((size) => (
+                  <Radio.Root
+                    key={size}
+                    value={size}
+                    disabled={pending}
+                    className="flex h-10 min-w-14 items-center justify-center rounded-xl border border-[#1C283D] bg-[#050C1D] px-3 text-sm font-medium text-zinc-300 transition-colors outline-none select-none hover:border-[#7166F0]/60 focus-visible:ring-2 focus-visible:ring-[#7166F0]/40 disabled:cursor-not-allowed disabled:opacity-50 data-checked:border-[#7166F0] data-checked:bg-[#7166F0]/20 data-checked:text-white"
+                  >
+                    {size}
+                  </Radio.Root>
+                ))}
+              </RadioGroup>
+            </div>
+          ) : null}
+
           <div className="space-y-2">
             <label htmlFor="recipientName" className={LABEL_CLASS}>
               Recipient name
