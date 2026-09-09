@@ -6,6 +6,16 @@ import { logger } from "@/lib/logger";
 /**
  * Workshop poster storage on Vercel Blob.
  *
+ * **STATUS: NOT VERIFIED. `put()` has never executed.** No Blob credentials
+ * exist in the platform environment, so every upload currently returns the
+ * "not configured" message below rather than storing anything. Before treating
+ * upload as working, `avatar_READ_WRITE_TOKEN` must be present AND scoped to a
+ * PUBLIC store in the deployed environment, and a real upload exercised.
+ *
+ * Setting a poster by PATH is a separate, working capability and does not
+ * depend on any of this — see "Uploading is optional" below. Posters ship as
+ * repo files under `public/workshop/posters/` today.
+ *
  * **Reuses the avatar store deliberately.** Posters are public marketing
  * images — the hero renders `<img src>` directly for signed-out traffic —
  * which is the same access class the avatar store is already provisioned for.
