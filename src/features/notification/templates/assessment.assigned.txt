@@ -1,0 +1,11 @@
+Hi {{recipientName}},
+
+{{title}}
+
+{{body}}
+
+View details: {{baseUrl}}{{href}}
+
+---
+You received this because of your notification settings on ABTalks.
+Update preferences: {{baseUrl}}/settings/notifications

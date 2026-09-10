@@ -7,6 +7,7 @@
  * Requires a database connection (uses real Prisma queries).
  * Tests create and clean up their own data.
  */
+import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { dispatch } from "./notification-service";
 
@@ -237,6 +238,112 @@ async function run() {
 
       const inApp = deliveries.find((d) => d.channel === "in_app");
       assert(inApp?.state === "sent", "in-app delivery state should be 'sent'");
+    },
+  );
+
+  await suite(
+    "suppression-exempt in-app cannot be disabled: API schema rejects in_app channel",
+    async () => {
+      const putSchema = z.object({
+        eventType: z.string(),
+        channel: z.literal("email"),
+        enabled: z.boolean(),
+      });
+
+      const result = putSchema.safeParse({
+        eventType: "application.received",
+        channel: "in_app",
+        enabled: false,
+      });
+
+      assert(!result.success, "schema must reject channel='in_app'");
+    },
+  );
+
+  await suite(
+    "suppression-exempt in-app always created even with in_app pref disabled in DB",
+    async () => {
+      await prisma.notificationPreference.upsert({
+        where: {
+          userId_eventType_channel: {
+            userId: TEST_USER_ID,
+            eventType: "application.received",
+            channel: "in_app",
+          },
+        },
+        update: { enabled: false },
+        create: {
+          userId: TEST_USER_ID,
+          eventType: "application.received",
+          channel: "in_app",
+          enabled: false,
+        },
+      });
+
+      const r = await dispatch({
+        eventType: "application.received",
+        recipientUserId: TEST_USER_ID,
+        primaryEntityId: "suppress-exempt-test",
+        title: "In-app must still arrive",
+      });
+      assert(r.ok === true, "dispatch should succeed");
+      if (!r.ok) return;
+
+      const deliveries = await prisma.notificationDelivery.findMany({
+        where: { notificationId: r.notificationId },
+        select: { channel: true, state: true },
+      });
+
+      const inApp = deliveries.find((d) => d.channel === "in_app");
+      assert(inApp !== undefined, "in-app delivery must exist regardless of pref");
+      assert(inApp!.state === "sent", "in-app state must be 'sent'");
+
+      await prisma.notificationPreference.deleteMany({
+        where: { userId: TEST_USER_ID, channel: "in_app" },
+      });
+    },
+  );
+
+  await suite(
+    "auth.password_reset email cannot be disabled: emailExempt flag bypasses pref",
+    async () => {
+      await prisma.notificationPreference.upsert({
+        where: {
+          userId_eventType_channel: {
+            userId: TEST_USER_ID,
+            eventType: "auth.password_reset",
+            channel: "email",
+          },
+        },
+        update: { enabled: false },
+        create: {
+          userId: TEST_USER_ID,
+          eventType: "auth.password_reset",
+          channel: "email",
+          enabled: false,
+        },
+      });
+
+      const r = await dispatch({
+        eventType: "auth.password_reset",
+        recipientUserId: TEST_USER_ID,
+        primaryEntityId: "pwd-reset-exempt-test",
+        title: "Password reset",
+      });
+      assert(r.ok === true, "dispatch should succeed");
+      if (!r.ok) return;
+
+      const deliveries = await prisma.notificationDelivery.findMany({
+        where: { notificationId: r.notificationId },
+        select: { channel: true },
+      });
+
+      const channels = deliveries.map((d) => d.channel);
+      assert(channels.includes("email"), "email delivery must exist even with pref disabled (emailExempt)");
+
+      await prisma.notificationPreference.deleteMany({
+        where: { userId: TEST_USER_ID, eventType: "auth.password_reset" },
+      });
     },
   );
 

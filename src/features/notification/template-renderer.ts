@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 type TemplateVars = {
   title: string;
   body: string;
@@ -21,7 +24,7 @@ function interpolate(template: string, vars: TemplateVars): string {
     .replace(/\{\{recipientName\}\}/g, vars.recipientName);
 }
 
-const HTML_TEMPLATE = `<div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+const GENERIC_HTML = `<div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
   <p style="color: #333;">Hi {{recipientName}},</p>
   <h2 style="color: #1a1a1a; margin: 16px 0 8px;">{{title}}</h2>
   <p style="color: #333;">{{body}}</p>
@@ -33,7 +36,7 @@ const HTML_TEMPLATE = `<div style="font-family: system-ui, sans-serif; max-width
   </p>
 </div>`;
 
-const TEXT_TEMPLATE = `Hi {{recipientName}},
+const GENERIC_TEXT = `Hi {{recipientName}},
 
 {{title}}
 
@@ -45,13 +48,35 @@ View details: {{baseUrl}}{{href}}
 You received this because of your notification settings on ABTalks.
 Update preferences: {{baseUrl}}/settings/notifications`;
 
+const templateCache = new Map<string, { html: string; text: string }>();
+
+function loadTemplate(eventType: string): { html: string; text: string } {
+  const cached = templateCache.get(eventType);
+  if (cached) return cached;
+
+  const dir = join(process.cwd(), "src", "features", "notification", "templates");
+
+  try {
+    const html = readFileSync(join(dir, `${eventType}.html`), "utf-8");
+    const text = readFileSync(join(dir, `${eventType}.txt`), "utf-8");
+    const result = { html, text };
+    templateCache.set(eventType, result);
+    return result;
+  } catch {
+    const result = { html: GENERIC_HTML, text: GENERIC_TEXT };
+    templateCache.set(eventType, result);
+    return result;
+  }
+}
+
 export function renderTemplate(
-  _eventType: string,
+  eventType: string,
   vars: TemplateVars,
 ): RenderedEmail {
+  const { html, text } = loadTemplate(eventType);
   return {
     subject: vars.title,
-    html: interpolate(HTML_TEMPLATE, vars),
-    text: interpolate(TEXT_TEMPLATE, vars),
+    html: interpolate(html, vars),
+    text: interpolate(text, vars),
   };
 }
