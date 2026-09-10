@@ -100,7 +100,8 @@
     "test:virtual": "NODE_OPTIONS=--conditions=react-server tsx src/features/hire/virtual-candidate.test.ts",
     "test:registration-gate": "cross-env NODE_OPTIONS=--conditions=react-server tsx src/features/registration/registration-gate.test.ts",
     "test:work-email": "cross-env NODE_OPTIONS=--conditions=react-server tsx src/features/recruiter-auth/work-email.test.ts",
-    "db:audit:personal-domain-recruiters": "tsx prisma/scripts/audit-personal-domain-recruiters.ts"
+    "db:audit:personal-domain-recruiters": "tsx prisma/scripts/audit-personal-domain-recruiters.ts",
+    "test:notification-dispatch": "cross-env NODE_OPTIONS=--conditions=react-server tsx src/features/notification/notification-service.test.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
