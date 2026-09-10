@@ -60,6 +60,7 @@ export async function getNotificationsForUser(
     programMemberships,
     hackathonMembership,
     workshopRegistrations,
+    userNotifRows,
   ] = await Promise.all([
     prisma.notification.findMany({
       where: {
@@ -104,6 +105,19 @@ export async function getNotificationsForUser(
       where: { userId },
       select: { eventId: true },
     }),
+    prisma.userNotification.findMany({
+      where: { recipientUserId: userId },
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        href: true,
+        eventType: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: FEED_LIMIT,
+    }),
   ]);
 
   const audiences = new Set<string>(["ALL"]);
@@ -124,6 +138,17 @@ export async function getNotificationsForUser(
       publishedAt: row.publishedAt.toISOString(),
     }));
 
+  const userItems: Omit<AppNotification, "isRead">[] = userNotifRows.map(
+    (row) => ({
+      key: `user:${row.id}`,
+      title: row.title,
+      body: row.body,
+      href: row.href,
+      category: "GENERAL" as NotificationCategoryKey,
+      publishedAt: row.createdAt.toISOString(),
+    }),
+  );
+
   const derivedItems = deriveEventNotifications({
     now,
     enrollingCohorts,
@@ -136,7 +161,7 @@ export async function getNotificationsForUser(
     events: await getWorkshopEvents(),
   });
 
-  const items: AppNotification[] = [...adminItems, ...derivedItems]
+  const items: AppNotification[] = [...adminItems, ...derivedItems, ...userItems]
     .map((item) => ({ ...item, isRead: readKeys.has(item.key) }))
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
     .slice(0, FEED_LIMIT);
