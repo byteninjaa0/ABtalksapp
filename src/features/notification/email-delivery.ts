@@ -6,6 +6,7 @@ import { renderTemplate } from "./template-renderer";
 
 const MAX_ATTEMPTS = 5;
 const FAILURE_REASON_MAX_LENGTH = 1000;
+const SENDING_TIMEOUT_MS = 10 * 60 * 1000;
 
 export async function processEmailDelivery(
   deliveryId: string,
@@ -23,7 +24,7 @@ export async function processEmailDelivery(
          "lastAttemptAt" = NOW(),
          "updatedAt" = NOW()
      WHERE "id" = $1
-       AND "state" IN ('created', 'failed')
+       AND "state" IN ('created', 'failed', 'sending')
      RETURNING "id", "notificationId", "attemptCount"`,
     deliveryId,
   );
@@ -102,13 +103,23 @@ export async function retryFailedDeliveries(): Promise<{
   failed: number;
 }> {
   const now = new Date();
+  const sendingCutoff = new Date(now.getTime() - SENDING_TIMEOUT_MS);
+
   const eligible = await prisma.notificationDelivery.findMany({
     where: {
-      state: "failed",
       channel: "email",
-      attemptCount: { lt: MAX_ATTEMPTS },
+      OR: [
+        {
+          state: "failed",
+          attemptCount: { lt: MAX_ATTEMPTS },
+        },
+        {
+          state: "sending",
+          lastAttemptAt: { lt: sendingCutoff },
+        },
+      ],
     },
-    select: { id: true, attemptCount: true, lastAttemptAt: true },
+    select: { id: true, state: true, attemptCount: true, lastAttemptAt: true },
   });
 
   let processed = 0;
@@ -116,7 +127,7 @@ export async function retryFailedDeliveries(): Promise<{
   let failed = 0;
 
   for (const row of eligible) {
-    if (row.lastAttemptAt) {
+    if (row.state === "failed" && row.lastAttemptAt) {
       const backoffMs = Math.pow(2, row.attemptCount) * 60 * 1000;
       if (now.getTime() - row.lastAttemptAt.getTime() < backoffMs) continue;
     }

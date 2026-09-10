@@ -171,6 +171,50 @@ async function run() {
   });
 
   await suite(
+    "assessment.assigned dispatches both in-app and email",
+    async () => {
+      const r = await dispatch({
+        eventType: "assessment.assigned",
+        recipientUserId: TEST_USER_ID,
+        primaryEntityId: "assess-001",
+        title: "New assessment assigned",
+      });
+      assert(r.ok === true, "dispatch should succeed");
+      if (!r.ok) return;
+
+      const deliveries = await prisma.notificationDelivery.findMany({
+        where: { notificationId: r.notificationId },
+        select: { channel: true },
+      });
+      const channels = deliveries.map((d) => d.channel);
+      assert(channels.includes("in_app"), "in-app delivery must exist");
+      assert(channels.includes("email"), "email delivery must exist for assessment.assigned");
+    },
+  );
+
+  await suite(
+    "outreach.reply_received dispatches both in-app and email",
+    async () => {
+      const r = await dispatch({
+        eventType: "outreach.reply_received",
+        recipientUserId: TEST_USER_ID,
+        primaryEntityId: "outreach-001",
+        title: "You received a reply",
+      });
+      assert(r.ok === true, "dispatch should succeed");
+      if (!r.ok) return;
+
+      const deliveries = await prisma.notificationDelivery.findMany({
+        where: { notificationId: r.notificationId },
+        select: { channel: true },
+      });
+      const channels = deliveries.map((d) => d.channel);
+      assert(channels.includes("in_app"), "in-app delivery must exist");
+      assert(channels.includes("email"), "email delivery must exist for outreach.reply_received");
+    },
+  );
+
+  await suite(
     "important event with default preferences creates email delivery",
     async () => {
       const r = await dispatch({

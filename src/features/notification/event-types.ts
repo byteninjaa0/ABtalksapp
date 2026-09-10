@@ -50,6 +50,22 @@ export const EVENT_TYPE_REGISTRY: Record<string, EventTypeConfig> = {
     emailExempt: false,
     defaultEmailEnabled: false,
   },
+  "assessment.assigned": {
+    key: "assessment.assigned",
+    label: "Assessment assigned",
+    priority: "important",
+    suppressionExempt: true,
+    emailExempt: false,
+    defaultEmailEnabled: true,
+  },
+  "outreach.reply_received": {
+    key: "outreach.reply_received",
+    label: "Outreach reply received",
+    priority: "important",
+    suppressionExempt: true,
+    emailExempt: false,
+    defaultEmailEnabled: true,
+  },
   "auth.password_reset": {
     key: "auth.password_reset",
     label: "Password reset",

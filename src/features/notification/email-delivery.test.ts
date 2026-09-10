@@ -186,6 +186,53 @@ async function run() {
     );
   });
 
+  await suite("retryFailedDeliveries reclaims orphaned sending rows after 10 min", async () => {
+    const { deliveryId } = await createTestNotificationWithDelivery("orphan-sending-1");
+
+    await prisma.notificationDelivery.update({
+      where: { id: deliveryId },
+      data: {
+        state: "sending",
+        attemptCount: 1,
+        lastAttemptAt: new Date(Date.now() - 15 * 60 * 1000),
+      },
+    });
+
+    const result = await retryFailedDeliveries();
+
+    assert(result.processed >= 1, `should process at least 1 orphaned sending row, got ${result.processed}`);
+
+    const after = await prisma.notificationDelivery.findUnique({
+      where: { id: deliveryId },
+      select: { state: true, attemptCount: true },
+    });
+    assert(after!.attemptCount === 2, `attemptCount should be 2, got ${after!.attemptCount}`);
+  });
+
+  await suite("retryFailedDeliveries skips recent sending rows (not yet orphaned)", async () => {
+    const { deliveryId } = await createTestNotificationWithDelivery("recent-sending-1");
+
+    await prisma.notificationDelivery.update({
+      where: { id: deliveryId },
+      data: {
+        state: "sending",
+        attemptCount: 1,
+        lastAttemptAt: new Date(),
+      },
+    });
+
+    await retryFailedDeliveries();
+
+    const after = await prisma.notificationDelivery.findUnique({
+      where: { id: deliveryId },
+      select: { state: true, attemptCount: true },
+    });
+    assert(
+      after!.attemptCount === 1,
+      `attemptCount should still be 1 (not orphaned yet), got ${after!.attemptCount}`,
+    );
+  });
+
   await suite("retryFailedDeliveries respects max attempts", async () => {
     const { deliveryId } = await createTestNotificationWithDelivery("retry-max-1");
 
