@@ -317,6 +317,8 @@ model User {
   legalConsents           LegalConsent[]
   dataRightsRequests      DataRightsRequest[]
   notificationReads       NotificationRead[]
+  userNotifications        UserNotification[]       @relation("UserNotifications")
+  notificationPreferences  NotificationPreference[] @relation("NotificationPreferences")
   /// Interview platform attempts (plan 103). Direct User relation: a mock
   /// interview needs registration only, never cohort enrollment.
   mockInterviews          MockInterview[]
@@ -1792,6 +1794,65 @@ model NotificationRead {
 
   @@unique([userId, notificationKey])
   @@index([userId])
+}
+
+/// Per-user transactional notifications (plan 118, T-248). Separate from the
+/// broadcast Notification model above — that one has no userId and addresses
+/// audiences; this one targets a specific person about a specific entity.
+/// Dedupe is enforced by the unique index on dedupeKey.
+model UserNotification {
+  id              String   @id @default(cuid())
+  recipientUserId String
+  eventType       String
+  title           String
+  body            String?
+  href            String?
+  dedupeKey       String   @unique
+  primaryEntityId String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  recipient  User                  @relation("UserNotifications", fields: [recipientUserId], references: [id], onDelete: Cascade)
+  deliveries NotificationDelivery[]
+
+  @@index([recipientUserId, createdAt(sort: Desc)])
+}
+
+/// Per-channel delivery tracking for UserNotification (plan 118, T-248).
+/// At most one row per (notificationId, channel). The state machine is:
+/// created → sending → sent | failed. Retry is via the atomic claim pattern
+/// (UPDATE … WHERE state IN ('created','failed') RETURNING *).
+model NotificationDelivery {
+  id             String    @id @default(cuid())
+  notificationId String
+  channel        String
+  state          String    @default("created")
+  attemptCount   Int       @default(0)
+  lastAttemptAt  DateTime?
+  failureReason  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  notification UserNotification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, channel])
+  @@index([state])
+}
+
+/// User × event_type × channel preference (plan 118, T-248). Rows are created
+/// only when a user explicitly changes a default. Absence = default enabled.
+/// channel is always 'email' in this PR — in-app cannot be disabled.
+model NotificationPreference {
+  id        String   @id @default(cuid())
+  userId    String
+  eventType String
+  channel   String
+  enabled   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  user User @relation("NotificationPreferences", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventType, channel])
 }
 
 // =============================================================================
