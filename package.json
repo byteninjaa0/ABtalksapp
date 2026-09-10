@@ -102,7 +102,8 @@
     "test:work-email": "cross-env NODE_OPTIONS=--conditions=react-server tsx src/features/recruiter-auth/work-email.test.ts",
     "db:audit:personal-domain-recruiters": "tsx prisma/scripts/audit-personal-domain-recruiters.ts",
     "test:notification-dispatch": "cross-env NODE_OPTIONS=--conditions=react-server tsx src/features/notification/notification-service.test.ts",
-    "test:email-delivery": "cross-env NODE_OPTIONS=--conditions=react-server tsx src/features/notification/email-delivery.test.ts"
+    "test:email-delivery": "cross-env NODE_OPTIONS=--conditions=react-server tsx src/features/notification/email-delivery.test.ts",
+    "test:notification-acceptance": "cross-env NODE_OPTIONS=--conditions=react-server tsx src/features/notification/notification-acceptance.test.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
