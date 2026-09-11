@@ -672,14 +672,56 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-node--off {
   transition: grid-template-columns 280ms var(--ease);
 }
 
+/* `--hire-panel-w` is set on :root by `PanelResizer` when the recruiter drags
+   the grip. The fallback is a single track value, not the old `minmax`, because
+   a var() fallback has to be substitutable on its own.
+
+   Deliberately NOT applied to `.scout__body` (the closed `1fr 0fr` state) or to
+   the <=1100px copy of this rule (`0fr 1fr`, where the panel is a fullscreen
+   overlay): a stored width in either would hold a gap open behind the panel. */
 .scout__body.is-open {
-  grid-template-columns: 1fr minmax(320px, 400px);
+  grid-template-columns: 1fr var(--hire-panel-w, clamp(320px, 30vw, 400px));
 }
 
 .chat-output {
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
+  /* Load-bearing for the scroll restore in `scout-chat.tsx`. Opening the panel
+     narrows this column, which makes its content taller and can pull a
+     scrollbar in — changing the usable width, so the scrollTop we saved before
+     opening would land on a different card. Reserving the gutter means the
+     column is the same width open or closed.
+
+     Safari does not support this, and does not need to: its scrollbars are
+     overlays that take no layout width, so the reflow never happens there. */
+  scrollbar-gutter: stable;
+}
+
+/* No easing while the grip is held: the 280ms grid transition below makes the
+   column chase the pointer a third of a second behind. */
+.scout__body.is-resizing {
+  transition: none;
+}
+
+.scout__body.is-resizing * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* The Filters menu has to clear the result cards.
+
+   `hire-results-in` animates a transform on BOTH `.scout__toolbar` and
+   `.chat-output`, and a running transform animation makes each one its own
+   stacking context. That traps the menu's `z-index: 30` inside the toolbar,
+   and `.chat-output` — the later sibling — then paints over the lot, so the
+   menu disappeared behind the cards. Lifting the toolbar itself settles it.
+
+   Stays below `.hire-detail` at <=1100px (z-index 95) and the shortlist bar
+   (90), so the fullscreen panel still covers this. */
+.scout__toolbar {
+  position: relative;
+  z-index: 40;
 }
 
 .scout-empty {
@@ -1736,6 +1778,7 @@ html.dark:not(:has(.theme-abtalks-light)) .desk-shortlist.is-on {
 
 /* Inspector */
 .hire-detail {
+  position: relative; /* anchors `.hire-detail__grip` */
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -1744,6 +1787,40 @@ html.dark:not(:has(.theme-abtalks-light)) .desk-shortlist.is-on {
   color: var(--h-ink);
   display: flex;
   flex-direction: column;
+}
+
+/* The resize handle, straddling the panel's left border so the whole seam is
+   grabbable rather than just the pixel the border occupies. */
+.hire-detail__grip {
+  position: absolute;
+  inset-block: 0;
+  left: -8px;
+  width: 12px;
+  z-index: 2;
+  cursor: col-resize;
+  background: transparent;
+  touch-action: none; /* the pointer drag owns the gesture */
+}
+
+.hire-detail__grip::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 7px;
+  width: 2px;
+  background: var(--h-primary);
+  opacity: 0;
+  transition: opacity 150ms var(--ease);
+}
+
+.hire-detail__grip:hover::after,
+.hire-detail__grip:focus-visible::after,
+.scout__body.is-resizing .hire-detail__grip::after {
+  opacity: 1;
+}
+
+.hire-detail__grip:focus-visible {
+  outline: none;
 }
 
 .hire-detail[hidden] {
@@ -3109,6 +3186,34 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-app .hire-podbar button:not(.hir
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
+/* The same evidence resume, rendered inside the review panel instead of on its
+   own page. `.hire-sheet` is a centred 820px card; in a 360px column it has to
+   stop being a card and just be content — the panel already supplies the
+   surface, the padding and the scroll. */
+.hire-sheet--embed {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.hire-sheet--embed .hire-sheet__grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 14px;
+}
+
+.hire-sheet--embed .hire-sheet__name {
+  font-size: 20px;
+  line-height: 26px;
+}
+
+.hire-sheet--embed .hire-sheet__rule {
+  margin: 20px 0;
+}
+
 .hire-sheet__top {
   display: flex;
   align-items: flex-start;
@@ -4416,6 +4521,12 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-app.hire-menu {
     z-index: 95;
     border-left: 0;
     background: var(--h-surface);
+  }
+
+  /* Nothing to resize against once the panel covers the desk. `PanelResizer`
+     also returns null below this width; this is the belt to that's braces. */
+  .hire-detail__grip {
+    display: none;
   }
 
   .scout__body.is-open .hire-detail__scroll {
@@ -7151,8 +7262,10 @@ button.hire-side__me {
 }
 
 @media (min-width: 1101px) {
+  /* The rule that actually wins on the desk. See the note on
+     `.scout__body.is-open` for why the width is a variable. */
   .hire-app--results .scout__body.is-open {
-    grid-template-columns: minmax(0, 1fr) clamp(360px, 30vw, 484px);
+    grid-template-columns: minmax(0, 1fr) var(--hire-panel-w, clamp(360px, 30vw, 484px));
     column-gap: 15px;
   }
 
@@ -9154,7 +9267,12 @@ button.hire-side__me {
    -------------------------------------------------------------------------- */
 @media (min-width: 1101px) {
   .hire-app--results .scout__body {
-    grid-template-columns: minmax(0, 1fr) clamp(360px, 30vw, 484px);
+    /* Same `--hire-panel-w` as the `.is-open` rules below. This column is
+       always present on screen 2, so if only the open state honoured the
+       recruiter's width the layout would jump on every open and close. One
+       width throughout also means the card column never changes size, which
+       is what makes the scroll restore in `scout-chat.tsx` exact. */
+    grid-template-columns: minmax(0, 1fr) var(--hire-panel-w, clamp(360px, 30vw, 484px));
     column-gap: 15px;
     /* No column transition here. The base rule animates the columns for the
        panel opening, but this column is always present now — and on arrival

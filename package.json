@@ -112,6 +112,7 @@
     "verify:hire-pool": "tsx scripts/verify-hire-pool.ts",
     "test:guest-adoption": "NODE_OPTIONS=--conditions=react-server tsx src/features/hire/guest-adoption.test.ts",
     "test:match-persistence": "NODE_OPTIONS=--conditions=react-server tsx src/features/hire/match-persistence.test.ts",
+    "test:review-panel": "cross-env NODE_OPTIONS=--conditions=react-server tsx src/features/hire/review-panel.test.ts",
     "test:project-state": "NODE_OPTIONS=--conditions=react-server tsx src/features/hire/project-state.test.ts",
     "test:navbar-shortlist": "NODE_OPTIONS=--conditions=react-server tsx src/features/hire/navbar-shortlist.test.ts",
     "test:virtual": "NODE_OPTIONS=--conditions=react-server tsx src/features/hire/virtual-candidate.test.ts",
