@@ -5,7 +5,15 @@
 **Covers:** TC-C-012, TC-C-013 (E2E Tests rows 12–13). Requirement Traceability R27, R28, R29.
 **Depends on:** T-244 (plan 128, commit `0f7e19f9`), T-243 (plan 121). **Design:** T-203 — see §2.6.
 **Blocks:** T-219 (integrity signals, "recorded as fact against the attempt").
-**Status:** plan only. No code written.
+**Status:** **shipped.** Implemented and on `master` in `cdaa8cf6`
+("RECRUITER SIDE ASSESSMENT and Candidate side v1 — T-218, T-243, T244").
+`src/features/assessment-attempts/{service,prisma-store}.ts`, the
+`/assessments` and `/assessments/[assignmentId]` routes and migration
+`20260911210000_assessment_answer` are all present;
+`npm run test:assessment-attempts` is 29/29. The candidate take-and-submit flow
+was exercised end to end on 2026-09-11 during TC-R-018 acceptance (plan 133).
+*(This line previously read "plan only. No code written." — it was already false
+when written.)*
 
 > **Local prerequisites (same as plans 121 / 128):** `/hire` sign-in needs
 > `ENABLE_RECRUITER_AUTH=true`, and **`.env.local` points at the production

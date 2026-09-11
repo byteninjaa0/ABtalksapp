@@ -6,10 +6,16 @@
 **Blocks:** T-218 (candidate taking + autosave), whose row says "Depends on: T-244".
 **Board owner:** the workbook still lists **shashank** for T-244. Update the board to
 the actual assignee before implementation starts so two people do not build it.
-**Status:** implemented on `ab-dev` (2026-09-11), uncommitted. `tsc` clean,
-`npm run build` green, `test:recruiter-assessments` 26/26, isolation 9/9.
-Migration `20260911180000_…` generated offline and **not applied to any
-database**; §7 steps 2–6 and the §8 manual checks are still to do.
+**Status:** **shipped.** Committed and on `master` in `0f7e19f9` (merged via PR #296);
+`cdaa8cf6` brought the T-218 candidate side alongside it. `tsc` clean,
+`npm run build` green, `test:recruiter-assessments` 27/27, isolation 9/9.
+The §8 manual checks were completed on 2026-09-11 under **TC-R-018 acceptance
+(plan 133)**, which also applied migration `20260911180000_…` to the dev Neon
+branch — it had to be reconciled with `prisma migrate resolve --applied`, because
+the objects already existed there from an earlier `db push`. Still **not applied
+to production**: that happens on the next `master` deploy via `build:deploy`.
+Plan 132 closed the one outstanding deviation from §5 step 10 (the
+`hire-chrome.tsx` nav highlight).
 
 > **Local prerequisite (same as plan 121):** `/hire` sign-in needs
 > `ENABLE_RECRUITER_AUTH=true`. **And `.env.local` points at the production
