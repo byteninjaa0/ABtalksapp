@@ -45,6 +45,7 @@
 - 2026-08-10 — `/` now renders the landing hub for signed-in users too (no more redirect to /dashboard); track cards show "Open dashboard" per-track via `features/landing/get-landing-state.ts`; `/login` bounces signed-in users to `/` instead of `/dashboard`.
 
 ## Pending reconcile
+- 2026-09-12 [convention] PRs auto-labeled from changed paths: `module:<id>` for every matching module and `primary:<id>` for the largest file share (tie-break: changed lines); map lives in scripts/pr-module-labels.mjs.
 - 2026-09-11 [rule] T-258 UNLOCK rate limit now wraps unlockContactAction (T-229 spend path); preview/reveal stay reads and do not consume the bucket.
 - 2026-09-11 [convention] Cursor rules split for chat use: always-apply ABTalks88 contract + Sohail ownership; forest-green UI is glob/agent; workbook moved to `.cursor/sources` because xlsx is not a Cursor rule.
 - 2026-09-11 [schema|rule] Profile completion is field-weighted to 100% (plan 132): gated Experience/Education on entry #1, skills 0/5/10, resume 3%, extra rows add 0; `CandidateProfile.hasNoWorkExperience` awards the Experience 20% for freshers (migration 20260911220000, additive, NOT applied). Completeness stays a UX number in `computeCompleteness` and gates nothing.
