@@ -210,6 +210,19 @@ suite("the drag disables the grid transition", () => {
   );
 });
 
+suite("the Filters menu clears the result cards", () => {
+  // `hire-results-in` animates a transform on both .scout__toolbar and
+  // .chat-output, making each a stacking context — which trapped the menu's
+  // z-index inside the toolbar and let the later sibling paint over it.
+  assert(
+    /\.scout__toolbar\s*\{[^}]*position:\s*relative[^}]*z-index:\s*40/.test(css),
+    "the toolbar must be lifted, or the Filters menu hides behind the cards",
+  );
+  // Must stay under the fullscreen panel (95) and the shortlist bar (90).
+  const z = /\.scout__toolbar\s*\{[^}]*z-index:\s*(\d+)/.exec(css);
+  assert(z != null && Number(z[1]) < 90, "the toolbar must stay below the panel and podbar");
+});
+
 suite("the results column reserves its scrollbar gutter", () => {
   assert(
     /\.chat-output\s*\{[^}]*scrollbar-gutter:\s*stable/.test(css),

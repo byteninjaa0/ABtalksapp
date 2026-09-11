@@ -709,6 +709,21 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-node--off {
   user-select: none;
 }
 
+/* The Filters menu has to clear the result cards.
+
+   `hire-results-in` animates a transform on BOTH `.scout__toolbar` and
+   `.chat-output`, and a running transform animation makes each one its own
+   stacking context. That traps the menu's `z-index: 30` inside the toolbar,
+   and `.chat-output` — the later sibling — then paints over the lot, so the
+   menu disappeared behind the cards. Lifting the toolbar itself settles it.
+
+   Stays below `.hire-detail` at <=1100px (z-index 95) and the shortlist bar
+   (90), so the fullscreen panel still covers this. */
+.scout__toolbar {
+  position: relative;
+  z-index: 40;
+}
+
 .scout-empty {
   display: flex;
   flex-direction: column;
