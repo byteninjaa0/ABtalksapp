@@ -335,10 +335,57 @@ export function ScoutChat({
   const [activeSearchId, setActiveSearchId] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [openMatch, setOpenMatch] = useState<MatchCardData | null>(null);
+  /**
+   * Where the results were scrolled to before the panel opened.
+   *
+   * Captured on the FIRST open only. Opening narrows the left column, so a mark
+   * taken while the panel is already open measures a different layout — which
+   * is exactly what walking next/previous would do to it.
+   */
+  const savedScroll = useRef<number | null>(null);
   /** Open the inspector and fire-and-forget a detail-view record (plan 120). */
   function openMatchPanel(match: MatchCardData) {
+    if (!openMatch) savedScroll.current = scrollRef.current?.scrollTop ?? null;
     setOpenMatch(match);
     void recordCandidateViewAction(match.candidateRef);
+  }
+
+  /** Close the panel and put the results back exactly where they were. */
+  function closeMatchPanel() {
+    const top = savedScroll.current;
+    savedScroll.current = null;
+    setOpenMatch(null);
+    if (top == null) return;
+    // The grid animates back to one column over 280ms. Restore on the next
+    // frame so the recruiter sees the right place immediately, then again when
+    // the track actually settles, or the browser keeps wherever the reflow left
+    // us.
+    requestAnimationFrame(() => {
+      const root = scrollRef.current;
+      if (root) root.scrollTop = top;
+    });
+    const body = scrollRef.current?.closest(".scout__body");
+    if (!body) return;
+    // Arrow consts, not function declarations: a hoisted `function` loses the
+    // `top == null` narrowing above and TS widens it back to `number | null`.
+    let timer = 0;
+    const done = () => {
+      window.clearTimeout(timer);
+      body.removeEventListener("transitionend", settle);
+    };
+    const settle = (e: Event) => {
+      // `.scout__body` transitions more than one property; without this the
+      // handler fires on whichever finishes first, mid-reflow.
+      if ((e as TransitionEvent).propertyName !== "grid-template-columns") return;
+      done();
+      const root = scrollRef.current;
+      if (root) root.scrollTop = top;
+    };
+    // The transition may never fire — reduced motion, or a track that did not
+    // actually change. Without this the listener and its closure would outlive
+    // every close for the rest of the session.
+    timer = window.setTimeout(done, 600);
+    body.addEventListener("transitionend", settle);
   }
   /** Cards sit under this message index so a later turn starts below them. */
   const [resultsPin, setResultsPin] = useState<number | null>(
@@ -955,6 +1002,7 @@ export function ScoutChat({
     setText("");
     setDetailsOpen(false);
     setOpenMatch(null);
+    savedScroll.current = null;
   }
 
   /**
@@ -1438,6 +1486,7 @@ export function ScoutChat({
                               const tab = searchTabs.find((t) => t.id === id);
                               setMatchCount(tab?.matches.length ?? 0);
                               setOpenMatch(null);
+                              savedScroll.current = null;
                             }}
                           />
                         </div>
@@ -1559,7 +1608,7 @@ export function ScoutChat({
             key={openMatch.candidateRef}
             match={openMatch}
             decision={openDecision}
-            onClose={() => setOpenMatch(null)}
+            onClose={closeMatchPanel}
             onPrev={
               openIndex > 0
                 ? () => openFromList(panelList[openIndex - 1]!)

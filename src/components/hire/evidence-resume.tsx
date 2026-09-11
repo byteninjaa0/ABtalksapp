@@ -129,6 +129,34 @@ export function EvidenceResume({ lookup }: { lookup: string }) {
     );
   }
 
+  return (
+    <main className="hire-sheet">
+      <BackToScout />
+      <EvidenceResumeBody match={match} />
+    </main>
+  );
+}
+
+/**
+ * The evidence record itself, without a container.
+ *
+ * Split out so the review panel can render the same record inline instead of
+ * sending the recruiter to a new tab — the panel wraps it in
+ * `.hire-sheet--embed`, the page in `.hire-sheet`. Returns a fragment so each
+ * caller owns its own element.
+ */
+export function EvidenceResumeBody({
+  match,
+  showIdentity = true,
+}: {
+  match: MatchCardData;
+  /**
+   * The panel already shows the name, location and score in its own header, so
+   * it turns this off — repeating them would duplicate the identity a few
+   * inches apart, and would nest this <h1> under the panel's <h3>.
+   */
+  showIdentity?: boolean;
+}) {
   const e = match.evidence ?? {};
   const sample = match.candidateRef.startsWith("SAMPLE:");
   const publicId = refPublicId(match.candidateRef);
@@ -146,29 +174,29 @@ export function EvidenceResume({ lookup }: { lookup: string }) {
         : null;
 
   return (
-    <main className="hire-sheet">
-      <BackToScout />
-
-      <div className="hire-sheet__top">
-        <div>
-          <h1 className="hire-sheet__name">
-            {match.jobRole} <OpenToWorkBadge openToWork={match.openToWork} />
-          </h1>
-          <p className="hire-sheet__sub">
-            {sample
-              ? "Sample profile — not a person in the pool"
-              : [match.locationLabel, publicId, track]
-                  .filter(Boolean)
-                  .join(" · ")}
-          </p>
-        </div>
-        {!sample && (
-          <div className="hire-sheet__score">
-            <b>{match.score}</b>
-            <span>out of 100</span>
+    <>
+      {showIdentity && (
+        <div className="hire-sheet__top">
+          <div>
+            <h1 className="hire-sheet__name">
+              {match.jobRole} <OpenToWorkBadge openToWork={match.openToWork} />
+            </h1>
+            <p className="hire-sheet__sub">
+              {sample
+                ? "Sample profile — not a person in the pool"
+                : [match.locationLabel, publicId, track]
+                    .filter(Boolean)
+                    .join(" · ")}
+            </p>
           </div>
-        )}
-      </div>
+          {!sample && (
+            <div className="hire-sheet__score">
+              <b>{match.score}</b>
+              <span>out of 100</span>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="hire-sheet__tags">
         {track && <span className="desk-pill">{track}</span>}
@@ -279,6 +307,6 @@ export function EvidenceResume({ lookup }: { lookup: string }) {
         {match.compensationBand ? ` ${COMPENSATION_DISCLAIMER}` : ""}{" "}
         Compensation and availability are confirmed at outreach.
       </p>
-    </main>
+    </>
   );
 }
