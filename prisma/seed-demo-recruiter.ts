@@ -50,6 +50,24 @@ config();
 const PRODUCTION_DB_HOST_IDS = ["ep-nameless-term-ams9a5e3", ".main."] as const;
 const RECRUITER_EMAIL = "recruiter@hire.abtalks.dev";
 const CANDIDATE_EMAIL = "strong@hire.abtalks.dev";
+
+/**
+ * Every candidate `seed-hire-fixtures.ts` creates.
+ *
+ * All three need `CandidateVisibility`, not just the T-229 one: the /hire pool
+ * gate is `searchableByRecruiters` (repositories/talent.ts `searchableUserWhere`
+ * / `filterSearchableUserIds`), so a fixture without a row is invisible to
+ * search AND unassignable in the T-244 assign panel. Seeding only `strong@`
+ * left TC-R-018 ("assign to three candidates") impossible to demonstrate.
+ *
+ * There is no UI for this — `searchableByRecruiters` is written with
+ * `consentSource: "platform_default"`, never from the profile form.
+ */
+const POOL_EMAILS = [
+  CANDIDATE_EMAIL,
+  "narrow@hire.abtalks.dev",
+  "consistent@hire.abtalks.dev",
+] as const;
 const COMPANY_NAME = "Scout Test Co";
 
 function assertNotProductionDb() {
@@ -144,25 +162,36 @@ async function main() {
     );
   }
 
-  await prisma.candidateVisibility.upsert({
-    where: { userId: candidateUser.id },
-    create: {
-      userId: candidateUser.id,
-      searchableByRecruiters: true,
-      consentSource: "platform_default",
-      showResume: true,
-      showInterviewResults: true,
-      showAssessmentScores: true,
-      showLinkedin: true,
-      showGithub: true,
-      showCurrentEmployer: true,
-    },
-    update: {
-      searchableByRecruiters: true,
-      withdrawnAt: null,
-    },
-  });
-  console.log(`  ✓ Candidate visibility: searchableByRecruiters=true for ${CANDIDATE_EMAIL}`);
+  for (const email of POOL_EMAILS) {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+    if (!user) {
+      throw new Error(
+        `Candidate ${email} not found. Please run 'npx tsx prisma/seed-hire-fixtures.ts' first.`,
+      );
+    }
+    await prisma.candidateVisibility.upsert({
+      where: { userId: user.id },
+      create: {
+        userId: user.id,
+        searchableByRecruiters: true,
+        consentSource: "platform_default",
+        showResume: true,
+        showInterviewResults: true,
+        showAssessmentScores: true,
+        showLinkedin: true,
+        showGithub: true,
+        showCurrentEmployer: true,
+      },
+      update: {
+        searchableByRecruiters: true,
+        withdrawnAt: null,
+      },
+    });
+    console.log(`  ✓ Candidate visibility: searchableByRecruiters=true for ${email}`);
+  }
 
   // 5. Candidate: Ensure CandidateProfile has phone for T-229 contact reveal
   await prisma.candidateProfile.upsert({
