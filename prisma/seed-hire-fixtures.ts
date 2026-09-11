@@ -71,6 +71,7 @@ async function main() {
     {
       email: `strong${SUFFIX}`,
       name: "Scout Strong",
+      referralCode: "SCOUT01",
       skills: ["Python", "SQL", "TypeScript", "Docker"],
       missionPoints: 240,
       cleanPassCount: 18,
@@ -83,6 +84,7 @@ async function main() {
     {
       email: `narrow${SUFFIX}`,
       name: "Scout Narrow",
+      referralCode: "SCOUT02",
       skills: ["Python", "FastAPI"],
       missionPoints: 120,
       cleanPassCount: 8,
@@ -95,6 +97,7 @@ async function main() {
     {
       email: `consistent${SUFFIX}`,
       name: "Scout Consistent",
+      referralCode: "SCOUT03",
       skills: ["Python", "SQL", "dbt"],
       missionPoints: 96,
       cleanPassCount: 5,
@@ -113,6 +116,27 @@ async function main() {
 
   for (const f of fixtures) {
     const user = await upsertUser(f.email, f.name);
+
+    // The post-auth registration gate is "has a StudentProfile"
+    // (features/registration/registration-gate.ts). Without one these fixtures
+    // sign in fine and are then bounced to /register, where the form cannot be
+    // completed in dev because Vercel Blob is not configured for the resume
+    // upload. `resumeUrl` is optional on this model, so the profile alone is
+    // enough to let a fixture reach /assessments and take a test.
+    await prisma.studentProfile.upsert({
+      where: { userId: user.id },
+      create: {
+        userId: user.id,
+        fullName: f.name,
+        college: "Fixture College",
+        graduationYear: 2026,
+        domain: "AI",
+        skills: f.skills,
+        referralCode: f.referralCode,
+      },
+      update: { fullName: f.name, skills: f.skills },
+    });
+
     const member = await prisma.programMember.upsert({
       where: {
         userId_cohortId: { userId: user.id, cohortId: cohort.id },

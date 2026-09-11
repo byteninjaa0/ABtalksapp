@@ -1139,6 +1139,30 @@ async function run() {
     assert(!page.includes("candidateUserId"), "no user id reaches the builder");
   });
 
+  await suite(
+    "20. the Assessments nav stays current on the monitor route",
+    () => {
+      const chrome = readSource("src/components/hire/hire-chrome.tsx");
+      // The monitor is /hire/assessments/<id>. Strict equality on the nav link
+      // dropped the highlight the moment a recruiter opened an assessment.
+      const navBlock = chrome.slice(chrome.indexOf('href="/hire/assessments"'));
+      assert(
+        navBlock.includes('pathname.startsWith("/hire/assessments")'),
+        "the Assessments nav link must match with startsWith, not ===",
+      );
+      assert(
+        !navBlock.slice(0, 600).includes('pathname === "/hire/assessments"'),
+        "no strict-equality pathname check may remain on the nav link",
+      );
+      // The desk deny-list is a different question - the single /hire/<id>
+      // segment - and must keep its !== form.
+      assert(
+        chrome.includes('pathname !== "/hire/assessments"'),
+        "the desk deny-list must keep its !== check",
+      );
+    },
+  );
+
   console.log(`\n${passed} passed, ${failed} failed\n`);
   process.exit(failed > 0 ? 1 : 0);
 }

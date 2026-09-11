@@ -228,14 +228,21 @@ export function HireChrome({
               currency={credits.currency}
             />
           ) : null}
+          {/* `startsWith`, not `===`: the monitor lives at
+              /hire/assessments/<id>, and strict equality dropped the nav
+              highlight the moment a recruiter opened an assessment. The desk
+              deny-list above stays on `!==` — that one is about the single
+              /hire/<requestId> segment and must not match this route. */}
           <Link
             href="/hire/assessments"
             className={cn(
               "hire-hbtn",
               "hire-hbtn--label",
-              pathname === "/hire/assessments" && "is-current",
+              pathname.startsWith("/hire/assessments") && "is-current",
             )}
-            aria-current={pathname === "/hire/assessments" ? "page" : undefined}
+            aria-current={
+              pathname.startsWith("/hire/assessments") ? "page" : undefined
+            }
           >
             <ClipboardCheck className="hire-hbtn__svg" aria-hidden="true" />
             <span>Assessments</span>
