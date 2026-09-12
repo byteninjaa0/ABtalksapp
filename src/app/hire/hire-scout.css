@@ -6347,29 +6347,6 @@ html.dark .vc-card {
   color: #d2d2d2;
 }
 
-.hire-app--landing .hire-hbtn--landing-projects {
-  height: 36px;
-  padding: 0 16px;
-  border-radius: 100px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-  font-weight: 500;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.hire-app--landing .hire-hbtn--landing-projects:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
-  color: #ffffff;
-}
-
-.hire-app--landing .hire-hbtn--landing-projects .hire-hbtn__svg {
-  color: #d4ebec;
-}
-
 .hire-app--landing .hire-app__nav form button {
   color: #ffffff;
 }

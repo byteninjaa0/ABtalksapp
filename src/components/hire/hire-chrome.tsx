@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Bookmark, Briefcase, ClipboardCheck, FolderKanban, UserCheck, X } from "lucide-react";
+import { Bookmark, Briefcase, ClipboardCheck, UserCheck, X } from "lucide-react";
 import { RecruiterAccountMenu } from "@/components/hire/recruiter-account-menu";
 import { CreditBalancePill } from "@/components/hire/credit-balance-pill";
 import { useHireAuth } from "@/components/hire/hire-auth-provider";
@@ -264,24 +264,7 @@ export function HireChrome({
           </>
           )}
           {account ? (
-            <>
-              {isLanding && (
-                <Link
-                  href="/hire/requests"
-                  className={cn(
-                    "hire-hbtn",
-                    "hire-hbtn--label",
-                    "hire-hbtn--landing-projects",
-                    pathname === "/hire/requests" && "is-current",
-                  )}
-                  title="View your past search projects"
-                >
-                  <FolderKanban className="hire-hbtn__svg" aria-hidden="true" />
-                  <span>Projects</span>
-                </Link>
-              )}
-              <RecruiterAccountMenu account={account} />
-            </>
+            <RecruiterAccountMenu account={account} />
           ) : (
             <button
               type="button"
