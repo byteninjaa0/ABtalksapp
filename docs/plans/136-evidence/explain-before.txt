@@ -1,0 +1,132 @@
+DB: ep-young-shadow-amawetjy-pooler.c-5.us-east-1.aws.neon.tech
+pool (searchable): 69
+==============================================================================
+1. CHALLENGE TRACK — unbounded Enrollment scan (the ~40x amplifier)
+==============================================================================
+listChallengeCandidates: WHERE challenge.domain IN (...) AND EXISTS(submissions)
+AND the user gate. No LIMIT. This is the query that returns ~40k rows per search.
+------------------------------------------------------------------------------
+TIMINGS (run 1 is cold; compare warm runs only):
+  run 1: Planning Time: 7.770 ms | Execution Time: 1.363 ms
+  run 2: Planning Time: 7.457 ms | Execution Time: 1.442 ms
+  run 3: Planning Time: 7.625 ms | Execution Time: 1.406 ms
+------------------------------------------------------------------------------
+WARM PLAN (last run):
+Nested Loop  (cost=13.42..122.70 rows=1 width=56) (actual time=0.407..1.351 rows=44 loops=1)
+  Buffers: shared hit=549
+  ->  Nested Loop  (cost=13.13..121.77 rows=1 width=82) (actual time=0.402..1.224 rows=44 loops=1)
+        Buffers: shared hit=397
+        ->  Nested Loop Semi Join  (cost=13.00..121.61 rows=1 width=108) (actual time=0.394..1.157 rows=44 loops=1)
+              Buffers: shared hit=309
+              ->  Hash Join  (cost=12.71..119.95 rows=5 width=108) (actual time=0.082..0.699 rows=67 loops=1)
+                    Hash Cond: (e."userId" = v."userId")
+                    Buffers: shared hit=88
+                    ->  Seq Scan on "Enrollment" e  (cost=0.00..98.87 rows=3187 width=82) (actual time=0.009..0.249 rows=3188 loops=1)
+                          Buffers: shared hit=67
+                    ->  Hash  (cost=12.45..12.45 rows=21 width=26) (actual time=0.055..0.055 rows=69 loops=1)
+                          Buckets: 1024  Batches: 1  Memory Usage: 12kB
+                          Buffers: shared hit=21
+                          ->  Index Scan using candidate_visibility_searchable on "CandidateVisibility" v  (cost=0.14..12.45 rows=21 width=26) (actual time=0.009..0.042 rows=69 loops=1)
+                                Filter: ("withdrawnAt" IS NULL)
+                                Buffers: shared hit=21
+              ->  Index Only Scan using "Submission_enrollmentId_dayNumber_key" on "Submission" s  (cost=0.29..1.05 rows=21 width=26) (actual time=0.006..0.006 rows=1 loops=67)
+                    Index Cond: ("enrollmentId" = e.id)
+                    Heap Fetches: 19
+                    Buffers: shared hit=221
+        ->  Index Scan using "Challenge_pkey" on "Challenge" c  (cost=0.13..0.16 rows=1 width=26) (actual time=0.001..0.001 rows=1 loops=44)
+              Index Cond: (id = e."challengeId")
+              Filter: (domain = ANY ('{CLAUDE,SE,DS,AI}'::"Domain"[]))
+              Buffers: shared hit=88
+  ->  Index Scan using "User_pkey" on "User" u  (cost=0.29..0.91 rows=1 width=26) (actual time=0.002..0.002 rows=1 loops=44)
+        Index Cond: (id = e."userId")
+        Filter: ("deletedAt" IS NULL)
+        Buffers: shared hit=142
+Planning:
+  Buffers: shared hit=81
+Planning Time: 7.625 ms
+Execution Time: 1.406 ms
+==============================================================================
+1b. SAME QUERY, filtering Enrollment.domain (already indexed) — the free fix
+==============================================================================
+A one-line change: filter the denormalised Enrollment.domain instead of joining
+Challenge. Compare the plan above. NOT implemented in this PR — documented only.
+------------------------------------------------------------------------------
+TIMINGS (run 1 is cold; compare warm runs only):
+  run 1: Planning Time: 15.047 ms | Execution Time: 3.100 ms
+  run 2: Planning Time: 7.319 ms | Execution Time: 1.468 ms
+  run 3: Planning Time: 7.305 ms | Execution Time: 1.475 ms
+------------------------------------------------------------------------------
+WARM PLAN (last run):
+Nested Loop  (cost=13.29..138.47 rows=1 width=56) (actual time=0.355..1.425 rows=44 loops=1)
+  Buffers: shared hit=461
+  ->  Nested Loop Semi Join  (cost=13.00..137.54 rows=1 width=82) (actual time=0.350..1.285 rows=44 loops=1)
+        Buffers: shared hit=309
+        ->  Hash Join  (cost=12.71..135.89 rows=5 width=82) (actual time=0.084..0.830 rows=67 loops=1)
+              Hash Cond: (e."userId" = v."userId")
+              Buffers: shared hit=88
+              ->  Seq Scan on "Enrollment" e  (cost=0.00..114.81 rows=3187 width=56) (actual time=0.011..0.453 rows=3188 loops=1)
+                    Filter: (domain = ANY ('{CLAUDE,SE,DS,AI}'::"Domain"[]))
+                    Buffers: shared hit=67
+              ->  Hash  (cost=12.45..12.45 rows=21 width=26) (actual time=0.052..0.053 rows=69 loops=1)
+                    Buckets: 1024  Batches: 1  Memory Usage: 12kB
+                    Buffers: shared hit=21
+                    ->  Index Scan using candidate_visibility_searchable on "CandidateVisibility" v  (cost=0.14..12.45 rows=21 width=26) (actual time=0.007..0.040 rows=69 loops=1)
+                          Filter: ("withdrawnAt" IS NULL)
+                          Buffers: shared hit=21
+        ->  Index Only Scan using "Submission_enrollmentId_dayNumber_key" on "Submission" s  (cost=0.29..1.05 rows=21 width=26) (actual time=0.006..0.006 rows=1 loops=67)
+              Index Cond: ("enrollmentId" = e.id)
+              Heap Fetches: 19
+              Buffers: shared hit=221
+  ->  Index Scan using "User_pkey" on "User" u  (cost=0.29..0.91 rows=1 width=26) (actual time=0.003..0.003 rows=1 loops=44)
+        Index Cond: (id = e."userId")
+        Filter: ("deletedAt" IS NULL)
+        Buffers: shared hit=142
+Planning:
+  Buffers: shared hit=75
+Planning Time: 7.305 ms
+Execution Time: 1.475 ms
+==============================================================================
+2. THE DISCOVERY GATE — ProgramMember x User x CandidateVisibility
+==============================================================================
+searchableUserWhere() is ANDed into every candidate query (11 sites).
+Candidate index: CandidateVisibility(searchableByRecruiters, withdrawnAt, userId).
+------------------------------------------------------------------------------
+TIMINGS (run 1 is cold; compare warm runs only):
+  run 1: Planning Time: 5.133 ms | Execution Time: 0.340 ms
+  run 2: Planning Time: 5.274 ms | Execution Time: 0.335 ms
+  run 3: Planning Time: 5.403 ms | Execution Time: 0.371 ms
+------------------------------------------------------------------------------
+WARM PLAN (last run):
+Nested Loop  (cost=13.00..25.84 rows=1 width=56) (actual time=0.080..0.288 rows=67 loops=1)
+  Buffers: shared hit=249
+  ->  Hash Join  (cost=12.71..18.67 rows=1 width=82) (actual time=0.072..0.112 rows=67 loops=1)
+        Hash Cond: (m."userId" = v."userId")
+        Buffers: shared hit=26
+        ->  Seq Scan on "ProgramMember" m  (cost=0.00..5.79 rows=63 width=56) (actual time=0.013..0.029 rows=67 loops=1)
+              Filter: (status = ANY ('{ENROLLED,COMPLETED}'::"ProgramMemberStatus"[]))
+              Buffers: shared hit=5
+        ->  Hash  (cost=12.45..12.45 rows=21 width=26) (actual time=0.052..0.053 rows=69 loops=1)
+              Buckets: 1024  Batches: 1  Memory Usage: 12kB
+              Buffers: shared hit=21
+              ->  Index Scan using candidate_visibility_searchable on "CandidateVisibility" v  (cost=0.14..12.45 rows=21 width=26) (actual time=0.006..0.040 rows=69 loops=1)
+                    Filter: ("withdrawnAt" IS NULL)
+                    Buffers: shared hit=21
+  ->  Index Scan using "User_pkey" on "User" u  (cost=0.29..6.97 rows=1 width=26) (actual time=0.002..0.002 rows=1 loops=67)
+        Index Cond: (id = m."userId")
+        Filter: ("deletedAt" IS NULL)
+        Buffers: shared hit=212
+Planning:
+  Buffers: shared hit=52
+Planning Time: 5.403 ms
+Execution Time: 0.371 ms
+==============================================================================
+4. THE WASTED interview JOIN — quantified
+==============================================================================
+RECRUITER_FIELD_POLICY.interviewResults is false (repositories/talent.ts:64-71),
+yet PROGRAM_CANDIDATE_SELECT still selects the interview relation and the value
+is thrown away in JS at repositories/hire.ts:145. A wasted join per search.
+NOT fixed in this PR — documented only.
+------------------------------------------------------------------------------
+  with    interview join: 0.092 ms
+  without interview join: 0.050 ms
+  wasted per search     : 0.042 ms  (46% of this query)

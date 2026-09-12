@@ -1,0 +1,257 @@
+
+> abtalksapp@0.1.0 bench:hire
+> cross-env NODE_OPTIONS=--conditions=react-server tsx scripts/bench-hire-search.ts --runs 3
+
+
+==============================================================================
+/hire search benchmark — T-235
+==============================================================================
+DB                : ep-young-shadow-amawetjy-pooler.c-5.us-east-1.aws.neon.tech
+searchable pool   : 5069   (synthetic: 5000)
+rare-skill needles: 20 (Elixir)
+runs per scenario : 3
+⚠  wall-clock below includes LOCAL network RTT to Neon us-east-1.
+   Primary metrics are stmts / rows / blks — those are location-free.
+GROQ_API_KEY      : SET — unset it to measure Postgres only
+tracks            : HIRE_CHALLENGE_POOL=10
+==============================================================================
+
+
+--- challenge tracks OFF ---
+  scenario                    stmts     rows    blks       p50     p95   matches
+  unscoped (no filters)          45   100562       0   16582ms 27192ms        20
+  role only                      25   103074       0   15811ms 15959ms        20
+  one must-have skill            25   101052       0   14700ms 19726ms        20
+  two must-have skills           22   100379       0   21960ms 27725ms        20
+  skill + experience band        27   100370       0   13885ms 19106ms        20
+  skill + salary ceiling         26   100270       0   14955ms 15226ms        20
+  location + work mode           25   100290       0   21126ms 23350ms        20
+  RARE skill (the needle)        33   100261       0   15476ms 26899ms        20
+
+--- challenge tracks ON ---
+  scenario                    stmts     rows    blks       p50     p95   matches
+  unscoped (no filters)          61   153691       0   17816ms 18691ms        20
+  role only                      56   150329       0   24597ms 26020ms        20
+  one must-have skill            61   150241       0   20649ms 26974ms        20
+  two must-have skills           63   153001       0   14591ms 16641ms        20
+  skill + experience band        67   150290       0   16452ms 19427ms        20
+  skill + salary ceiling         58   153065       0   20052ms 21868ms        20
+  location + work mode           68   150201       0   19504ms 20700ms        20
+  RARE skill (the needle)        54   150201       0   25626ms 32599ms        20
+
+------------------------------------------------------------------------------
+CORRECTNESS — pre-filter cap truncation (plan 136 §8)
+------------------------------------------------------------------------------
+  needles in the database        : 20
+  candidates the engine examined : 5067
+  needles actually returned      : 20
+  MISSED                         : 0  (0.0% miss rate)
+  ✅ no truncation at this pool size.
+
+------------------------------------------------------------------------------
+JSON
+------------------------------------------------------------------------------
+{
+  "pool": 5069,
+  "synthetic": 5000,
+  "needles": 20,
+  "runs": 3,
+  "missed": 0,
+  "missRate": 0,
+  "wallClockCaveat": "wall-clock includes local developer network RTT (~300ms/round trip) to Neon us-east-1; production runs in-region. Use statements/tuples/blksRead for comparison.",
+  "scenarios": [
+    {
+      "name": "unscoped (no filters)",
+      "tracks": "off",
+      "statements": 45,
+      "tuples": 100562,
+      "blksRead": 0,
+      "p50": 16582,
+      "p95": 27192,
+      "p99": 27192,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "role only",
+      "tracks": "off",
+      "statements": 25,
+      "tuples": 103074,
+      "blksRead": 0,
+      "p50": 15811,
+      "p95": 15959,
+      "p99": 15959,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "one must-have skill",
+      "tracks": "off",
+      "statements": 25,
+      "tuples": 101052,
+      "blksRead": 0,
+      "p50": 14700,
+      "p95": 19726,
+      "p99": 19726,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "two must-have skills",
+      "tracks": "off",
+      "statements": 22,
+      "tuples": 100379,
+      "blksRead": 0,
+      "p50": 21960,
+      "p95": 27725,
+      "p99": 27725,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "skill + experience band",
+      "tracks": "off",
+      "statements": 27,
+      "tuples": 100370,
+      "blksRead": 0,
+      "p50": 13885,
+      "p95": 19106,
+      "p99": 19106,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "skill + salary ceiling",
+      "tracks": "off",
+      "statements": 26,
+      "tuples": 100270,
+      "blksRead": 0,
+      "p50": 14955,
+      "p95": 15226,
+      "p99": 15226,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "location + work mode",
+      "tracks": "off",
+      "statements": 25,
+      "tuples": 100290,
+      "blksRead": 0,
+      "p50": 21126,
+      "p95": 23350,
+      "p99": 23350,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "RARE skill (the needle)",
+      "tracks": "off",
+      "statements": 33,
+      "tuples": 100261,
+      "blksRead": 0,
+      "p50": 15476,
+      "p95": 26899,
+      "p99": 26899,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "unscoped (no filters)",
+      "tracks": "on",
+      "statements": 61,
+      "tuples": 153691,
+      "blksRead": 0,
+      "p50": 17816,
+      "p95": 18691,
+      "p99": 18691,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "role only",
+      "tracks": "on",
+      "statements": 56,
+      "tuples": 150329,
+      "blksRead": 0,
+      "p50": 24597,
+      "p95": 26020,
+      "p99": 26020,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "one must-have skill",
+      "tracks": "on",
+      "statements": 61,
+      "tuples": 150241,
+      "blksRead": 0,
+      "p50": 20649,
+      "p95": 26974,
+      "p99": 26974,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "two must-have skills",
+      "tracks": "on",
+      "statements": 63,
+      "tuples": 153001,
+      "blksRead": 0,
+      "p50": 14591,
+      "p95": 16641,
+      "p99": 16641,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "skill + experience band",
+      "tracks": "on",
+      "statements": 67,
+      "tuples": 150290,
+      "blksRead": 0,
+      "p50": 16452,
+      "p95": 19427,
+      "p99": 19427,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "skill + salary ceiling",
+      "tracks": "on",
+      "statements": 58,
+      "tuples": 153065,
+      "blksRead": 0,
+      "p50": 20052,
+      "p95": 21868,
+      "p99": 21868,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "location + work mode",
+      "tracks": "on",
+      "statements": 68,
+      "tuples": 150201,
+      "blksRead": 0,
+      "p50": 19504,
+      "p95": 20700,
+      "p99": 20700,
+      "matches": 20,
+      "totalEligible": 5067
+    },
+    {
+      "name": "RARE skill (the needle)",
+      "tracks": "on",
+      "statements": 54,
+      "tuples": 150201,
+      "blksRead": 0,
+      "p50": 25626,
+      "p95": 32599,
+      "p99": 32599,
+      "matches": 20,
+      "totalEligible": 5067
+    }
+  ]
+}
+
