@@ -1,0 +1,17 @@
+# T-235 search load test — environment record
+
+Date:   2026-09-12T01:44:06Z
+Branch: feat/t235-search-load-test @ d26e0cb5
+Base:   master @ d26e0cb5 (fast-forward from upstream)
+
+## DB target
+  @ep-young-shadow-amawetjy-pooler.c-5.us-east-1.aws.neon.tech/neondb
+  NOT production (production is ep-nameless-term-ams9a5e3 / .main.)
+
+## prisma migrate status
+  Prisma schema loaded from prisma/schema.prisma
+  Datasource "db": PostgreSQL database "neondb", schema "public" at "ep-young-shadow-amawetjy.c-5.us-east-1.aws.neon.tech"
+  
+  68 migrations found in prisma/migrations
+  
+  Database schema is up to date!
