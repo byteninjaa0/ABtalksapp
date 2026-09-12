@@ -8,8 +8,13 @@ import { applyToJobAction } from "@/app/actions/job-actions";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { useTrack } from "@/lib/analytics/use-track";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { dsButtonVariants } from "@/components/design/ds-button";
+import { CLAY_CTA } from "@/components/jobs/job-ui";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+
+/** DS v2 primary CTA with clay depth — the Jobs tab's only filled button. */
+const CLAY_BUTTON_CLASS = cn(dsButtonVariants(), CLAY_CTA);
 
 type Props = {
   jobId: string;
@@ -70,7 +75,11 @@ export function ApplyJobButton({
     <div className="space-y-4">
       {!showNote ? (
         <div className="flex flex-wrap gap-3">
-          <Button type="button" onClick={() => setShowNote(true)}>
+          <Button
+            type="button"
+            className={cn(CLAY_BUTTON_CLASS, "w-full")}
+            onClick={() => setShowNote(true)}
+          >
             Apply
           </Button>
           {externalUrl ? (
@@ -78,7 +87,7 @@ export function ApplyJobButton({
               href={externalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={cn(buttonVariants({ variant: "outline" }))}
+              className={cn(buttonVariants({ variant: "outline" }), "w-full")}
             >
               Apply on company site ↗
             </Link>
@@ -100,6 +109,7 @@ export function ApplyJobButton({
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
+              className={CLAY_BUTTON_CLASS}
               disabled={pending}
               onClick={() => submitApplication()}
             >
