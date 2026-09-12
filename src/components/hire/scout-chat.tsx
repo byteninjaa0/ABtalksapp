@@ -93,6 +93,8 @@ type RecentRequest = {
   title: string;
   status: string;
   date: string;
+  /** Candidates shortlisted inside THIS project. Absent on older callers. */
+  shortlisted?: number;
 };
 
 type Props = {
@@ -1623,12 +1625,25 @@ export function ScoutChat({
                         isNew: false,
                       },
                     }));
-                    void setMatchDecisionAction({
-                      requestId,
-                      candidateUserId: userId,
-                      decision,
-                    }).then((res) => {
-                      if (!res.ok) toast.error(res.message);
+                    // The header shortlist is built in the /hire LAYOUT, so the
+                    // write alone is not enough: `revalidateHire` marks the
+                    // server cache stale, but nothing refetches it unless the
+                    // action runs inside a transition and the router is told to
+                    // re-read. Fire-and-forget left the badge on its old number
+                    // until a hard reload — the write had landed, so it read as
+                    // "the shortlist did not save". Removal in `hire-talent-pod`
+                    // always did this; adding from a card did not.
+                    startTransition(async () => {
+                      const res = await setMatchDecisionAction({
+                        requestId,
+                        candidateUserId: userId,
+                        decision,
+                      });
+                      if (!res.ok) {
+                        toast.error(res.message);
+                        return;
+                      }
+                      router.refresh();
                     });
                   }}
                   selectedRef={openMatch?.candidateRef}
@@ -1908,6 +1923,46 @@ export function ScoutChat({
             />
           ) : null}
         </div>
+
+        {/* Bare /hire, for a recruiter who already has projects.
+
+            The desk here is empty by design — `/hire` passes no `results`, and
+            the header shortlist is scoped to the open project, of which there is
+            none. That is correct isolation (plan 133) and a terrible landing: it
+            renders as "my candidates and my shortlist are gone" when both are
+            intact one click away. The project list was already loaded, but only
+            reachable behind the Filters button, which nobody opens to look for
+            it.
+
+            So it is shown here instead, with each project's OWN shortlist count.
+            Nothing is merged: this is a list of doors, not a pooled shortlist,
+            and the legacy store is left exactly where it is. */}
+        {hero && persist && !initialRequestId && recent.length > 0 && (
+          <nav className="hire-projects" aria-label="Your projects">
+            <p className="hire-projects__label">Your projects</p>
+            <ul className="hire-projects__list">
+              {recent.map((r) => (
+                <li key={r.id}>
+                  <button
+                    type="button"
+                    className="hire-projects__item"
+                    onClick={() => router.push(`/hire/${r.id}`)}
+                  >
+                    <span className="hire-projects__name">{r.title}</span>
+                    <span className="hire-projects__meta">
+                      {r.shortlisted ? (
+                        <span className="hire-projects__count">
+                          {r.shortlisted} shortlisted
+                        </span>
+                      ) : null}
+                      <span>{r.date}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
       </div>
       <HireFilterDialog
         open={filtersOpen}
