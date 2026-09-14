@@ -6482,7 +6482,7 @@ html.dark .vc-card {
   color: #ffffff;
   font-family: var(--font-outfit), sans-serif;
   font-size: 64px;
-  font-weight: 700;
+  font-weight: 100;
   line-height: 70px;
   letter-spacing: 0;
   text-align: center;
@@ -6821,7 +6821,7 @@ html.dark .vc-card {
     max-width: 12ch;
     font-size: 40px;
     line-height: 44px;
-    font-weight: 700;
+    font-weight: 500;
     letter-spacing: 0;
   }
 
