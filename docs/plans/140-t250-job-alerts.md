@@ -326,6 +326,16 @@ Refs: T-250, TC-C-009, TC-C-010, TC-C-011
 
 ---
 
+## Follow-ups shipped after the initial cut
+
+- **Admin path fanout** — `admin-job-actions.createJobAction` and
+  `toggleJobOpenAction` also fire the alert fanout when a job publishes.
+  `createJobAction` always publishes on create, so the fanout runs
+  unconditionally. `toggleJobOpenAction` reads the prior status and only
+  fanouts when the toggle is a real DRAFT/CLOSED → PUBLISHED transition.
+  Same dedup key as the recruiter path, so an accidental double-toggle
+  never double-sends.
+
 ## Not in scope (documented so nobody expands it mid-execution)
 
 - T-249 recruiter notification events. Still blocked by T-247, which is
