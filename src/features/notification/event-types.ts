@@ -85,6 +85,17 @@ export const EVENT_TYPE_REGISTRY: Record<string, EventTypeConfig> = {
     emailExempt: true,
     defaultEmailEnabled: true,
   },
+  // T-250: candidate job alerts. The master alert toggle (JobAlert.enabled)
+  // gates the fanout before dispatch runs; the T-248 preference row can
+  // still turn email off separately, so suppressionExempt stays false.
+  "job.alert.match": {
+    key: "job.alert.match",
+    label: "New job matches your alert",
+    priority: "important",
+    suppressionExempt: false,
+    emailExempt: false,
+    defaultEmailEnabled: true,
+  },
 };
 
 export const EVENT_TYPES = Object.keys(EVENT_TYPE_REGISTRY);

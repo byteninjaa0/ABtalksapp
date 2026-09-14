@@ -25,6 +25,9 @@ import {
 } from "@/features/recruiter-jobs/prisma-store";
 import type { MatchCardData } from "@/components/hire/match-card";
 import type { LifecycleAction } from "@/features/recruiter-jobs/lifecycle";
+import { prismaJobAlertStore } from "@/features/job-alerts/prisma-store";
+import { fanoutOnJobPublished } from "@/features/job-alerts/service";
+import { dispatch as dispatchNotification } from "@/features/notification/notification-service";
 
 type ActionOk<T = undefined> = T extends undefined
   ? { ok: true }
@@ -151,8 +154,27 @@ async function runTransition(
   if (!parsed.success) return { ok: false, message: "Invalid input" };
 
   try {
+    // T-250: on the first-time DRAFT→PUBLISHED transition, transitionJob
+    // invokes this hook with the freshly-updated row. Fanout is idempotent
+    // via UserNotification.dedupeKey, so a stray retry cannot double-send.
+    const alertStore = prismaJobAlertStore();
     const result = await transitionJob(
-      { jobs: prismaJobStore() },
+      {
+        jobs: prismaJobStore(),
+        onFirstPublish: async (job) => {
+          const summary = await fanoutOnJobPublished(
+            { alerts: alertStore, dispatch: dispatchNotification },
+            job,
+          );
+          logger.info("[job-alerts] fanout", {
+            jobId: job.id,
+            matched: summary.matched,
+            sent: summary.sent,
+            deduplicated: summary.deduplicated,
+            failed: summary.failed.length,
+          });
+        },
+      },
       { userId: workspace.data.userId },
       parsed.data.jobId,
       action,

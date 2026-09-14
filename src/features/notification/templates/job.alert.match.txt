@@ -1,0 +1,11 @@
+Hi {{recipientName}},
+
+{{title}}
+
+{{body}}
+
+View this job: {{baseUrl}}{{href}}
+
+---
+You received this because a newly published job matched your job-alert criteria.
+Change or turn off alerts: {{baseUrl}}/jobs/alerts

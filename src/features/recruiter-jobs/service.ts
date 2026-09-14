@@ -97,6 +97,14 @@ export type ServiceDeps = {
     userId: string,
   ) => Promise<ApplicantPublicIdentity | null>;
   now?: () => Date;
+  /**
+   * T-250 fanout hook. Called AFTER a successful transition write, and only
+   * when the transition was a first-time DRAFT→PUBLISHED (i.e. the row had
+   * no `publishedAt` before the write). A thrown error is swallowed by the
+   * caller so the publish response is not held hostage by an alerts
+   * failure — dispatch is idempotent, so a retry stays safe.
+   */
+  onFirstPublish?: (job: JobRow) => Promise<void>;
 };
 
 /** Serializable applicant row for the recruiter's own job view. */
@@ -186,14 +194,30 @@ export async function transitionJob(
   actor: { userId: string; isAdmin?: boolean },
   jobId: string,
   action: LifecycleAction,
-): Promise<Result<{ id: string; status: JobStatus }>> {
+): Promise<Result<{ id: string; status: JobStatus; firstPublish: boolean }>> {
   const loaded = await loadOwned(deps, jobId, actor);
   if (!loaded.ok) return loaded;
   const now = (deps.now ?? (() => new Date()))();
   const patch = lifecyclePatch(loaded.data, action, now);
   if (!patch.ok) return patch;
+  // First publish = the transition just stamped publishedAt for the first
+  // time. Derive from the pre-image + the patch so this stays a single
+  // invariant with lifecyclePatch — edit/close/reopen physically cannot
+  // set firstPublish.
+  const firstPublish =
+    action === "publish" &&
+    !loaded.data.publishedAt &&
+    patch.data.publishedAt != null;
   const updated = await deps.jobs.update(jobId, patch.data);
-  return OK({ id: updated.id, status: updated.status });
+  if (firstPublish && deps.onFirstPublish) {
+    try {
+      await deps.onFirstPublish(updated);
+    } catch {
+      // Swallowed on purpose: the row is written, dispatch is idempotent,
+      // the action layer logs. See ServiceDeps.onFirstPublish doc.
+    }
+  }
+  return OK({ id: updated.id, status: updated.status, firstPublish });
 }
 
 export type UpdateJobInput = Partial<Omit<CreateJobInput, "opportunityType">> & {

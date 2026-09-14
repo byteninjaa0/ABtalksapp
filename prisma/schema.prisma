@@ -319,6 +319,7 @@ model User {
   notificationReads       NotificationRead[]
   userNotifications       UserNotification[]       @relation("UserNotifications")
   notificationPreferences NotificationPreference[] @relation("NotificationPreferences")
+  jobAlerts               JobAlert[]               @relation("CandidateJobAlerts")
   /// Interview platform attempts (plan 103). Direct User relation: a mock
   /// interview needs registration only, never cohort enrollment.
   mockInterviews          MockInterview[]
@@ -358,9 +359,9 @@ model User {
   candidateMatches           TalentRequestMatch[]            @relation("CandidateMatches")
   engagementMessages         TalentEngagementMessage[]
   /// T-232 — recruiter ↔ candidate outreach (plan 130).
-  outreachThreadsAsRecruiter OutreachThread[]          @relation("OutreachThreadsAsRecruiter")
-  outreachThreadsAsCandidate OutreachThread[]          @relation("OutreachThreadsAsCandidate")
-  outreachMessagesAuthored   OutreachMessage[]         @relation("OutreachMessagesAuthored")
+  outreachThreadsAsRecruiter OutreachThread[]                @relation("OutreachThreadsAsRecruiter")
+  outreachThreadsAsCandidate OutreachThread[]                @relation("OutreachThreadsAsCandidate")
+  outreachMessagesAuthored   OutreachMessage[]               @relation("OutreachMessagesAuthored")
   /// Plan 120 — recruiter detail views / resume unlocks on this candidate.
   profileEvents              CandidateProfileEvent[]
   /// Plan 121 — recruiter-authored assessments (builder drafts).
@@ -1209,17 +1210,17 @@ model TalentRequest {
 }
 
 model TalentRequestMessage {
-  id        String        @id @default(cuid())
+  id        String               @id @default(cuid())
   requestId String
   role      String // "user" | "assistant"
   content   String
   options   Json?
-  createdAt DateTime      @default(now())
+  createdAt DateTime             @default(now())
   /// Plan 133. The search session this turn belongs to. Null only on rows
   /// written before sessions existed, until `ensureLegacySession` files them
   /// under Session 1.
   sessionId String?
-  request   TalentRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  request   TalentRequest        @relation(fields: [requestId], references: [id], onDelete: Cascade)
   session   TalentSearchSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
 
   @@index([requestId, createdAt])
@@ -1949,6 +1950,29 @@ model NotificationPreference {
   user User @relation("NotificationPreferences", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, eventType, channel])
+}
+
+/// T-250 candidate job alert. Rule-based, not a recommendation engine.
+/// Exactly one row per candidate (`@@unique([candidateUserId])`); disabling
+/// keeps the row and flips `enabled = false` so the same criteria come back
+/// on re-enable. Fanout happens on the FIRST DRAFT→PUBLISHED transition of a
+/// Job (see recruiter-jobs.transitionJob) — edit and reopen never re-fire
+/// because Job.publishedAt is stamped once and never overwritten.
+model JobAlert {
+  id              String       @id @default(cuid())
+  candidateUserId String       @unique
+  enabled         Boolean      @default(true)
+  skills          String[]     @default([])
+  role            String?
+  location        String?
+  workMode        JobWorkMode?
+  opportunityType JobType?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  candidate User @relation("CandidateJobAlerts", fields: [candidateUserId], references: [id], onDelete: Cascade)
+
+  @@index([enabled])
 }
 
 // =============================================================================
@@ -4093,8 +4117,8 @@ enum OutboundDeliveryStatus {
 /// T-259 observability side-table for outbound mail. Distinct from
 /// T-248 `NotificationDelivery`, which tracks UserNotification channels.
 model OutboundDelivery {
-  id      String                   @id @default(cuid())
-  channel OutboundDeliveryChannel  @default(EMAIL)
+  id      String                  @id @default(cuid())
+  channel OutboundDeliveryChannel @default(EMAIL)
 
   /// What this send is, e.g. "recruiter.otp", "hire.alert", "contact.form".
   /// Free text so a new caller needs no migration.
