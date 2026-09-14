@@ -7,6 +7,7 @@ import type { JobAlertCriteria, JobAlertRow, MatchableJob } from "./types";
 const SELECT = {
   id: true,
   candidateUserId: true,
+  name: true,
   enabled: true,
   skills: true,
   role: true,
@@ -18,52 +19,62 @@ const SELECT = {
 } as const;
 
 export type UpsertInput = Omit<JobAlertCriteria, "enabled"> & {
+  name: string;
   enabled?: boolean;
 };
 
 export type JobAlertStore = {
-  getByCandidate(userId: string): Promise<JobAlertRow | null>;
-  upsert(userId: string, input: UpsertInput): Promise<JobAlertRow>;
-  setEnabled(userId: string, enabled: boolean): Promise<JobAlertRow | null>;
+  listByCandidate(userId: string): Promise<JobAlertRow[]>;
+  countByCandidate(userId: string): Promise<number>;
+  getById(id: string, userId: string): Promise<JobAlertRow | null>;
+  create(userId: string, input: UpsertInput): Promise<JobAlertRow>;
+  updateById(
+    id: string,
+    userId: string,
+    input: UpsertInput,
+  ): Promise<JobAlertRow | null>;
+  setEnabledById(
+    id: string,
+    userId: string,
+    enabled: boolean,
+  ): Promise<JobAlertRow | null>;
+  deleteById(id: string, userId: string): Promise<boolean>;
   /**
-   * Delete the caller's alert row. Returns true if a row was actually
-   * deleted, false if there was nothing to delete — the caller uses that
-   * to decide between "gone" and "was already gone".
-   */
-  deleteByCandidate(userId: string): Promise<boolean>;
-  /**
-   * Return every enabled alert whose criteria are satisfied by `job`. The
-   * store scans all enabled rows and delegates to the pure matcher — an
-   * SQL-side prefilter on skills is a future optimization when row counts
-   * make it worthwhile; T-250 acceptance does not require it.
+   * Every enabled alert whose criteria the job satisfies. The store scans
+   * enabled rows and the pure matcher does the work — SQL-side prefilter
+   * is a future optimization when volumes justify it.
    */
   findEnabledMatching(job: MatchableJob): Promise<JobAlertRow[]>;
 };
 
 export function prismaJobAlertStore(): JobAlertStore {
   return {
-    async getByCandidate(userId) {
-      return prisma.jobAlert.findUnique({
+    async listByCandidate(userId) {
+      return prisma.jobAlert.findMany({
         where: { candidateUserId: userId },
+        orderBy: { createdAt: "desc" },
         select: SELECT,
       });
     },
 
-    async upsert(userId, input) {
-      // enabled defaults to true on a fresh row and preserves the caller's
-      // value on save; the disable endpoint uses setEnabled(), not this.
-      return prisma.jobAlert.upsert({
-        where: { candidateUserId: userId },
-        create: {
+    async countByCandidate(userId) {
+      return prisma.jobAlert.count({ where: { candidateUserId: userId } });
+    },
+
+    async getById(id, userId) {
+      // Include candidateUserId in the where so a foreign id returns null
+      // — no existence signal for other users' alert ids.
+      return prisma.jobAlert.findFirst({
+        where: { id, candidateUserId: userId },
+        select: SELECT,
+      });
+    },
+
+    async create(userId, input) {
+      return prisma.jobAlert.create({
+        data: {
           candidateUserId: userId,
-          enabled: input.enabled ?? true,
-          skills: input.skills,
-          role: input.role,
-          location: input.location,
-          workMode: input.workMode,
-          opportunityType: input.opportunityType,
-        },
-        update: {
+          name: input.name,
           enabled: input.enabled ?? true,
           skills: input.skills,
           role: input.role,
@@ -75,25 +86,43 @@ export function prismaJobAlertStore(): JobAlertStore {
       });
     },
 
-    async setEnabled(userId, enabled) {
-      const existing = await prisma.jobAlert.findUnique({
-        where: { candidateUserId: userId },
-        select: { id: true },
+    async updateById(id, userId, input) {
+      // updateMany + count check keeps ownership enforcement in the SQL
+      // where clause; there is no path where a foreign id can be mutated.
+      const result = await prisma.jobAlert.updateMany({
+        where: { id, candidateUserId: userId },
+        data: {
+          name: input.name,
+          enabled: input.enabled ?? true,
+          skills: input.skills,
+          role: input.role,
+          location: input.location,
+          workMode: input.workMode,
+          opportunityType: input.opportunityType,
+        },
       });
-      if (!existing) return null;
-      return prisma.jobAlert.update({
-        where: { candidateUserId: userId },
+      if (result.count === 0) return null;
+      return prisma.jobAlert.findFirst({
+        where: { id, candidateUserId: userId },
+        select: SELECT,
+      });
+    },
+
+    async setEnabledById(id, userId, enabled) {
+      const result = await prisma.jobAlert.updateMany({
+        where: { id, candidateUserId: userId },
         data: { enabled },
+      });
+      if (result.count === 0) return null;
+      return prisma.jobAlert.findFirst({
+        where: { id, candidateUserId: userId },
         select: SELECT,
       });
     },
 
-    async deleteByCandidate(userId) {
-      // deleteMany with a filter beats delete() here — delete() throws on
-      // "not found", which we would immediately catch and treat as "gone",
-      // so this returns the same shape with one round-trip instead of two.
+    async deleteById(id, userId) {
       const result = await prisma.jobAlert.deleteMany({
-        where: { candidateUserId: userId },
+        where: { id, candidateUserId: userId },
       });
       return result.count > 0;
     },

@@ -20,6 +20,7 @@ export type JobAlertCriteria = {
 export type JobAlertRow = JobAlertCriteria & {
   id: string;
   candidateUserId: string;
+  name: string;
   createdAt: Date;
   updatedAt: Date;
 };

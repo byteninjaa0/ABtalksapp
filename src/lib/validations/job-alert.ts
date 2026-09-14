@@ -1,10 +1,6 @@
 import { z } from "zod";
 import { JobType, JobWorkMode } from "@prisma/client";
 
-/**
- * A blank string in the form is treated as "unset". Keeping the transform
- * here means the server action does not have to think about "" vs null.
- */
 const optionalTrimmed = z
   .string()
   .max(200)
@@ -15,7 +11,17 @@ const optionalTrimmed = z
     return t ? t : null;
   });
 
-export const saveJobAlertSchema = z.object({
+const nameSchema = z
+  .string()
+  .max(80)
+  .optional()
+  .transform((v) => {
+    const t = v?.trim();
+    return t && t.length > 0 ? t : "My job alert";
+  });
+
+const criteriaSchema = z.object({
+  name: nameSchema,
   skills: z
     .array(z.string().max(60))
     .max(25)
@@ -41,8 +47,19 @@ export const saveJobAlertSchema = z.object({
   enabled: z.boolean().optional().default(true),
 });
 
-export type SaveJobAlertInput = z.infer<typeof saveJobAlertSchema>;
+export const createJobAlertSchema = criteriaSchema;
+export const updateJobAlertSchema = criteriaSchema.extend({
+  id: z.string().min(1),
+});
 
 export const toggleJobAlertSchema = z.object({
+  id: z.string().min(1),
   enabled: z.boolean(),
 });
+
+export const deleteJobAlertSchema = z.object({
+  id: z.string().min(1),
+});
+
+export type CreateJobAlertInput = z.infer<typeof createJobAlertSchema>;
+export type UpdateJobAlertInput = z.infer<typeof updateJobAlertSchema>;

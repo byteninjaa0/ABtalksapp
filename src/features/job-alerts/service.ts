@@ -1,17 +1,23 @@
 import type { JobAlertRow, MatchableJob } from "./types";
 import type { JobAlertStore, UpsertInput } from "./prisma-store";
 
+/**
+ * Max alerts one candidate can have at once. Raise this later — no schema
+ * change is needed; the DB already supports many rows per candidate. Set
+ * to `Infinity` if you want it truly unbounded.
+ */
+export const MAX_ALERTS_PER_CANDIDATE = 5;
+
 export type Result<T> =
   | { ok: true; data: T }
-  | { ok: false; message: string; code?: "NOT_FOUND" | "INVALID" };
+  | {
+      ok: false;
+      message: string;
+      code?: "NOT_FOUND" | "INVALID" | "LIMIT_REACHED";
+    };
 
 const OK = <T>(data: T): Result<T> => ({ ok: true, data });
 
-/**
- * Dispatch shape mirrors {@link import("@/features/notification/notification-service").dispatch}
- * without importing it at module scope: tests inject a fake and the action
- * layer wires the real one.
- */
 export type DispatchFn = (event: {
   eventType: string;
   recipientUserId: string;
@@ -31,35 +37,65 @@ export type ServiceDeps = {
   alerts: JobAlertStore;
 };
 
-export async function getMyAlert(
+export async function listMyAlerts(
   deps: ServiceDeps,
   userId: string,
-): Promise<Result<JobAlertRow | null>> {
-  const row = await deps.alerts.getByCandidate(userId);
+): Promise<Result<JobAlertRow[]>> {
+  const rows = await deps.alerts.listByCandidate(userId);
+  return OK(rows);
+}
+
+export async function getMyAlertById(
+  deps: ServiceDeps,
+  userId: string,
+  id: string,
+): Promise<Result<JobAlertRow>> {
+  const row = await deps.alerts.getById(id, userId);
+  if (!row) {
+    return { ok: false, code: "NOT_FOUND", message: "Alert not found." };
+  }
   return OK(row);
 }
 
-export async function upsertMyAlert(
+export async function createMyAlert(
   deps: ServiceDeps,
   userId: string,
   input: UpsertInput,
 ): Promise<Result<JobAlertRow>> {
-  const row = await deps.alerts.upsert(userId, input);
+  const count = await deps.alerts.countByCandidate(userId);
+  if (count >= MAX_ALERTS_PER_CANDIDATE) {
+    return {
+      ok: false,
+      code: "LIMIT_REACHED",
+      message: `You can have at most ${MAX_ALERTS_PER_CANDIDATE} job alerts. Delete one to add another.`,
+    };
+  }
+  const row = await deps.alerts.create(userId, input);
+  return OK(row);
+}
+
+export async function updateMyAlert(
+  deps: ServiceDeps,
+  userId: string,
+  id: string,
+  input: UpsertInput,
+): Promise<Result<JobAlertRow>> {
+  const row = await deps.alerts.updateById(id, userId, input);
+  if (!row) {
+    return { ok: false, code: "NOT_FOUND", message: "Alert not found." };
+  }
   return OK(row);
 }
 
 export async function setMyAlertEnabled(
   deps: ServiceDeps,
   userId: string,
+  id: string,
   enabled: boolean,
 ): Promise<Result<JobAlertRow>> {
-  const row = await deps.alerts.setEnabled(userId, enabled);
+  const row = await deps.alerts.setEnabledById(id, userId, enabled);
   if (!row) {
-    return {
-      ok: false,
-      code: "NOT_FOUND",
-      message: "No job alert exists to toggle.",
-    };
+    return { ok: false, code: "NOT_FOUND", message: "Alert not found." };
   }
   return OK(row);
 }
@@ -67,41 +103,47 @@ export async function setMyAlertEnabled(
 export async function deleteMyAlert(
   deps: ServiceDeps,
   userId: string,
+  id: string,
 ): Promise<Result<{ deleted: boolean }>> {
-  const deleted = await deps.alerts.deleteByCandidate(userId);
+  const deleted = await deps.alerts.deleteById(id, userId);
   return OK({ deleted });
 }
 
-/**
- * Result of a single fanout run, useful to logs and tests.
- */
 export type FanoutResult = {
-  /** Alerts that matched the job (pre-dispatch count). */
+  /** Distinct candidates whose enabled alerts matched. */
   matched: number;
-  /** New notifications the dispatcher accepted. */
+  /** New notifications the dispatcher accepted (one per candidate max). */
   sent: number;
-  /** Alerts whose dispatch was a dedup no-op. */
+  /** Dispatches the dispatcher swallowed as a dedup no-op. */
   deduplicated: number;
   /** Recipient user ids for which dispatch reported ok:false. */
   failed: string[];
 };
 
 /**
- * Fan out `job.alert.match` notifications to every candidate whose enabled
- * alert matches this job. Idempotent: the notification service's dedupeKey
- * (`job.alert.match:{userId}:{jobId}`) makes a second call for the same job
- * a no-op, so accidental re-runs are safe.
- *
- * A single dispatch failure does not stop the loop — the row is preserved
- * so a retry / next publish can complete it. The caller logs the summary.
+ * Fan out `job.alert.match` to every candidate with at least one enabled
+ * matching alert. Deduplicated per candidate BEFORE dispatch so a candidate
+ * with 3 matching alerts still gets one notification (not three that then
+ * dedup at the DB — cleaner logs, one round-trip). The dispatcher's own
+ * dedup on `${eventType}:${userId}:${jobId}` remains the ultimate guarantee.
  */
 export async function fanoutOnJobPublished(
   deps: FanoutDeps,
   job: MatchableJob,
 ): Promise<FanoutResult> {
   const matched = await deps.alerts.findEnabledMatching(job);
+
+  // First matching alert per candidate wins — used only to pick an alertId
+  // for the metadata; correctness does not depend on which one.
+  const byCandidate = new Map<string, JobAlertRow>();
+  for (const alert of matched) {
+    if (!byCandidate.has(alert.candidateUserId)) {
+      byCandidate.set(alert.candidateUserId, alert);
+    }
+  }
+
   const result: FanoutResult = {
-    matched: matched.length,
+    matched: byCandidate.size,
     sent: 0,
     deduplicated: 0,
     failed: [],
@@ -111,11 +153,11 @@ export async function fanoutOnJobPublished(
   const href = `/jobs/${job.id}`;
   const title = "A new job matches your alert";
 
-  for (const alert of matched) {
+  for (const [candidateUserId, alert] of byCandidate) {
     try {
       const res = await deps.dispatch({
         eventType: "job.alert.match",
-        recipientUserId: alert.candidateUserId,
+        recipientUserId: candidateUserId,
         primaryEntityId: job.id,
         title,
         body,
@@ -123,16 +165,14 @@ export async function fanoutOnJobPublished(
         metadata: { alertId: alert.id, jobId: job.id },
       });
       if (!res.ok) {
-        result.failed.push(alert.candidateUserId);
+        result.failed.push(candidateUserId);
       } else if (res.deduplicated) {
         result.deduplicated += 1;
       } else {
         result.sent += 1;
       }
     } catch {
-      // The notification service already logs; the fanout only records
-      // that this recipient did not receive.
-      result.failed.push(alert.candidateUserId);
+      result.failed.push(candidateUserId);
     }
   }
 

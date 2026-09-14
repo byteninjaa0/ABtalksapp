@@ -1953,14 +1953,16 @@ model NotificationPreference {
 }
 
 /// T-250 candidate job alert. Rule-based, not a recommendation engine.
-/// Exactly one row per candidate (`@@unique([candidateUserId])`); disabling
-/// keeps the row and flips `enabled = false` so the same criteria come back
-/// on re-enable. Fanout happens on the FIRST DRAFT→PUBLISHED transition of a
-/// Job (see recruiter-jobs.transitionJob) — edit and reopen never re-fire
-/// because Job.publishedAt is stamped once and never overwritten.
+/// Many rows per candidate — each with its own name and criteria. Cap is
+/// enforced in the service (not the schema) so it can be raised without a
+/// migration. Fanout runs on the FIRST DRAFT→PUBLISHED transition of a Job
+/// and dedups per (candidate, job) via UserNotification.dedupeKey — even if
+/// several of a candidate's alerts match the same job, they still receive
+/// exactly one notification.
 model JobAlert {
   id              String       @id @default(cuid())
-  candidateUserId String       @unique
+  candidateUserId String
+  name            String       @default("My job alert")
   enabled         Boolean      @default(true)
   skills          String[]     @default([])
   role            String?
@@ -1972,6 +1974,7 @@ model JobAlert {
 
   candidate User @relation("CandidateJobAlerts", fields: [candidateUserId], references: [id], onDelete: Cascade)
 
+  @@index([candidateUserId, createdAt(sort: Desc)])
   @@index([enabled])
 }
 
