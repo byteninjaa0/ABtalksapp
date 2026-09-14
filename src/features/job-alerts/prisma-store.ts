@@ -26,6 +26,12 @@ export type JobAlertStore = {
   upsert(userId: string, input: UpsertInput): Promise<JobAlertRow>;
   setEnabled(userId: string, enabled: boolean): Promise<JobAlertRow | null>;
   /**
+   * Delete the caller's alert row. Returns true if a row was actually
+   * deleted, false if there was nothing to delete — the caller uses that
+   * to decide between "gone" and "was already gone".
+   */
+  deleteByCandidate(userId: string): Promise<boolean>;
+  /**
    * Return every enabled alert whose criteria are satisfied by `job`. The
    * store scans all enabled rows and delegates to the pure matcher — an
    * SQL-side prefilter on skills is a future optimization when row counts
@@ -80,6 +86,16 @@ export function prismaJobAlertStore(): JobAlertStore {
         data: { enabled },
         select: SELECT,
       });
+    },
+
+    async deleteByCandidate(userId) {
+      // deleteMany with a filter beats delete() here — delete() throws on
+      // "not found", which we would immediately catch and treat as "gone",
+      // so this returns the same shape with one round-trip instead of two.
+      const result = await prisma.jobAlert.deleteMany({
+        where: { candidateUserId: userId },
+      });
+      return result.count > 0;
     },
 
     async findEnabledMatching(job) {

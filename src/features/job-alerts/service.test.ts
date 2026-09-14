@@ -10,6 +10,7 @@ import type { JobType, JobWorkMode } from "@prisma/client";
 import type { JobAlertStore, UpsertInput } from "./prisma-store";
 import { matches } from "./matcher";
 import {
+  deleteMyAlert,
   fanoutOnJobPublished,
   getMyAlert,
   setMyAlertEnabled,
@@ -70,6 +71,9 @@ function inMemoryAlertStore(): JobAlertStore & {
       const updated = { ...existing, enabled, updatedAt: new Date() };
       rows.set(userId, updated);
       return updated;
+    },
+    async deleteByCandidate(userId) {
+      return rows.delete(userId);
     },
     async findEnabledMatching(job) {
       const out: JobAlertRow[] = [];
@@ -173,6 +177,34 @@ await suite("setEnabled returns NOT_FOUND when no row exists", async () => {
   const store = inMemoryAlertStore();
   const res = await setMyAlertEnabled({ alerts: store }, "u1", false);
   assert(!res.ok && res.code === "NOT_FOUND", "expected NOT_FOUND");
+});
+
+await suite("deleteMyAlert removes the row and reports true", async () => {
+  const store = inMemoryAlertStore();
+  await upsertMyAlert({ alerts: store }, "u1", reactBengaluruFullTime());
+  const res = await deleteMyAlert({ alerts: store }, "u1");
+  assert(res.ok && res.data.deleted === true, "should report deleted");
+  const after = await getMyAlert({ alerts: store }, "u1");
+  assert(after.ok && after.data === null, "row is gone");
+});
+
+await suite("deleteMyAlert on a missing row reports false, no throw", async () => {
+  const store = inMemoryAlertStore();
+  const res = await deleteMyAlert({ alerts: store }, "u1");
+  assert(res.ok && res.data.deleted === false, "should report nothing deleted");
+});
+
+await suite("deleted alert stops fanout to that candidate", async () => {
+  const store = inMemoryAlertStore();
+  await upsertMyAlert({ alerts: store }, "cand_A", reactBengaluruFullTime());
+  await deleteMyAlert({ alerts: store }, "cand_A");
+  const dispatch = fakeDispatcher();
+  const summary = await fanoutOnJobPublished(
+    { alerts: store, dispatch },
+    matchingJob("job_del_1"),
+  );
+  assert(summary.matched === 0, "deleted alert cannot match");
+  assert(dispatch.sent.length === 0, "no dispatch after delete");
 });
 
 // --- Fanout: TC-C-009 ---

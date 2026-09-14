@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import type { JobType, JobWorkMode } from "@prisma/client";
 import {
+  deleteMyJobAlertAction,
   saveMyJobAlertAction,
   toggleMyJobAlertAction,
 } from "@/app/actions/job-alert-actions";
@@ -11,6 +12,16 @@ import type { JobAlertRow } from "@/features/job-alerts/types";
 type Props = {
   initial: JobAlertRow | null;
 };
+
+/**
+ * Three modes:
+ * - `empty`   : no alert exists. Only the form is shown.
+ * - `view`    : an alert exists. Show a read-only summary with Edit +
+ *               Delete. This is the default when `initial` is present.
+ * - `edit`    : same fields as `empty` but pre-filled, with a Cancel that
+ *               returns to `view`.
+ */
+type Mode = "empty" | "view" | "edit";
 
 type FormState = {
   enabled: boolean;
@@ -42,12 +53,19 @@ function fromInitial(row: JobAlertRow | null): FormState {
   };
 }
 
+function initialMode(row: JobAlertRow | null): Mode {
+  return row ? "view" : "empty";
+}
+
 export function JobAlertForm({ initial }: Props) {
+  const [current, setCurrent] = useState<JobAlertRow | null>(initial);
+  const [mode, setMode] = useState<Mode>(() => initialMode(initial));
   const [state, setState] = useState<FormState>(() => fromInitial(initial));
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, startSave] = useTransition();
   const [toggling, startToggle] = useTransition();
+  const [deleting, startDelete] = useTransition();
 
   function addSkill() {
     const raw = state.skillsInput.trim();
@@ -84,7 +102,9 @@ export function JobAlertForm({ initial }: Props) {
         setError(res.message);
       } else {
         setMessage("Alert saved.");
+        setCurrent(res.data.alert);
         setState(fromInitial(res.data.alert));
+        setMode("view");
       }
     });
   }
@@ -95,20 +115,159 @@ export function JobAlertForm({ initial }: Props) {
     startToggle(async () => {
       const res = await toggleMyJobAlertAction({ enabled: next });
       if (!res.ok) {
+        // No row yet — flip local state and stay in whatever mode we're in;
+        // Save creates the first row.
+        setState((s) => ({ ...s, enabled: next }));
         if (next) {
-          // No row yet — save first to create it.
-          setState((s) => ({ ...s, enabled: true }));
           setMessage(
             "Add your criteria and press Save to create your first alert.",
           );
-        } else {
-          setError(res.message);
         }
         return;
       }
+      setCurrent(res.data.alert);
       setState(fromInitial(res.data.alert));
       setMessage(next ? "Alerts turned on." : "Alerts turned off.");
     });
+  }
+
+  function handleDelete() {
+    if (
+      !window.confirm(
+        "Delete this job alert? Your criteria will be lost. You can create a new alert any time.",
+      )
+    ) {
+      return;
+    }
+    setMessage(null);
+    setError(null);
+    startDelete(async () => {
+      const res = await deleteMyJobAlertAction();
+      if (!res.ok) {
+        setError(res.message);
+        return;
+      }
+      setCurrent(null);
+      setState(fromInitial(null));
+      setMode("empty");
+      setMessage("Alert deleted.");
+    });
+  }
+
+  function beginEdit() {
+    setMessage(null);
+    setError(null);
+    setState(fromInitial(current));
+    setMode("edit");
+  }
+
+  function cancelEdit() {
+    setMessage(null);
+    setError(null);
+    setState(fromInitial(current));
+    setMode("view");
+  }
+
+  if (mode === "view" && current) {
+    return (
+      <div style={{ display: "grid", gap: 20 }}>
+        <label style={masterToggleStyle}>
+          <input
+            type="checkbox"
+            checked={current.enabled}
+            onChange={(e) => handleToggle(e.target.checked)}
+            disabled={toggling}
+          />
+          <span>
+            <strong>
+              Alerts are {current.enabled ? "on" : "off"}.
+            </strong>{" "}
+            <span style={{ color: "#666" }}>
+              {current.enabled
+                ? "You will be notified once per matching job."
+                : "Your criteria are saved but no alerts will fire."}
+            </span>
+          </span>
+        </label>
+
+        <section style={cardStyle}>
+          <header
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 12,
+              gap: 8,
+              flexWrap: "wrap",
+            }}
+          >
+            <h2 style={{ margin: 0, fontSize: 18 }}>Your saved alert</h2>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                type="button"
+                onClick={beginEdit}
+                style={secondaryButton}
+                disabled={deleting}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                style={dangerButton}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </header>
+
+          <dl style={dlStyle}>
+            <SummaryRow
+              label="Skills"
+              value={
+                current.skills.length > 0
+                  ? current.skills.join(", ")
+                  : "Any"
+              }
+            />
+            <SummaryRow label="Role" value={current.role?.trim() || "Any"} />
+            <SummaryRow
+              label="Location"
+              value={current.location?.trim() || "Any"}
+            />
+            <SummaryRow
+              label="Work mode"
+              value={
+                current.workMode
+                  ? current.workMode.charAt(0) +
+                    current.workMode.slice(1).toLowerCase()
+                  : "Any"
+              }
+            />
+            <SummaryRow
+              label="Opportunity type"
+              value={
+                OPP_TYPES.find((o) => o.value === current.opportunityType)
+                  ?.label ?? "Any"
+              }
+            />
+          </dl>
+
+          {(message || error) && (
+            <p
+              style={{
+                marginTop: 12,
+                marginBottom: 0,
+                color: error ? "#b91c1c" : "#166534",
+              }}
+            >
+              {error ?? message}
+            </p>
+          )}
+        </section>
+      </div>
+    );
   }
 
   return (
@@ -119,16 +278,7 @@ export function JobAlertForm({ initial }: Props) {
       }}
       style={{ display: "grid", gap: 20 }}
     >
-      <label
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "12px 16px",
-          background: "#f6f6f6",
-          borderRadius: 8,
-        }}
-      >
+      <label style={masterToggleStyle}>
         <input
           type="checkbox"
           checked={state.enabled}
@@ -290,8 +440,18 @@ export function JobAlertForm({ initial }: Props) {
             opacity: saving ? 0.7 : 1,
           }}
         >
-          {saving ? "Saving…" : "Save alert"}
+          {saving ? "Saving…" : mode === "edit" ? "Save changes" : "Save alert"}
         </button>
+        {mode === "edit" && (
+          <button
+            type="button"
+            onClick={cancelEdit}
+            style={secondaryButton}
+            disabled={saving}
+          >
+            Cancel
+          </button>
+        )}
         {message && <span style={{ color: "#166534" }}>{message}</span>}
         {error && <span style={{ color: "#b91c1c" }}>{error}</span>}
       </div>
@@ -316,6 +476,23 @@ function Field({
   );
 }
 
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "160px 1fr",
+        gap: 8,
+        padding: "8px 0",
+        borderBottom: "1px solid #eee",
+      }}
+    >
+      <dt style={{ color: "#666", fontSize: 13 }}>{label}</dt>
+      <dd style={{ margin: 0, color: "#111", fontSize: 14 }}>{value}</dd>
+    </div>
+  );
+}
+
 const inputStyle: React.CSSProperties = {
   padding: "8px 10px",
   border: "1px solid #d1d5db",
@@ -333,4 +510,35 @@ const secondaryButton: React.CSSProperties = {
   borderRadius: 6,
   cursor: "pointer",
   fontSize: 14,
+};
+
+const dangerButton: React.CSSProperties = {
+  padding: "8px 14px",
+  background: "#fff",
+  border: "1px solid #ef4444",
+  color: "#b91c1c",
+  borderRadius: 6,
+  cursor: "pointer",
+  fontSize: 14,
+};
+
+const masterToggleStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 12,
+  padding: "12px 16px",
+  background: "#f6f6f6",
+  borderRadius: 8,
+};
+
+const cardStyle: React.CSSProperties = {
+  border: "1px solid #e5e7eb",
+  borderRadius: 8,
+  padding: "16px 20px",
+  background: "#fff",
+};
+
+const dlStyle: React.CSSProperties = {
+  margin: 0,
+  display: "grid",
 };

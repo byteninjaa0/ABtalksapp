@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { logger } from "@/lib/logger";
 import { prismaJobAlertStore } from "@/features/job-alerts/prisma-store";
 import {
+  deleteMyAlert,
   getMyAlert,
   setMyAlertEnabled,
   upsertMyAlert,
@@ -63,6 +64,22 @@ export async function saveMyJobAlertAction(
   } catch (error) {
     logger.error("[job-alert-actions] save", { error: String(error) });
     return { ok: false, message: "Could not save your job alert." };
+  }
+}
+
+export async function deleteMyJobAlertAction(): Promise<
+  ActionResult<{ deleted: boolean }>
+> {
+  const gate = await requireCandidate();
+  if (!gate.ok) return gate;
+  try {
+    const result = await deleteMyAlert(deps(), gate.data.userId);
+    if (!result.ok) return { ok: false, message: result.message };
+    revalidatePath("/jobs/alerts");
+    return { ok: true, data: result.data };
+  } catch (error) {
+    logger.error("[job-alert-actions] delete", { error: String(error) });
+    return { ok: false, message: "Could not delete your job alert." };
   }
 }
 

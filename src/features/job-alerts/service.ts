@@ -64,6 +64,14 @@ export async function setMyAlertEnabled(
   return OK(row);
 }
 
+export async function deleteMyAlert(
+  deps: ServiceDeps,
+  userId: string,
+): Promise<Result<{ deleted: boolean }>> {
+  const deleted = await deps.alerts.deleteByCandidate(userId);
+  return OK({ deleted });
+}
+
 /**
  * Result of a single fanout run, useful to logs and tests.
  */
