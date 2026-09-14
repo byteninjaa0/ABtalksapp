@@ -50,8 +50,8 @@ function criteria(overrides: Partial<JobAlertCriteria> = {}): JobAlertCriteria {
 
 console.log("matcher.test.ts");
 
-suite("threshold constant is 0.75 by default", () => {
-  assert(MATCH_THRESHOLD === 0.75, `got ${MATCH_THRESHOLD}`);
+suite("threshold constant is 0.6 by default", () => {
+  assert(MATCH_THRESHOLD === 0.6, `got ${MATCH_THRESHOLD}`);
 });
 
 suite("disabled alert never matches", () => {
@@ -148,29 +148,29 @@ suite(
 );
 
 suite(
-  "3-criteria alert with 2 passes: does NOT match (67% < 75%)",
+  "3-criteria alert with 2 passes: matches (67% >= 60%)",
   () => {
     const c = criteria({
       skills: ["React"],
       location: "Bengaluru",
       opportunityType: "INTERNSHIP", // fails
     });
-    assert(!matches(job(), c), "two of three should not fire under 75%");
+    assert(matches(job(), c), "two of three should fire at 60%");
   },
 );
 
-suite("4-criteria alert with 3 passes: matches (75% >= 75%)", () => {
+suite("4-criteria alert with 3 passes: matches (75% >= 60%)", () => {
   const c = criteria({
     skills: ["React"],
     location: "Bengaluru",
     workMode: "HYBRID",
     opportunityType: "INTERNSHIP", // fails
   });
-  assert(matches(job(), c), "three of four should fire at 75%");
+  assert(matches(job(), c), "three of four should fire at 60%");
 });
 
 suite(
-  "4-criteria alert with 2 passes: does NOT match (50% < 75%)",
+  "4-criteria alert with 2 passes: does NOT match (50% < 60%)",
   () => {
     const c = criteria({
       skills: ["React"],
@@ -178,7 +178,17 @@ suite(
       workMode: "REMOTE", // fails
       opportunityType: "FULL_TIME",
     });
-    assert(!matches(job(), c), "two of four should not fire");
+    assert(!matches(job(), c), "two of four should not fire at 60%");
+  },
+);
+
+suite(
+  "1-criterion alert still requires 100% (single field can't average)",
+  () => {
+    assert(
+      !matches(job(), criteria({ skills: ["python"] })),
+      "single-field failure remains a total failure",
+    );
   },
 );
 

@@ -2,11 +2,18 @@ import type { JobAlertCriteria, MatchableJob } from "./types";
 
 /**
  * Fraction of the alert's SET criteria that must pass for the alert to
- * count as matching the job. 0.75 = "if at least 75% of what I asked for
- * is true, tell me". Lower to 0.5 for very loose matching; raise to 1.0
- * for strict AND behavior (T-250 spec default).
+ * count as matching the job. 0.60 = "if at least 60% of what I asked for
+ * is true, tell me". Lower for very loose matching; raise to 1.0 for
+ * strict AND behavior (T-250 spec original).
+ *
+ * At the current 0.60:
+ *   1 criterion   → 1 must pass (100%)
+ *   2 criteria    → 2 must pass (100%)
+ *   3 criteria    → 2 of 3 must pass (67%)
+ *   4 criteria    → 3 of 4 must pass (75%)
+ *   5 criteria    → 3 of 5 must pass (60%)
  */
-export const MATCH_THRESHOLD = 0.75;
+export const MATCH_THRESHOLD = 0.6;
 
 function toLowerTrim(s: string): string {
   return s.trim().toLowerCase();
