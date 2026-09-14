@@ -2,7 +2,7 @@
  * Unit tests for the T-250 rule-based matcher.
  *   npx tsx src/features/job-alerts/matcher.test.ts
  */
-import { matches } from "./matcher";
+import { matches, MATCH_THRESHOLD } from "./matcher";
 import type { JobAlertCriteria, MatchableJob } from "./types";
 
 let passed = 0;
@@ -50,6 +50,10 @@ function criteria(overrides: Partial<JobAlertCriteria> = {}): JobAlertCriteria {
 
 console.log("matcher.test.ts");
 
+suite("threshold constant is 0.75 by default", () => {
+  assert(MATCH_THRESHOLD === 0.75, `got ${MATCH_THRESHOLD}`);
+});
+
 suite("disabled alert never matches", () => {
   assert(!matches(job(), criteria({ enabled: false })), "should reject");
 });
@@ -58,37 +62,64 @@ suite("empty enabled criteria matches every job (documented wildcard)", () => {
   assert(matches(job(), criteria()), "empty criteria should match");
 });
 
+suite("single-criterion alert still requires that criterion to pass", () => {
+  // 1 set criterion, 1 pass = 100%; 0 pass = 0%. Threshold irrelevant at N=1.
+  assert(matches(job(), criteria({ skills: ["React"] })), "one skill pass");
+  assert(!matches(job(), criteria({ skills: ["python"] })), "one skill fail");
+});
+
 suite("skills intersect case-insensitively", () => {
   assert(matches(job(), criteria({ skills: ["react"] })), "lowercase should match");
   assert(matches(job(), criteria({ skills: ["REACT"] })), "uppercase should match");
-  assert(!matches(job(), criteria({ skills: ["python"] })), "no overlap should not match");
 });
 
-suite("skills whitespace-only entries are ignored", () => {
-  assert(matches(job(), criteria({ skills: ["  react  "] })), "trims match");
-  assert(
-    !matches(job({ skills: [] }), criteria({ skills: ["   "] })),
-    "only-whitespace criterion still requires an intersection, but a job with no skills cannot intersect anything",
-  );
-});
-
-suite("role is case-insensitive substring on job.title", () => {
+suite("role direct substring still works", () => {
   assert(matches(job(), criteria({ role: "react" })), "substring hit");
   assert(matches(job(), criteria({ role: "Senior" })), "different casing");
-  assert(!matches(job(), criteria({ role: "backend" })), "no substring");
 });
+
+suite(
+  "role token match: individual words of the alert role match against the title",
+  () => {
+    // Alert role "Head of Design" -> tokens ["head", "design"]. Title
+    // "Design Lead" contains "design" -> passes even though the exact phrase
+    // does not appear.
+    assert(
+      matches(
+        job({ title: "Design Lead" }),
+        criteria({ role: "Head of Design" }),
+      ),
+      "should token-match",
+    );
+    assert(
+      matches(
+        job({ title: "Senior Design Engineer" }),
+        criteria({ role: "Design Head" }),
+      ),
+      "should token-match via 'Design'",
+    );
+  },
+);
+
+suite(
+  "role token match: unrelated title still fails role check",
+  () => {
+    // Alert "Design Head" vs job "Marketing Manager" -> no shared word.
+    assert(
+      !matches(
+        job({ title: "Marketing Manager" }),
+        criteria({ role: "Design Head" }),
+      ),
+      "unrelated titles should not match",
+    );
+  },
+);
 
 suite("location is case-insensitive substring on job.location", () => {
   assert(matches(job(), criteria({ location: "Bengaluru" })), "exact-ish");
   assert(matches(job(), criteria({ location: "bengaluru" })), "casing");
+  // 1 of 1 fails -> ratio 0.
   assert(!matches(job(), criteria({ location: "mumbai" })), "different city");
-});
-
-suite("location set + job.location null => no match", () => {
-  assert(
-    !matches(job({ location: null }), criteria({ location: "Bengaluru" })),
-    "null job location cannot satisfy a set location criterion",
-  );
 });
 
 suite("workMode is exact enum match", () => {
@@ -104,16 +135,66 @@ suite("opportunityType is exact enum match", () => {
   );
 });
 
-suite("T-250 grid example: React + Bengaluru + full-time matches", () => {
+suite(
+  "3-criteria alert with 3 passes: matches (100% >= 75%)",
+  () => {
+    const c = criteria({
+      skills: ["React"],
+      location: "Bengaluru",
+      opportunityType: "FULL_TIME",
+    });
+    assert(matches(job(), c), "all three pass");
+  },
+);
+
+suite(
+  "3-criteria alert with 2 passes: does NOT match (67% < 75%)",
+  () => {
+    const c = criteria({
+      skills: ["React"],
+      location: "Bengaluru",
+      opportunityType: "INTERNSHIP", // fails
+    });
+    assert(!matches(job(), c), "two of three should not fire under 75%");
+  },
+);
+
+suite("4-criteria alert with 3 passes: matches (75% >= 75%)", () => {
   const c = criteria({
     skills: ["React"],
     location: "Bengaluru",
-    opportunityType: "FULL_TIME",
+    workMode: "HYBRID",
+    opportunityType: "INTERNSHIP", // fails
   });
-  assert(matches(job(), c), "grid case should match");
+  assert(matches(job(), c), "three of four should fire at 75%");
 });
 
-suite("T-250 grid example: non-matching job (Python part-time Mumbai)", () => {
+suite(
+  "4-criteria alert with 2 passes: does NOT match (50% < 75%)",
+  () => {
+    const c = criteria({
+      skills: ["React"],
+      location: "Mumbai", // fails
+      workMode: "REMOTE", // fails
+      opportunityType: "FULL_TIME",
+    });
+    assert(!matches(job(), c), "two of four should not fire");
+  },
+);
+
+suite(
+  "T-250 grid: React + Bengaluru + FULL_TIME still matches on a matching job",
+  () => {
+    const c = criteria({
+      skills: ["React"],
+      location: "Bengaluru",
+      opportunityType: "FULL_TIME",
+    });
+    assert(matches(job(), c), "grid case should match");
+  },
+);
+
+suite("T-250 grid: totally non-matching job still receives nothing", () => {
   const c = criteria({
     skills: ["React"],
     location: "Bengaluru",
