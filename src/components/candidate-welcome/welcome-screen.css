@@ -9,8 +9,8 @@
  * and is intentionally not approximated.
  *
  * Back to front: ellipses → background blur → vertical grid → horizontal
- * grid → text. The grid rectangles blend (overlay) straight onto the
- * ellipses, so none of their wrappers may create a stacking context.
+ * grid → text. Each grid layer blends (overlay) straight onto the ellipses,
+ * so nothing between them and .cwelcome may create a stacking context.
  */
 
 /*
@@ -115,45 +115,50 @@
   backdrop-filter: blur(2.0833cqw);
 }
 
-/* 2b / 3. Grid groups — plain wrappers, no stacking context. */
+/*
+ * 2b / 3. The grid, as two tiled layers: full-height columns and full-width
+ * bands, one square cell apart.
+ *
+ * The design draws 19 columns across 1920 and 100px-tall bands down 900, so a
+ * cell is ~101 × 100 — square only at that exact frame. Sizing the columns by
+ * width and the bands by height (100%/19 and 11.1111%) turns every cell into a
+ * rectangle as soon as the aspect ratio moves. Instead both axes take the same
+ * --cwelcome-cell and the pattern repeats to fill, so cells stay square at any
+ * viewport and only their count changes. The cell tracks the design's 1/19 of
+ * the width, with a floor so the mesh does not collapse into a fine screen on
+ * phones. Each layer blends as a whole: the stripes within a layer never
+ * overlap, so that paints the same as blending each stripe on its own.
+ *
+ * Gradient direction follows Figma's transform [[1,0,0],[0,81,-40]]: across a
+ * column's width and — the bands being rotated -90° — down a band's height.
+ */
 .cwelcome__grid {
   position: absolute;
   inset: 0;
-}
-
-/*
- * Shared Overlay paint. The gradient transform [[1,0,0],[0,81,-40]] keeps the
- * gradient on the rectangle's own x axis: across a column's width, and — the
- * bands being rotated -90° — down a band's height.
- */
-.cwelcome__col,
-.cwelcome__row {
-  position: absolute;
+  --cwelcome-cell: max(36px, 5.2632cqw); /* 101.05px at 1920 */
   mix-blend-mode: overlay;
 }
 
-.cwelcome__col {
-  top: 0;
-  width: calc(100% / 19);
-  height: 100%;
-  background: linear-gradient(
+.cwelcome__grid--cols {
+  background-image: linear-gradient(
     90deg,
     rgba(217, 217, 217, 0) 0%,
     rgba(15.462, 15.462, 15.462, 0.77) 75%,
     #ffffff 100%
   );
+  background-size: var(--cwelcome-cell) 100%;
+  background-repeat: repeat-x;
 }
 
-.cwelcome__row {
-  left: 0;
-  width: 100%;
-  height: 11.1111%; /* 100px */
-  background: linear-gradient(
+.cwelcome__grid--rows {
+  background-image: linear-gradient(
     180deg,
     rgba(217, 217, 217, 0) 0%,
     rgba(15.462, 15.462, 15.462, 0.77) 75%,
     #ffffff 100%
   );
+  background-size: 100% var(--cwelcome-cell);
+  background-repeat: repeat-y;
 }
 
 /* 4. Centred text. Below lg it centres in the frame at a readable size. */

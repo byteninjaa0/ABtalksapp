@@ -12,9 +12,6 @@ import "./welcome-screen.css";
 const outfit = Outfit({ subsets: ["latin"], weight: ["300", "500"] });
 
 const ELLIPSES = [1, 2, 3, 4] as const;
-const COLUMNS = Array.from({ length: 19 }, (_, i) => i);
-// Band tops in the frame's 900px height, back to front.
-const ROW_TOPS = [0, 104, 204, 304, 404, 504, 600, 700, 800] as const;
 
 export function WelcomeScreen() {
   return (
@@ -25,17 +22,10 @@ export function WelcomeScreen() {
 
       <div aria-hidden className="cwelcome__backdrop" />
 
-      <div aria-hidden className="cwelcome__grid">
-        {COLUMNS.map((i) => (
-          <div key={i} className="cwelcome__col" style={{ left: `${(i * 100) / 19}%` }} />
-        ))}
-      </div>
+      {/* Both grids tile one square cell, so the mesh never stretches. */}
+      <div aria-hidden className="cwelcome__grid cwelcome__grid--cols" />
 
-      <div aria-hidden className="cwelcome__grid">
-        {ROW_TOPS.map((top) => (
-          <div key={top} className="cwelcome__row" style={{ top: `${(top * 100) / 900}%` }} />
-        ))}
-      </div>
+      <div aria-hidden className="cwelcome__grid cwelcome__grid--rows" />
 
       <div className="cwelcome__frame">
         <h1 className={`cwelcome__text ${outfit.className}`}>
