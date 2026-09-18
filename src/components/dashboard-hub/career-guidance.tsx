@@ -1,6 +1,6 @@
 import { CareerGuidanceDeck } from "@/components/dashboard-hub/career-guidance-deck";
 import type { GuidanceTargeting } from "@/features/career-guidance/catalog";
-import type { GuidanceItem } from "@/features/career-guidance/types";
+import type { DailyCard, GuidanceItem } from "@/features/career-guidance/types";
 
 type CareerGuidanceProps = {
   userId: string;
@@ -8,6 +8,7 @@ type CareerGuidanceProps = {
   istWeek: string;
   items: GuidanceItem[];
   targeting: GuidanceTargeting;
+  questCards?: DailyCard[];
 };
 
 /**

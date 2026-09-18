@@ -33,7 +33,8 @@ export type AdminNavIcon =
   | "mock-interview"
   | "talentProjects"
   | "platformAdmins"
-  | "hire";
+  | "hire"
+  | "gamification";
 
 export type AdminNavItem = {
   href: string;
@@ -69,6 +70,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         match: ["/admin/recruiters"],
       },
       { href: "/admin/credits", label: "Credits & Plans", icon: "credits" },
+      { href: "/admin/gamification", label: "Gamification", icon: "gamification", match: ["/admin/gamification"] },
       {
         href: "/admin/assessments",
         label: "Assessments",

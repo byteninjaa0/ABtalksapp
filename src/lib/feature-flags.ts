@@ -241,3 +241,60 @@ export function isHireProPreviewEnabled(): boolean {
 export function isVirtualCandidatesEnabled(): boolean {
   return process.env.HIRE_VIRTUAL_CANDIDATES === "true";
 }
+
+/**
+ * Plan 151 gamification flags. Read on the server and passed to clients as
+ * props. Defaults off — shadow mode until calibration, then UI flags one by
+ * one. Runtime per-rule kill switches live in GamificationRule.isActive.
+ */
+export function isGamificationEventsEnabled(): boolean {
+  return process.env.ENABLE_GAMIFICATION_EVENTS === "true";
+}
+
+export function isXpUiEnabled(): boolean {
+  return process.env.ENABLE_XP_UI === "true";
+}
+
+export function isBadgesUiEnabled(): boolean {
+  return process.env.ENABLE_BADGES_UI === "true";
+}
+
+export function isQuestsEnabled(): boolean {
+  return process.env.ENABLE_QUESTS === "true";
+}
+
+export function isGamificationNotificationsEnabled(): boolean {
+  return process.env.ENABLE_GAMIFICATION_NOTIFICATIONS === "true";
+}
+
+export function isHackathonResultsBoardEnabled(): boolean {
+  return process.env.ENABLE_HACKATHON_RESULTS_BOARD === "true";
+}
+
+export function isLeaderboardWeeklyEnabled(): boolean {
+  return process.env.ENABLE_LEADERBOARD_WEEKLY === "true";
+}
+
+export function isWeekStreakEnabled(): boolean {
+  return process.env.ENABLE_WEEK_STREAK === "true";
+}
+
+export function isLeaguesEnabled(): boolean {
+  return process.env.ENABLE_LEAGUES === "true";
+}
+
+export function isSkillStagesEnabled(): boolean {
+  return process.env.ENABLE_SKILL_STAGES === "true";
+}
+
+export function isCandidateSignalsEnabled(): boolean {
+  return process.env.ENABLE_CANDIDATE_SIGNALS === "true";
+}
+
+export function isCommunityVotingEnabled(): boolean {
+  return process.env.ENABLE_COMMUNITY_VOTING === "true";
+}
+
+export function isGamificationEmailEnabled(): boolean {
+  return process.env.ENABLE_GAMIFICATION_EMAIL === "true";
+}

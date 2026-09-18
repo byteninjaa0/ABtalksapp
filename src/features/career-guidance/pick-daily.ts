@@ -29,6 +29,7 @@ export type PickDailyInput = {
   istWeek: string;
   onceSeen: string[];
   weeklySeen: Record<string, string>;
+  questCards?: DailyCard[];
 };
 
 function cadenceOk(
@@ -100,6 +101,12 @@ export function pickDailyPack(input: PickDailyInput): DailyCard[] {
   const onceSeen = new Set(input.onceSeen);
   const used = new Set<string>();
   const pack: DailyCard[] = [];
+
+  const questCards = (input.questCards ?? []).slice(0, 1);
+  for (const card of questCards) {
+    pack.push(card);
+    used.add(card.id);
+  }
 
   const nextStepPool = input.profileItems.filter((i) => NEXT_STEP.has(i.kind));
   const growthPool = input.profileItems.filter((i) => i.kind === "challenge");
@@ -242,20 +249,38 @@ export function cardsForFrozenIds(
   packIds: string[],
   profileItems: GuidanceItem[],
   catalog: CatalogItem[],
+  extraCards: DailyCard[] = [],
 ): DailyCard[] {
   const profileById = new Map(profileItems.map((i) => [i.id, i]));
   const catalogById = new Map(catalog.map((i) => [i.id, i]));
+  const extraById = new Map(extraCards.map((c) => [c.id, c]));
   const cards: DailyCard[] = [];
+  const seen = new Set<string>();
+  for (const extra of extraCards.slice(0, 1)) {
+    cards.push(extra);
+    seen.add(extra.id);
+  }
   for (const id of packIds) {
+    if (seen.has(id)) continue;
+    const extra = extraById.get(id);
+    if (extra) {
+      cards.push(extra);
+      seen.add(id);
+      continue;
+    }
     const profile = profileById.get(id);
     if (profile) {
       cards.push(profileToCard(profile));
+      seen.add(id);
       continue;
     }
     const catalogItem = catalogById.get(id);
-    if (catalogItem) cards.push(catalogToCard(catalogItem));
+    if (catalogItem) {
+      cards.push(catalogToCard(catalogItem));
+      seen.add(id);
+    }
   }
-  return cards;
+  return cards.slice(0, DAILY_CAP);
 }
 
 /**

@@ -317,6 +317,44 @@ export async function recordPowerBiAttempt(
       isAuthoritative: true,
     },
   });
+  if (input.passed) {
+    const pe = await tx.programEnrollment.findUnique({
+      where: { id: input.enrollmentId },
+      select: { userId: true },
+    });
+    const activity = await tx.activity.findUnique({
+      where: { id: input.activityId },
+      select: { type: true, estimatedMinutes: true, difficulty: true, tags: true },
+    });
+    if (pe) {
+      const { scheduleGamificationEvent } = await import(
+        "@/features/gamification/record-event"
+      );
+      const github =
+        typeof input.payload === "object" &&
+        input.payload &&
+        !Array.isArray(input.payload) &&
+        typeof (input.payload as { githubUrl?: unknown }).githubUrl === "string";
+      scheduleGamificationEvent({
+        type: "activity.passed",
+        userId: pe.userId,
+        sourceType: "ActivityEvaluation",
+        sourceId: attempt.id,
+        scopeKey: `${pe.userId}:${input.activityId}`,
+        occurredAt: attempt.createdAt,
+        payload: {
+          activityId: input.activityId,
+          enrollmentId: input.enrollmentId,
+          activityType: activity?.type ?? "ASSIGNMENT",
+          estimatedMinutes: activity?.estimatedMinutes ?? null,
+          difficulty: activity?.difficulty ?? null,
+          lateness: input.lateness,
+          hasGithubProof: Boolean(github),
+          missionType: activity?.tags[0] ?? null,
+        },
+      });
+    }
+  }
   if (input.firstPass) {
     await tx.enrollmentDayActivity.upsert({
       where: {

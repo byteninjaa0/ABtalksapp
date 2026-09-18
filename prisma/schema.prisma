@@ -391,6 +391,15 @@ model User {
   recruiterCreditTransactions CreditTransaction[] @relation("RecruiterCreditTransactions")
   candidateCreditTransactions CreditTransaction[] @relation("CandidateCreditTransactions")
 
+  // Plan 151 — gamification. All cascade on user delete (T-217).
+  gamificationEvents GamificationEvent[]
+  xpTransactions     XpTransaction[]
+  userProgress       UserProgress?
+  xpPeriodScores     XpPeriodScore[]
+  userBadges         UserBadge[]
+  userQuests         UserQuest[]
+  gamificationFlags  GamificationFlag[]
+
   @@index([deletedAt, createdAt(sort: Desc)])
   @@index([disabledAt])
   @@index([createdAt(sort: Desc)])
@@ -4278,4 +4287,264 @@ model OutboundDelivery {
   @@index([status, createdAt(sort: Desc)])
   @@index([kind, createdAt(sort: Desc)])
   @@index([recipientHash])
+}
+
+// =============================================================================
+// Plan 151 — Gamification engine (additive). XP is not SP. Never write
+// PointsTransaction / SkillEvidence / Credential from this module.
+// =============================================================================
+
+enum GamificationEventStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  SKIPPED
+  FAILED
+  DEAD
+}
+
+enum XpCategory {
+  LEARNING
+  BUILDING
+  CAREER
+  COMPETITION
+  COMMUNITY
+}
+
+enum GamificationFlagSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum GamificationFlagStatus {
+  OPEN
+  CLEARED
+  ACTIONED
+}
+
+enum QuestCadence {
+  ONBOARDING
+  WEEKLY
+  MONTHLY
+  CAREER
+}
+
+enum UserQuestStatus {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+}
+
+/// Outbox + log. Written post-commit (after()) or derived by the sweep.
+model GamificationEvent {
+  id             String                  @id @default(cuid())
+  userId         String
+  /// Registry key, e.g. "activity.passed". String, not enum (NotificationEventKey precedent).
+  type           String
+  /// Source table name, e.g. "ActivityEvaluation". Polymorphic, no FK (Credential precedent).
+  sourceType     String
+  sourceId       String
+  idempotencyKey String                  @unique
+  /// Domain time, never insert time. Drives period and week keys.
+  occurredAt     DateTime
+  /// Bounded, Zod-validated per type. No PII.
+  payload        Json?
+  status         GamificationEventStatus @default(PENDING)
+  attempts       Int                     @default(0)
+  lockedAt       DateTime?
+  lastError      String?
+  /// True when created by a historical backfill — no notifications, no weekly-board XP.
+  isBackfill     Boolean                 @default(false)
+  processedAt    DateTime?
+  createdAt      DateTime                @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([userId, occurredAt(sort: Desc)])
+  @@index([type, occurredAt(sort: Desc)])
+  @@index([sourceType, sourceId])
+}
+
+/// Append-only. SUM(amount) per user is the true XP. Never updated, never deleted.
+model XpTransaction {
+  id              String     @id @default(cuid())
+  userId          String
+  amount          Int
+  category        XpCategory
+  ruleKey         String
+  eventId         String?
+  sourceType      String
+  sourceId        String
+  idempotencyKey  String     @unique
+  /// Set on a reversal row; unique so a transaction is reversed at most once.
+  reversesId      String?    @unique
+  isBackfill      Boolean    @default(false)
+  reason          String?
+  createdByUserId String?
+  createdAt       DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([sourceType, sourceId])
+  @@index([createdAt(sort: Desc)])
+}
+
+/// CACHE. Source of truth: XpTransaction + gate queries. Nightly spot-recompute.
+model UserProgress {
+  userId            String    @id
+  xpTotal           Int       @default(0)
+  level             Int       @default(1)
+  levelReachedAt    DateTime?
+  weekStreak        Int       @default(0)
+  longestWeekStreak Int       @default(0)
+  lastActiveWeekKey String?
+  streakFreezes     Int       @default(0)
+  /// Fraud/admin hold: badges and board eligibility paused; XP still accrues.
+  heldAt            DateTime?
+  recomputedAt      DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([level])
+}
+
+/// Leaderboard materialization. periodType WEEK|MONTH (String), periodKey "2026-W41" | "2026-10" (IST).
+model XpPeriodScore {
+  id         String   @id @default(cuid())
+  userId     String
+  periodType String
+  periodKey  String
+  xp         Int      @default(0)
+  lastXpAt   DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, periodType, periodKey])
+  @@index([periodType, periodKey, xp(sort: Desc), lastXpAt])
+}
+
+model BadgeDefinition {
+  id              String      @id @default(cuid())
+  /// Frozen once shipped.
+  slug            String      @unique
+  name            String
+  description     String
+  category        String
+  baseRarity      String
+  /// Zod discriminated union (§11.4). Never an expression.
+  criteria        Json
+  criteriaVersion Int         @default(1)
+  xpReward        Int         @default(0)
+  iconKey         String
+  isActive        Boolean     @default(true)
+  isHidden        Boolean     @default(false)
+  sortOrder       Int         @default(0)
+  earnedCount     Int         @default(0)
+  measuredRarity  String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  holders         UserBadge[]
+}
+
+model UserBadge {
+  id              String          @id @default(cuid())
+  userId          String
+  badgeId         String
+  criteriaVersion Int
+  earnedAt        DateTime
+  sourceEventId   String?
+  /// Snapshot {sourceType, sourceId, label, href}.
+  evidence        Json?
+  seenAt          DateTime?
+  revokedAt       DateTime?
+  revokedReason   String?
+
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge BadgeDefinition @relation(fields: [badgeId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, badgeId])
+  @@index([badgeId, earnedAt])
+  @@index([userId, earnedAt(sort: Desc)])
+  @@index([userId, seenAt])
+}
+
+model QuestDefinition {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  name        String
+  description String
+  cadence     QuestCadence
+  /// Segment key from §33, null = everyone eligible.
+  segment     String?
+  /// Array of {taskKey, label, eventTypes[], count, distinctDays?, withinDays?, filter?}. Zod-validated.
+  tasks       Json
+  xpReward    Int          @default(0)
+  badgeSlug   String?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  isActive    Boolean      @default(true)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  userQuests  UserQuest[]
+}
+
+model UserQuest {
+  id          String          @id @default(cuid())
+  userId      String
+  questId     String
+  /// "once" for ONBOARDING/CAREER; ISO week / month key otherwise.
+  periodKey   String
+  status      UserQuestStatus @default(ACTIVE)
+  /// CACHE of derived per-task progress.
+  progress    Json
+  startedAt   DateTime        @default(now())
+  completedAt DateTime?
+
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quest QuestDefinition @relation(fields: [questId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, questId, periodKey])
+  @@index([userId, status])
+}
+
+/// Runtime-tunable rules (PlatformConfig registry pattern: typed keys in code, values in rows).
+model GamificationRule {
+  key             String     @id
+  eventType       String
+  category        XpCategory
+  /// Flat amount; null = formula (§6.1).
+  xpAmount        Int?
+  /// Basis points applied to formula output. 10000 = 1.0×.
+  multiplierBp    Int        @default(10000)
+  dailyCap        Int?
+  weeklyCap       Int?
+  lifetimeCap     Int?
+  isActive        Boolean    @default(false)
+  updatedByUserId String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model GamificationFlag {
+  id               String                   @id @default(cuid())
+  userId           String
+  kind             String
+  severity         GamificationFlagSeverity
+  status           GamificationFlagStatus   @default(OPEN)
+  details          Json?
+  sourceEventId    String?
+  reviewedByUserId String?
+  reviewedAt       DateTime?
+  resolution       String?
+  createdAt        DateTime                 @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, severity, createdAt])
+  @@index([userId, createdAt(sort: Desc)])
 }

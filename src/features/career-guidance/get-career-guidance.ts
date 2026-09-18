@@ -10,10 +10,13 @@ import { isUserRegistered } from "@/features/hackathon/registration-status";
 import { evaluateRules } from "@/features/career-guidance/rules";
 import { getIstDateKey, getIstWeekKey } from "@/lib/date-utils";
 import type { GuidanceTargeting } from "@/features/career-guidance/catalog";
+import { getMyQuests } from "@/features/gamification/loaders";
+import { isQuestsEnabled } from "@/lib/feature-flags";
 import type {
   AiCohortStatus,
   CandidateFacts,
   ChallengeFact,
+  DailyCard,
   GuidanceItem,
   MockFact,
   TrackStatus,
@@ -71,6 +74,7 @@ export type CareerGuidancePayload = {
   targeting: GuidanceTargeting;
   istDay: string;
   istWeek: string;
+  questCards: DailyCard[];
 };
 
 /**
@@ -137,6 +141,22 @@ export async function getCareerGuidance(
     mocks,
   };
 
+  const quests = isQuestsEnabled() ? await getMyQuests(userId) : [];
+  const questCards: DailyCard[] = quests.slice(0, 1).map((q) => {
+    const step = q.tasks[q.currentIndex] ?? q.tasks[0];
+    return {
+      id: `quest:${q.slug}`,
+      source: "profile" as const,
+      kind: "quest" as const,
+      title: q.name,
+      body: step
+        ? `${step.label} (${step.current}/${step.required})`
+        : q.description,
+      ctaLabel: "Continue",
+      href: q.href,
+    };
+  });
+
   return {
     items: evaluateRules(facts),
     targeting: {
@@ -155,5 +175,6 @@ export async function getCareerGuidance(
     },
     istDay: getIstDateKey(),
     istWeek: getIstWeekKey(),
+    questCards,
   };
 }

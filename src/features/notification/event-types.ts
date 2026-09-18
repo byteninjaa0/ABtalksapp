@@ -125,6 +125,22 @@ export const EVENT_TYPE_REGISTRY: Record<string, EventTypeConfig> = {
     emailExempt: false,
     defaultEmailEnabled: true,
   },
+  "gamification.digest": {
+    key: "gamification.digest",
+    label: "Daily progress digest",
+    priority: "low",
+    suppressionExempt: false,
+    emailExempt: false,
+    defaultEmailEnabled: false,
+  },
+  "hackathon.result_published": {
+    key: "hackathon.result_published",
+    label: "Hackathon result",
+    priority: "important",
+    suppressionExempt: true,
+    emailExempt: false,
+    defaultEmailEnabled: false,
+  },
 };
 
 export const EVENT_TYPES = Object.keys(EVENT_TYPE_REGISTRY);

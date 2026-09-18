@@ -27,6 +27,7 @@ import {
   Send,
   Settings,
   ShieldCheck,
+  Trophy,
   UserPlus,
   Users,
   X,
@@ -67,6 +68,7 @@ const iconMap: Record<AdminNavIcon, typeof LayoutDashboard> = {
   talentProjects: FolderSearch,
   platformAdmins: ShieldCheck,
   hire: Briefcase,
+  gamification: Trophy,
 };
 
 export function AdminMobileNav() {

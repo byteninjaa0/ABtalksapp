@@ -77,7 +77,7 @@ export const GUIDANCE_CAP = GUIDANCE_POOL_CAP;
 export const GUIDANCE_COMPLETED_DAYS = 50;
 
 /** Hub daily mix card — profile rec or catalog check-in/quote. */
-export type DailyCardKind = GuidanceKind | "checkin" | "quote";
+export type DailyCardKind = GuidanceKind | "checkin" | "quote" | "quest";
 
 export type DailyCard = {
   id: string;

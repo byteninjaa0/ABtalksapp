@@ -25,5 +25,17 @@ export async function awardReferralSynergy(
   if (!applied.ok) {
     throw new Error("Failed to award referral synergy");
   }
+  const { scheduleGamificationEvent } = await import(
+    "@/features/gamification/record-event"
+  );
+  scheduleGamificationEvent({
+    type: "referral.qualified",
+    userId: args.referrerId,
+    sourceType: "Referral",
+    sourceId: args.referralId,
+    scopeKey: args.referralId,
+    occurredAt: new Date(),
+    payload: { referralId: args.referralId },
+  });
   return SYNERGY_REFERRAL;
 }

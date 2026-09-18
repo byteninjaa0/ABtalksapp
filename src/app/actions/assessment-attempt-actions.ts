@@ -166,6 +166,19 @@ export async function submitAssessmentAttemptAction(
     }
     revalidateAttempt(parsed.data.assignmentId);
 
+    const { scheduleGamificationEvent } = await import(
+      "@/features/gamification/record-event"
+    );
+    scheduleGamificationEvent({
+      type: "assessment.completed",
+      userId,
+      sourceType: "AssessmentAttemptSession",
+      sourceId: parsed.data.assignmentId,
+      scopeKey: parsed.data.assignmentId,
+      occurredAt: result.data.submittedAt,
+      payload: { assignmentId: parsed.data.assignmentId },
+    });
+
     // T-249 #3: fire the assessment.completed notification for the
     // recruiter who owns the assessment. Wrapped in try/catch by the
     // helper itself; wrapped here again as belt-and-braces so a

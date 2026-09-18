@@ -20,6 +20,8 @@ import {
   dualWriteChallengeEnrollmentById,
   dualWriteSubmissionAttempt,
 } from "@/repositories/dual-write";
+import { scheduleGamificationEvent } from "@/features/gamification/record-event";
+import { activityIdForDailyTask } from "@/repositories/ids";
 
 /**
  * Relaxation window: today + previous 4 days = 5 calendar days total.
@@ -312,6 +314,27 @@ export async function submitDay(input: {
       timeout: 20000,
     }),
     );
+
+    scheduleGamificationEvent({
+      type: "activity.passed",
+      userId,
+      sourceType: "ActivityEvaluation",
+      sourceId: `ev_sub_${result.submissionId}`,
+      scopeKey: `${userId}:${activityIdForDailyTask(task.id)}`,
+      occurredAt: new Date(),
+      payload: {
+        activityId: activityIdForDailyTask(task.id),
+        enrollmentId: enrollment.id,
+        activityType: "DAILY_CHALLENGE",
+        estimatedMinutes: 30,
+        difficulty: null,
+        // This path records ON_TIME only (see `newStatus` above); the
+        // relaxation window is what decides whether the day is submittable.
+        lateness: "ON_TIME",
+        hasGithubProof: Boolean(githubNormalized),
+        missionType: "CHALLENGE_DAY",
+      },
+    });
 
     return { ok: true, ...result };
   } catch (e: unknown) {

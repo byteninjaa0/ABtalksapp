@@ -1083,8 +1083,17 @@ export function CandidateInspector({
             <h4 className="hire-profile__h">Skill Map</h4>
             {(() => {
               const verifiedMap = new Map<string, string[]>();
+              // Plan 151 §19: stage and band travel with the sources, so the
+              // recruiter reads how strong the proof is, not how active the
+              // candidate has been.
+              const stageMap = new Map<
+                string,
+                { stage: string | null; band: string | null }
+              >();
               for (const vs of verifiedSkills ?? []) {
-                verifiedMap.set(vs.name.trim().toLowerCase(), vs.sources);
+                const key = vs.name.trim().toLowerCase();
+                verifiedMap.set(key, vs.sources);
+                stageMap.set(key, { stage: vs.stage, band: vs.band });
               }
               const hasSkills = skills.length > 0;
               const hasVerified = (verifiedSkills ?? []).length > 0;
@@ -1101,8 +1110,10 @@ export function CandidateInspector({
                     </p>
                     <ul className="hire-profile__chips">
                       {skills.map((s) => {
-                        const sources = verifiedMap.get(s.trim().toLowerCase());
+                        const key = s.trim().toLowerCase();
+                        const sources = verifiedMap.get(key);
                         const isVerified = Boolean(sources && sources.length > 0);
+                        const derived = stageMap.get(key);
                         return (
                           <li
                             key={s}
@@ -1115,7 +1126,7 @@ export function CandidateInspector({
                               <span className="font-medium text-zinc-900">{s}</span>
                               {isVerified ? (
                                 <span className="inline-flex items-center rounded-full bg-[#03535f] px-2 py-0.5 text-[10px] font-semibold text-white tracking-wide uppercase">
-                                  Evidence-backed
+                                  {derived?.stage ?? "Evidence-backed"}
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-500 tracking-wide uppercase">
@@ -1125,6 +1136,7 @@ export function CandidateInspector({
                             </div>
                             {isVerified && sources && sources.length > 0 && (
                               <p className="text-[11px] text-[#03535f] font-normal leading-tight">
+                                {derived?.band ? `${derived.band} · ` : ""}
                                 Source: {sources.join(", ")}
                               </p>
                             )}

@@ -6,6 +6,12 @@ import {
   EvidenceSourceType,
 } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import {
+  deriveSkillStage,
+  nextStageHint,
+  strengthBand,
+  type SkillStage,
+} from "@/features/profile/skill-stage";
 
 /**
  * The read-only half of the profile: what the platform can actually attest to.
@@ -38,6 +44,10 @@ export type VerifiedSkillView = {
   evidenceScore: number;
   evidenceCount: number;
   items: SkillEvidenceItem[];
+  /** Derived from the evidence rows, never chosen by the candidate. */
+  stage: SkillStage;
+  band: "Emerging" | "Established" | "Strong";
+  nextStageHint: string | null;
 };
 
 export type CredentialItem = {
@@ -116,19 +126,34 @@ export async function getProfileEvidence(
     }),
   ]);
 
-  const verifiedSkills: VerifiedSkillView[] = skillRows.map((row) => ({
-    skillId: row.skillId,
-    name: row.skill.name,
-    evidenceScore: row.evidenceScore,
-    evidenceCount: row.evidenceCount || row.evidence.length,
-    items: row.evidence.map((e) => ({
+  const verifiedSkills: VerifiedSkillView[] = skillRows.map((row) => {
+    const items = row.evidence.map((e) => ({
       sourceType: e.sourceType,
       sourceLabel: e.sourceLabel,
       score: e.score,
       maxScore: e.maxScore,
       occurredAt: e.occurredAt,
-    })),
-  }));
+    }));
+    const stage = deriveSkillStage(
+      items.map((e) => ({
+        sourceType: e.sourceType,
+        score: e.score,
+        maxScore: e.maxScore,
+        weight: 1,
+        occurredAt: e.occurredAt,
+      })),
+    );
+    return {
+      skillId: row.skillId,
+      name: row.skill.name,
+      evidenceScore: row.evidenceScore,
+      evidenceCount: row.evidenceCount || row.evidence.length,
+      items,
+      stage,
+      band: strengthBand(row.evidenceScore),
+      nextStageHint: nextStageHint(stage),
+    };
+  });
 
   return {
     verifiedSkills,

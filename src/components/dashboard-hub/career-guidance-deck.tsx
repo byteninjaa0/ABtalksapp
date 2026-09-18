@@ -33,6 +33,7 @@ const KIND_LABEL: Record<DailyCardKind, string> = {
   mock: "Mock",
   checkin: "Check-in",
   quote: "Quote",
+  quest: "Quest",
 };
 
 function storageKey(userId: string): string {
@@ -91,6 +92,7 @@ type CareerGuidanceDeckProps = {
   istWeek: string;
   items: GuidanceItem[];
   targeting: GuidanceTargeting;
+  questCards?: DailyCard[];
 };
 
 export function CareerGuidanceDeck({
@@ -99,6 +101,7 @@ export function CareerGuidanceDeck({
   istWeek,
   items,
   targeting,
+  questCards,
 }: CareerGuidanceDeckProps) {
   // Profile-first paint before localStorage hydrates (avoids null flash).
   const bootstrapPack = useMemo(
@@ -111,8 +114,9 @@ export function CareerGuidanceDeck({
         istWeek,
         onceSeen: [],
         weeklySeen: {},
+        questCards,
       }),
-    [items, targeting, istDay, istWeek],
+    [items, targeting, istDay, istWeek, questCards],
   );
 
   const [memory, setMemory] = useState<GuidanceMemory | null>(null);
@@ -134,17 +138,18 @@ export function CareerGuidanceDeck({
       istWeek,
       onceSeen: loaded.onceSeen,
       weeklySeen: loaded.weeklySeen,
+      questCards,
     });
     const next = rememberPack(loaded, pack, catalogById, istWeek);
     writeMemory(userId, next);
     setMemory(next);
     setHydrated(true);
-  }, [userId, istDay, istWeek, items, targeting]);
+  }, [userId, istDay, istWeek, items, targeting, questCards]);
 
   const pack = useMemo(() => {
     if (!hydrated || !memory?.packIds) return bootstrapPack;
-    return cardsForFrozenIds(memory.packIds, items, GUIDANCE_CATALOG);
-  }, [hydrated, memory, items, bootstrapPack]);
+    return cardsForFrozenIds(memory.packIds, items, GUIDANCE_CATALOG, questCards);
+  }, [hydrated, memory, items, bootstrapPack, questCards]);
 
   const visible = useMemo(() => {
     if (!hydrated || !memory) return bootstrapPack;

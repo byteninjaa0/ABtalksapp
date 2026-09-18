@@ -32,6 +32,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { PERSONA_LABELS } from "@/lib/candidate-vocab";
 import { isOtpVerificationRequired } from "@/lib/feature-flags";
 import { isAvatarStorageConfigured } from "@/features/profile/avatar-storage";
+import { ProfileGamificationSection } from "@/components/gamification/profile-section";
 
 /**
  * Résumé parsing runs inline in a Server Action invoked from this route, and one
@@ -458,6 +459,7 @@ export default async function ProfilePage() {
       collapsible
       contentClassName="min-h-0"
     >
+      <ProfileGamificationSection userId={userId} />
       <ProfileWizard
         steps={steps}
         initialIndex={initialIndex}

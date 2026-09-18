@@ -22,6 +22,11 @@ import {
 } from "@/repositories/candidate-detail";
 import { resolveProgramRefs } from "@/repositories/hire";
 import { logger } from "@/lib/logger";
+import {
+  deriveSkillStage,
+  strengthBand,
+  type SkillStage,
+} from "@/features/profile/skill-stage";
 
 const candidateRefSchema = z.string().trim().min(1).max(200);
 
@@ -266,6 +271,13 @@ export type InspectorSkillEvidenceItem = {
   name: string;
   isEvidenceBacked: boolean;
   sources: string[];
+  /**
+   * Plan 151 §8/§19 — what the evidence supports, as a stage and a band. The
+   * recruiter never sees XP, levels, streaks or badges: those measure
+   * engagement, not proof.
+   */
+  stage: SkillStage | null;
+  band: "Emerging" | "Established" | "Strong" | null;
 };
 
 export type InspectorSkillEvidence = {
@@ -325,8 +337,16 @@ export async function loadInspectorSkillEvidenceAction(
         where: { userId, evidence: { some: {} } },
         select: {
           skill: { select: { name: true } },
+          evidenceScore: true,
           evidence: {
-            select: { sourceLabel: true, sourceType: true },
+            select: {
+              sourceLabel: true,
+              sourceType: true,
+              score: true,
+              maxScore: true,
+              weight: true,
+              occurredAt: true,
+            },
           },
         },
       }),
@@ -339,8 +359,26 @@ export async function loadInspectorSkillEvidenceAction(
       for (const s of v.sources) verifiedMap.get(key)!.add(s);
     }
 
+    // Stage and band come from the evidence rows themselves, so a skill that
+    // was only ever claimed cannot present as proven.
+    const stageMap = new Map<
+      string,
+      { stage: SkillStage; band: "Emerging" | "Established" | "Strong" }
+    >();
     for (const row of profileEvidence) {
       const key = row.skill.name.trim().toLowerCase();
+      stageMap.set(key, {
+        stage: deriveSkillStage(
+          row.evidence.map((e) => ({
+            sourceType: e.sourceType,
+            score: e.score,
+            maxScore: e.maxScore,
+            weight: e.weight,
+            occurredAt: e.occurredAt,
+          })),
+        ),
+        band: strengthBand(row.evidenceScore),
+      });
       if (!verifiedMap.has(key)) verifiedMap.set(key, new Set());
       for (const ev of row.evidence) {
         if (ev.sourceLabel) {
@@ -351,12 +389,15 @@ export async function loadInspectorSkillEvidenceAction(
       }
     }
 
-    const skillsResult: { name: string; isEvidenceBacked: boolean; sources: string[] }[] = [];
+    const skillsResult: InspectorSkillEvidenceItem[] = [];
     for (const [nameKey, sourcesSet] of verifiedMap.entries()) {
+      const derived = stageMap.get(nameKey) ?? null;
       skillsResult.push({
         name: nameKey,
         isEvidenceBacked: true,
         sources: Array.from(sourcesSet),
+        stage: derived?.stage ?? null,
+        band: derived?.band ?? null,
       });
     }
 

@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { DashboardShell } from "@/components/dashboard-hub/dashboard-shell";
 import { HeroGreeting } from "@/components/dashboard-hub/hero-greeting";
 import { StreakCard } from "@/components/dashboard-hub/streak-card";
+import { isWeekStreakEnabled } from "@/lib/feature-flags";
 import { ActivityHeatmap } from "@/components/dashboard-hub/activity-heatmap";
 import { ContinueJourney } from "@/components/dashboard-hub/continue-journey";
 import { CareerGuidance } from "@/components/dashboard-hub/career-guidance";
@@ -16,6 +17,7 @@ import { HUB_CARD_HOVER_CLASS } from "@/components/dashboard-hub/nav-items";
 import { getHubData } from "@/features/dashboard/get-hub-data";
 import { registrationRedirect } from "@/features/registration/registration-gate";
 import { loadAvailableInterviews } from "@/features/dashboard/load-available-interviews";
+import { GamificationHubSection } from "@/components/gamification/hub-section";
 import type { Domain } from "@prisma/client";
 
 const TRACK_PATH: Record<Domain, string> = {
@@ -89,13 +91,27 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     image: session.user.image ?? null,
   };
   const isAdmin = session.user.isAdmin ?? false;
+  const weekStreakReplacesDaily = isWeekStreakEnabled();
 
   return (
     <DashboardShell user={shellUser} isAdmin={isAdmin} collapsible>
       <section className="px-4 py-8 sm:px-6">
         <div className="w-full max-w-[1020px] lg:ml-5 2xl:mx-auto 2xl:max-w-[1600px]">
           <HeroGreeting firstName={firstName} />
-          <div className="mt-4 grid min-w-0 gap-6 lg:grid-cols-[1fr_320px] lg:items-center lg:gap-8 2xl:grid-cols-[minmax(0,1fr)_minmax(320px,360px)]">
+          <GamificationHubSection userId={session.user.id} />
+          {/*
+            Plan 151 §10: the weekly building streak REPLACES the daily card
+            here rather than sitting beside it — two streaks on one page
+            contradict each other, and the daily card's "Streak lost." copy is
+            exactly the anxiety the weekly streak exists to remove.
+          */}
+          <div
+            className={
+              weekStreakReplacesDaily
+                ? "mt-4 min-w-0"
+                : "mt-4 grid min-w-0 gap-6 lg:grid-cols-[1fr_320px] lg:items-center lg:gap-8 2xl:grid-cols-[minmax(0,1fr)_minmax(320px,360px)]"
+            }
+          >
             <div className="min-w-0 lg:pr-6">
               <ActivityHeatmap
                 cells={data.heatmap.cells}
@@ -103,9 +119,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 embedded
               />
             </div>
-            <div className="mt-2 lg:mt-0 lg:pl-5">
-              <StreakCard streak={data.streak} restartHref={restartHref} />
-            </div>
+            {weekStreakReplacesDaily ? null : (
+              <div className="mt-2 lg:mt-0 lg:pl-5">
+                <StreakCard streak={data.streak} restartHref={restartHref} />
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -132,6 +150,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         istWeek={guidance.istWeek}
         items={guidance.items}
         targeting={guidance.targeting}
+        questCards={guidance.questCards}
       />
       <OtherChallenges
         joinedDomains={data.joinedDomains}

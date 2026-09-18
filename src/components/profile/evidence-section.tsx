@@ -18,6 +18,57 @@ const CREDENTIAL_TYPE_LABEL: Record<string, string> = {
   ASSESSMENT: "Assessment",
 };
 
+const STAGES = [
+  "Claimed",
+  "Learning",
+  "Practicing",
+  "Applied",
+  "Verified",
+  "Advanced",
+] as const;
+
+/**
+ * The stage track. Stages come from evidence, so this is a read-out, not a
+ * control — the current stage is marked by shape and label, never colour alone.
+ */
+function SkillStageTrack({ stage }: { stage: string }) {
+  const currentIndex = STAGES.indexOf(stage as (typeof STAGES)[number]);
+  return (
+    <ol className="mt-3 flex items-start justify-between gap-1">
+      {STAGES.map((label, i) => {
+        const done = i < currentIndex;
+        const current = i === currentIndex;
+        return (
+          <li
+            key={label}
+            className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center"
+          >
+            <span
+              className={
+                current
+                  ? "size-4 rounded-full border-4 border-[#197E23] bg-white"
+                  : done
+                    ? "size-4 rounded-full bg-[#197E23]"
+                    : "size-4 rounded-full border-2 border-[#CDD3D3] bg-white"
+              }
+              aria-hidden
+            />
+            <span
+              className={
+                current
+                  ? "text-[10px] font-semibold leading-tight text-foreground"
+                  : "text-[10px] leading-tight text-muted-foreground"
+              }
+            >
+              {label}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-IN", {
     month: "short",
@@ -61,10 +112,38 @@ export function EvidenceSection({ evidence }: { evidence: ProfileEvidence }) {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-medium">{skill.name}</span>
                   <Badge className="bg-[#197E23] text-white hover:bg-[#197E23]/90">
-                    {skill.evidenceCount} piece
-                    {skill.evidenceCount === 1 ? "" : "s"} of evidence
+                    {skill.stage}
                   </Badge>
                 </div>
+
+                <SkillStageTrack stage={skill.stage} />
+
+                <div className="mt-3 flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground">Strength</span>
+                  <div
+                    className="h-2 flex-1 overflow-hidden rounded-full bg-[#E9E9E9]"
+                    role="progressbar"
+                    aria-valuenow={skill.evidenceScore}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuetext={`${skill.evidenceScore} of 100 — ${skill.band}`}
+                  >
+                    <div
+                      className="h-full rounded-full bg-[#03535F]"
+                      style={{ width: `${Math.min(100, skill.evidenceScore)}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold tabular-nums">
+                    {skill.evidenceScore}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{skill.band}</span>
+                </div>
+
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {skill.evidenceCount} piece
+                  {skill.evidenceCount === 1 ? "" : "s"} of evidence
+                  {skill.nextStageHint ? ` · Next: ${skill.nextStageHint}` : ""}
+                </p>
                 <ul className="mt-2 space-y-1">
                   {skill.items.map((item, i) => (
                     <li

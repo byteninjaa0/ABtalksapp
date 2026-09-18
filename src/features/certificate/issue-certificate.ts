@@ -114,6 +114,38 @@ export async function ensureClaudeCertificate(userId: string): Promise<IssueResu
       { maxWait: 10000, timeout: 20000 },
     );
 
+    const cred = await prisma.credential.findUnique({
+      where: { credentialId: created.certificateId },
+      select: { id: true, type: true, sourceType: true, metadata: true },
+    });
+    if (cred) {
+      const { scheduleGamificationEvent } = await import(
+        "@/features/gamification/record-event"
+      );
+      const meta =
+        cred.metadata && typeof cred.metadata === "object" && !Array.isArray(cred.metadata)
+          ? (cred.metadata as Record<string, unknown>)
+          : {};
+      const variant =
+        typeof meta.hackathonVariant === "string" ? meta.hackathonVariant : null;
+      scheduleGamificationEvent({
+        type: variant ? "hackathon.placed" : "credential.issued",
+        userId,
+        sourceType: "Credential",
+        sourceId: cred.id,
+        scopeKey: cred.id,
+        occurredAt: new Date(),
+        payload: variant
+          ? { eventId: "vicodathon-2026", variant }
+          : {
+              credentialId: cred.id,
+              credentialType: cred.type,
+              sourceType: cred.sourceType,
+              hackathonVariant: variant,
+            },
+      });
+    }
+
     return {
       ok: true,
       data: { certificateId: created.certificateId, alreadyIssued: false },

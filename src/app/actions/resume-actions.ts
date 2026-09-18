@@ -98,6 +98,20 @@ export async function saveResumeLinkAction(
   try {
     const result = await saveResumeLink(authed.userId, parsed.data.url);
     revalidatePath("/profile");
+    if (result.ok) {
+      const { scheduleGamificationEvent } = await import(
+        "@/features/gamification/record-event"
+      );
+      scheduleGamificationEvent({
+        type: "profile.section_completed",
+        userId: authed.userId,
+        sourceType: "CandidateProfile",
+        sourceId: `${authed.userId}:resume`,
+        scopeKey: `${authed.userId}:resume`,
+        occurredAt: new Date(),
+        payload: { sectionKey: "resume" },
+      });
+    }
     return result;
   } catch (error) {
     logger.error("[resume] link action failed", {

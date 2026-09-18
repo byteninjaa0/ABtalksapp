@@ -762,6 +762,19 @@ export async function finishAttempt(
       attemptId,
       message: stored.message,
     });
+  } else {
+    const { scheduleGamificationEvent } = await import(
+      "@/features/gamification/record-event"
+    );
+    scheduleGamificationEvent({
+      type: "mock_interview.completed",
+      userId,
+      sourceType: "MockInterviewReport",
+      sourceId: attemptId,
+      scopeKey: attemptId,
+      occurredAt: new Date(),
+      payload: { mockInterviewId: attemptId },
+    });
   }
 
   logger.info("[mock-interview] attempt completed", {

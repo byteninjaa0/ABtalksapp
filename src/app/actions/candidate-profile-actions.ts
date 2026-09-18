@@ -140,6 +140,19 @@ async function runSection<S extends z.ZodType>(
     return { ok: false, message: "Could not save. Please try again." };
   }
 
+  const { scheduleGamificationEvent } = await import(
+    "@/features/gamification/record-event"
+  );
+  scheduleGamificationEvent({
+    type: "profile.section_completed",
+    userId: session.user.id,
+    sourceType: "CandidateProfile",
+    sourceId: `${session.user.id}:${label}`,
+    scopeKey: `${session.user.id}:${label}`,
+    occurredAt: new Date(),
+    payload: { sectionKey: label },
+  });
+
   revalidatePath("/profile");
   return { ok: true };
 }
@@ -206,6 +219,19 @@ export async function saveBasicInfoAction(raw: unknown): Promise<ActionResult> {
     });
     return { ok: false, message: "Could not save. Please try again." };
   }
+
+  const { scheduleGamificationEvent } = await import(
+    "@/features/gamification/record-event"
+  );
+  scheduleGamificationEvent({
+    type: "profile.section_completed",
+    userId: session.user.id,
+    sourceType: "CandidateProfile",
+    sourceId: `${session.user.id}:basic`,
+    scopeKey: `${session.user.id}:basic`,
+    occurredAt: new Date(),
+    payload: { sectionKey: "basic" },
+  });
 
   revalidatePath("/profile");
   return { ok: true };

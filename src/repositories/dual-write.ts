@@ -19,6 +19,7 @@ import {
 } from "@prisma/client";
 import { logger } from "@/lib/logger";
 import { isDualWriteEnabled } from "@/lib/feature-flags";
+import { scheduleGamificationEvent } from "@/features/gamification/record-event";
 import {
   activityIdForDailyTask,
   activityIdForProgramDay,
@@ -194,6 +195,24 @@ export async function dualWriteChallengeEnrollment(
       },
     });
     await ensureCandidateVisibility(tx, enrollment.userId);
+    scheduleGamificationEvent({
+      type:
+        enrollment.status === EnrollmentStatus.COMPLETED
+          ? "enrollment.completed"
+          : "enrollment.started",
+      userId: enrollment.userId,
+      sourceType: "ProgramEnrollment",
+      sourceId: peIdForEnrollment(enrollment.id),
+      scopeKey:
+        enrollment.status === EnrollmentStatus.COMPLETED
+          ? peIdForEnrollment(enrollment.id)
+          : `${peIdForEnrollment(enrollment.id)}:started`,
+      occurredAt: enrollment.completedAt ?? enrollment.startedAt,
+      payload: {
+        enrollmentId: peIdForEnrollment(enrollment.id),
+        cohortId: cohort.id,
+      },
+    });
   });
 }
 
@@ -366,6 +385,30 @@ export async function dualWriteSubmissionAttempt(
       },
       update: { passed: true },
     });
+    const pe = await tx.programEnrollment.findUnique({
+      where: { id: peIdForEnrollment(submission.enrollmentId) },
+      select: { userId: true },
+    });
+    if (pe?.userId) {
+      scheduleGamificationEvent({
+        type: "activity.passed",
+        userId: pe.userId,
+        sourceType: "ActivityEvaluation",
+        sourceId: `ev_sub_${submission.id}`,
+        scopeKey: `${pe.userId}:${activityIdForDailyTask(submission.dailyTaskId)}`,
+        occurredAt: submission.submittedAt,
+        payload: {
+          activityId: activityIdForDailyTask(submission.dailyTaskId),
+          enrollmentId: peIdForEnrollment(submission.enrollmentId),
+          activityType: "DAILY_CHALLENGE",
+          estimatedMinutes: 30,
+          difficulty: null,
+          lateness: submission.status === "LATE" ? "LATE" : "ON_TIME",
+          hasGithubProof: Boolean(submission.githubUrl),
+          missionType: "CHALLENGE_DAY",
+        },
+      });
+    }
   });
 }
 
@@ -426,6 +469,31 @@ export async function dualWriteMissionAttempt(
       },
       update: { passed: row.passed, detailJson: row.verdict },
     });
+    if (row.passed) {
+      const pe = await tx.programEnrollment.findUnique({
+        where: { id: peIdForMember(row.memberId) },
+        select: { userId: true },
+      });
+      if (pe?.userId) {
+        scheduleGamificationEvent({
+          type: "activity.passed",
+          userId: pe.userId,
+          sourceType: "ActivityEvaluation",
+          sourceId: `ev_ms_${row.id}`,
+          scopeKey: `${pe.userId}:${activityIdForProgramDay(row.programDayId)}`,
+          occurredAt: row.createdAt,
+          payload: {
+            activityId: activityIdForProgramDay(row.programDayId),
+            enrollmentId: peIdForMember(row.memberId),
+            activityType: "ASSIGNMENT",
+            estimatedMinutes: 45,
+            difficulty: null,
+            lateness: "NOT_APPLICABLE",
+            hasGithubProof: false,
+          },
+        });
+      }
+    }
   });
 }
 

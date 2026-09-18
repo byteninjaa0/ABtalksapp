@@ -25,6 +25,7 @@ import {
   Send,
   Settings,
   ShieldCheck,
+  Trophy,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -64,6 +65,7 @@ const iconMap: Record<AdminNavIcon, typeof LayoutDashboard> = {
   talentProjects: FolderSearch,
   platformAdmins: ShieldCheck,
   hire: Briefcase,
+  gamification: Trophy,
 };
 
 export function AdminSidebar() {

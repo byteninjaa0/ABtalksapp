@@ -90,6 +90,10 @@
     "test:078-points-writes": "NODE_OPTIONS=--conditions=react-server tsx src/repositories/points-writes.test.ts",
     "test:078-progress": "NODE_OPTIONS=--conditions=react-server tsx src/repositories/progress.test.ts",
     "test:synergy-cap": "NODE_OPTIONS=--conditions=react-server tsx src/features/synergy/synergy-cap.test.ts",
+    "test:gamification:unit": "tsx src/features/gamification/gamification.unit.test.ts",
+    "test:gamification:static": "tsx src/features/gamification/gamification.static.test.ts",
+    "test:gamification:integration": "tsx src/features/gamification/gamification.integration.test.ts",
+    "test:gamification": "npm run test:gamification:unit && npm run test:gamification:static && npm run test:gamification:integration",
     "test:profile": "NODE_OPTIONS=--conditions=react-server tsx src/features/profile/profile.test.ts",
     "test:career-guidance": "tsx src/features/career-guidance/career-guidance.test.ts",
     "build:resume-fixture": "tsx scripts/build-resume-fixture.ts",
@@ -152,6 +156,8 @@
     "db:backfill:search-sessions": "cross-env NODE_OPTIONS=--conditions=react-server tsx prisma/scripts/backfill-search-sessions.ts",
     "test:project-sessions": "cross-env NODE_OPTIONS=--conditions=react-server tsx src/features/hire/project-sessions.test.ts",
     "db:seed:platform-config": "cross-env NODE_OPTIONS=--conditions=react-server tsx prisma/seed-platform-config.ts",
+    "db:seed:gamification": "cross-env NODE_OPTIONS=--conditions=react-server tsx prisma/seed-gamification.ts",
+    "db:backfill:gamification": "cross-env NODE_OPTIONS=--conditions=react-server tsx prisma/scripts/gamification-backfill.ts",
     "db:seed:demo-recruiter": "cross-env NODE_OPTIONS=--conditions=react-server tsx prisma/seed-demo-recruiter.ts",
     "db:check:credit-ledger": "cross-env NODE_OPTIONS=--conditions=react-server tsx prisma/scripts/check-credit-ledger.ts",
     "db:backfill:credit-grants": "cross-env NODE_OPTIONS=--conditions=react-server tsx prisma/scripts/backfill-credit-grants.ts",
@@ -172,7 +178,10 @@
     "audit:candidate-data": "cross-env NODE_OPTIONS=--conditions=react-server tsx scripts/search-qa/audit.ts data",
     "audit:search-explain": "cross-env NODE_OPTIONS=--conditions=react-server tsx scripts/search-qa/audit.ts explain",
     "test:unlock-diagnosis": "tsx src/features/admin/unlock-diagnosis.test.ts",
-    "db:seed:demo-admin": "cross-env NODE_OPTIONS=--conditions=react-server tsx scripts/seed-demo-admin.ts"
+    "db:seed:demo-admin": "cross-env NODE_OPTIONS=--conditions=react-server tsx scripts/seed-demo-admin.ts",
+    "db:seed:activity-skills": "tsx prisma/scripts/seed-activity-skills.ts",
+    "db:backfill:skill-evidence": "tsx prisma/scripts/backfill-skill-evidence.ts",
+    "test:skill-evidence": "cross-env NODE_OPTIONS=--conditions=react-server tsx src/features/profile/skill-evidence.unit.test.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
