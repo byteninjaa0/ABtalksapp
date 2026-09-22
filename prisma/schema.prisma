@@ -152,6 +152,9 @@ model User {
   emailVerified           DateTime?
   name                    String?
   image                   String?
+  /// scrypt hash from `src/lib/password.ts` (`scrypt$…`). Any other value —
+  /// e.g. an old plain-text dev seed — is treated as "no password" and never
+  /// compared.
   password                String?
   role                    Role                     @default(STUDENT)
   /// Soft delete. Set instead of DELETE; PII is scrubbed by the anonymizer.
@@ -2188,6 +2191,14 @@ enum RateLimitBucket {
   OUTREACH
   SEARCH
   EXPORT
+  /// Plan 154: password sign-in attempts per account (`email:<addr>`).
+  LOGIN_PASSWORD_ACCOUNT
+  /// Plan 154: password sign-in attempts per client address (`ip:<addr>`).
+  LOGIN_PASSWORD_IP
+  /// Plan 154: sign-in / reset codes emailed to one address (`email:<addr>`).
+  EMAIL_CODE_ADDRESS
+  /// Plan 154: sign-in / reset codes requested from one client address.
+  EMAIL_CODE_IP
 }
 
 /// Sliding-window hits for unlock / outreach / search / export (T-258).
@@ -3974,12 +3985,16 @@ model VerifiedRecruiterSeat {
 /// never merged to any branch. The fields below are the live DDL read back from
 /// information_schema, so Prisma describes what is actually there rather than
 /// something close to it.
+/// Every emailed one-time code, not only recruiters' (plan 154 widened it
+/// rather than add a second table): recruiter sign-in / registration, candidate
+/// sign-in, and password set / reset. `purpose` binds a code to one of those.
 model RecruiterEmailOtp {
   id        String   @id @default(cuid())
   email     String
   /// sha256(code + AUTH_SECRET). The plaintext code is never stored.
   codeHash  String
-  /// "login" | "register" — kept as text to match the existing column.
+  /// "login" | "register" (recruiter), "candidate-login", "password-reset".
+  /// Text, so a new purpose is not a migration.
   purpose   String
   attempts  Int      @default(0)
   expiresAt DateTime

@@ -7,6 +7,8 @@ import { Loader2 } from "lucide-react";
 import { type Resolver, Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { completeRegistrationAction } from "@/app/actions/registration-actions";
+import { setPasswordAction } from "@/app/actions/email-auth-actions";
+import { PasswordInput } from "@/components/auth/password-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +28,7 @@ import {
   type LegalConsentValues,
 } from "@/components/legal/legal-consent-fields";
 import { registerPayloadSchema } from "@/lib/validations/register";
+import { PASSWORD_MIN_LENGTH } from "@/lib/validations/email-auth";
 import { ResumeUploadField } from "./resume-upload-field";
 
 /**
@@ -76,6 +79,8 @@ type Props = {
   resumeFileName: string | null;
   /** When false (local `next dev`), OTP is not required to submit. */
   otpVerificationRequired: boolean;
+  /** Plan 154: show the optional password field (see register/page.tsx). */
+  offerPassword: boolean;
 };
 
 export function RegistrationForm({
@@ -85,9 +90,13 @@ export function RegistrationForm({
   resumeReady,
   resumeFileName,
   otpVerificationRequired,
+  offerPassword,
 }: Props) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Plan 154. Outside the RHF model on purpose: it is not part of the
+  // registration payload and is saved by its own action afterwards.
+  const [password, setPassword] = useState("");
   const [resumeUploaded, setResumeUploaded] = useState(resumeReady);
   const [legalConsent, setLegalConsent] = useState<LegalConsentValues>({
     acceptLegal: false,
@@ -136,6 +145,12 @@ export function RegistrationForm({
       toast.error("Please verify your phone number first.");
       return;
     }
+    if (offerPassword && password && password.length < PASSWORD_MIN_LENGTH) {
+      toast.error(
+        `Use at least ${PASSWORD_MIN_LENGTH} characters for your password, or leave it blank.`,
+      );
+      return;
+    }
     setIsSubmitting(true);
     try {
       const fd = new FormData();
@@ -151,6 +166,16 @@ export function RegistrationForm({
       if (!res.ok) {
         toast.error(res.message);
         return;
+      }
+      // The profile exists at this point, so a password that fails to save
+      // must not undo or block it — say so and carry on.
+      if (offerPassword && password) {
+        const saved = await setPasswordAction({ newPassword: password });
+        if (!saved.ok) {
+          toast.warning(
+            `You're registered, but your password wasn't saved: ${saved.message} You can set one later in Settings.`,
+          );
+        }
       }
       toast.success("Welcome to ABTalks!");
       // Wherever they were headed before Google sent them here — the hackathon
@@ -258,6 +283,25 @@ export function RegistrationForm({
         onUploadedChange={setResumeUploaded}
         disabled={isSubmitting}
       />
+
+      {offerPassword ? (
+        <div className="space-y-2">
+          <Label htmlFor="registration-password">Password (optional)</Label>
+          <PasswordInput
+            id="registration-password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isSubmitting}
+            aria-describedby="registration-password-hint"
+          />
+          <p id="registration-password-hint" className="text-xs text-muted-foreground">
+            Sign in with your email and this password next time. At least{" "}
+            {PASSWORD_MIN_LENGTH} characters. Leave blank to keep using Google or
+            an emailed code.
+          </p>
+        </div>
+      ) : null}
 
       <LegalConsentFields
         values={legalConsent}

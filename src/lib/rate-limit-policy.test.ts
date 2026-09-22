@@ -51,7 +51,7 @@ suite("hits outside the window do not count", () => {
 });
 
 suite("every bucket has a readable message and a max", () => {
-  for (const bucket of ["UNLOCK", "OUTREACH", "SEARCH", "EXPORT"] as const) {
+  for (const bucket of Object.keys(RATE_LIMIT_MAX) as (keyof typeof RATE_LIMIT_MAX)[]) {
     assert(RATE_LIMIT_MAX[bucket] > 0, `${bucket} needs a max`);
     assert(rateLimitMessage(bucket).length > 10, `${bucket} needs a message`);
   }

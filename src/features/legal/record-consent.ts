@@ -26,7 +26,13 @@ export type ConsentSource =
    * adapter, so no createUser event fires — the User row is created inside
    * authorize(), and the consent is recorded there at the same moment.
    */
-  | "recruiter_otp_signup";
+  | "recruiter_otp_signup"
+  /**
+   * Plan 154: first candidate sign-in by emailed code on /login. Same reason
+   * as `oauth_signup` — the account is created at sign-in, before any form —
+   * and the same notice on the login page covers it.
+   */
+  | "email_signup";
 
 type RecordConsentArgs = {
   userId?: string | null;

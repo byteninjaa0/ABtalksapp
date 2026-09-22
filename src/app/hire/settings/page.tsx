@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import { isEmailLoginEnabled } from "@/lib/feature-flags";
 import { requireRecruiter } from "@/lib/program-auth";
+import { cn } from "@/lib/utils";
 import { getRecruiterProfileAction } from "@/app/actions/recruiter-profile-actions";
 import { RecruiterProfileForm } from "@/components/hire/recruiter-profile-form";
 
@@ -51,6 +55,23 @@ export default async function HireSettingsPage() {
       </div>
 
       <RecruiterProfileForm initialData={res.data} />
+
+      {isEmailLoginEnabled() ? (
+        <section className="rounded-xl border bg-card p-5">
+          <h2 className="font-heading text-base font-semibold text-foreground">
+            Password &amp; sign-in
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Sign in with an emailed code, or set a password to use instead.
+          </p>
+          <Link
+            href="/settings/security"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-3")}
+          >
+            Manage password
+          </Link>
+        </section>
+      ) : null}
     </div>
   );
 }

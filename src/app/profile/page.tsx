@@ -30,7 +30,7 @@ import { ResumeSection } from "@/components/profile/resume-section";
 import { PreferencesSection } from "@/components/profile/preferences-section";
 import { buttonVariants } from "@/components/ui/button";
 import { PERSONA_LABELS } from "@/lib/candidate-vocab";
-import { isOtpVerificationRequired } from "@/lib/feature-flags";
+import { isEmailLoginEnabled, isOtpVerificationRequired } from "@/lib/feature-flags";
 import { isAvatarStorageConfigured } from "@/features/profile/avatar-storage";
 
 /**
@@ -486,6 +486,22 @@ export default async function ProfilePage({
         avatarUploadEnabled={isAvatarStorageConfigured()}
         performance={performance}
       />
+      {isEmailLoginEnabled() ? (
+        <div className="border-t px-4 py-6">
+          <h2 className="font-display text-base font-semibold">
+            Password &amp; sign-in
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Set or change a password to sign in with your email.
+          </p>
+          <Link
+            href="/settings/security"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-3")}
+          >
+            Manage password
+          </Link>
+        </div>
+      ) : null}
       <div className="border-t px-4 py-6">
         <h2 className="font-display text-base font-semibold">Delete account</h2>
         <p className="mt-1 text-sm text-muted-foreground">

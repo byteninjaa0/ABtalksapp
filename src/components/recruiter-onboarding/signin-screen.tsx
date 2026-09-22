@@ -4,6 +4,15 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { requestRecruiterOtpAction } from "@/app/actions/recruiter-auth-actions";
+import {
+  requestEmailCodeAction,
+  resetPasswordAction,
+} from "@/app/actions/email-auth-actions";
+import { PasswordInput } from "@/components/auth/password-input";
+import {
+  PASSWORD_MIN_LENGTH,
+  signInErrorMessage,
+} from "@/lib/validations/email-auth";
 import { useMotionMode, type Direction, type StepMotion } from "./motion";
 import {
   EMAIL_RE,
@@ -24,20 +33,31 @@ import { CodeStep } from "./steps/verify-step";
 import { EMPTY_VISUAL, SupportingVisual } from "./supporting-visual";
 
 /*
- * Recruiter sign-in, in the onboarding's frame: two cards in the same stack.
+ * Recruiter sign-in, in the onboarding's frame: cards in the same stack.
  *
- * Recruiters are passwordless, so this is the same flow as /talent/login:
- * request a code for the email (the server refuses an address with no
- * registration), then sign in with the `recruiter-otp` provider.
+ * The same flow as /talent/login: request a code for the email (the server
+ * refuses an address with no registration), then sign in with the
+ * `recruiter-otp` provider. Plan 154 adds, behind `passwordEnabled`, a
+ * password card (the `password` provider, recruiter audience) and a
+ * forgot-password card (emailed code + new password).
  */
 
-export function SigninScreen({ initialEmail = "" }: { initialEmail?: string }) {
+type Screen = "email" | "code" | "password" | "reset";
+
+export function SigninScreen({
+  initialEmail = "",
+  passwordEnabled = false,
+}: {
+  initialEmail?: string;
+  passwordEnabled?: boolean;
+}) {
   const motionMode = useMotionMode();
-  const [screen, setScreen] = useState<"email" | "code">("email");
+  const [screen, setScreen] = useState<Screen>("email");
   const [dir, setDir] = useState<Direction>(1);
   const [navigated, setNavigated] = useState(false);
   const [email, setEmail] = useState(initialEmail);
   const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
   const [devCode, setDevCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
@@ -49,7 +69,7 @@ export function SigninScreen({ initialEmail = "" }: { initialEmail?: string }) {
     [dir, motionMode, navigated],
   );
 
-  function go(next: "email" | "code", direction: Direction) {
+  function go(next: Screen, direction: Direction) {
     setDir(direction);
     setNavigated(true);
     setScreen(next);
@@ -94,6 +114,96 @@ export function SigninScreen({ initialEmail = "" }: { initialEmail?: string }) {
     });
   }
 
+  async function openWithPassword(secret: string): Promise<boolean> {
+    const res = await signIn("password", {
+      email: email.trim(),
+      password: secret,
+      audience: "recruiter",
+      redirect: false,
+    });
+    if (!res || res.error) {
+      setError(signInErrorMessage(res?.code, "password"));
+      return false;
+    }
+    window.location.href = "/hire";
+    return true;
+  }
+
+  function submitPassword() {
+    if (emailError) {
+      setShowErrors(true);
+      document.getElementById("si-pw-email")?.focus();
+      return;
+    }
+    if (!password) {
+      setError("Enter your password.");
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      if (!(await openWithPassword(password))) setPassword("");
+    });
+  }
+
+  function requestReset() {
+    if (emailError) {
+      setShowErrors(true);
+      document.getElementById("si-pw-email")?.focus();
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const res = await requestEmailCodeAction({
+        email,
+        purpose: "password-reset",
+        audience: "recruiter",
+      });
+      if (!res.ok) {
+        setError(res.message);
+        return;
+      }
+      setDevCode(res.data.devCode ?? null);
+      setCode("");
+      setPassword("");
+      if (screen !== "reset") go("reset", 1);
+    });
+  }
+
+  function confirmReset() {
+    if (code.length !== 6) {
+      setError("Enter the 6-digit code.");
+      return;
+    }
+    if (password.length < PASSWORD_MIN_LENGTH) {
+      setError(`Use at least ${PASSWORD_MIN_LENGTH} characters.`);
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const res = await resetPasswordAction({ email, code, newPassword: password });
+      if (!res.ok) {
+        setError(res.message);
+        return;
+      }
+      await openWithPassword(password);
+    });
+  }
+
+  function passwordField(id: string, autoComplete: string, label: string) {
+    return (
+      <Field id={id} label={label}>
+        <PasswordInput
+          id={id}
+          autoComplete={autoComplete}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={pending}
+          className={INPUT_CLASS}
+        />
+      </Field>
+    );
+  }
+
   return (
     <OnboardingShell
       aside={
@@ -126,12 +236,29 @@ export function SigninScreen({ initialEmail = "" }: { initialEmail?: string }) {
               onSubmit={requestCode}
               actions={<OnboardingNavigation primaryLabel="Send code" pending={pending} />}
               footer={
-                <p>
-                  Don’t have an account?{" "}
-                  <Link href="/recruiter-onboarding/signup" className={TEXT_LINK}>
-                    Sign up
-                  </Link>
-                </p>
+                <div className="space-y-2">
+                  {passwordEnabled ? (
+                    <p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setError(null);
+                          go("password", 1);
+                        }}
+                        disabled={pending}
+                        className={TEXT_LINK}
+                      >
+                        Sign in with a password instead
+                      </button>
+                    </p>
+                  ) : null}
+                  <p>
+                    Don’t have an account?{" "}
+                    <Link href="/recruiter-onboarding/signup" className={TEXT_LINK}>
+                      Sign up
+                    </Link>
+                  </p>
+                </div>
               }
             >
               <StaggerItem>
@@ -163,6 +290,96 @@ export function SigninScreen({ initialEmail = "" }: { initialEmail?: string }) {
                 <FieldError message={error} />
               </StaggerItem>
             </OnboardingStep>
+          ) : screen === "password" ? (
+            <OnboardingStep
+              key="password"
+              motion={stepMotion}
+              focusHeading={navigated}
+              eyebrow="ABTalks Hire"
+              title="Sign in with your password"
+              description={<p>Use the password you set for your work email.</p>}
+              onSubmit={submitPassword}
+              actions={
+                <OnboardingNavigation
+                  onBack={() => {
+                    setPassword("");
+                    setError(null);
+                    go("email", -1);
+                  }}
+                  primaryLabel="Sign in"
+                  pending={pending}
+                />
+              }
+              footer={
+                <p>
+                  Forgot it, or never set one?{" "}
+                  <button
+                    type="button"
+                    onClick={requestReset}
+                    disabled={pending}
+                    className={TEXT_LINK}
+                  >
+                    Email me a code to set a password
+                  </button>
+                </p>
+              }
+            >
+              <StaggerItem className="space-y-4">
+                <Field
+                  id="si-pw-email"
+                  label="Work email"
+                  error={showErrors ? emailError : null}
+                  valid={!emailError}
+                >
+                  <input
+                    id="si-pw-email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="username"
+                    placeholder="you@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={pending}
+                    {...fieldA11y("si-pw-email", showErrors ? emailError : null)}
+                    className={INPUT_CLASS}
+                  />
+                </Field>
+                {passwordField("si-password", "current-password", "Password")}
+                <FieldError message={error} />
+              </StaggerItem>
+            </OnboardingStep>
+          ) : screen === "reset" ? (
+            <CodeStep
+              key="reset"
+              codeId="si-reset-code"
+              motion={stepMotion}
+              focusHeading={navigated}
+              eyebrow="Set a password"
+              title="Check your email"
+              lead="If this address has an account, we sent a 6-digit code to"
+              email={email.trim()}
+              code={code}
+              devCode={devCode}
+              error={error}
+              pending={pending}
+              primaryLabel="Save & sign in"
+              resendIn={0}
+              onCodeChange={setCode}
+              onResend={requestReset}
+              onBack={() => {
+                setCode("");
+                setPassword("");
+                setDevCode(null);
+                setError(null);
+                go("password", -1);
+              }}
+              onSubmit={confirmReset}
+            >
+              {passwordField("si-new-password", "new-password", "New password")}
+              <p className="mt-1.5 text-xs leading-5 text-[#787878]">
+                At least {PASSWORD_MIN_LENGTH} characters.
+              </p>
+            </CodeStep>
           ) : (
             <CodeStep
               key="code"

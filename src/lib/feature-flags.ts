@@ -119,6 +119,20 @@ export function isRecruiterAuthEnabled(): boolean {
 }
 
 /**
+ * Plan 154: password sign-in and emailed-code sign-in on top of Google.
+ *
+ * Off unless `ENABLE_EMAIL_LOGIN=true`. Covers the candidate `/login` email
+ * options (code, password, forgot password), open email signup, recruiter
+ * password sign-in (which also needs `ENABLE_RECRUITER_AUTH`), the password
+ * field at recruiter registration, `/settings/security`, and Google account
+ * linking by verified email. Read directly as `process.env` in
+ * `auth.config.ts`, which cannot import this file (edge bundle).
+ */
+export function isEmailLoginEnabled(): boolean {
+  return process.env.ENABLE_EMAIL_LOGIN === "true";
+}
+
+/**
  * Cohorts whose consenting members `/hire` may match, before their results are
  * published.
  *

@@ -10,6 +10,18 @@ export const RATE_LIMIT_MAX = {
   OUTREACH: 30,
   SEARCH: 60,
   EXPORT: 10,
+  /** Plan 154. Every password attempt on one account, right or wrong. */
+  LOGIN_PASSWORD_ACCOUNT: 10,
+  /**
+   * Plan 154. Per client address. Generous on purpose: a college lab or hostel
+   * wifi puts a whole class behind one IP, and the per-account cap above is
+   * what actually stops guessing.
+   */
+  LOGIN_PASSWORD_IP: 100,
+  /** Plan 154. Codes emailed to one address — the mailbox is not a free cannon. */
+  EMAIL_CODE_ADDRESS: 5,
+  /** Plan 154. Codes requested from one client address, any mailbox. */
+  EMAIL_CODE_IP: 30,
 } as const;
 
 export type RateLimitBucketName = keyof typeof RATE_LIMIT_MAX;
@@ -40,6 +52,16 @@ export const REQUIRED_RATE_LIMIT_SITES: {
     files: ["src/app/actions/hire-unlock-actions.ts"],
   },
   { bucket: "OUTREACH", files: ["src/app/actions/outreach-actions.ts"] },
+  { bucket: "LOGIN_PASSWORD_ACCOUNT", files: ["src/lib/email-auth.ts"] },
+  { bucket: "LOGIN_PASSWORD_IP", files: ["src/lib/email-auth.ts"] },
+  { bucket: "EMAIL_CODE_ADDRESS", files: ["src/lib/email-code.ts"] },
+  {
+    bucket: "EMAIL_CODE_IP",
+    files: [
+      "src/app/actions/email-auth-actions.ts",
+      "src/app/actions/recruiter-auth-actions.ts",
+    ],
+  },
 ];
 
 export function isRateLimited(
@@ -62,5 +84,11 @@ export function rateLimitMessage(bucket: RateLimitBucketName): string {
       return "Too many searches. Wait a few minutes and try again.";
     case "EXPORT":
       return "Too many exports. Wait a few minutes and try again.";
+    case "LOGIN_PASSWORD_ACCOUNT":
+    case "LOGIN_PASSWORD_IP":
+      return "Too many sign-in attempts. Wait 15 minutes and try again, or sign in with an emailed code.";
+    case "EMAIL_CODE_ADDRESS":
+    case "EMAIL_CODE_IP":
+      return "Too many codes requested. Wait a few minutes and try again.";
   }
 }
