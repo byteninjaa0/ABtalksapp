@@ -332,10 +332,17 @@ export default function CommunityStats() {
             together.
           </p>
 
-          {/* body — node 1:318 */}
+          {/* body — node 1:318. Raised above the stats and collage layers that
+              follow it: both are full-frame `inset: 0` boxes, and as later
+              positioned siblings they painted over this block and swallowed
+              every click on the Claude challenge link it holds. It is the only
+              interactive element on the frame and overlaps neither the images
+              (x >= 1065) nor the figures (y >= 543), so lifting it covers
+              nothing. */}
           <div
             style={{
               position: "absolute",
+              zIndex: 1,
               left: 123,
               top: 352,
               width: 693,
