@@ -4,16 +4,18 @@ import { getRecruiterProfileAction } from "@/app/actions/recruiter-profile-actio
 import { RecruiterProfileForm } from "@/components/hire/recruiter-profile-form";
 
 export const metadata: Metadata = {
-  title: "Settings | ABTalks Hire",
+  title: "Your profile | ABTalks Hire",
 };
 
 /**
- * Recruiter settings page (T-227).
+ * Recruiter profile page (T-227). Was /hire/settings, which held nothing but
+ * this form; it is now reached from the account row in the sidebar, and
+ * /hire/settings redirects here (next.config.ts).
  * Allows the recruiter to view and edit their profile (name, phone) and
  * company identity (name, website, industry, size, location).
  * Isolated per-recruiter workspace via requireRecruiter().
  */
-export default async function HireSettingsPage() {
+export default async function HireProfilePage() {
   await requireRecruiter();
   const res = await getRecruiterProfileAction();
 
@@ -22,10 +24,10 @@ export default async function HireSettingsPage() {
       <div className="hire-settings space-y-6 pb-12">
         <div className="space-y-2">
           <p className="text-xs font-semibold tracking-wider text-primary uppercase">
-            Workspace
+            Account
           </p>
           <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
-            Settings
+            Your profile
           </h1>
           <p className="max-w-2xl text-sm text-destructive">
             {res.message}
@@ -39,10 +41,10 @@ export default async function HireSettingsPage() {
     <div className="hire-settings space-y-6 pb-12">
       <div className="space-y-2">
         <p className="text-xs font-semibold tracking-wider text-primary uppercase">
-          Workspace
+          Account
         </p>
         <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
-          Settings
+          Your profile
         </h1>
         <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
           Manage your personal recruiter profile and company identity. Changes

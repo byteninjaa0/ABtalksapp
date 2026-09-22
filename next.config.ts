@@ -94,6 +94,14 @@ const nextConfig: NextConfig = {
       // if one is ever built.
       { source: "/events", destination: "/workshop/events", permanent: false },
       { source: "/event", destination: "/workshop/events", permanent: false },
+      // The recruiter profile moved from /hire/settings (which held nothing but
+      // the profile form) to /hire/profile. Kept for bookmarks; 307 so it can
+      // be reclaimed if a real settings page is ever built.
+      {
+        source: "/hire/settings",
+        destination: "/hire/profile",
+        permanent: false,
+      },
     ];
   },
 };
