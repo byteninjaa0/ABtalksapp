@@ -346,7 +346,11 @@ export function PhoneVerifyField({
           onValueChange={handleCountryChange}
           disabled={disabled || step === "verified"}
         >
-          <SelectTrigger className="w-[7.5rem] shrink-0" aria-label="Country code">
+          {/* Sized to the widest code the trigger shows ("+977") plus its
+              chevron. It was 7.5rem, and the trigger is justify-between, so the
+              spare width opened a gap between "+91" and the chevron. Fixed, not
+              w-fit, so the number field doesn't shift when the code changes. */}
+          <SelectTrigger className="w-[5.25rem] shrink-0" aria-label="Country code">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
