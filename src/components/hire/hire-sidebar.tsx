@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOutAction } from "@/app/actions/auth-actions";
 import { useHireAuth } from "@/components/hire/hire-auth-provider";
 import { useHireDesk } from "@/components/hire/hire-desk-context";
 import type { RecruiterAccountSnapshot } from "@/features/hire/recruiter-account-types";
@@ -32,7 +31,6 @@ import {
   House,
   KanbanSquare,
   LifeBuoy,
-  LogOut,
   MessageSquare,
   MoreHorizontal,
   Pencil,
@@ -729,30 +727,9 @@ export function HireSidebar({
             >
               {who}
             </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <button
-                    type="button"
-                    className="hire-side__more"
-                    aria-label="Account actions"
-                  />
-                }
-              >
-                <MoreHorizontal className="hire-side__moreicon" aria-hidden="true" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <form action={signOutAction}>
-                  <button
-                    type="submit"
-                    className="flex w-full cursor-pointer items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-sm text-destructive hover:bg-destructive/10"
-                  >
-                    <LogOut className="size-3.5" aria-hidden="true" />
-                    Sign out
-                  </button>
-                </form>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* No "…" menu here: its only item was Sign out, which the header
+                account menu (RecruiterAccountMenu) already carries on every
+                /hire page. */}
           </div>
         ) : (
           <button
