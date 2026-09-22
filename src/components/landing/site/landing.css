@@ -1320,6 +1320,9 @@
   gap: var(--lp-space-32);
 }
 .abtalks-landing .footer__logo { font-family: var(--lp-font-display); font-size: 24px; font-weight: 700; color: var(--lp-color-text-primary); letter-spacing: .02em; }
+/* The brand mark image, sized to the nav's resting height. The ground is #EEF6F6,
+   so the solid-black mark reads without the nav's over-hero filter. */
+.abtalks-landing .footer__logo img { display: block; height: 28px; width: auto; }
 .abtalks-landing .footer__head {
   font-size: 12px; line-height: 16px; font-weight: 600;
   text-transform: uppercase; letter-spacing: .06em;
