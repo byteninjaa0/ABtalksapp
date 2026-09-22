@@ -22,6 +22,7 @@ const NOT_A_PROJECT = new Set([
   "create-test",
   "assessments",
   "projects",
+  "profile",
   "settings",
   "jobs",
   "credits",
