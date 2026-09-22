@@ -17,7 +17,7 @@ type DashboardHeaderProps = {
   onMenuClick: () => void;
   /** Hub page section anchors. Default true. Ignored when sectionNavItems is set. */
   showSectionNav?: boolean;
-  /** Custom header links (Claude). Desktop only (`md+`), same as hub section nav. */
+  /** Custom header links (Claude). Desktop only (`lg+`), same as hub section nav. */
   sectionNavItems?: HeaderSectionNavItem[];
 };
 
@@ -46,7 +46,7 @@ export function DashboardHeader({
   return (
     <header className="abt-header">
       <div className="abt-header-inner">
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
             className="abt-header-icon md:hidden"
@@ -73,9 +73,14 @@ export function DashboardHeader({
             />
           </Link>
 
+          {/* Section navs appear from `lg`, and shrink and scroll sideways
+              rather than overflow. From `md` the header also carries a fixed
+              250px search beside a 250px sidebar, so between 768px and ~1100px
+              four uppercase, non-wrapping links pushed the search and bell
+              out of the bar. */}
           {customNav ? (
             <nav
-              className="abt-header-nav hidden md:flex"
+              className="abt-header-nav no-scrollbar hidden min-w-0 overflow-x-auto lg:flex"
               aria-label="Page sections"
             >
               {sectionNavItems.map((item) => (
@@ -88,7 +93,7 @@ export function DashboardHeader({
 
           {hubNav ? (
             <nav
-              className="abt-header-nav hidden md:flex"
+              className="abt-header-nav no-scrollbar hidden min-w-0 overflow-x-auto lg:flex"
               aria-label="Page sections"
             >
               {HUB_SECTION_NAV.map((item) => (
