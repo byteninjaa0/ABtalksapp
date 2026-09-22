@@ -194,6 +194,11 @@ export function HireSidebar({
 
   return (
     <aside className="hire-side" aria-label="Hire navigation">
+      {/* Everything above the footer scrolls here, inside the card, so the
+          account row below stays pinned however many projects there are.
+          The contents keep their original indentation to keep this diff
+          readable. */}
+      <div className="hire-side__scroll">
       <nav className="hire-side__nav" aria-label="Sections">
         <Link
           href="/hire"
@@ -697,6 +702,7 @@ export function HireSidebar({
         onOpenChange={(next) => !next && setDeleting(null)}
         project={deleting}
       />
+      </div>
 
       <div className="hire-side__foot">
         {/* Settings is configuration, not day-to-day workflow, so it sits below
