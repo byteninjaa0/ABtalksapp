@@ -127,7 +127,7 @@ export async function updateRecruiterProfileAction(
       { maxWait: 20_000, timeout: 20_000 },
     );
 
-    revalidatePath("/hire/settings");
+    revalidatePath("/hire/profile");
     revalidatePath("/hire");
 
     return { ok: true, message: "Profile and company identity saved." };

@@ -8754,6 +8754,38 @@ button.hire-side__me {
   cursor: pointer;
 }
 
+/* Signed-in account row: the avatar + name area is the link to the
+   recruiter's profile. Hover/current use a neutral tint, not the accent —
+   the avatar is already accent-soft and would vanish into it — and the
+   current page is marked by colouring the name. */
+.hire-side__melink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: -4px 0 -4px -4px;
+  padding: 4px;
+  border-radius: 10px;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.18s ease;
+}
+
+.hire-side__melink:hover,
+.hire-side__melink.is-current {
+  background: #f4f6f6;
+}
+
+.hire-side__melink.is-current .hire-side__name {
+  color: var(--side-accent);
+}
+
+.hire-side__melink:focus-visible {
+  outline: 2px solid var(--side-accent);
+  outline-offset: 2px;
+}
+
 .hire-side__avatar {
   display: inline-flex;
   align-items: center;
