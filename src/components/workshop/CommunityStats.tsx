@@ -158,7 +158,7 @@ function BodyCopy() {
       <p style={{ margin: 0 }}>
         Take on the{" "}
         <Link
-          href="/"
+          href="/claude-signup"
           style={{ color: "var(--wk-a1)", fontWeight: 700, textDecoration: "underline" }}
         >
           60-Day Claude AI Challenge
