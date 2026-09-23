@@ -1053,10 +1053,7 @@
 
 /* ---------- 13. TESTIMONIALS (unchanged) ---------- */
 .abtalks-landing .testimonials { background: var(--lp-color-background); overflow: hidden; }
-/* The cohort cards sat 128px clear of this heading (54px off .section.open
-   plus 74px here). Trimmed to the top of this section only, so every other
-   section keeps the shared --lp-section-gap rhythm. */
-.abtalks-landing .section.testimonials { padding-block-start: 36px; }
+/* Top/bottom spacing for this section: see SECTION GAPS at the end of the file. */
 .abtalks-landing .testimonials__head { text-align: center; margin-bottom: var(--lp-space-40); }
 .abtalks-landing .testimonials__head .h2 { text-transform: uppercase; letter-spacing: .01em; }
 .abtalks-landing .testimonials__head .p { margin-inline: auto; font-size: 14px; line-height: 21px; }
@@ -2036,3 +2033,24 @@
 
   .abtalks-landing * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* =========================================================
+   SECTION GAPS — cohorts / testimonials / FAQ (issue #561)
+   =========================================================
+   Each gap is exactly one section's bottom padding plus the next section's
+   top padding, so the 30px is set there and nowhere else. Measured before:
+   cohort cards -> "What people are saying?" was 90px at 1440 (74 at 1024,
+   100 at 390); testimonial cards -> FAQ was 128px (95, 128).
+
+   The whole 30px sits on one side of each seam. The testimonials section
+   keeps its own 30px below the marquee because it is overflow: hidden; the
+   quote cards carry no shadow or lift today, but a future one would clip
+   against a zero edge.
+
+   Kept at the END of the file on purpose: the <=720px block re-sets
+   .section.open / .section.faq padding-block at this same specificity, so a
+   rule placed beside the base styles would lose on phones. Only these four
+   edges change; every other section keeps the shared --lp-section-gap. */
+.abtalks-landing .section.open { padding-block-end: 0; }
+.abtalks-landing .section.testimonials { padding-block: 30px; }
+.abtalks-landing .section.faq { padding-block-start: 0; }
