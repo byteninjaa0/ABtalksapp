@@ -269,27 +269,36 @@ suite("updateRecruiterProfileAction atomically updates RecruiterProfile and Orga
   );
 });
 
-suite("settings page requires recruiter authentication", () => {
-  const src = source("src/app/hire/settings/page.tsx");
+suite("profile page requires recruiter authentication", () => {
+  const src = source("src/app/hire/profile/page.tsx");
   assert(
     src.includes("requireRecruiter"),
-    "settings page must call requireRecruiter()",
+    "profile page must call requireRecruiter()",
   );
   assert(
     src.includes("RecruiterProfileForm"),
-    "settings page must render RecruiterProfileForm",
+    "profile page must render RecruiterProfileForm",
   );
 });
 
-suite("sidebar includes Settings navigation link for recruiters", () => {
+suite("sidebar account row opens the recruiter profile", () => {
   const src = source("src/components/hire/hire-sidebar.tsx");
   assert(
-    src.includes('href="/hire/settings"'),
-    "sidebar must link to /hire/settings",
+    src.includes('href="/hire/profile"'),
+    "sidebar account row must link to /hire/profile",
   );
   assert(
-    src.includes("Settings"),
-    "sidebar must display Settings label/icon",
+    !src.includes('href="/hire/settings"'),
+    "sidebar must not link to the retired /hire/settings",
+  );
+});
+
+suite("old /hire/settings URL still resolves", () => {
+  const src = source("next.config.ts");
+  assert(
+    src.includes('source: "/hire/settings"') &&
+      src.includes('destination: "/hire/profile"'),
+    "next.config must redirect /hire/settings to /hire/profile",
   );
 });
 

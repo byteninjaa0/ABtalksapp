@@ -56,7 +56,7 @@ suite("a project URL names its project", () => {
 });
 
 suite("pages under /hire are not projects", () => {
-  for (const p of ["/hire", "/hire/requests", "/hire/messages", "/hire/matches", "/hire/assessments", "/hire/jobs", "/hire/create-test", "/hire/evidence", "/hire/messages/abc", "/profile"]) {
+  for (const p of ["/hire", "/hire/requests", "/hire/messages", "/hire/matches", "/hire/assessments", "/hire/jobs", "/hire/create-test", "/hire/evidence", "/hire/profile", "/hire/messages/abc", "/profile"]) {
     assert(projectIdFromPath(p) === null, `${p} read as a project`);
   }
 });

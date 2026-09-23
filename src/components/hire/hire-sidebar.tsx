@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOutAction } from "@/app/actions/auth-actions";
 import { useHireAuth } from "@/components/hire/hire-auth-provider";
 import { useHireDesk } from "@/components/hire/hire-desk-context";
 import type { RecruiterAccountSnapshot } from "@/features/hire/recruiter-account-types";
@@ -32,14 +31,12 @@ import {
   House,
   KanbanSquare,
   LifeBuoy,
-  LogOut,
   MessageSquare,
   MoreHorizontal,
   Pencil,
   Pin,
   PinOff,
   Plus,
-  Settings,
   Trash2,
 } from "lucide-react";
 
@@ -699,25 +696,9 @@ export function HireSidebar({
       />
 
       <div className="hire-side__foot">
-        {/* Settings is configuration, not day-to-day workflow, so it sits below
-            the navigation groups rather than inside them. It stays a first-class
-            row here as well as in the account menu below: the menu is where you
-            look for "my account", this is where you look for "the product". */}
-        {account && (
-          <Link
-            href="/hire/settings"
-            className={cn(
-              "hire-side__item",
-              pathname.startsWith("/hire/settings") && "is-current",
-            )}
-            aria-current={
-              pathname.startsWith("/hire/settings") ? "page" : undefined
-            }
-          >
-            <Settings className="hire-side__icon" aria-hidden="true" />
-            Settings
-          </Link>
-        )}
+        {/* No Settings row: /hire/settings only ever held the recruiter's own
+            profile, so it lives behind the account row below (/hire/profile)
+            instead of posing as product settings. */}
         <Link href="/contact" className="hire-side__item hire-side__item--quiet">
           <LifeBuoy className="hire-side__icon" aria-hidden="true" />
           Support
@@ -726,39 +707,23 @@ export function HireSidebar({
         {/* Recruiter ------------------------------------------------------ */}
         {account ? (
           <div className="hire-side__me">
-            {who}
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <button
-                    type="button"
-                    className="hire-side__more"
-                    aria-label="Account actions"
-                  />
-                }
-              >
-                <MoreHorizontal className="hire-side__moreicon" aria-hidden="true" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem
-                  render={<Link href="/hire/settings" />}
-                  className="cursor-pointer"
-                >
-                  <Settings className="size-3.5" aria-hidden="true" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <form action={signOutAction}>
-                  <button
-                    type="submit"
-                    className="flex w-full cursor-pointer items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-sm text-destructive hover:bg-destructive/10"
-                  >
-                    <LogOut className="size-3.5" aria-hidden="true" />
-                    Sign out
-                  </button>
-                </form>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* The name row itself opens the recruiter's profile. */}
+            <Link
+              href="/hire/profile"
+              className={cn(
+                "hire-side__melink",
+                pathname.startsWith("/hire/profile") && "is-current",
+              )}
+              aria-current={
+                pathname.startsWith("/hire/profile") ? "page" : undefined
+              }
+              aria-label={`Your profile — ${name}`}
+            >
+              {who}
+            </Link>
+            {/* No "…" menu here: its only item was Sign out, which the header
+                account menu (RecruiterAccountMenu) already carries on every
+                /hire page. */}
           </div>
         ) : (
           <button
