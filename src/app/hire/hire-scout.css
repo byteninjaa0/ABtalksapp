@@ -12253,51 +12253,79 @@ a.hire-profile__ext-link:focus-visible {
 }
 
 /* --- Empty stage mark -----------------------------------------------------
-   The pipeline's "nothing here yet" drawing, given a slow idle so an empty
+   The pipeline's "nothing here yet" drawing, given a visible idle so an empty
    column reads as waiting rather than broken.
 
-   The lens works a scanning path — out, across, back — magnifying a touch at
-   each pause, with a light travelling over the glass as it turns. Its shadow
-   tracks it and shortens at the extremes, as a real one would. The whole mark
-   breathes on a longer cycle than the lens, and the dashed card behind fades
-   on a longer one still, so nothing beats in lockstep and the loop does not
-   announce where it restarts.
+   Five things move, on four different cycle lengths so the loop never beats in
+   lockstep or announces where it restarts:
 
-   Only transform and opacity, so it composites and never lays out. The travel
-   is a few pixels over several seconds on purpose: this sits under a line of
-   muted text a recruiter reads once and moves past, so it should register at
-   the edge of vision rather than compete with the page.
-   `transform-box: fill-box` makes the percentages resolve against each shape
-   rather than the whole SVG canvas.
+     lens    3.2s  scans out, across and back, magnifying at each pause
+     glint   3.2s  a light crossing the glass as the lens turns
+     ripple  3.2s  two rings pushing out from the lens, staggered by half
+     cards   4.4s  front card and ghost rocking against each other
+     dashes  2.4s  the ghost's dashed outline marching, the way a marquee does
 
-   Behind `no-preference`, so the mark is simply still for anyone who asked for
-   reduced motion. */
+   Only transform, opacity and stroke-dashoffset — all compositable, none of
+   them lay out.
+
+   `transform-box: fill-box` makes each shape's percentages resolve against its
+   own box rather than the whole SVG canvas.
+
+   Behind `no-preference`, so the mark is simply a still drawing for anyone who
+   asked for reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
   .hire-empty-mark {
-    animation: hire-empty-float 7s ease-in-out infinite;
+    animation: hire-empty-float 4.4s ease-in-out infinite;
   }
 
   .hire-empty-mark__lens {
     transform-box: fill-box;
     transform-origin: center;
-    animation: hire-empty-lens 4.6s ease-in-out infinite;
+    animation: hire-empty-lens 3.2s ease-in-out infinite;
   }
 
   .hire-empty-mark__glint {
     transform-box: fill-box;
     transform-origin: center;
     opacity: 0;
-    animation: hire-empty-glint 4.6s ease-in-out infinite;
+    animation: hire-empty-glint 3.2s ease-in-out infinite;
+  }
+
+  .hire-empty-mark__ripple {
+    transform-box: fill-box;
+    transform-origin: center;
+    opacity: 0;
+    animation: hire-empty-ripple 3.2s ease-out infinite;
+  }
+
+  .hire-empty-mark__ripple--late {
+    animation-delay: 1.6s;
   }
 
   .hire-empty-mark__shadow {
     transform-box: fill-box;
     transform-origin: center;
-    animation: hire-empty-shadow 4.6s ease-in-out infinite;
+    animation: hire-empty-shadow 3.2s ease-in-out infinite;
+  }
+
+  .hire-empty-mark__card {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hire-empty-card 4.4s ease-in-out infinite;
+  }
+
+  .hire-empty-mark__cross {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hire-empty-cross 4.4s ease-in-out infinite;
   }
 
   .hire-empty-mark__ghost {
-    animation: hire-empty-ghost 5.8s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation:
+      hire-empty-ghost 4.4s ease-in-out infinite,
+      hire-empty-march 2.4s linear infinite;
   }
 }
 
@@ -12307,7 +12335,7 @@ a.hire-profile__ext-link:focus-visible {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-2.5px);
+    transform: translateY(-4px);
   }
 }
 
@@ -12316,17 +12344,17 @@ a.hire-profile__ext-link:focus-visible {
   100% {
     transform: translate(0, 0) rotate(0deg) scale(1);
   }
-  18% {
-    transform: translate(5px, -3px) rotate(7deg) scale(1.05);
+  16% {
+    transform: translate(9px, -6px) rotate(13deg) scale(1.1);
   }
-  40% {
-    transform: translate(8px, 2px) rotate(3deg) scale(1.02);
+  38% {
+    transform: translate(13px, 4px) rotate(6deg) scale(1.04);
   }
-  62% {
-    transform: translate(-2px, 4px) rotate(-6deg) scale(1.06);
+  60% {
+    transform: translate(-5px, 7px) rotate(-11deg) scale(1.12);
   }
-  82% {
-    transform: translate(-5px, -1px) rotate(-3deg) scale(1.01);
+  80% {
+    transform: translate(-9px, -3px) rotate(-6deg) scale(1.03);
   }
 }
 
@@ -12334,28 +12362,45 @@ a.hire-profile__ext-link:focus-visible {
    its own — hence the same duration and the narrow windows. */
 @keyframes hire-empty-glint {
   0%,
-  10% {
+  8% {
     opacity: 0;
     transform: translateX(-9px);
   }
-  20% {
-    opacity: 0.75;
+  18% {
+    opacity: 0.85;
   }
-  32% {
+  30% {
     opacity: 0;
     transform: translateX(10px);
   }
-  56% {
+  54% {
     opacity: 0;
     transform: translateX(-9px);
   }
-  66% {
-    opacity: 0.6;
+  64% {
+    opacity: 0.7;
   }
-  78%,
+  76%,
   100% {
     opacity: 0;
     transform: translateX(10px);
+  }
+}
+
+/* Rings leaving the lens. They start at its edge and fade as they widen, so
+   the mark looks like it is probing rather than merely wobbling. */
+@keyframes hire-empty-ripple {
+  0% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
   }
 }
 
@@ -12365,21 +12410,43 @@ a.hire-profile__ext-link:focus-visible {
     transform: translateX(0) scaleX(1);
     opacity: 1;
   }
-  18% {
-    transform: translateX(4px) scaleX(0.93);
-    opacity: 0.82;
+  16% {
+    transform: translateX(7px) scaleX(0.88);
+    opacity: 0.75;
   }
-  40% {
-    transform: translateX(6px) scaleX(0.88);
-    opacity: 0.76;
+  38% {
+    transform: translateX(10px) scaleX(0.82);
+    opacity: 0.68;
   }
-  62% {
-    transform: translateX(-2px) scaleX(0.96);
-    opacity: 0.9;
+  60% {
+    transform: translateX(-4px) scaleX(0.93);
+    opacity: 0.85;
   }
-  82% {
-    transform: translateX(-4px) scaleX(0.94);
-    opacity: 0.86;
+  80% {
+    transform: translateX(-7px) scaleX(0.9);
+    opacity: 0.8;
+  }
+}
+
+@keyframes hire-empty-card {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  50% {
+    transform: rotate(1.6deg) translateY(-1.5px);
+  }
+}
+
+@keyframes hire-empty-cross {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.88);
   }
 }
 
@@ -12387,9 +12454,18 @@ a.hire-profile__ext-link:focus-visible {
   0%,
   100% {
     opacity: 1;
+    transform: rotate(0deg);
   }
   50% {
-    opacity: 0.45;
+    opacity: 0.5;
+    transform: rotate(-2deg);
+  }
+}
+
+/* 9 = the 5 + 4 dash pattern, so the march loops seamlessly. */
+@keyframes hire-empty-march {
+  to {
+    stroke-dashoffset: -18;
   }
 }
 
