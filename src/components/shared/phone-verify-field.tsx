@@ -346,11 +346,13 @@ export function PhoneVerifyField({
           onValueChange={handleCountryChange}
           disabled={disabled || step === "verified"}
         >
-          {/* Sized to the widest code the trigger shows ("+977") plus its
-              chevron. It was 7.5rem, and the trigger is justify-between, so the
-              spare width opened a gap between "+91" and the chevron. Fixed, not
-              w-fit, so the number field doesn't shift when the code changes. */}
-          <SelectTrigger className="w-[5.25rem] shrink-0" aria-label="Country code">
+          {/* No width of its own: the trigger only ever shows a dial code, and
+              it is justify-between, so any fixed width becomes empty space
+              between "+91" and the chevron — 7.5rem originally. The shadcn base
+              class is w-fit, so it now hugs its content and there is no gap to
+              open. The number field beside it is flex-1 and simply takes the
+              rest, shifting a few px between a 3- and 4-digit code. */}
+          <SelectTrigger className="shrink-0" aria-label="Country code">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
