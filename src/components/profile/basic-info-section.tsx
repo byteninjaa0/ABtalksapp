@@ -179,7 +179,9 @@ export function BasicInfoSection({
         <PwField
           label="Phone number"
           required={otpRequired}
-          htmlFor="bi-phone"
+          // Unverified, the input is PhoneVerifyField's own (`phoneNumber`);
+          // this row's label is the only one shown, so it must point there.
+          htmlFor={phoneVerified ? "bi-phone" : "phoneNumber"}
           verified={phoneVerified}
           error={phoneError}
         >
@@ -195,6 +197,9 @@ export function BasicInfoSection({
           ) : (
             <div className="pw-phone-verify">
               <PhoneVerifyField
+                // The row above already says "Phone number"; a second label
+                // doubled it and pushed this input below Full name.
+                hideLabel
                 defaultCountryCode={defaults.countryCode}
                 defaultPhoneNumber={defaults.national}
                 verificationRequired={otpRequired}

@@ -168,6 +168,13 @@ type Props = {
   disabled?: boolean;
   /** When false (local next dev), OTP controls are hidden and the field is allowed to continue. */
   verificationRequired?: boolean;
+  /**
+   * Omit the built-in "Phone Number" label, for callers that already wrap the
+   * field in their own labelled row (the profile's Basic Information). Point
+   * that label at `phoneNumber`, the input's id. Default false: every other
+   * caller keeps the label.
+   */
+  hideLabel?: boolean;
 };
 
 export function PhoneVerifyField({
@@ -178,6 +185,7 @@ export function PhoneVerifyField({
   onVerified,
   disabled,
   verificationRequired = true,
+  hideLabel = false,
 }: Props) {
   const [countryCode, setCountryCode] = useState(defaultCountryCode);
   const [phoneNumber, setPhoneNumber] = useState(defaultPhoneNumber);
@@ -339,7 +347,7 @@ export function PhoneVerifyField({
 
   return (
     <div className="space-y-3">
-      <Label htmlFor="phoneNumber">Phone Number</Label>
+      {hideLabel ? null : <Label htmlFor="phoneNumber">Phone Number</Label>}
       <div className="flex gap-2">
         <Select
           value={countryCode}
