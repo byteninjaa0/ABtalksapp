@@ -67,6 +67,52 @@ suite("callers pass reason, previousState, newState", () => {
   }
 });
 
+suite("admin resume file route is gated, scoped and audited", () => {
+  const src = read("src/app/api/admin/candidates/[id]/resume/route.ts");
+  assert(
+    src.includes("getAdminContext"),
+    "must gate on getAdminContext",
+  );
+  assert(
+    // The call form, not the bare name: the route's header comment explains
+    // why `requireAdmin` is the wrong gate here, and that prose is worth keeping.
+    !src.includes("requireAdmin("),
+    "must not call requireAdmin — it redirects, which answers a denied binary request with an HTML page at 200",
+  );
+  assert(
+    src.includes("getResumeFilePathForAdmin"),
+    "must resolve the blob path server-side from the candidate id",
+  );
+  assert(
+    src.includes("paramsSchema.safeParse(await params)"),
+    "the candidate id must be validated before it is used",
+  );
+  assert(
+    !src.includes("searchParams"),
+    "must not take the candidate from the query string",
+  );
+  assert(
+    !src.includes("_request."),
+    "the request body and headers must not be an input — the only inputs are the session and the validated path param, so no caller can name a blob",
+  );
+  assert(src.includes("writeAudit("), "must write an audit row");
+  assert(
+    src.includes('actionType: "RESUME_FILE_VIEWED"'),
+    "the audit row must name the action",
+  );
+  assert(src.includes("targetUserId:"), "the audit row must name the candidate");
+  assert(src.includes("reason:"), "the audit row must carry a reason");
+  assert(
+    src.indexOf("writeAudit(") < src.indexOf("new NextResponse(file.stream"),
+    "the audit row must be written BEFORE the bytes are streamed",
+  );
+  assert(
+    src.includes('"cache-control": "private, no-store"'),
+    "a private document must never reach a shared cache",
+  );
+  assert(!src.includes("console."), "must not log with console");
+});
+
 if (failed > 0) {
   console.log(`\n${failed} failed, ${passed} passed`);
   process.exit(1);

@@ -383,3 +383,25 @@ export async function getOwnResumeFilePath(
     fileName: row.fileName ?? "resume.pdf",
   };
 }
+
+/**
+ * The same lookup for a candidate the CALLER IS NOT. Deliberately a separate
+ * export rather than a second caller of `getOwnResumeFilePath`, whose name is a
+ * safety claim: that function can only ever be handed a session id, and keeping
+ * it that way is what makes the download route's "no IDOR surface" comment true.
+ *
+ * This one takes an arbitrary id, so it is unsafe by construction and the
+ * authorisation has to happen above it. Its only caller is
+ * `/api/admin/candidates/[id]/resume`, which gates on `getAdminContext` and
+ * writes an audit row before it streams a byte.
+ */
+export async function getResumeFilePathForAdmin(
+  candidateUserId: string,
+): Promise<{ pathname: string; fileName: string } | null> {
+  const row = await getResumeRow(candidateUserId);
+  if (!row?.blobPathname) return null;
+  return {
+    pathname: row.blobPathname,
+    fileName: row.fileName ?? "resume.pdf",
+  };
+}

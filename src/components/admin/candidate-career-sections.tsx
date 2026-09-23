@@ -393,8 +393,36 @@ export function CandidateCareerSections({
             {detail.resume ? (
               <div className="space-y-1 text-sm">
                 <Fact label="Status">{detail.resume.status}</Fact>
-                {detail.resume.fileName ? (
-                  <Fact label="File">{detail.resume.fileName}</Fact>
+                {/* The filename IS the link. It used to be plain text, which
+                    named the document and gave no way to reach it — every
+                    stored résumé is an upload, so that was the whole Resume
+                    block for most candidates.
+
+                    `downloadPath` is the view's "a file is stored" signal, but
+                    its value is the CANDIDATE's own owner-scoped endpoint —
+                    following it as an admin serves your own résumé or a 404.
+                    So it is read as a boolean and the href is the admin route,
+                    which resolves the blob from this id and audits the read.
+
+                    Keyed off `fileName || downloadPath`: the name is nullable
+                    while the file is not, and keying off the name alone left
+                    those résumés with no row and no way in. */}
+                {detail.resume.fileName || detail.resume.downloadPath ? (
+                  <Fact label="File">
+                    {detail.resume.downloadPath ? (
+                      <a
+                        className="inline-flex items-center gap-1 text-[#03535F] underline"
+                        href={`/api/admin/candidates/${account.userId}/resume`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {detail.resume.fileName ?? "Resume file"}{" "}
+                        <ExternalLink className="size-3" />
+                      </a>
+                    ) : (
+                      detail.resume.fileName
+                    )}
+                  </Fact>
                 ) : null}
                 {detail.resume.sourceUrl ? (
                   <Fact label="Source">
