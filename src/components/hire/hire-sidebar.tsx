@@ -169,6 +169,12 @@ export function HireSidebar({
     ? `${account.company}’s Dashboard`
     : "Sign in to save searches";
 
+  /**
+   * Whether a project is actually open. The id in the URL is the authority —
+   * it is what `liveProject` above is validated against. Off-project this whole
+   * band has nothing to say, so it is not rendered at all.
+   */
+  const hasCurrentProject = Boolean(openProjectId);
   const currentLabel = projectName || openProject?.label || "Current Project";
   const searchCount = liveProject?.sessions.length ?? 0;
   const currentMeta = [
@@ -309,20 +315,15 @@ export function HireSidebar({
       </nav>
 
       {/* Current project ------------------------------------------------- */}
+      {/* Only when a project is actually open. Off-project this rendered a
+          heading over an inert card labelled "Current Project" — no meta, no
+          menu, nothing on click. Its "+" is gone too: it opened the same
+          dialog as "New Project" under All projects, which is now always
+          there for a signed-in recruiter. */}
+      {hasCurrentProject && (
       <section className="hire-side__section" aria-label="Current project">
         <div className="hire-side__head">
           <h2 className="hire-side__kicker">Current project</h2>
-          <button
-            type="button"
-            className="hire-side__headbtn"
-            onClick={() =>
-              account ? setNewProjectOpen(true) : requestNewProject()
-            }
-            aria-label="New project"
-            title="New project"
-          >
-            <Plus className="hire-side__headicon" aria-hidden="true" />
-          </button>
         </div>
 
         <div className="hire-side__card">
@@ -409,6 +410,7 @@ export function HireSidebar({
           )}
         </div>
       </section>
+      )}
 
       {/* Recent searches -------------------------------------------------- */}
       {liveProject && (
@@ -567,7 +569,12 @@ export function HireSidebar({
       )}
 
       {/* All projects (unpinned) ------------------------------------------- */}
-      {account && unpinnedInSidebar.length > 0 && (
+      {/* Rendered for every signed-in recruiter, not just one who already has
+          an unpinned project. This "New Project" is now the only one in the
+          sidebar, so gating it on the list being non-empty left a recruiter
+          with no projects — or with every project pinned — no way to start
+          one. */}
+      {account && (
         <section className="hire-side__section" aria-label="All projects">
           <div className="hire-side__head">
             <h2 className="hire-side__kicker">All projects</h2>
@@ -580,6 +587,14 @@ export function HireSidebar({
               New Project
             </button>
           </div>
+
+          {unpinnedInSidebar.length === 0 && (
+            <p className="hire-side__empty">
+              {pinnedInSidebar.length > 0
+                ? "Every project is pinned above."
+                : "No projects yet."}
+            </p>
+          )}
 
           <ul className="hire-side__list">
             {visibleUnpinned.map((p) => {
