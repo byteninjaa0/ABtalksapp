@@ -133,7 +133,7 @@ export const EVENTS: WorkshopEvent[] = [
     desc: "Daily AI tasks across four domains with GitHub and LinkedIn proof of work, streaks, and recruiter discoverability at the finish.",
     host: "ABTalks",
     location: "Online · 60 days",
-    href: "/",
+    href: "/claude-signup",
     ctaLabel: "View challenge",
   },
   {
