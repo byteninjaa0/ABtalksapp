@@ -12252,6 +12252,76 @@ a.hire-profile__ext-link:focus-visible {
   padding-top: 8px;
 }
 
+/* --- Empty stage mark -----------------------------------------------------
+   The pipeline's "nothing here yet" drawing, given a slow idle so an empty
+   column reads as waiting rather than broken. The lens sweeps as though it is
+   still looking, its shadow drifts with it (and shortens at the extremes, as a
+   real one would), and the dashed card behind breathes.
+
+   ~4s and a few pixels on purpose: this sits under a line of muted text that a
+   recruiter reads and moves on from, so it should register at the edge of
+   vision, not compete with the page. `transform-box: fill-box` makes the
+   percentages resolve against each shape rather than the whole SVG canvas.
+
+   Behind `no-preference`, so the mark is simply still for anyone who asked for
+   reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .hire-empty-mark__lens {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hire-empty-lens 4.2s ease-in-out infinite;
+  }
+
+  .hire-empty-mark__shadow {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hire-empty-shadow 4.2s ease-in-out infinite;
+  }
+
+  .hire-empty-mark__ghost {
+    animation: hire-empty-ghost 4.2s ease-in-out infinite;
+  }
+}
+
+@keyframes hire-empty-lens {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  35% {
+    transform: translate(5px, -2px) rotate(5deg);
+  }
+  70% {
+    transform: translate(-3px, 1px) rotate(-4deg);
+  }
+}
+
+@keyframes hire-empty-shadow {
+  0%,
+  100% {
+    transform: translateX(0) scaleX(1);
+    opacity: 1;
+  }
+  35% {
+    transform: translateX(4px) scaleX(0.92);
+    opacity: 0.85;
+  }
+  70% {
+    transform: translateX(-2px) scaleX(0.97);
+    opacity: 0.95;
+  }
+}
+
+@keyframes hire-empty-ghost {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
 /* Opt-out of the 880px measure for pages that are a BOARD or a wide table
    rather than prose.
 
