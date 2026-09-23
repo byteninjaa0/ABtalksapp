@@ -729,6 +729,8 @@ export function ScoutChat({
     }
     // Brief stage: always land on the latest turn.
     shownResultsKey.current = null;
+    const behavior: ScrollBehavior =
+      searched || pending || prefersReducedMotion() ? "auto" : "smooth";
     const frame = window.requestAnimationFrame(() => {
       root.scrollTo({
         top: searched ? 0 : root.scrollHeight,
@@ -736,7 +738,7 @@ export function ScoutChat({
       });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [messages.length, pending, resultsKey, resultsPin, detailsOpen]);
+  }, [messages.length, pending, resultsKey, searched]);
 
   useEffect(() => {
     if (!detailsOpen) return;
