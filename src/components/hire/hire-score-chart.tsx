@@ -1,88 +1,85 @@
-"use client";
-
-import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { PublicScoreSlice } from "@/components/hire/match-card";
 
-const SIZE = 200;
-const CX = 100;
-const CY = 100;
-const R_OUTER = 88;
-const R_INNER = 44;
-const EXPLODE = 5;
-const ROUND = 7;
-
+/**
+ * What each ranking dimension measures, in the order of its default weight.
+ * Every line follows the formula in `features/hire/score-candidate.ts`; change
+ * them together. All seven are scored against the recruiter's current search.
+ */
 const PARAMS: {
   key: keyof PublicScoreSlice;
   label: string;
-  color: { base: string; lift: string; edge: string };
+  source: "ABTalks record" | "Declared";
+  means: string;
 }[] = [
-  { key: "stack", label: "Stack match", color: { base: "#03535F", lift: "#A6D2D5", edge: "#076573" } },
-  { key: "missions", label: "Missions", color: { base: "#AA821D", lift: "#FFEDB0", edge: "#AA821D" } },
-  { key: "cleanPass", label: "First-attempt", color: { base: "#076573", lift: "#D4EBEC", edge: "#03535F" } },
-  { key: "projects", label: "Projects", color: { base: "#03535F", lift: "#A6D2D5", edge: "#03535F" } },
-  { key: "consistency", label: "Commit consistency", color: { base: "#076573", lift: "#D4EBEC", edge: "#03535F" } },
-  { key: "interview", label: "Interview", color: { base: "#D92D20", lift: "#D92D2024", edge: "#D92D20" } },
-  { key: "experience", label: "Experience", color: { base: "#03535F", lift: "#D4EBEC", edge: "#03535F" } },
+  {
+    key: "stack",
+    label: "Stack match",
+    source: "Declared",
+    means:
+      "Skills on their profile against the must-have and nice-to-have skills in this search.",
+  },
+  {
+    key: "missions",
+    label: "Missions",
+    source: "ABTalks record",
+    means:
+      "Coding missions passed, out of the missions available so far in their cohort.",
+  },
+  {
+    key: "cleanPass",
+    label: "First-attempt pass",
+    source: "ABTalks record",
+    means:
+      "Share of passed missions that passed the automated check on the first run.",
+  },
+  {
+    key: "projects",
+    label: "Projects",
+    source: "ABTalks record",
+    means: "Reviewer scores on cohort projects, weighted toward their best one.",
+  },
+  {
+    key: "consistency",
+    label: "Commit consistency",
+    source: "ABTalks record",
+    means:
+      "Days with a GitHub commit, out of the days elapsed in their cohort (last 30 at most).",
+  },
+  {
+    key: "interview",
+    label: "Mock interview",
+    source: "ABTalks record",
+    means:
+      "Average of their mock-interview scores for communication, technical, problem solving and overall.",
+  },
+  {
+    key: "experience",
+    label: "Experience",
+    source: "Declared",
+    means: "How their years of experience fit the range in this search.",
+  },
 ];
 
-function polar(r: number, deg: number) {
-  const rad = ((deg - 90) * Math.PI) / 180;
-  return { x: r * Math.cos(rad), y: r * Math.sin(rad) };
-}
-
-function ringPath(startDeg: number, endDeg: number, rIn: number, rOut: number) {
-  const a = polar(rOut, startDeg);
-  const b = polar(rOut, endDeg);
-  const c = polar(rIn, endDeg);
-  const d = polar(rIn, startDeg);
-  const large = endDeg - startDeg > 180 ? 1 : 0;
-  return (
-    `M${a.x.toFixed(1)},${a.y.toFixed(1)}` +
-    ` A${rOut},${rOut} 0 ${large} 1 ${b.x.toFixed(1)},${b.y.toFixed(1)}` +
-    ` L${c.x.toFixed(1)},${c.y.toFixed(1)}` +
-    ` A${rIn},${rIn} 0 ${large} 0 ${d.x.toFixed(1)},${d.y.toFixed(1)} Z`
-  );
+/** Plain score bands. Nothing here compares the candidate with anyone else. */
+function band(value: number | null, source: string) {
+  if (value === null) return { label: "Not scored", tone: "none" } as const;
+  if (value === 0) {
+    return {
+      label: source === "Declared" ? "No match" : "None on record",
+      tone: "low",
+    } as const;
+  }
+  if (value >= 80) return { label: "Strong", tone: "high" } as const;
+  if (value >= 50) return { label: "Moderate", tone: "mid" } as const;
+  return { label: "Low", tone: "low" } as const;
 }
 
 /**
- * Donut of the seven ranking dimensions. Slice size is share of the combined
- * known score; a missing dimension is listed as "Not scored", never drawn as 0.
+ * One bar per ranking dimension, each on its own 0–100 scale. Null = the pool
+ * has no evidence for it, so it is never drawn; 0 = this candidate has none.
  */
-export function HireScoreChart({
-  scores,
-  total,
-}: {
-  scores: PublicScoreSlice;
-  total: number;
-}) {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [formed, setFormed] = useState(
-    () => typeof IntersectionObserver !== "function",
-  );
-
-  useEffect(() => {
-    const node = rootRef.current;
-    if (!node || typeof IntersectionObserver !== "function") return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const box = entry.rootBounds;
-          const scrolledPast =
-            box && entry.boundingClientRect.bottom < box.top + 40;
-          if (!entry.isIntersecting && !scrolledPast) continue;
-          setFormed(true);
-          io.disconnect();
-        }
-      },
-      { threshold: [0, 0.4] },
-    );
-    io.observe(node);
-    return () => io.disconnect();
-  }, []);
-
-  const rows = PARAMS.map((p) => ({ ...p, value: scores[p.key] }));
-  const known = rows.filter((r) => r.value !== null);
-  if (known.length === 0) {
+export function HireScoreChart({ scores }: { scores: PublicScoreSlice }) {
+  if (PARAMS.every((p) => scores[p.key] === null)) {
     return (
       <p className="hire-detail__p">
         Evaluation scores have not been recorded for this candidate yet.
@@ -90,122 +87,41 @@ export function HireScoreChart({
     );
   }
 
-  const sum = known.reduce((s, r) => s + (r.value ?? 0), 0) || 1;
-  const gap = 1.6;
-  const numbered = rows
-    .map((row, index) => ({ row, index }))
-    .filter(
-      (item): item is { row: (typeof rows)[number] & { value: number }; index: number } =>
-        item.row.value !== null,
-    );
-  const sweeps = numbered.map((item) => (360 * item.row.value) / sum);
-  const slices = numbered.map((item, i) => {
-    const used = sweeps.slice(0, i).reduce((s, n) => s + n, 0);
-    const sweep = sweeps[i]!;
-    const start = used + gap;
-    const end = used + sweep - gap;
-    const mid = (start + end) / 2;
-    const out = polar(1, mid);
-    return {
-      index: item.index,
-      color: item.row.color,
-      start,
-      end,
-      px: out.x * EXPLODE,
-      py: out.y * EXPLODE,
-      ox: out.x,
-      oy: out.y,
-    };
-  });
-
   return (
-    <div ref={rootRef} className={formed ? "hire-pie is-formed" : "hire-pie"}>
-      <svg
-        className="hire-pie__svg"
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
-        role="img"
-        aria-label="Candidate evaluation scores as a donut chart. Exact values out of 100 are listed beside it."
-      >
-        <defs>
-          {slices.map((s) => (
-            <linearGradient
-              key={s.index}
-              id={`hire-clay${s.index}`}
-              x1="12%"
-              y1="0%"
-              x2="88%"
-              y2="100%"
-            >
-              <stop offset="0%" stopColor={s.color.lift} />
-              <stop offset="52%" stopColor={s.color.base} />
-              <stop offset="100%" stopColor={s.color.edge} />
-            </linearGradient>
-          ))}
-        </defs>
-        <g transform={`translate(${CX},${CY})`}>
-          {slices.map((s) => (
-            <g
-              key={s.index}
-              className="hire-pie__slice"
-              style={
-                {
-                  "--i": s.index,
-                  "--tx": `${(s.ox * 34).toFixed(1)}px`,
-                  "--ty": `${(s.oy * 34).toFixed(1)}px`,
-                } as CSSProperties
-              }
-            >
-              <g transform={`translate(${s.px.toFixed(1)},${s.py.toFixed(1)})`}>
-                <path
-                  className="hire-pie__wedge"
-                  d={ringPath(s.start, s.end, R_INNER, R_OUTER)}
-                  fill={`url(#hire-clay${s.index})`}
-                  stroke={`url(#hire-clay${s.index})`}
-                  strokeWidth={ROUND}
-                  strokeLinejoin="round"
-                  paintOrder="stroke fill"
-                />
-                <path
-                  className="hire-pie__gloss"
-                  d={ringPath(s.start, s.end, R_INNER, R_OUTER)}
-                />
-              </g>
-            </g>
-          ))}
-          <circle className="hire-pie__hub" cx="0" cy="0" r={R_INNER - 9} />
-          <text className="hire-pie__hubscore" x="0" y="2" textAnchor="middle">
-            {total}
-          </text>
-          <text className="hire-pie__hubunit" x="0" y="15" textAnchor="middle">
-            OUT OF 100
-          </text>
-        </g>
-      </svg>
-      <ul className="hire-pie__legend">
-        {rows.map((row, index) => (
-          <li
-            key={row.key}
-            className="hire-pie__row"
-            style={
-              {
-                "--i": index,
-                "--clay": row.color.base,
-                "--clay-lift": row.color.lift,
-              } as CSSProperties
-            }
-          >
-            <span className="hire-pie__swatch" aria-hidden="true" />
-            <span className="hire-pie__label">{row.label}</span>
-            {row.value === null ? (
-              <span className="hire-pie__value is-empty">Not scored</span>
-            ) : (
-              <span className="hire-pie__value">
-                <b>{row.value}</b>/100
+    <ul
+      className="hire-scorecard"
+      aria-label="Candidate scores for this search, out of 100"
+    >
+      {PARAMS.map((p) => {
+        const value = scores[p.key];
+        const b = band(value, p.source);
+        return (
+          <li key={p.key} className="hire-scorecard__row" data-tone={b.tone}>
+            <div className="hire-scorecard__head">
+              <span className="hire-scorecard__label">{p.label}</span>
+              <span className="hire-scorecard__source">{p.source}</span>
+              <span className="hire-scorecard__value">
+                {value === null ? (
+                  "Not scored"
+                ) : (
+                  <>
+                    <b>{value}</b>/100 · {b.label}
+                  </>
+                )}
               </span>
+            </div>
+            {value !== null && (
+              <div className="hire-scorecard__track" aria-hidden="true">
+                <span
+                  className="hire-scorecard__fill"
+                  style={{ width: `${value}%` }}
+                />
+              </div>
             )}
+            <p className="hire-scorecard__means">{p.means}</p>
           </li>
-        ))}
-      </ul>
-    </div>
+        );
+      })}
+    </ul>
   );
 }

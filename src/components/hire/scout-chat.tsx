@@ -661,12 +661,12 @@ export function ScoutChat({
       project:
         persist && requestId
           ? {
-              id: requestId,
-              activeSessionId: sessionId,
-              sessions: projectSessions,
-              assessments: projectAssessments,
-              unassignedAssessments,
-            }
+            id: requestId,
+            activeSessionId: sessionId,
+            sessions: projectSessions,
+            assessments: projectAssessments,
+            unassignedAssessments,
+          }
           : null,
     });
   }, [
@@ -704,13 +704,31 @@ export function ScoutChat({
   }, [persist, initialMessages.length, initialRequestId]);
 
   // Results: land on rank 1. Pre-search thread: follow the latest question.
+  // The result set's identity: which search, and who is in it. Triage and
+  // "Hide rejected" don't change it, so deciding on a card never moves the page.
+  const resultsKey = searched
+    ? `${sessionId ?? activeSearchId}|${deskMatches.map((m) => m.candidateRef).join(",")}`
+    : null;
+  const shownResultsKey = useRef<string | null>(null);
+
+  // …until results show; then a new result set opens at the top. Scrolling to
+  // scrollHeight there landed recruiters on the lowest-ranked card.
   useEffect(() => {
     const root = scrollRef.current;
     if (!root) return;
-    // Results snap to rank 1. Smooth-scrolling the list made the cards
-    // travel down the pane; the enter motion is CSS `hire-results-in`.
-    const behavior: ScrollBehavior =
-      searched || pending || prefersReducedMotion() ? "auto" : "smooth";
+    // Results: a list read top-down. Open a NEW result set at #1; leave every
+    // other re-render alone so closing the inspector can restore the
+    // recruiter's place (closeMatchPanel).
+    if (resultsKey !== null) {
+      if (resultsKey === shownResultsKey.current) return;
+      const frame = window.requestAnimationFrame(() => {
+        shownResultsKey.current = resultsKey;
+        root.scrollTo({ top: 0, behavior: "auto" });
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+    // Brief stage: always land on the latest turn.
+    shownResultsKey.current = null;
     const frame = window.requestAnimationFrame(() => {
       root.scrollTo({
         top: searched ? 0 : root.scrollHeight,
@@ -718,7 +736,7 @@ export function ScoutChat({
       });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [messages.length, pending, searched, deskMatches.length]);
+  }, [messages.length, pending, resultsKey, resultsPin, detailsOpen]);
 
   useEffect(() => {
     if (!detailsOpen) return;
@@ -1336,7 +1354,7 @@ export function ScoutChat({
     : -1;
   const openDecision = openMatch
     ? (deskMatches.find((m) => m.candidateRef === openMatch.candidateRef)
-        ?.decision ?? null)
+      ?.decision ?? null)
     : null;
 
   // The strip shows the five criteria of the results design (Figma 1585:46),
@@ -1438,14 +1456,14 @@ export function ScoutChat({
   const pinned = (r: StageRect | null) =>
     r
       ? ({
-          position: "fixed",
-          top: r.top,
-          left: r.left,
-          width: r.width,
-          margin: 0,
-          zIndex: 5,
-          pointerEvents: "none",
-        } as const)
+        position: "fixed",
+        top: r.top,
+        left: r.left,
+        width: r.width,
+        margin: 0,
+        zIndex: 5,
+        pointerEvents: "none",
+      } as const)
       : undefined;
 
   return (
@@ -1725,127 +1743,127 @@ export function ScoutChat({
             </>
           ) : (
             <>
-          {!talked && (
-            <div className="scout-empty">
-              <button
-                type="button"
-                className="scout-pill"
-                disabled={pending || (persist && !requestId)}
-                onClick={() => runSearch()}
-              >
-                <Search className="size-3" />
-                Search with what I have
-              </button>
-              <p>
-                Answer the rest for a sharper ranking — I&apos;ll search
-                when we have enough to go on.
-              </p>
-            </div>
-          )}
-
-          <div className="scout-thread">
-              {messages.map((m, i) => {
-                const isLastAsk =
-                  askOpen && i === lastIndex && m.role === "assistant";
-                return (
-                  <Fragment key={`${m.role}-${i}`}>
-                  <div
-                    className={cn(
-                      "scout-turn",
-                      m.role === "user" && "scout-turn--user",
-                    )}
+              {!talked && (
+                <div className="scout-empty">
+                  <button
+                    type="button"
+                    className="scout-pill"
+                    disabled={pending || (persist && !requestId)}
+                    onClick={() => runSearch()}
                   >
-                    {m.role === "assistant" && (
-                      // `scout-mark--id` gives this the header's identity:
-                      // same Sparkles, same solid orange plate. Plain
-                      // `scout-mark` is the shared geometry, still used by the
-                      // user's "You" chip and by the loader core.
-                      <span className="scout-mark scout-mark--id">
-                        <Sparkles className="size-3" />
-                      </span>
-                    )}
-                    <div className="scout-turn__body">
-                      <p
-                        className={
-                          m.role === "assistant"
-                            ? "scout-ask__q"
-                            : "scout-turn__text"
-                        }
-                      >
-                        {m.content}
-                      </p>
-                      {isLastAsk && (chips.length > 0 || talked) && (
-                        <div className="scout-follow">
-                          {chips.length > 0 && (
-                            <div className="scout-chips">
-                              {chips.map((o, oi) => (
-                                <button
-                                  key={`${o.value}-${oi}`}
-                                  type="button"
-                                  className={cn(
-                                    "scout-chip",
-                                    o.value === "action:search" &&
-                                      "scout-chip--show",
-                                  )}
-                                  disabled={pending}
-                                  onClick={() => send(o.value, chipLabel(o))}
-                                >
-                                  {chipLabel(o)}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                          {talked && !searched && (
-                            <p className="scout-follow__hint">
-                              Share more details about the candidate
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    {m.role === "user" && (
-                      <span className="scout-mark">You</span>
-                    )}
-                  </div>
-                  </Fragment>
-                );
-              })}
-
-              {pending && (
-                <div className="scout-turn">
-                  <ScoutLoader />
-                  <p className="scout-turn__text scout-loader__label">
-                    Looking through verified work…
+                    <Search className="size-3" />
+                    Search with what I have
+                  </button>
+                  <p>
+                    Answer the rest for a sharper ranking — I&apos;ll search
+                    when we have enough to go on.
                   </p>
                 </div>
               )}
-              {/* The workspace is on screen before the backend has answered —
+
+              <div className="scout-thread">
+                {messages.map((m, i) => {
+                  const isLastAsk =
+                    askOpen && i === lastIndex && m.role === "assistant";
+                  return (
+                    <Fragment key={`${m.role}-${i}`}>
+                      <div
+                        className={cn(
+                          "scout-turn",
+                          m.role === "user" && "scout-turn--user",
+                        )}
+                      >
+                        {m.role === "assistant" && (
+                          // `scout-mark--id` gives this the header's identity:
+                          // same Sparkles, same solid orange plate. Plain
+                          // `scout-mark` is the shared geometry, still used by the
+                          // user's "You" chip and by the loader core.
+                          <span className="scout-mark scout-mark--id">
+                            <Sparkles className="size-3" />
+                          </span>
+                        )}
+                        <div className="scout-turn__body">
+                          <p
+                            className={
+                              m.role === "assistant"
+                                ? "scout-ask__q"
+                                : "scout-turn__text"
+                            }
+                          >
+                            {m.content}
+                          </p>
+                          {isLastAsk && (chips.length > 0 || talked) && (
+                            <div className="scout-follow">
+                              {chips.length > 0 && (
+                                <div className="scout-chips">
+                                  {chips.map((o, oi) => (
+                                    <button
+                                      key={`${o.value}-${oi}`}
+                                      type="button"
+                                      className={cn(
+                                        "scout-chip",
+                                        o.value === "action:search" &&
+                                        "scout-chip--show",
+                                      )}
+                                      disabled={pending}
+                                      onClick={() => send(o.value, chipLabel(o))}
+                                    >
+                                      {chipLabel(o)}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                              {talked && !searched && (
+                                <p className="scout-follow__hint">
+                                  Share more details about the candidate
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {m.role === "user" && (
+                          <span className="scout-mark">You</span>
+                        )}
+                      </div>
+                    </Fragment>
+                  );
+                })}
+
+                {pending && (
+                  <div className="scout-turn">
+                    <ScoutLoader />
+                    <p className="scout-turn__text scout-loader__label">
+                      Looking through verified work…
+                    </p>
+                  </div>
+                )}
+                {/* The workspace is on screen before the backend has answered —
                   the bar has already arrived. Card-shaped placeholders hold
                   the space the results will take, so they populate into it
                   rather than pushing the layout around. */}
-              {pending && (
-                <div className="hire-skeletons" aria-hidden="true">
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className="hire-skel">
-                      <div className="hire-skel__head">
-                        <span className="hire-skel__avatar" />
-                        <span className="hire-skel__lines">
-                          <span className="hire-skel__line hire-skel__line--name" />
-                          <span className="hire-skel__line hire-skel__line--meta" />
-                        </span>
+                {pending && (
+                  <div className="hire-skeletons" aria-hidden="true">
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="hire-skel">
+                        <div className="hire-skel__head">
+                          <span className="hire-skel__avatar" />
+                          <span className="hire-skel__lines">
+                            <span className="hire-skel__line hire-skel__line--name" />
+                            <span className="hire-skel__line hire-skel__line--meta" />
+                          </span>
+                        </div>
+                        <div className="hire-skel__chips">
+                          {[0, 1, 2, 3, 4].map((c) => (
+                            <span key={c} className="hire-skel__chip" />
+                          ))}
+                        </div>
+                        <span className="hire-skel__summary" />
                       </div>
-                      <div className="hire-skel__chips">
-                        {[0, 1, 2, 3, 4].map((c) => (
-                          <span key={c} className="hire-skel__chip" />
-                        ))}
-                      </div>
-                      <span className="hire-skel__summary" />
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div ref={bottomRef} className="scout-thread__end" aria-hidden="true" />
-            </div>
+                    ))}
+                  </div>
+                )}
+                <div ref={bottomRef} className="scout-thread__end" aria-hidden="true" />
+              </div>
             </>
           )}
         </div>
@@ -1937,30 +1955,30 @@ export function ScoutChat({
             </button>
           </div>
           {hero && (
-          <div className="scout-criteria-slot is-open">
-            <div className="scout-criteria-slot__clip">
-              <ul
-                className="scout-criteria"
-                aria-label="Requirements"
-                ref={criteriaRef}
-              >
-                {stripItems.map((c) => (
-                  <li
-                    key={c.key}
-                    className={cn("scout-criterion", c.on && "is-on")}
-                  >
-                    {/* The tick is drawn for every item so the row does not
+            <div className="scout-criteria-slot is-open">
+              <div className="scout-criteria-slot__clip">
+                <ul
+                  className="scout-criteria"
+                  aria-label="Requirements"
+                  ref={criteriaRef}
+                >
+                  {stripItems.map((c) => (
+                    <li
+                      key={c.key}
+                      className={cn("scout-criterion", c.on && "is-on")}
+                    >
+                      {/* The tick is drawn for every item so the row does not
                         re-measure when one turns on; `.scout-criterion` already
                         carries the muted colour and `.is-on` the green. */}
-                    <span className="scout-criterion__box" aria-hidden="true">
-                      ✓
-                    </span>
-                    <span>{c.key}</span>
-                  </li>
-                ))}
-              </ul>
+                      <span className="scout-criterion__box" aria-hidden="true">
+                        ✓
+                      </span>
+                      <span>{c.key}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
           )}
         </form>
 
@@ -1976,7 +1994,7 @@ export function ScoutChat({
           ) : heroGhost?.below ? (
             <RecruiterSearchSuggestions
               pending
-              onPick={() => {}}
+              onPick={() => { }}
               leaving
               frozen={pinned(heroGhost.below)}
             />

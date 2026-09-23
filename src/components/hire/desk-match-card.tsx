@@ -199,6 +199,14 @@ export function DeskMatchCard({
   const decision = match.decision ?? "UNDECIDED";
   const rejected = decision === "REJECTED";
   const showTriage = Boolean(requestId && match.candidateUserId && onDecision);
+  // The list is ordered tier first, then score. Without both on the card, a 72
+  // listed above an 88 looks random (plan 155).
+  const tierLabel =
+    match.tier === "STRONG"
+      ? "Recommended"
+      : match.tier === "PARTIAL"
+        ? "Partial match"
+        : null;
 
   function pickDecision(next: MatchDecision) {
     if (!onDecision) return;
@@ -397,7 +405,14 @@ export function DeskMatchCard({
                   )}
                 </h3>
                 <OpenToWorkBadge openToWork={match.openToWork} />
-                {rank === 1 && <span className="desk-card__badge">Top match</span>}
+                {rank === 1 && match.tier === "STRONG" && (
+                  <span className="desk-card__badge">Top match</span>
+                )}
+                {!match.isVirtual && (
+                  <span className="desk-card__score" data-tier={match.tier}>
+                    <b>{match.score}</b>/100{tierLabel ? ` · ${tierLabel}` : ""}
+                  </span>
+                )}
               </div>
               {meta.length > 0 && (
                 <ul className="desk-card__meta">

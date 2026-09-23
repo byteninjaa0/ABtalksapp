@@ -82,8 +82,8 @@ const WORK_MODE: Record<string, string> = {
 /** The panel's tabs jump to sections of one scroll, as in the design. */
 const TABS = [
   { id: "overview", label: "Overview" },
-  { id: "experience", label: "Experience" },
   { id: "evidence", label: "ABTalks Evidence" },
+  { id: "experience", label: "Experience" },
   { id: "education", label: "Education" },
   { id: "skills", label: "Skills" },
   { id: "resume", label: "Resume" },
@@ -940,6 +940,69 @@ export function CandidateInspector({
         </section>
 
         <section
+          data-section="evidence"
+          className="hire-profile__section hire-profile__section--ruled"
+          aria-label="ABTalks Evidence"
+        >
+          <h4 className="hire-profile__h">ABTalks Evidence</h4>
+          <div className="hire-profile__org-block">
+            <span className="hire-profile__tile" aria-hidden="true">
+              {monogram("ABTalks")}
+            </span>
+            <div className="hire-profile__org-main">
+              <div>
+                <p className="hire-profile__org-name">Verified work on ABTalks</p>
+                <p className="hire-profile__org-sub">
+                  Completions and placements only
+                </p>
+              </div>
+              {evidenceRoles.length > 0 ? (
+                <ul className="hire-profile__roles">
+                  {evidenceRoles.map((r) => (
+                    <li key={r.key ?? r.title} className="hire-profile__role">
+                      <span
+                        className="hire-profile__timeline"
+                        aria-hidden="true"
+                      />
+                      <div className="hire-profile__role-body">
+                        <div className="hire-profile__role-head">
+                          <p className="hire-profile__role-title">{r.title}</p>
+                          {r.badge && (
+                            <span className="hire-profile__promo">{r.badge}</span>
+                          )}
+                        </div>
+                        <p className="hire-profile__meta">{r.value}</p>
+                        {r.note && <p className="hire-profile__text">{r.note}</p>}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="hire-profile__meta">
+                  {sample
+                    ? "Figures are taken from your requirement, not from a candidate."
+                    : "No completed tracks or placements recorded."}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {!sample && match.scores && (
+            <div className="hire-profile__group">
+              <h4 className="hire-profile__h">How they score for this search</h4>
+              <HireScoreChart scores={match.scores} />
+              <p className="hire-profile__note">
+                Each bar is its own score out of 100, calculated against this
+                search. &ldquo;ABTalks record&rdquo; rows come from work verified
+                on the platform; &ldquo;Declared&rdquo; rows come from the
+                candidate&apos;s profile. Indicative, not a validated
+                psychometric measure.
+              </p>
+            </div>
+          )}
+        </section>
+
+        <section
           data-section="experience"
           className="hire-profile__section hire-profile__section--ruled"
           aria-label="Experience"
@@ -997,55 +1060,6 @@ export function CandidateInspector({
           ) : (
             <p className="hire-profile__meta">No work experience recorded</p>
           )}
-        </section>
-
-        <section
-          data-section="evidence"
-          className="hire-profile__section hire-profile__section--ruled"
-          aria-label="ABTalks Evidence"
-        >
-          <h4 className="hire-profile__h">ABTalks Evidence</h4>
-          <div className="hire-profile__org-block">
-            <span className="hire-profile__tile" aria-hidden="true">
-              {monogram("ABTalks")}
-            </span>
-            <div className="hire-profile__org-main">
-              <div>
-                <p className="hire-profile__org-name">Verified work on ABTalks</p>
-                <p className="hire-profile__org-sub">
-                  Completions and placements only
-                </p>
-              </div>
-              {evidenceRoles.length > 0 ? (
-                <ul className="hire-profile__roles">
-                  {evidenceRoles.map((r) => (
-                    <li key={r.key ?? r.title} className="hire-profile__role">
-                      <span
-                        className="hire-profile__timeline"
-                        aria-hidden="true"
-                      />
-                      <div className="hire-profile__role-body">
-                        <div className="hire-profile__role-head">
-                          <p className="hire-profile__role-title">{r.title}</p>
-                          {r.badge && (
-                            <span className="hire-profile__promo">{r.badge}</span>
-                          )}
-                        </div>
-                        <p className="hire-profile__meta">{r.value}</p>
-                        {r.note && <p className="hire-profile__text">{r.note}</p>}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="hire-profile__meta">
-                  {sample
-                    ? "Figures are taken from your requirement, not from a candidate."
-                    : "No completed tracks or placements recorded."}
-                </p>
-              )}
-            </div>
-          </div>
         </section>
 
         <section className="hire-profile__section hire-profile__section--ruled hire-profile__section--wide">
@@ -1183,19 +1197,6 @@ export function CandidateInspector({
               ? "This is an illustration of the requirement — nobody in the pool matches it yet. Figures above are taken from what you asked for, not from a candidate."
               : coverageLede(match)}
           </p>
-
-          {!sample && match.scores && (
-            <div className="hire-profile__group">
-              <h4 className="hire-profile__h">Candidate parameters</h4>
-              <HireScoreChart scores={match.scores} total={match.score} />
-              <p className="hire-profile__note">
-                Slice size is each parameter&apos;s share of this candidate&apos;s
-                combined score; the exact value out of 100 is listed beside it.
-                Scores are derived from the evidence on record — indicative, not
-                a validated psychometric measure.
-              </p>
-            </div>
-          )}
 
           {platforms.length > 0 && (
             <div className="hire-profile__card">

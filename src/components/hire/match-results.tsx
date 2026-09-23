@@ -25,6 +25,29 @@ import { cn } from "@/lib/utils";
  */
 const INITIAL_VISIBLE = 1;
 
+/**
+ * The desk list's tier groups, in the server's listing order (tier first, then
+ * score — `rankCandidates`). Labelling them is what explains a Partial 88
+ * sitting below a Recommended 72; the order itself is never changed here.
+ */
+const DESK_GROUPS = [
+  {
+    tier: "STRONG",
+    title: "Recommended",
+    note: "Proven work on ABTalks and a fit for this search. Highest score first.",
+  },
+  {
+    tier: "PARTIAL",
+    title: "Partial match",
+    note: "Fits on paper, with less verified work or something you asked for missing. Can score higher than a Recommended candidate; listed below them because the evidence is thinner.",
+  },
+  {
+    tier: "NONE",
+    title: "Also in the pool",
+    note: "Shown because fewer than five people matched well.",
+  },
+] as const;
+
 export function MatchResults({
   matches,
   cartCount,
@@ -75,6 +98,38 @@ export function MatchResults({
   const hidden = matches.length - visible.length;
   const showSamples = matches.length === 0 && (samples?.length ?? 0) > 0;
 
+  // Rank runs 1…N across groups. An unknown tier falls into the last group so
+  // no card can disappear.
+  const ranked = visible.map((m, i) => ({ m, rank: i + 1 }));
+  const deskGroups = DESK_GROUPS.map((g) => ({
+    ...g,
+    items: ranked.filter(({ m }) =>
+      g.tier === "NONE"
+        ? m.tier !== "STRONG" && m.tier !== "PARTIAL"
+        : m.tier === g.tier,
+    ),
+  })).filter((g) => g.items.length > 0);
+
+  function deskItem(m: MatchCardData & Partial<MatchTriage>, rank: number) {
+    return (
+      <li key={m.candidateRef}>
+        <DeskMatchCard
+          match={m}
+          rank={rank}
+          selected={selectedRef === m.candidateRef}
+          onOpen={() => onOpen?.(m)}
+          onDecision={
+            onDecision ? (decision) => onDecision(m, decision) : undefined
+          }
+          requestId={requestId}
+          onCartToggle={(inCart) =>
+            setCount((c) => Math.max(0, c + (inCart ? 1 : -1)))
+          }
+        />
+      </li>
+    );
+  }
+
   return (
     <div className={desk ? "scout-results" : "space-y-4"}>
       {showSamples && samples!.some((m) => m.isVirtual) && sampleDemand?.spec && (
@@ -113,33 +168,42 @@ export function MatchResults({
         </div>
       )}
 
-      {visible.length > 0 && (
-        <ul className={desk ? "scout-results" : "space-y-4"}>
+      {/* One tier: a heading over an unsplit list is noise, so none. */}
+      {desk && deskGroups.length === 1 && (
+        <ul className="scout-results">
+          {ranked.map(({ m, rank }) => deskItem(m, rank))}
+        </ul>
+      )}
+
+      {desk &&
+        deskGroups.length > 1 &&
+        deskGroups.map((g) => (
+          <section
+            key={g.tier}
+            className="scout-results__group"
+            aria-labelledby={`scout-group-${g.tier}`}
+          >
+            <h3 id={`scout-group-${g.tier}`} className="scout-results__group-h">
+              {g.title} <small>· {g.items.length}</small>
+            </h3>
+            <p className="scout-results__group-note">{g.note}</p>
+            <ul className="scout-results">
+              {g.items.map(({ m, rank }) => deskItem(m, rank))}
+            </ul>
+          </section>
+        ))}
+
+      {!desk && visible.length > 0 && (
+        <ul className="space-y-4">
           {visible.map((m, i) => (
             <li key={m.candidateRef}>
-              {desk ? (
-                <DeskMatchCard
-                  match={m}
-                  rank={i + 1}
-                  selected={selectedRef === m.candidateRef}
-                  onOpen={() => onOpen?.(m)}
-                  onDecision={
-                    onDecision ? (decision) => onDecision(m, decision) : undefined
-                  }
-                  requestId={requestId}
-                  onCartToggle={(inCart) =>
-                    setCount((c) => Math.max(0, c + (inCart ? 1 : -1)))
-                  }
-                />
-              ) : (
-                <MatchCard
-                  match={m}
-                  rank={i + 1}
-                  onCartToggle={(inCart) =>
-                    setCount((c) => Math.max(0, c + (inCart ? 1 : -1)))
-                  }
-                />
-              )}
+              <MatchCard
+                match={m}
+                rank={i + 1}
+                onCartToggle={(inCart) =>
+                  setCount((c) => Math.max(0, c + (inCart ? 1 : -1)))
+                }
+              />
             </li>
           ))}
         </ul>
