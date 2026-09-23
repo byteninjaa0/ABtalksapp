@@ -8224,13 +8224,32 @@ a.hire-assess-action {
   max-height: calc(100% - 36px);
   margin: 36px 31px 0 0;
   padding: 18px 14px 14px;
-  overflow-y: auto;
+  /* The card itself never scrolls — .hire-side__scroll does, so the footer
+     (Settings, Support, the account row) stays pinned to the bottom however
+     many projects the list above it holds. */
+  overflow: hidden;
   border-radius: 16px;
   background: #ffffff;
   box-shadow:
     0 1px 2px rgba(16, 24, 40, 0.04),
     0 8px 24px rgba(16, 24, 40, 0.06);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Everything above the footer. Same 18px rhythm as the card, so spacing is
+   unchanged; it takes the height left over by the footer and scrolls within
+   it. The negative inline margin runs the region out to the card's edge, so
+   the scrollbar sits where it always did and edge focus rings are not
+   clipped by the overflow. */
+.hire-side__scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-inline: -14px;
+  padding-inline: 14px;
+  overflow-y: auto;
   scrollbar-width: thin;
 }
 
@@ -8661,6 +8680,7 @@ a.hire-assess-action {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: none;
   margin-top: auto;
   padding-top: 4px;
 }
