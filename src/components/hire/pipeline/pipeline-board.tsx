@@ -242,6 +242,11 @@ function EmptyIllustration() {
       aria-hidden="true"
       className="hire-empty-mark opacity-70"
     >
+      <defs>
+        <clipPath id="hire-empty-lens-clip">
+          <circle cx="40" cy="62" r="11" />
+        </clipPath>
+      </defs>
       <rect
         className="hire-empty-mark__ghost"
         x="16.5"
@@ -280,6 +285,20 @@ function EmptyIllustration() {
       {/* Lens last so it sweeps over the cards rather than under them. */}
       <g className="hire-empty-mark__lens">
         <circle cx="40" cy="62" r="12" fill="#fff" stroke="#6b7a82" strokeWidth="2.5" />
+        {/* A light travelling across the glass, clipped to it. Tilted by the
+            wrapping <g> so the CSS transform is free to do the travelling. */}
+        <g clipPath="url(#hire-empty-lens-clip)">
+          <g transform="rotate(22 40 62)">
+            <rect
+              className="hire-empty-mark__glint"
+              x="30"
+              y="48"
+              width="5"
+              height="28"
+              fill="#ffffff"
+            />
+          </g>
+        </g>
         <path d="M49 71l7 7" stroke="#6b7a82" strokeWidth="3" strokeLinecap="round" />
       </g>
     </svg>
