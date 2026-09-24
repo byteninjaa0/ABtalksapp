@@ -847,7 +847,15 @@
    ========================================================= */
 .abtalks-landing .keep {
   background: #FFFFFF;
-  --lp-keep-track: 460vh;
+  /* 240vh, down from 460.
+     The track is the scroll distance; the pin sits still inside it while the
+     three pipeline stages advance. At 460vh the travel was ~360vh, so a stage
+     cost ~105vh — about a full turn of the wheel each, three times over, to
+     read three short paragraphs. It was also the longest track on the page
+     while having the fewest moving parts: `bridge` runs 340vh and `how` 320vh.
+     240vh puts a stage at ~41vh, which still gives each one a beat without
+     holding the reader in place. */
+  --lp-keep-track: 240vh;
   --lp-tighten-above: 88px;
   margin-top: calc(var(--lp-tighten-above) * -1);
   position: relative; z-index: 1;
@@ -1357,7 +1365,7 @@
 
   .abtalks-landing .bridge { --lp-bridge-track: 300vh; }
   .abtalks-landing .how    { --lp-how-track: 280vh; --lp-face-h: 460px; }
-  .abtalks-landing .keep   { --lp-keep-track: 400vh; }
+  .abtalks-landing .keep   { --lp-keep-track: 220vh; }
 
   /* Single-column pins leave far less empty band below their content, so the
      junction overlap is scaled back to stay clear of it. */
@@ -1638,7 +1646,7 @@
   .abtalks-landing .roller__dots { margin-top: var(--lp-space-20); }
 
   /* ---------- KEEP THE THREE ---------- */
-  .abtalks-landing .keep { --lp-keep-track: 320vh; }
+  .abtalks-landing .keep { --lp-keep-track: 190vh; }
   .abtalks-landing .keep__grid { gap: var(--lp-space-24); }
   .abtalks-landing .keep__text .h2 { margin-bottom: var(--lp-space-12); }
   .abtalks-landing .pipeline { margin-top: var(--lp-space-16); gap: var(--lp-space-8); }
