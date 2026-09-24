@@ -16,7 +16,7 @@ import {
   PwInput,
   PwMonthYear,
   PwRow,
-  PwSelect,
+  PwMenuSelect,
   PwTags,
   PwTogglePanel,
 } from "./wizard-fields";
@@ -139,18 +139,14 @@ export function PreferencesSection({
             control={control}
             name="remotePreference"
             render={({ field }) => (
-              <PwSelect
+              <PwMenuSelect
                 id="pref-mode"
-                value={field.value}
-                onChange={(e) => field.onChange(e.target.value)}
-              >
-                <option value="">Select</option>
-                {WORK_MODES.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </PwSelect>
+                aria-label="Work mode"
+                placeholder="Select"
+                value={field.value ?? ""}
+                options={WORK_MODES}
+                onChange={field.onChange}
+              />
             )}
           />
         </PwField>
