@@ -12229,7 +12229,18 @@ a.hire-profile__ext-link:focus-visible {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   white-space: nowrap;
+  /* One ink for all nine, so the row reads as a single label set. It sat in a
+     per-step array before, white on the dark half and near-black on the pale
+     half, which looked like two font weights (issue #551). */
+  color: #ffffff;
   transition: filter 120ms ease;
+  /* DS clay moulding. `clip-path` crops the left and right edges of a shadow,
+     and the outer drop shadow with them — but the top and bottom edges of the
+     chevron are flat, so the inset highlight and the inset underside both
+     survive the clip and give the step its material. */
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.14),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.26);
   /* Arrow on the right, matching notch on the left, so the steps read as a
      flow even with a gap between them. */
   clip-path: polygon(
@@ -12263,13 +12274,28 @@ a.hire-profile__ext-link:focus-visible {
   outline-offset: 2px;
 }
 
-/* Selection cannot be a ring or a box-shadow: `clip-path` crops both. A child
-   bar is inside the clip, so it survives and follows the chevron's edges. */
+/* The selected step is pressed deeper than its neighbours — the clay gradient
+   comes from the component, this is the moulding that sells it. */
+.hire-pipe-step[aria-current="true"] {
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.42);
+}
+
+.hire-pipe-step[aria-current="true"]:hover {
+  filter: brightness(1.04);
+}
+
+/* Selection cannot be a ring or an outer box-shadow: `clip-path` crops both. A
+   child bar is inside the clip, so it survives and follows the chevron's edges.
+   It used to be black at 38%, which vanished into the dark end of the ramp and
+   left the current stage unmarked; a bright underline reads against every fill
+   the rail can take. */
 .hire-pipe-step__bar {
   position: absolute;
   inset: auto 0 0 0;
   height: 4px;
-  background: rgba(0, 0, 0, 0.38);
+  background: #7fd4de;
 }
 
 .hire-pipe-step__n {
@@ -12283,6 +12309,8 @@ a.hire-profile__ext-link:focus-visible {
   background: rgba(255, 255, 255, 0.85);
   color: #0f2b31;
   font-size: 10.5px;
+  /* Same 700 as the label beside it — the count is part of the step, not a
+     second tier of type. */
   font-weight: 700;
   letter-spacing: 0;
 }
