@@ -13,7 +13,7 @@ export const DASHBOARD_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What are Synergy points?",
-    a: "Synergy points reward community participation — referrals, workshop attendance, and other platform activity. You can redeem them in the Marketplace for rewards and perks.",
+    a: "Synergy points reward community participation: referrals, workshop attendance, and other platform activity. You can redeem them in the Marketplace for rewards and perks.",
   },
   {
     q: "When do I get a certificate?",
@@ -21,7 +21,7 @@ export const DASHBOARD_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Can I join another track?",
-    a: "You can explore other tracks from the Roadmaps section on your dashboard. Each track has its own 60-day journey — browse available challenges and follow the join flow for the track you want.",
+    a: "You can explore other tracks from the Roadmaps section on your dashboard. Each track has its own 60-day journey. Browse available challenges and follow the join flow for the track you want.",
   },
   {
     q: "How do I contact support?",
