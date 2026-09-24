@@ -85,7 +85,7 @@ export function HackathonShell({
           </button>
 
           <div className="ab-header__right">
-            <Link className="ab-header__link" href="/events">
+            <Link className="ab-header__link" href="/workshop/events">
               <svg viewBox="0 0 24 24" aria-hidden>
                 <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
                 <path d="M3.5 9.5h17M8 3.5V6M16 3.5V6" />

@@ -88,6 +88,12 @@ const nextConfig: NextConfig = {
         destination: "/workshop/:path*",
         permanent: true,
       },
+      // Events live at /workshop/events; /events and /event were never routes
+      // but are what people type and share. Temporary (307) on purpose — a 308
+      // is cached by browsers indefinitely and would shadow a real /events page
+      // if one is ever built.
+      { source: "/events", destination: "/workshop/events", permanent: false },
+      { source: "/event", destination: "/workshop/events", permanent: false },
     ];
   },
 };
