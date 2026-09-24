@@ -1,9 +1,18 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatInTimeZone } from "date-fns-tz";
 import { IST } from "@/lib/date-utils";
-import { EVENTS } from "@/components/workshop/events-data";
+import {
+  EVENTS,
+  hasReplay,
+  pastEvents,
+  type WorkshopEvent,
+} from "@/components/workshop/events-data";
+import WorkshopDetailsModal from "@/components/workshop/WorkshopDetailsModal";
+import WorkshopThemeStyles from "@/components/workshop/WorkshopThemeStyles";
 import {
   HUB_CARD_CTA_CLASS,
   HUB_CARD_HOVER_CLASS,
@@ -20,9 +29,9 @@ export function EventsSection() {
   const upcoming = EVENTS.filter((e) => e.date >= today).sort((a, b) =>
     a.date.localeCompare(b.date),
   );
-  const past = EVENTS.filter((e) => e.date < today).sort((a, b) =>
-    b.date.localeCompare(a.date),
-  );
+  // `pastEvents` is the same filter-and-sort this used to do inline, and it is
+  // the definition `hasReplay` below is built on — one rule for "past", not two.
+  const past = pastEvents(today);
 
   return (
     <section id="events" className="scroll-mt-20 px-4 py-8 sm:px-6 lg:ml-5">
@@ -34,50 +43,363 @@ export function EventsSection() {
         <EventRail title="Upcoming events" events={upcoming} />
       ) : null}
 
-      {past.length > 0 ? (
-        <EventRail title="Past events" events={past} past />
-      ) : null}
+      {past.length > 0 ? <PastEventsRail events={past} today={today} /> : null}
     </section>
+  );
+}
+
+/** Gap between cards, in px. Must track the `gap-5` on the rows below — the
+ *  arrow step is computed from it and cannot read a Tailwind class. */
+const CARD_GAP = 20;
+
+/**
+ * Past card shell. `overflow-hidden` so the hover sheen is clipped to the
+ * rounded corner.
+ *
+ * The width is a share of the rail rather than a fixed size, so a page holds
+ * a whole number of cards and none is left sticking out past the edge — a
+ * sliver of a fifth card reads as a rendering fault, not as an invitation to
+ * scroll. `cqw` is the scroller's own inline size (it carries
+ * `container-type: inline-size`), and each step subtracts the gaps: two cards
+ * share one 1rem gap, three share two.
+ *
+ * Phones keep a fixed width and swipe, because a third of a phone is not a
+ * card.
+ */
+const CARD_BASE =
+  "group relative isolate flex w-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E0E0E0] bg-gradient-to-b from-white to-[#FBFDFD] p-6 text-left sm:w-[calc((100cqw-1.25rem)/2)] lg:w-[calc((100cqw-2.5rem)/3)]";
+
+/**
+ * Hover and focus, for the two clickable branches only.
+ *
+ * Lift, then an aqua hairline and a teal glow spreading under the card. Focus
+ * gets the identical treatment rather than a default outline, so a keyboard
+ * user sees exactly what a mouse user sees.
+ */
+const CARD_INTERACTIVE = [
+  "cursor-pointer transition-[transform,box-shadow,border-color] duration-200 ease-out",
+  "hover:-translate-y-1 hover:border-[#7FD4DE]",
+  "hover:shadow-[0_14px_34px_-10px_rgba(3,83,95,0.38),0_0_0_1px_rgba(127,212,222,0.65)]",
+  "focus-visible:outline-none focus-visible:-translate-y-1 focus-visible:border-[#7FD4DE]",
+  "focus-visible:shadow-[0_14px_34px_-10px_rgba(3,83,95,0.38),0_0_0_1px_rgba(127,212,222,0.65)]",
+  "motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:focus-visible:translate-y-0",
+].join(" ");
+
+const CARD_FOCUS =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#03535F]";
+
+/**
+ * Truncation to N lines, spelled out rather than left to `line-clamp-N`.
+ *
+ * `-webkit-line-clamp` only binds on a `-webkit-box`, and the utility cannot be
+ * relied on to set that display here — which is how the old card ended up with
+ * the clamp declared and ignored, laying four lines out inside a three-line
+ * box. Writing the display explicitly is what makes the clamp take, and the
+ * clamp is what supplies the ellipsis.
+ *
+ * It is still not the thing holding the layout together: the exact `h-*` on
+ * each box is. If the clamp failed again the text could only be cut cleanly at
+ * the box edge, never painted over the line beneath it.
+ */
+function clampStyle(lines: number): CSSProperties {
+  return {
+    display: "-webkit-box",
+    WebkitBoxOrient: "vertical",
+    WebkitLineClamp: lines,
+    overflow: "hidden",
+  };
+}
+
+/**
+ * The gloss. A soft white band, skewed and parked off the left edge, that
+ * sweeps across on hover. `overflow-hidden` on the card clips it to the
+ * corners; `motion-reduce:hidden` removes it entirely rather than leaving a
+ * stationary streak across the card.
+ */
+function CardSheen() {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-y-0 -left-full w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent transition-[left] duration-700 ease-out group-hover:left-full motion-reduce:hidden"
+    />
+  );
+}
+
+/**
+ * Past events as a two-row horizontal shelf.
+ *
+ * This section used to be a grid that grew downward, and it is the one part of
+ * the page with no ceiling — every workshop ever run lands here. Two rows in a
+ * fixed-height rail keeps it skimmable however long the list gets.
+ *
+ * Both rows are children of ONE scroller, which is what makes the arrows move
+ * them together: there is a single `scrollLeft`, so they cannot desync.
+ */
+function PastEventsRail({
+  events,
+  today,
+}: {
+  events: WorkshopEvent[];
+  today: string;
+}) {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  /** The card that opened the modal, so focus goes back where it came from. */
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const [active, setActive] = useState<WorkshopEvent | null>(null);
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(true);
+  const [scrollable, setScrollable] = useState(false);
+
+  const sync = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setScrollable(max > 1);
+    setAtStart(el.scrollLeft <= 0);
+    setAtEnd(el.scrollLeft >= max - 1);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    sync();
+    el.addEventListener("scroll", sync, { passive: true });
+    // Card widths change at `sm`, and the sidebar collapsing re-flows the
+    // column — both change whether there is anything left to scroll.
+    const observer = new ResizeObserver(sync);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener("scroll", sync);
+      observer.disconnect();
+    };
+  }, [sync]);
+
+  function page(direction: -1 | 1) {
+    const el = scrollerRef.current;
+    if (!el) return;
+    // Measure a real card rather than assume the breakpoint, then move whole
+    // columns so a step never leaves a card half out of view.
+    const card = el.querySelector<HTMLElement>("[data-event-card]");
+    const pitch = (card?.getBoundingClientRect().width ?? 280) + CARD_GAP;
+    // `round`, not `floor`. The cards are sized to fill the rail exactly, so
+    // the last column's trailing gap falls outside the viewport and the ratio
+    // lands just under the true count — three columns measure as 2.95 and
+    // `floor` would page by two, leaving the rail half-scrolled.
+    const columns = Math.max(1, Math.round(el.clientWidth / pitch));
+    // `scrollBy` takes the behaviour as an argument, so reduced motion has to
+    // be read here — CSS `scroll-behavior` cannot express it for this call.
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollBy({
+      left: direction * columns * pitch,
+      behavior: reduced ? "auto" : "smooth",
+    });
+  }
+
+  // Row-major, so reading left to right stays chronological: row 1 holds the
+  // newest events in order and row 2 continues from there. Filling by column
+  // instead would put events 1, 3, 5… on top and interleave the order.
+  const mid = Math.ceil(events.length / 2);
+  const rows = [events.slice(0, mid), events.slice(mid)];
+
+  const openModal = useCallback((event: WorkshopEvent, el: HTMLElement) => {
+    triggerRef.current = el;
+    setActive(event);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setActive(null);
+    triggerRef.current?.focus();
+    triggerRef.current = null;
+  }, []);
+
+  return (
+    <div className="mt-8">
+      <h3 className="text-sm font-semibold tracking-wide text-black uppercase">
+        Past events
+      </h3>
+
+      {/* No horizontal padding here. A gutter for the arrows to sit in pushed
+          the whole rail inward and broke the left edge this section shares
+          with Upcoming events above it, so the arrows straddle the rail's own
+          edges instead — mostly outside it, overlapping only each end card's
+          padding rather than its text. */}
+      <div className="relative mt-3">
+        {scrollable && (
+          <>
+            <RailArrow
+              direction={-1}
+              disabled={atStart}
+              onClick={() => page(-1)}
+            />
+            <RailArrow direction={1} disabled={atEnd} onClick={() => page(1)} />
+          </>
+        )}
+        {/* `tabIndex` is not decoration: without it a keyboard user cannot
+            scroll this region at all, because nothing inside it is reachable
+            once the visible cards run out. */}
+        <div
+          ref={scrollerRef}
+          role="region"
+          aria-label="Past events"
+          tabIndex={0}
+          className={cn(
+            // The container the cards size themselves against.
+            "no-scrollbar snap-x overflow-x-auto pt-1 pb-3 [container-type:inline-size]",
+            CARD_FOCUS,
+          )}
+        >
+          <div className="flex w-max flex-col gap-5">
+            {rows.map((row, i) => (
+              <div key={i} className="flex gap-5">
+                {row.map((event) => (
+                  <PastEventCard
+                    key={event.id}
+                    event={event}
+                    today={today}
+                    onOpen={openModal}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* The modal paints entirely from `--wk-*` tokens, which only exist under
+          `.wk-root` and are only shipped by the /workshop routes. Without both
+          of these it renders with no surface, no border and invisible text.
+          Wrapping just the modal keeps the workshop palette off the dashboard's
+          own cards, and the wrapper collapses to zero height when nothing is
+          open, so its `--wk-page-grad` background never paints. */}
+      <div className="wk-root">
+        <WorkshopThemeStyles />
+        <WorkshopDetailsModal event={active} onClose={closeModal} />
+      </div>
+    </div>
+  );
+}
+
+function RailArrow({
+  direction,
+  disabled,
+  onClick,
+}: {
+  direction: -1 | 1;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const Icon = direction === -1 ? ChevronLeft : ChevronRight;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={
+        direction === -1 ? "Scroll past events left" : "Scroll past events right"
+      }
+      className={cn(
+        "absolute top-1/2 z-10 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full lg:flex",
+        // Solid teal, not frosted white. Against the page there is nothing
+        // behind the button to blur, so glass read as a smudge — and a white
+        // face on a near-white page is barely a control at all. This is the DS
+        // clay tile, the same recipe as the sidebar's current item.
+        "bg-[#03535F] text-white",
+        "shadow-[inset_0_-5px_14px_rgba(0,0,0,0.34),inset_0_1px_1px_rgba(255,255,255,0.18),0_6px_18px_rgba(3,83,95,0.30)]",
+        "transition-[background-color,box-shadow,transform] duration-200",
+        "hover:bg-[#076573] hover:shadow-[inset_0_-5px_14px_rgba(0,0,0,0.30),inset_0_1px_1px_rgba(255,255,255,0.22),0_10px_26px_rgba(3,83,95,0.42)]",
+        "active:translate-y-px active:shadow-[inset_0_-3px_10px_rgba(0,0,0,0.42)] motion-reduce:transition-none",
+        // Gone, not dimmed: an arrow over a card is only worth the space it
+        // covers while it can still do something.
+        "disabled:pointer-events-none disabled:opacity-0",
+        direction === -1 ? "-left-3" : "-right-3",
+        CARD_FOCUS,
+      )}
+    >
+      <Icon className="size-[18px]" strokeWidth={2.5} aria-hidden />
+    </button>
+  );
+}
+
+/**
+ * A past card, routed exactly as the calendar routes its tiles — same
+ * `hasReplay` predicate, so the two surfaces cannot drift apart.
+ *
+ * The hover lift only goes on the two branches that actually do something. It
+ * used to go on all of them, which is why a finished workshop looked clickable
+ * and wasn't.
+ */
+function PastEventCard({
+  event,
+  today,
+  onOpen,
+}: {
+  event: WorkshopEvent;
+  today: string;
+  onOpen: (event: WorkshopEvent, el: HTMLElement) => void;
+}) {
+  // Any finished real workshop → the details modal, with or without a recording.
+  if (hasReplay(event, today)) {
+    return (
+      <button
+        type="button"
+        data-event-card
+        aria-label={`${event.title} — view details`}
+        onClick={(e) => onOpen(event, e.currentTarget)}
+        className={cn(CARD_BASE, CARD_INTERACTIVE)}
+      >
+        <CardSheen />
+        <PastEventCardBody event={event} clickable />
+      </button>
+    );
+  }
+
+  // Anything with its own destination — hackathon, cohort, challenge.
+  if (event.href) {
+    const external = event.href.startsWith("http");
+    return (
+      <Link
+        href={event.href}
+        data-event-card
+        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+        className={cn(CARD_BASE, CARD_INTERACTIVE)}
+      >
+        <CardSheen />
+        <PastEventCardBody event={event} clickable />
+      </Link>
+    );
+  }
+
+  // Nothing to open. No lift, no glow, no sheen, no chevron — the card must not
+  // promise a click it cannot honour.
+  return (
+    <article data-event-card className={CARD_BASE}>
+      <PastEventCardBody event={event} clickable={false} />
+    </article>
   );
 }
 
 function EventRail({
   title,
   events,
-  past = false,
 }: {
   title: string;
   events: (typeof EVENTS)[number][];
-  past?: boolean;
 }) {
   return (
-    <div className={cn("mt-6", past && "mt-8")}>
+    <div className="mt-6">
       <h3 className="text-sm font-semibold tracking-wide text-black uppercase">
         {title}
       </h3>
-      <div
-        className={cn(
-          "mt-3 gap-4 pt-1 pb-3",
-          past
-            ? "grid grid-cols-1 items-stretch sm:grid-cols-2 xl:grid-cols-3"
-            : "no-scrollbar flex overflow-x-auto snap-x snap-mandatory 2xl:flex-wrap 2xl:overflow-visible",
-        )}
-      >
+      <div className="no-scrollbar mt-3 flex gap-4 overflow-x-auto pt-1 pb-3 snap-x snap-mandatory 2xl:flex-wrap 2xl:overflow-visible">
         {events.map((event) => (
-          <EventCard key={event.id} event={event} past={past} />
+          <EventCard key={event.id} event={event} />
         ))}
       </div>
     </div>
   );
 }
 
-function EventCard({
-  event,
-  past = false,
-}: {
-  event: (typeof EVENTS)[number];
-  past?: boolean;
-}) {
+function EventCard({ event }: { event: (typeof EVENTS)[number] }) {
   const href =
     event.href ??
     (event.register ? `/workshop/events#${event.id}` : "/workshop/events");
@@ -88,56 +410,109 @@ function EventCard({
       className={cn(
         "flex flex-col rounded-2xl border border-[#E0E0E0] p-5",
         HUB_CARD_HOVER_CLASS,
-        past
-          ? "h-full w-full min-w-0 bg-white"
-          : "w-[280px] shrink-0 snap-start justify-between bg-white shadow-sm sm:w-[300px] 2xl:min-w-[300px] 2xl:max-w-[420px] 2xl:shrink 2xl:grow 2xl:basis-0",
+        "w-[280px] shrink-0 snap-start justify-between bg-white shadow-sm sm:w-[300px] 2xl:min-w-[300px] 2xl:max-w-[420px] 2xl:shrink 2xl:grow 2xl:basis-0",
       )}
     >
-      <div className="min-w-0">
+      <EventCardBody event={event} />
+      <Link
+        href={href}
+        {...(event.href ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+        className={cn(HUB_CARD_CTA_CLASS, "mt-2 self-end")}
+      >
+        {ctaLabel}
+      </Link>
+    </article>
+  );
+}
+
+/** The upcoming card's text block. Unchanged from before the shelf landed. */
+function EventCardBody({ event }: { event: (typeof EVENTS)[number] }) {
+  return (
+    <div className="min-w-0">
+      <h4 className="font-inter text-base font-bold leading-snug text-black">
+        {event.title}
+      </h4>
+      <p className="mt-2 text-xs text-[#4B4B4B]">
+        {event.date} · {event.time}
+      </p>
+      <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-[#4B4B4B]">
+        {event.desc}
+      </p>
+      <p className="mt-3 text-xs text-[#4B4B4B]">{event.location}</p>
+    </div>
+  );
+}
+
+/**
+ * The past card's own text block.
+ *
+ * Every text box here states an explicit height with `overflow-hidden` rather
+ * than trusting `line-clamp`. In this build `line-clamp-3` emits the clamp but
+ * leaves `display: flow-root`, so the clamp is inert — measured, not assumed:
+ * a 4-line description rendered 91px inside a 78px `min-height` box and spilled
+ * its last line over the location underneath. The old 3-column grid was wide
+ * enough that descriptions fitted in 3 lines anyway, which is why the bug only
+ * appeared once the cards narrowed. The clamp classes stay for their ellipsis
+ * where the build does honour them; the heights are what guarantee the layout.
+ *
+ * `leading-6` over `leading-relaxed` for the same reason: 24px lines divide
+ * into the box exactly, where 22.75px left a third line clipped through its
+ * descenders.
+ */
+function PastEventCardBody({
+  event,
+  clickable,
+}: {
+  event: WorkshopEvent;
+  clickable: boolean;
+}) {
+  return (
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      {/* Every text box states an exact height and hides its overflow. The
+          clamp alone was not enough: the old card set `min-height` and trusted
+          `line-clamp-3`, and a four-line description laid out 91px inside a
+          78px minimum and spilled its last line over the location beneath it.
+          An exact height plus `overflow: hidden` cannot do that whatever the
+          clamp does, and it keeps every card in the row the same height. */}
+      <div>
+        <span
+          className="w-fit rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] inline-block"
+          style={{
+            color: event.accent,
+            background: `color-mix(in srgb, ${event.accent} 12%, transparent)`,
+          }}
+        >
+          {event.tag}
+        </span>
+
         <h4
-          className={cn(
-            "font-inter text-base font-bold leading-snug text-black",
-            past && "line-clamp-2 min-h-[2.75rem]",
-          )}
+          className="mt-3 h-12 font-inter text-[17px] font-bold leading-6 text-black"
+          style={clampStyle(2)}
         >
           {event.title}
         </h4>
-        <p
-          className={cn(
-            "mt-2 text-xs text-[#4B4B4B]",
-            past && "line-clamp-1 min-h-4",
-          )}
-        >
+
+        <p className="mt-1.5 truncate text-xs font-medium text-[#6B7477]">
           {event.date} · {event.time}
         </p>
+
         <p
-          className={cn(
-            "mt-3 text-sm leading-relaxed text-[#4B4B4B]",
-            past ? "line-clamp-3 min-h-[4.875rem]" : "line-clamp-3",
-          )}
+          className="mt-3 h-18 text-sm leading-6 text-[#4B4B4B]"
+          style={clampStyle(3)}
         >
           {event.desc}
         </p>
-        <p
-          className={cn(
-            "mt-3 text-xs text-[#4B4B4B]",
-            past && "line-clamp-1 min-h-4",
-          )}
-        >
-          {event.location}
-        </p>
       </div>
-      {past ? null : (
-        <Link
-          href={href}
-          {...(event.href
-            ? { target: "_blank", rel: "noopener noreferrer" }
-            : {})}
-          className={cn(HUB_CARD_CTA_CLASS, "mt-2 self-end")}
-        >
-          {ctaLabel}
-        </Link>
-      )}
-    </article>
+
+      <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+        <span className="truncate text-xs text-[#6B7477]">{event.location}</span>
+        {clickable && (
+          <ChevronRight
+            aria-hidden
+            className="size-4 shrink-0 text-[#03535F] opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none"
+          />
+        )}
+      </div>
+    </div>
   );
 }
