@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatInTimeZone } from "date-fns-tz";
@@ -52,11 +52,68 @@ export function EventsSection() {
  *  arrow step is computed from it and cannot read a Tailwind class. */
 const CARD_GAP = 16;
 
+/**
+ * Past card shell. Wider than the old grid cell and `overflow-hidden` so the
+ * hover sheen is clipped to the rounded corner.
+ */
 const CARD_BASE =
-  "flex w-[280px] shrink-0 snap-start flex-col rounded-2xl border border-[#E0E0E0] bg-white p-5 text-left sm:w-[300px]";
+  "group relative isolate flex w-[300px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E0E0E0] bg-gradient-to-b from-white to-[#FBFDFD] p-6 text-left sm:w-[340px]";
+
+/**
+ * Hover and focus, for the two clickable branches only.
+ *
+ * Lift, then an aqua hairline and a teal glow spreading under the card. Focus
+ * gets the identical treatment rather than a default outline, so a keyboard
+ * user sees exactly what a mouse user sees.
+ */
+const CARD_INTERACTIVE = [
+  "cursor-pointer transition-[transform,box-shadow,border-color] duration-200 ease-out",
+  "hover:-translate-y-1 hover:border-[#7FD4DE]",
+  "hover:shadow-[0_14px_34px_-10px_rgba(3,83,95,0.38),0_0_0_1px_rgba(127,212,222,0.65)]",
+  "focus-visible:outline-none focus-visible:-translate-y-1 focus-visible:border-[#7FD4DE]",
+  "focus-visible:shadow-[0_14px_34px_-10px_rgba(3,83,95,0.38),0_0_0_1px_rgba(127,212,222,0.65)]",
+  "motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:focus-visible:translate-y-0",
+].join(" ");
 
 const CARD_FOCUS =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#03535F]";
+
+/**
+ * Truncation to N lines, spelled out rather than left to `line-clamp-N`.
+ *
+ * `-webkit-line-clamp` only binds on a `-webkit-box`, and the utility cannot be
+ * relied on to set that display here — which is how the old card ended up with
+ * the clamp declared and ignored, laying four lines out inside a three-line
+ * box. Writing the display explicitly is what makes the clamp take, and the
+ * clamp is what supplies the ellipsis.
+ *
+ * It is still not the thing holding the layout together: the exact `h-*` on
+ * each box is. If the clamp failed again the text could only be cut cleanly at
+ * the box edge, never painted over the line beneath it.
+ */
+function clampStyle(lines: number): CSSProperties {
+  return {
+    display: "-webkit-box",
+    WebkitBoxOrient: "vertical",
+    WebkitLineClamp: lines,
+    overflow: "hidden",
+  };
+}
+
+/**
+ * The gloss. A soft white band, skewed and parked off the left edge, that
+ * sweeps across on hover. `overflow-hidden` on the card clips it to the
+ * corners; `motion-reduce:hidden` removes it entirely rather than leaving a
+ * stationary streak across the card.
+ */
+function CardSheen() {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-y-0 -left-full w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent transition-[left] duration-700 ease-out group-hover:left-full motion-reduce:hidden"
+    />
+  );
+}
 
 /**
  * Past events as a two-row horizontal shelf.
@@ -261,8 +318,6 @@ function PastEventCard({
   today: string;
   onOpen: (event: WorkshopEvent, el: HTMLElement) => void;
 }) {
-  const interactive = cn(HUB_CARD_HOVER_CLASS, "cursor-pointer", CARD_FOCUS);
-
   // Any finished real workshop → the details modal, with or without a recording.
   if (hasReplay(event, today)) {
     return (
@@ -271,9 +326,10 @@ function PastEventCard({
         data-event-card
         aria-label={`${event.title} — view details`}
         onClick={(e) => onOpen(event, e.currentTarget)}
-        className={cn(CARD_BASE, interactive)}
+        className={cn(CARD_BASE, CARD_INTERACTIVE)}
       >
-        <EventCardBody event={event} past />
+        <CardSheen />
+        <PastEventCardBody event={event} clickable />
       </button>
     );
   }
@@ -286,17 +342,19 @@ function PastEventCard({
         href={event.href}
         data-event-card
         {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-        className={cn(CARD_BASE, interactive)}
+        className={cn(CARD_BASE, CARD_INTERACTIVE)}
       >
-        <EventCardBody event={event} past />
+        <CardSheen />
+        <PastEventCardBody event={event} clickable />
       </Link>
     );
   }
 
-  // Nothing to open. Deliberately inert, and deliberately without the lift.
+  // Nothing to open. No lift, no glow, no sheen, no chevron — the card must not
+  // promise a click it cannot honour.
   return (
     <article data-event-card className={CARD_BASE}>
-      <EventCardBody event={event} past />
+      <PastEventCardBody event={event} clickable={false} />
     </article>
   );
 }
@@ -348,42 +406,94 @@ function EventCard({ event }: { event: (typeof EVENTS)[number] }) {
   );
 }
 
-/** The card's text block, shared so the past wrapper does not restate it. */
-function EventCardBody({
-  event,
-  past = false,
-}: {
-  event: (typeof EVENTS)[number];
-  past?: boolean;
-}) {
+/** The upcoming card's text block. Unchanged from before the shelf landed. */
+function EventCardBody({ event }: { event: (typeof EVENTS)[number] }) {
   return (
     <div className="min-w-0">
-      <h4
-        className={cn(
-          "font-inter text-base font-bold leading-snug text-black",
-          past && "line-clamp-2 min-h-[2.75rem]",
-        )}
-      >
+      <h4 className="font-inter text-base font-bold leading-snug text-black">
         {event.title}
       </h4>
-      <p
-        className={cn("mt-2 text-xs text-[#4B4B4B]", past && "line-clamp-1 min-h-4")}
-      >
+      <p className="mt-2 text-xs text-[#4B4B4B]">
         {event.date} · {event.time}
       </p>
-      <p
-        className={cn(
-          "mt-3 text-sm leading-relaxed text-[#4B4B4B]",
-          past ? "line-clamp-3 min-h-[4.875rem]" : "line-clamp-3",
-        )}
-      >
+      <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-[#4B4B4B]">
         {event.desc}
       </p>
-      <p
-        className={cn("mt-3 text-xs text-[#4B4B4B]", past && "line-clamp-1 min-h-4")}
-      >
-        {event.location}
-      </p>
+      <p className="mt-3 text-xs text-[#4B4B4B]">{event.location}</p>
+    </div>
+  );
+}
+
+/**
+ * The past card's own text block.
+ *
+ * Every text box here states an explicit height with `overflow-hidden` rather
+ * than trusting `line-clamp`. In this build `line-clamp-3` emits the clamp but
+ * leaves `display: flow-root`, so the clamp is inert — measured, not assumed:
+ * a 4-line description rendered 91px inside a 78px `min-height` box and spilled
+ * its last line over the location underneath. The old 3-column grid was wide
+ * enough that descriptions fitted in 3 lines anyway, which is why the bug only
+ * appeared once the cards narrowed. The clamp classes stay for their ellipsis
+ * where the build does honour them; the heights are what guarantee the layout.
+ *
+ * `leading-6` over `leading-relaxed` for the same reason: 24px lines divide
+ * into the box exactly, where 22.75px left a third line clipped through its
+ * descenders.
+ */
+function PastEventCardBody({
+  event,
+  clickable,
+}: {
+  event: WorkshopEvent;
+  clickable: boolean;
+}) {
+  return (
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      {/* Every text box states an exact height and hides its overflow. The
+          clamp alone was not enough: the old card set `min-height` and trusted
+          `line-clamp-3`, and a four-line description laid out 91px inside a
+          78px minimum and spilled its last line over the location beneath it.
+          An exact height plus `overflow: hidden` cannot do that whatever the
+          clamp does, and it keeps every card in the row the same height. */}
+      <div>
+        <span
+          className="w-fit rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] inline-block"
+          style={{
+            color: event.accent,
+            background: `color-mix(in srgb, ${event.accent} 12%, transparent)`,
+          }}
+        >
+          {event.tag}
+        </span>
+
+        <h4
+          className="mt-3 h-12 font-inter text-[17px] font-bold leading-6 text-black"
+          style={clampStyle(2)}
+        >
+          {event.title}
+        </h4>
+
+        <p className="mt-1.5 truncate text-xs font-medium text-[#6B7477]">
+          {event.date} · {event.time}
+        </p>
+
+        <p
+          className="mt-3 h-18 text-sm leading-6 text-[#4B4B4B]"
+          style={clampStyle(3)}
+        >
+          {event.desc}
+        </p>
+      </div>
+
+      <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+        <span className="truncate text-xs text-[#6B7477]">{event.location}</span>
+        {clickable && (
+          <ChevronRight
+            aria-hidden
+            className="size-4 shrink-0 text-[#03535F] opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none"
+          />
+        )}
+      </div>
     </div>
   );
 }
