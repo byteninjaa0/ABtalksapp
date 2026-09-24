@@ -1760,14 +1760,35 @@ body.pw-sheet-open .abt-content-scroll {
   overflow-y: auto;
   background: #ffffff;
   color: var(--pw-navy);
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  /* Joined to the field, not floating under it. The component anchors this
+     list at a -1px gap so this border lands on the field's bottom border, and
+     it borrows the field's open border colour so the pair reads as one shape.
+     The corners that meet the field are square; only the far end is rounded,
+     and which end that is depends on which way the menu opened. */
+  border: 1px solid var(--pw-field-active-border);
   box-shadow: var(--pw-shadow-float);
   color-scheme: light;
-  transform-origin: top center;
-  animation: pw-pickOpen 0.16s cubic-bezier(0.2, 0.9, 0.3, 1) both;
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+.pw-menu-select-list[data-placement="down"] {
+  border-radius: 0 0 8px 8px;
+  transform-origin: top center;
+  animation: pw-selectDrop 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.pw-menu-select-list[data-placement="up"] {
+  border-radius: 8px 8px 0 0;
+  transform-origin: bottom center;
+  animation: pw-selectRise 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* The field's own corners open up to meet it. */
+.pw-menu-select.pw-open-down .pw-menu-select-trigger {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.pw-menu-select.pw-open-up .pw-menu-select-trigger {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 .pw-menu-select-list::-webkit-scrollbar {
   width: 0;
@@ -1782,6 +1803,39 @@ body.pw-sheet-open .abt-content-scroll {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* The menu unrolls out of the field rather than fading in beside it. `clip-path`
+   rather than a height or a scale: height cannot be animated from `auto`, and a
+   scale would squash the text on the way down. The `round` keeps the far corners
+   while the reveal runs, so the radius does not pop in at the end. */
+@keyframes pw-selectDrop {
+  from {
+    opacity: 0.6;
+    clip-path: inset(0 0 100% 0 round 0 0 8px 8px);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round 0 0 8px 8px);
+  }
+}
+
+@keyframes pw-selectRise {
+  from {
+    opacity: 0.6;
+    clip-path: inset(100% 0 0 0 round 8px 8px 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round 8px 8px 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pw-menu-select-list[data-placement="down"],
+  .pw-menu-select-list[data-placement="up"] {
+    animation: none;
   }
 }
 .pw-menu-select-option {
