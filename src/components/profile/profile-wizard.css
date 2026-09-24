@@ -2738,6 +2738,126 @@ body.pw-sheet-open .abt-content-scroll {
   flex-direction: column;
   min-height: 0;
 }
+/* --- A saved additional link, collapsed -----------------------------------
+   Issue #470. A saved link used to keep its editor mounted: Type, Label and
+   URL, three rows deep, forever. One read-only line says the same thing, and
+   the editor comes back on Edit.
+
+   The box deliberately borrows the field chrome above it — 48px tall, 8px
+   radius, the same border and white face as `.pw-field input` — because the
+   link sits in the same column as LinkedIn, GitHub and Portfolio and a
+   different shape there reads as a mistake rather than as a different state. */
+.pw-field-linked .pw-link-saved {
+  grid-column: 2;
+}
+
+.pw-link-saved {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  /* Explicit, so the 1px border lands inside the 48px like the input's does
+     rather than making this box two pixels taller than its neighbours. */
+  box-sizing: border-box;
+  height: 48px;
+  padding: 0 8px 0 16px;
+  border: 1px solid var(--pw-field-border);
+  border-radius: 8px;
+  background-color: var(--pw-field-white);
+}
+
+/* `min-width: 0` on a flex child is what lets it shrink far enough to
+   ellipsis; without it a long URL pushes the buttons off the row. */
+.pw-link-saved__url {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  color: var(--pw-primary);
+  text-decoration: underline;
+}
+
+.pw-link-saved__actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pw-link-action {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pw-primary);
+  cursor: pointer;
+}
+
+.pw-link-action:hover {
+  background: var(--pw-primary-tint);
+}
+
+.pw-link-action--danger {
+  color: #a12b2b;
+}
+
+.pw-link-action--danger:hover {
+  background: #fbeaea;
+}
+
+.pw-link-action:focus-visible {
+  outline: 2px solid var(--pw-primary);
+  outline-offset: 2px;
+}
+
+/* Closes the editor a saved row was reopened into. */
+.pw-link-editrow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.pw-link-done {
+  padding: 6px 14px;
+  border: 1px solid var(--pw-field-border);
+  border-radius: 8px;
+  background: var(--pw-field-white);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pw-primary);
+  cursor: pointer;
+}
+
+.pw-link-done:hover {
+  border-color: var(--pw-field-active-border);
+  background: var(--pw-primary-tint);
+}
+
+/* Below this the URL and the buttons stop sharing a 48px line. */
+@media (max-width: 560px) {
+  .pw-link-saved {
+    height: auto;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 10px 12px;
+  }
+
+  .pw-link-saved__url {
+    flex-basis: 100%;
+    font-size: 15px;
+  }
+
+  .pw-link-saved__actions {
+    margin-left: auto;
+  }
+}
+
 .pw-entry {
   position: relative;
 }

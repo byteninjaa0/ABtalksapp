@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { CandidateLinkType } from "@prisma/client";
 import { saveLinksAction } from "@/app/actions/candidate-profile-actions";
@@ -50,6 +50,15 @@ function CodeIcon() {
   );
 }
 
+function LinkIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  );
+}
+
 function GlobeIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden>
@@ -60,12 +69,89 @@ function GlobeIcon() {
   );
 }
 
+/**
+ * A saved additional link, read-only.
+ *
+ * Built from `PwField` with an icon and a label, exactly like the LinkedIn,
+ * GitHub and Portfolio fields above it — the link's own name becomes the
+ * label and its URL sits in a box that matches an input's 48px height, 8px
+ * radius and border. A first pass gave this its own compact pill, which was
+ * tidier in isolation and read as the odd one out in the group.
+ *
+ * Before any of it, a saved link kept its editor mounted forever: a Type
+ * dropdown, a Label box and a URL box, three rows deep, for a fact that is one
+ * line long (issue #470). The data was always being stored correctly — this
+ * was only ever how it was shown.
+ */
+function SavedLink({
+  name,
+  url,
+  onEdit,
+  onRemove,
+}: {
+  name: string;
+  url: string;
+  onEdit: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <PwRow cols={1}>
+      <PwField label={name} icon={<LinkIcon />}>
+        <div className="pw-link-saved">
+          {/* The href is whatever the candidate typed, so it opens in a new
+              tab with `noreferrer` rather than navigating in place. */}
+          <a
+            className="pw-link-saved__url"
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={url}
+          >
+            {url}
+          </a>
+          <span className="pw-link-saved__actions">
+            <button type="button" className="pw-link-action" onClick={onEdit}>
+              Edit
+            </button>
+            <button
+              type="button"
+              className="pw-link-action pw-link-action--danger"
+              onClick={onRemove}
+              aria-label={`Delete ${name} link`}
+            >
+              Delete
+            </button>
+          </span>
+        </div>
+      </PwField>
+    </PwRow>
+  );
+}
+
 export function LinksSection({ initial }: { initial: LinksFormValues }) {
   const { formId, onSaved, setDirty } = useProfileWizard();
   const { save } = useSectionSave(saveLinksAction, "Links", "links");
   const form = useForm<LinksFormValues>({ defaultValues: initial });
   const { control, register, handleSubmit, watch, setValue, formState } = form;
   const placeIssues = useServerFieldErrors(form);
+  /**
+   * Rows open for editing, keyed by `useFieldArray`'s own id — the index is
+   * not stable, so removing row 1 would otherwise drag row 2 into edit mode.
+   */
+  const [editing, setEditing] = useState<ReadonlySet<string>>(
+    () => new Set<string>(),
+  );
+  const openEditor = useCallback((id: string) => {
+    setEditing((prev) => new Set(prev).add(id));
+  }, []);
+  const closeEditor = useCallback((id: string) => {
+    setEditing((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: "extra",
@@ -167,10 +253,30 @@ export function LinksSection({ initial }: { initial: LinksFormValues }) {
       </PwRow>
 
       {fields.length > 0 ? (
-        <div className="pw-entries">
+        /* Not `.pw-entries`: a saved link is a field row like the ones above,
+           and only the rows still being edited are entry cards. */
+        <div>
           {fields.map((field, index) => {
             const linkType = watch(`extra.${index}.type`);
             const isOther = linkType === CandidateLinkType.OTHER;
+            const url = (watch(`extra.${index}.url`) ?? "").trim();
+            const label = (watch(`extra.${index}.label`) ?? "").trim();
+
+            // A saved link collapses to one read-only line. It stays open
+            // while it has no URL — a row you just added has nothing to show
+            // yet — and while you are editing it (issue #470).
+            if (url && !editing.has(field.id)) {
+              return (
+                <SavedLink
+                  key={field.id}
+                  name={isOther ? label || "Other" : (LINK_TYPE_LABELS[linkType] ?? linkType)}
+                  url={url}
+                  onEdit={() => openEditor(field.id)}
+                  onRemove={() => remove(index)}
+                />
+              );
+            }
+
             return (
               <PwEntryCard
                 key={field.id}
@@ -226,6 +332,17 @@ export function LinksSection({ initial }: { initial: LinksFormValues }) {
                     />
                   </PwField>
                 </PwRow>
+                {url ? (
+                  <div className="pw-link-editrow">
+                    <button
+                      type="button"
+                      className="pw-link-done"
+                      onClick={() => closeEditor(field.id)}
+                    >
+                      Done
+                    </button>
+                  </div>
+                ) : null}
               </PwEntryCard>
             );
           })}
