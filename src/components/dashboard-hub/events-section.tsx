@@ -53,11 +53,21 @@ export function EventsSection() {
 const CARD_GAP = 16;
 
 /**
- * Past card shell. Wider than the old grid cell and `overflow-hidden` so the
- * hover sheen is clipped to the rounded corner.
+ * Past card shell. `overflow-hidden` so the hover sheen is clipped to the
+ * rounded corner.
+ *
+ * The width is a share of the rail rather than a fixed size, so a page holds
+ * a whole number of cards and none is left sticking out past the edge — a
+ * sliver of a fifth card reads as a rendering fault, not as an invitation to
+ * scroll. `cqw` is the scroller's own inline size (it carries
+ * `container-type: inline-size`), and each step subtracts the gaps: two cards
+ * share one 1rem gap, three share two.
+ *
+ * Phones keep a fixed width and swipe, because a third of a phone is not a
+ * card.
  */
 const CARD_BASE =
-  "group relative isolate flex w-[300px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E0E0E0] bg-gradient-to-b from-white to-[#FBFDFD] p-6 text-left sm:w-[340px]";
+  "group relative isolate flex w-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E0E0E0] bg-gradient-to-b from-white to-[#FBFDFD] p-6 text-left sm:w-[calc((100cqw-1rem)/2)] lg:w-[calc((100cqw-2rem)/3)]";
 
 /**
  * Hover and focus, for the two clickable branches only.
@@ -171,7 +181,11 @@ function PastEventsRail({
     // columns so a step never leaves a card half out of view.
     const card = el.querySelector<HTMLElement>("[data-event-card]");
     const pitch = (card?.getBoundingClientRect().width ?? 280) + CARD_GAP;
-    const columns = Math.max(1, Math.floor(el.clientWidth / pitch));
+    // `round`, not `floor`. The cards are sized to fill the rail exactly, so
+    // the last column's trailing gap falls outside the viewport and the ratio
+    // lands just under the true count — three columns measure as 2.95 and
+    // `floor` would page by two, leaving the rail half-scrolled.
+    const columns = Math.max(1, Math.round(el.clientWidth / pitch));
     // `scrollBy` takes the behaviour as an argument, so reduced motion has to
     // be read here — CSS `scroll-behavior` cannot express it for this call.
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -204,7 +218,12 @@ function PastEventsRail({
         Past events
       </h3>
 
-      <div className="relative mt-3">
+      {/* The gutter the arrows sit in. They used to be overlaid on the cards,
+          where a frosted button over a white card had nothing to blur and read
+          as a faint smudge. Out here they sit against the page, clear of every
+          card, and the cards narrow by the same amount because their width is
+          a share of the scroller. */}
+      <div className="relative mt-3 lg:px-14">
         {scrollable && (
           <>
             <RailArrow
@@ -225,7 +244,8 @@ function PastEventsRail({
           aria-label="Past events"
           tabIndex={0}
           className={cn(
-            "no-scrollbar snap-x overflow-x-auto pt-1 pb-3",
+            // The container the cards size themselves against.
+            "no-scrollbar snap-x overflow-x-auto pt-1 pb-3 [container-type:inline-size]",
             CARD_FOCUS,
           )}
         >
@@ -279,24 +299,26 @@ function RailArrow({
         direction === -1 ? "Scroll past events left" : "Scroll past events right"
       }
       className={cn(
-        // Sits OVER the rail's edge, not beside it: frosted glass needs content
-        // behind it, and outside the rail there is only flat page to blur.
-        "absolute top-1/2 z-10 hidden size-9 -translate-y-1/2 items-center justify-center",
-        "rounded-full border border-white/70 text-[#03535F] transition-opacity duration-200",
-        "disabled:pointer-events-none disabled:opacity-0 sm:flex",
-        direction === -1 ? "-left-1" : "-right-1",
+        "absolute top-1/2 z-10 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full lg:flex",
+        // Solid teal, not frosted white. Against the page there is nothing
+        // behind the button to blur, so glass read as a smudge — and a white
+        // face on a near-white page is barely a control at all. This is the DS
+        // clay tile, the same recipe as the sidebar's current item.
+        //
+        // Two dark circles would be heavy if both showed at once, and they
+        // never do: whichever end the rail is at fades its arrow out entirely,
+        // so at rest there is one.
+        "bg-[#03535F] text-white",
+        "shadow-[inset_0_-5px_14px_rgba(0,0,0,0.34),inset_0_1px_1px_rgba(255,255,255,0.18),0_6px_18px_rgba(3,83,95,0.30)]",
+        "transition-[background-color,box-shadow,transform] duration-200",
+        "hover:bg-[#076573] hover:shadow-[inset_0_-5px_14px_rgba(0,0,0,0.30),inset_0_1px_1px_rgba(255,255,255,0.22),0_10px_26px_rgba(3,83,95,0.42)]",
+        "active:translate-y-px active:shadow-[inset_0_-3px_10px_rgba(0,0,0,0.42)] motion-reduce:transition-none",
+        "disabled:pointer-events-none disabled:opacity-0",
+        direction === -1 ? "left-2" : "right-2",
         CARD_FOCUS,
       )}
-      style={{
-        background: "rgba(255, 255, 255, 0.72)",
-        backdropFilter: "blur(10px)",
-        WebkitBackdropFilter: "blur(10px)",
-        // The DS clay recipe: lower inner shade, top highlight, soft lift.
-        boxShadow:
-          "inset 0 -4px 10px rgba(0, 0, 0, 0.10), inset 0 1px 1px rgba(255, 255, 255, 0.85), 0 4px 14px rgba(0, 0, 0, 0.12)",
-      }}
     >
-      <Icon className="size-4" aria-hidden />
+      <Icon className="size-5" strokeWidth={2.5} aria-hidden />
     </button>
   );
 }
