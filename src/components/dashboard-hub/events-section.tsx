@@ -48,9 +48,9 @@ export function EventsSection() {
   );
 }
 
-/** Gap between cards, in px. Must track the `gap-4` on the rows below — the
+/** Gap between cards, in px. Must track the `gap-5` on the rows below — the
  *  arrow step is computed from it and cannot read a Tailwind class. */
-const CARD_GAP = 16;
+const CARD_GAP = 20;
 
 /**
  * Past card shell. `overflow-hidden` so the hover sheen is clipped to the
@@ -67,7 +67,7 @@ const CARD_GAP = 16;
  * card.
  */
 const CARD_BASE =
-  "group relative isolate flex w-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E0E0E0] bg-gradient-to-b from-white to-[#FBFDFD] p-6 text-left sm:w-[calc((100cqw-1rem)/2)] lg:w-[calc((100cqw-2rem)/3)]";
+  "group relative isolate flex w-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E0E0E0] bg-gradient-to-b from-white to-[#FBFDFD] p-6 text-left sm:w-[calc((100cqw-1.25rem)/2)] lg:w-[calc((100cqw-2.5rem)/3)]";
 
 /**
  * Hover and focus, for the two clickable branches only.
@@ -218,12 +218,12 @@ function PastEventsRail({
         Past events
       </h3>
 
-      {/* The gutter the arrows sit in. They used to be overlaid on the cards,
-          where a frosted button over a white card had nothing to blur and read
-          as a faint smudge. Out here they sit against the page, clear of every
-          card, and the cards narrow by the same amount because their width is
-          a share of the scroller. */}
-      <div className="relative mt-3 lg:px-14">
+      {/* No horizontal padding here. A gutter for the arrows to sit in pushed
+          the whole rail inward and broke the left edge this section shares
+          with Upcoming events above it, so the arrows straddle the rail's own
+          edges instead — mostly outside it, overlapping only each end card's
+          padding rather than its text. */}
+      <div className="relative mt-3">
         {scrollable && (
           <>
             <RailArrow
@@ -234,7 +234,6 @@ function PastEventsRail({
             <RailArrow direction={1} disabled={atEnd} onClick={() => page(1)} />
           </>
         )}
-
         {/* `tabIndex` is not decoration: without it a keyboard user cannot
             scroll this region at all, because nothing inside it is reachable
             once the visible cards run out. */}
@@ -249,9 +248,9 @@ function PastEventsRail({
             CARD_FOCUS,
           )}
         >
-          <div className="flex w-max flex-col gap-4">
+          <div className="flex w-max flex-col gap-5">
             {rows.map((row, i) => (
-              <div key={i} className="flex gap-4">
+              <div key={i} className="flex gap-5">
                 {row.map((event) => (
                   <PastEventCard
                     key={event.id}
@@ -299,26 +298,24 @@ function RailArrow({
         direction === -1 ? "Scroll past events left" : "Scroll past events right"
       }
       className={cn(
-        "absolute top-1/2 z-10 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full lg:flex",
+        "absolute top-1/2 z-10 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full lg:flex",
         // Solid teal, not frosted white. Against the page there is nothing
         // behind the button to blur, so glass read as a smudge — and a white
         // face on a near-white page is barely a control at all. This is the DS
         // clay tile, the same recipe as the sidebar's current item.
-        //
-        // Two dark circles would be heavy if both showed at once, and they
-        // never do: whichever end the rail is at fades its arrow out entirely,
-        // so at rest there is one.
         "bg-[#03535F] text-white",
         "shadow-[inset_0_-5px_14px_rgba(0,0,0,0.34),inset_0_1px_1px_rgba(255,255,255,0.18),0_6px_18px_rgba(3,83,95,0.30)]",
         "transition-[background-color,box-shadow,transform] duration-200",
         "hover:bg-[#076573] hover:shadow-[inset_0_-5px_14px_rgba(0,0,0,0.30),inset_0_1px_1px_rgba(255,255,255,0.22),0_10px_26px_rgba(3,83,95,0.42)]",
         "active:translate-y-px active:shadow-[inset_0_-3px_10px_rgba(0,0,0,0.42)] motion-reduce:transition-none",
+        // Gone, not dimmed: an arrow over a card is only worth the space it
+        // covers while it can still do something.
         "disabled:pointer-events-none disabled:opacity-0",
-        direction === -1 ? "left-2" : "right-2",
+        direction === -1 ? "-left-3" : "-right-3",
         CARD_FOCUS,
       )}
     >
-      <Icon className="size-5" strokeWidth={2.5} aria-hidden />
+      <Icon className="size-[18px]" strokeWidth={2.5} aria-hidden />
     </button>
   );
 }
