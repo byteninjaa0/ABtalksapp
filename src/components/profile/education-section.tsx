@@ -73,6 +73,15 @@ const GRADE_PLACEHOLDER: Record<string, string> = {
   GRADE: "e.g. A+",
 };
 
+/**
+ * `PwMonthYear` caps the YEAR but not the month, so in the current year every
+ * month stayed selectable — in September you could still pick December and
+ * claim a start date that has not happened yet. `maxMonth` is only applied
+ * when the selected year IS the current year; every earlier year is complete
+ * and offers all twelve. Same guard `accomplishments-section` already uses.
+ */
+const CURRENT_MONTH = new Date().getMonth() + 1;
+
 export function EducationSection({ initial }: { initial: EducationFormRow[] }) {
   const { formId, onSaved, setDirty } = useProfileWizard();
   const { save } = useSectionSave(saveEducationAction, "Education", "education");
@@ -231,6 +240,11 @@ export function EducationSection({ initial }: { initial: EducationFormRow[] }) {
                             }}
                             fromYear={EDUCATION_MIN_YEAR}
                             toYear={CURRENT_YEAR}
+                            maxMonth={
+                              year.value === CURRENT_YEAR
+                                ? CURRENT_MONTH
+                                : undefined
+                            }
                           />
                         )}
                       />
