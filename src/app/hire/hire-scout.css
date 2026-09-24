@@ -12295,6 +12295,223 @@ a.hire-profile__ext-link:focus-visible {
   padding-top: 8px;
 }
 
+/* --- Empty stage mark -----------------------------------------------------
+   The pipeline's "nothing here yet" drawing, given a visible idle so an empty
+   column reads as waiting rather than broken.
+
+   Five things move, on four different cycle lengths so the loop never beats in
+   lockstep or announces where it restarts:
+
+     lens    3.2s  scans out, across and back, magnifying at each pause
+     glint   3.2s  a light crossing the glass as the lens turns
+     ripple  3.2s  two rings pushing out from the lens, staggered by half
+     cards   4.4s  front card and ghost rocking against each other
+     dashes  2.4s  the ghost's dashed outline marching, the way a marquee does
+
+   Only transform, opacity and stroke-dashoffset — all compositable, none of
+   them lay out.
+
+   `transform-box: fill-box` makes each shape's percentages resolve against its
+   own box rather than the whole SVG canvas.
+
+   Behind `no-preference`, so the mark is simply a still drawing for anyone who
+   asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .hire-empty-mark {
+    animation: hire-empty-float 4.4s ease-in-out infinite;
+  }
+
+  .hire-empty-mark__lens {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hire-empty-lens 3.2s ease-in-out infinite;
+  }
+
+  .hire-empty-mark__glint {
+    transform-box: fill-box;
+    transform-origin: center;
+    opacity: 0;
+    animation: hire-empty-glint 3.2s ease-in-out infinite;
+  }
+
+  .hire-empty-mark__ripple {
+    transform-box: fill-box;
+    transform-origin: center;
+    opacity: 0;
+    animation: hire-empty-ripple 3.2s ease-out infinite;
+  }
+
+  .hire-empty-mark__ripple--late {
+    animation-delay: 1.6s;
+  }
+
+  .hire-empty-mark__shadow {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hire-empty-shadow 3.2s ease-in-out infinite;
+  }
+
+  .hire-empty-mark__card {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hire-empty-card 4.4s ease-in-out infinite;
+  }
+
+  .hire-empty-mark__cross {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hire-empty-cross 4.4s ease-in-out infinite;
+  }
+
+  .hire-empty-mark__ghost {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation:
+      hire-empty-ghost 4.4s ease-in-out infinite,
+      hire-empty-march 2.4s linear infinite;
+  }
+}
+
+@keyframes hire-empty-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes hire-empty-lens {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  16% {
+    transform: translate(9px, -6px) rotate(13deg) scale(1.1);
+  }
+  38% {
+    transform: translate(13px, 4px) rotate(6deg) scale(1.04);
+  }
+  60% {
+    transform: translate(-5px, 7px) rotate(-11deg) scale(1.12);
+  }
+  80% {
+    transform: translate(-9px, -3px) rotate(-6deg) scale(1.03);
+  }
+}
+
+/* Catches the light as the lens turns through each pause, not on a beat of
+   its own — hence the same duration and the narrow windows. */
+@keyframes hire-empty-glint {
+  0%,
+  8% {
+    opacity: 0;
+    transform: translateX(-9px);
+  }
+  18% {
+    opacity: 0.85;
+  }
+  30% {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  54% {
+    opacity: 0;
+    transform: translateX(-9px);
+  }
+  64% {
+    opacity: 0.7;
+  }
+  76%,
+  100% {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+
+/* Rings leaving the lens. They start at its edge and fade as they widen, so
+   the mark looks like it is probing rather than merely wobbling. */
+@keyframes hire-empty-ripple {
+  0% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+
+@keyframes hire-empty-shadow {
+  0%,
+  100% {
+    transform: translateX(0) scaleX(1);
+    opacity: 1;
+  }
+  16% {
+    transform: translateX(7px) scaleX(0.88);
+    opacity: 0.75;
+  }
+  38% {
+    transform: translateX(10px) scaleX(0.82);
+    opacity: 0.68;
+  }
+  60% {
+    transform: translateX(-4px) scaleX(0.93);
+    opacity: 0.85;
+  }
+  80% {
+    transform: translateX(-7px) scaleX(0.9);
+    opacity: 0.8;
+  }
+}
+
+@keyframes hire-empty-card {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  50% {
+    transform: rotate(1.6deg) translateY(-1.5px);
+  }
+}
+
+@keyframes hire-empty-cross {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.88);
+  }
+}
+
+@keyframes hire-empty-ghost {
+  0%,
+  100% {
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+  50% {
+    opacity: 0.5;
+    transform: rotate(-2deg);
+  }
+}
+
+/* 9 = the 5 + 4 dash pattern, so the march loops seamlessly. */
+@keyframes hire-empty-march {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
 /* Opt-out of the 880px measure for pages that are a BOARD or a wide table
    rather than prose.
 
