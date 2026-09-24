@@ -12046,33 +12046,42 @@ a.hire-profile__ext-link:focus-visible {
    Scoped to the results screen because only it is zoomed — the landing keeps
    the plain values above. */
 .hire-app--results .scout-filters {
-  height: calc(41px / var(--hire-zoom, 1));
-  gap: calc(7px / var(--hire-zoom, 1));
-  padding: 0 calc(16px / var(--hire-zoom, 1));
-  border-radius: calc(10px / var(--hire-zoom, 1));
-  font-size: calc(14px / var(--hire-zoom, 1));
-  line-height: calc(20px / var(--hire-zoom, 1));
+  /* 34, not 41 (issue #536). These are secondary actions sitting directly
+     under the header, and at 41px with 14px type they carried more weight
+     than the header itself. */
+  height: calc(34px / var(--hire-zoom, 1));
+  gap: calc(6px / var(--hire-zoom, 1));
+  padding: 0 calc(13px / var(--hire-zoom, 1));
+  border-radius: calc(9px / var(--hire-zoom, 1));
+  font-size: calc(13px / var(--hire-zoom, 1));
+  line-height: calc(18px / var(--hire-zoom, 1));
 }
 
 .hire-app--results .scout-action {
-  padding: 0 calc(18px / var(--hire-zoom, 1));
+  padding: 0 calc(15px / var(--hire-zoom, 1));
 }
 
 .hire-app--results .scout-filters__icon {
-  width: calc(16px / var(--hire-zoom, 1));
-  height: calc(16px / var(--hire-zoom, 1));
+  width: calc(14px / var(--hire-zoom, 1));
+  height: calc(14px / var(--hire-zoom, 1));
 }
 
 .hire-app--results .scout-filters__icon img {
-  width: calc(16px / var(--hire-zoom, 1));
-  height: calc(15px / var(--hire-zoom, 1));
+  width: calc(14px / var(--hire-zoom, 1));
+  height: calc(13px / var(--hire-zoom, 1));
 }
 
 .hire-app--results .scout__toolbar {
-  /* 8px was set when these were 28px-high text links; against the 41px pills
-     they now are, it read as one segmented control rather than three separate
-     actions. 14px lets them breathe without drifting apart. */
-  gap: calc(14px / var(--hire-zoom, 1));
+  /* The row had NO top padding. This rule set `padding-bottom` alone, so the
+     shorthand underneath it — `padding: 0 18px 10px 0` — kept the top at 0,
+     and the only gap above the pills was the region's own 8px, which the
+     0.75 desk zoom paints as 6. The buttons read as welded to the header
+     (issue #536). Stated as a painted value like every other size here. */
+  padding-top: calc(18px / var(--hire-zoom, 1));
+  /* 14px was set against 41px pills. At 34px that spacing read as loose, so
+     it comes down with them and the row still reads as three separate
+     actions rather than one segmented control. */
+  gap: calc(10px / var(--hire-zoom, 1));
   padding-bottom: calc(12px / var(--hire-zoom, 1));
 }
 
