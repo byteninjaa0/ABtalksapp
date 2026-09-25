@@ -1,0 +1,48 @@
+/* Milestone hexagon sparkles: small stars that twinkle in turn. */
+.hex-sparkle {
+  position: absolute;
+  transform-origin: center;
+  opacity: 0;
+  animation: hex-twinkle 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+.hex-sparkle--2 { animation-delay: 0.8s; }
+.hex-sparkle--3 { animation-delay: 1.6s; }
+
+@keyframes hex-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  40% { opacity: 1; transform: scale(1) rotate(25deg); }
+  70% { opacity: 0.2; transform: scale(0.55) rotate(45deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hex-sparkle { animation: none; opacity: 0.85; transform: scale(0.7); }
+}
+
+/* ─── Layout that follows the sidebar ────────────────────────
+   The shell sets data-sidebar="open" | "collapsed". Side padding makes
+   up the 178px the sidebar gains or loses (250px vs 72px), so the hub's
+   containers keep the same width either way; the 60-day grid shows 15
+   squares a row with the sidebar collapsed and 10 with it open. */
+
+.dash-main { padding-inline: 12px; }
+@media (min-width: 640px) { .dash-main { padding-inline: 20px; } }
+@media (min-width: 1280px) {
+  .dash-main { padding-inline: 25px; }
+  [data-sidebar="collapsed"] .dash-main { padding-inline: 64px; }
+}
+
+.sixty-grid { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+
+@media (min-width: 768px) {
+  .progress-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  [data-sidebar="collapsed"] .sixty-grid { grid-template-columns: repeat(15, minmax(0, 1fr)); }
+  [data-sidebar="collapsed"] .progress-split { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+}
+
+/* ─── Streak box scales with its own width ─────────────────── */
+.streak-box { container-type: inline-size; }
+.week-hex { width: clamp(20px, 9cqw, 31px); aspect-ratio: 31 / 34; height: auto; }
+.week-hex-today { width: clamp(28px, 12.8cqw, 44px); aspect-ratio: 44 / 47; height: auto; }
+.week-label { font-size: clamp(9px, 3.5cqw, 12px); }
+.streak-badge { width: clamp(64px, 26cqw, 92px); aspect-ratio: 60 / 68; height: auto; }

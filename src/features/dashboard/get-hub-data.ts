@@ -30,6 +30,7 @@ export type HubEnrollment = {
   challengeTitle: string;
   daysCompleted: number;
   currentStreak: number;
+  startedAt: Date;
 };
 
 export type HubData = {
@@ -94,6 +95,7 @@ export async function getHubData(
     challengeTitle: r.challengeTitle,
     daysCompleted: r.daysCompleted,
     currentStreak: r.currentStreak,
+    startedAt: r.startedAt,
   }));
 
   const joinedDomains = [...new Set(joined.map((r) => r.domain))];

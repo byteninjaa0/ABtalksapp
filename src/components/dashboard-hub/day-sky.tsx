@@ -19,8 +19,8 @@ type Palette = {
 };
 
 const STOPS: { m: number; p: Palette }[] = [
-  { m: 0, p: { top: "#020714", mid: "#0a1c42", low: "#1e4180", back: "#2d5294", front: "#16306a", glow: "#c7dcff" } },
-  { m: 300, p: { top: "#060d22", mid: "#162a5a", low: "#4a64a3", back: "#4a63a0", front: "#2b4278", glow: "#ffd9e6" } },
+  { m: 0, p: { top: "#020714", mid: "#0a1c42", low: "#1e4180", back: "#4a5566", front: "#2c3442", glow: "#c7dcff" } },
+  { m: 300, p: { top: "#060d22", mid: "#162a5a", low: "#4a64a3", back: "#5e6679", front: "#3a4152", glow: "#ffd9e6" } },
   { m: 375, p: { top: "#f1d6e6", mid: "#c5a3de", low: "#8c9deb", back: "#7e8fe4", front: "#5a62c8", glow: "#ffe3ef" } },
   { m: 480, p: { top: "#fff0d0", mid: "#ffd9a0", low: "#ffc28a", back: "#f9d2ab", front: "#f2b186", glow: "#fff3c4" } },
   { m: 720, p: { top: "#ffe49b", mid: "#ffca7a", low: "#ffae6c", back: "#f8cea2", front: "#efa676", glow: "#fff6d8" } },
@@ -32,12 +32,12 @@ const STOPS: { m: number; p: Palette }[] = [
   { m: 1140, p: { top: "#a8375f", mid: "#d9505f", low: "#f28a6a", back: "#b8566a", front: "#823d5c", glow: "#ffb08a" } },
   { m: 1175, p: { top: "#4a2a5e", mid: "#8a3f6e", low: "#d0707a", back: "#7a4a70", front: "#4f3160", glow: "#ffb8a0" } },
   { m: 1205, p: { top: "#141b45", mid: "#2c2f6e", low: "#6a5a95", back: "#45477e", front: "#2c2f5c", glow: "#d6d8ff" } },
-  { m: 1240, p: { top: "#060d25", mid: "#0f2150", low: "#2a4a88", back: "#35579a", front: "#1c3874", glow: "#c7dcff" } },
-  { m: 1270, p: { top: "#020714", mid: "#0a1c42", low: "#1e4180", back: "#2d5294", front: "#16306a", glow: "#c7dcff" } },
-  { m: 1440, p: { top: "#020714", mid: "#0a1c42", low: "#1e4180", back: "#2d5294", front: "#16306a", glow: "#c7dcff" } },
+  { m: 1240, p: { top: "#060d25", mid: "#0f2150", low: "#2a4a88", back: "#4e596b", front: "#303847", glow: "#c7dcff" } },
+  { m: 1270, p: { top: "#020714", mid: "#0a1c42", low: "#1e4180", back: "#4a5566", front: "#2c3442", glow: "#c7dcff" } },
+  { m: 1440, p: { top: "#020714", mid: "#0a1c42", low: "#1e4180", back: "#4a5566", front: "#2c3442", glow: "#c7dcff" } },
 ];
 
-const DEMO_MS = 10_000;
+const DEMO_MS = 15_000;
 const SUNRISE = 360; // 06:00
 const SUNSET = 1125; // 18:45
 
@@ -326,19 +326,20 @@ function moonArcAt(nightMinute: number): number {
 const HILLS = [
   {
     name: "far",
-    d: "M0 72 C 200 30 420 18 640 46 C 860 74 1080 36 1280 26 C 1360 22 1410 28 1440 32 V200 H0 Z",
+    // Crest sits well above the next ridge so the darkest dune reads as a band.
+    d: "M0 64 C 200 28 420 16 640 40 C 860 64 1080 30 1280 20 C 1360 16 1410 22 1440 26 V200 H0 Z",
   },
   {
     name: "back",
-    d: "M0 108 C 180 66 380 58 600 90 C 820 122 1040 80 1240 68 C 1340 62 1400 70 1440 76 V200 H0 Z",
+    d: "M0 88 C 180 46 380 36 600 66 C 820 96 1040 56 1240 44 C 1340 38 1400 46 1440 52 V200 H0 Z",
   },
   {
     name: "mid",
-    d: "M0 124 C 240 96 460 100 700 130 C 920 158 1160 112 1440 104 V200 H0 Z",
+    d: "M0 104 C 240 74 460 78 700 106 C 920 134 1160 90 1440 82 V200 H0 Z",
   },
   {
     name: "front",
-    d: "M0 158 C 260 128 520 134 780 158 C 1020 180 1240 146 1440 140 V200 H0 Z",
+    d: "M0 142 C 260 112 520 118 780 142 C 1020 164 1240 130 1440 124 V200 H0 Z",
   },
   // Lightest, nearest dune — tinted by the sky, fading into the page colour.
   {
@@ -562,6 +563,11 @@ export function DaySkySection({
     "--sky-glow": colors.glow,
     "--hero-ink": dark ? "#FFFFFF" : "#000000",
     "--hero-ink-soft": dark ? "rgba(255, 255, 255, 0.82)" : "#4B4B4B",
+    // Accent (the name) — brand teal on light skies, a mint that reads on dark ones.
+    "--hero-accent": dark ? "#7CE8C8" : "#03535F",
+    // Inactive stage tabs sit a shade deeper on dark skies.
+    "--tab-idle-from": dark ? "rgba(38, 82, 86, 0.84)" : "rgba(63, 117, 121, 0.74)",
+    "--tab-idle-to": dark ? "rgba(26, 64, 68, 0.84)" : "rgba(45, 95, 99, 0.72)",
   } as CSSProperties;
 
   return (
@@ -573,6 +579,9 @@ export function DaySkySection({
       <div className="dsky__scene" aria-hidden="true">
         <div className="dsky__sky" />
 
+        {/* Sky objects live in a fixed-height band at the top, so their arcs
+            don't move when the scene grows to show more dunes below. */}
+        <div className="dsky__celestial">
         <div className="dsky__stars" style={{ opacity: starOpacity }}>
           {STARS.map(([x, y, s], i) => (
             <span
@@ -641,6 +650,8 @@ export function DaySkySection({
         {showMoon ? (
           <Moon phase={moonPhase} style={moonStyle} />
         ) : null}
+
+        </div>
 
         <Hills />
       </div>

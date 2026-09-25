@@ -139,6 +139,33 @@ export async function listChallengeCompletions(
   return out;
 }
 
+/** Passed challenge day numbers for one enrollment (dashboard 60-day grid). */
+export async function listPassedChallengeDays(enrollmentId: string): Promise<number[]> {
+  const rows = await prisma.activityAttempt.findMany({
+    where: {
+      enrollmentId: peIdForEnrollment(enrollmentId),
+      id: { startsWith: "aa_sub_" },
+      activityId: { startsWith: "act_dt_" },
+    },
+    select: {
+      passed: true,
+      activity: { select: { dayNumber: true } },
+      evaluations: {
+        where: { isAuthoritative: true },
+        select: { passed: true },
+        take: 1,
+      },
+    },
+  });
+  const days = new Set<number>();
+  for (const row of rows) {
+    const day = row.activity.dayNumber;
+    if (day == null) continue;
+    if (row.evaluations[0]?.passed ?? row.passed) days.add(day);
+  }
+  return [...days].sort((a, b) => a - b);
+}
+
 async function challengeCompletionFromAttempts(
   enrollmentId: string,
 ): Promise<{ daysCompleted: number; lastSubmittedDay: number | null }> {

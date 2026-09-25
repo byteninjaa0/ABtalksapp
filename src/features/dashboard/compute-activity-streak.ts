@@ -5,7 +5,7 @@ import {
   parseCalendarKeyToUtcDate,
 } from "@/lib/date-utils";
 
-export const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
+export const STREAK_MILESTONES = [3, 5, 7, 10, 14, 30, 60] as const;
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
