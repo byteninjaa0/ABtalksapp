@@ -162,3 +162,17 @@ export async function attachParsedImportToUser(userId: string, rawEmail: string 
   return attached;
 }
 
+
+/**
+ * Dashboard banner for an admin-imported student who has taken their account
+ * over: their profile was made from the résumé, not by them, so until they
+ * verify a phone number the dashboard asks them to check it. Only admin
+ * registration sets `reviewPendingSince`; verifying a phone clears it.
+ */
+export async function needsImportedProfileReview(userId: string): Promise<boolean> {
+  const row = await prisma.candidateProfile.findUnique({
+    where: { userId },
+    select: { reviewPendingSince: true, phoneVerified: true },
+  });
+  return Boolean(row?.reviewPendingSince) && row?.phoneVerified !== true;
+}

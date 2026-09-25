@@ -14,6 +14,8 @@ import { FaqSection } from "@/components/dashboard-hub/faq-section";
 import { HUB_CARD_HOVER_CLASS } from "@/components/dashboard-hub/nav-items";
 import { getHubData } from "@/features/dashboard/get-hub-data";
 import { registrationRedirect } from "@/features/registration/registration-gate";
+import { needsImportedProfileReview } from "@/features/resume/import/claim";
+import { ProfileReviewBanner } from "@/components/dashboard-hub/profile-review-banner";
 import type { Domain } from "@prisma/client";
 
 const TRACK_PATH: Record<Domain, string> = {
@@ -54,7 +56,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     redirect("/api/auth/signout?callbackUrl=/login");
   }
 
-  const guidance = await getCareerGuidance(session.user.id, []);
+  const [guidance, reviewPending] = await Promise.all([
+    getCareerGuidance(session.user.id, []),
+    needsImportedProfileReview(session.user.id),
+  ]);
 
   const firstName =
     data.profile?.fullName.split(/\s+/)[0] ??
@@ -99,6 +104,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </div>
         </div>
       </section>
+
+      {reviewPending ? <ProfileReviewBanner /> : null}
 
       {notice ? (
         <section className="px-4 py-2 sm:px-6 lg:ml-4">

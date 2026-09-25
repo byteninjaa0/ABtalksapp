@@ -182,6 +182,13 @@ export async function registerImportedStudent(importId: string): Promise<Registe
         countryCode: null,
         synergyPoints: 0,
       });
+      // Same banner as a self-upload auto-registration: when the student signs
+      // in, the dashboard asks them to check this profile and verify a phone.
+      await tx.candidateProfile.update({
+        where: { userId: user.id },
+        data: { reviewPendingSince: new Date() },
+        select: { id: true },
+      });
       await upsertResume(user.id, resumeFromImport(imp, parsed, analysis), tx);
       await applyVisibilityChange(tx, { userId: user.id, kind: "admin_import" });
       const moved = await markImportRegisteredTx(tx, imp.id, {

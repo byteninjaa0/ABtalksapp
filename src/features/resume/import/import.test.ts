@@ -830,6 +830,27 @@ async function main() {
     assert(a.includes('account?.provider === "google"'), "Google only");
   });
 
+  /* ─── Only admin-imported students skip /register ─────────────────────── */
+  console.log("\nImported students: no form, a review banner instead");
+
+  await suite("self-uploads keep the normal /register form (no auto-registration)", () => {
+    assert(!src("src/app/register/page.tsx").includes("registerFromParsedResume"), "register page");
+    assert(!src("src/app/register/registration-form.tsx").includes("router.refresh();\n        }}"), "form");
+    assert(!src("src/features/resume/service.ts").includes("reviewPendingSince"), "self-upload never flags");
+  });
+
+  await suite("only admin registration flags the profile; phone verification clears it", () => {
+    assert(src("src/features/resume/import/register.ts").includes("data: { reviewPendingSince: new Date() }"), "admin import flags");
+    assert(src("src/app/actions/otp-actions.ts").includes("data: { reviewPendingSince: null }"), "cleared on verification");
+  });
+
+  await suite("the dashboard banner shows for a flagged, phone-unverified profile and links to /profile", () => {
+    const c = src("src/features/resume/import/claim.ts");
+    assert(c.includes("Boolean(row?.reviewPendingSince) && row?.phoneVerified !== true"), "banner condition");
+    assert(src("src/app/dashboard/page.tsx").includes("{reviewPending ? <ProfileReviewBanner /> : null}"), "rendered");
+    assert(src("src/components/dashboard-hub/profile-review-banner.tsx").includes('href="/profile"'), "links to profile");
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
   process.exit(0);

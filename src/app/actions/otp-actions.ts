@@ -92,6 +92,12 @@ export async function verifyOtpAction(input: {
           phoneVerified: true,
           phoneVerifiedAt: new Date(),
         });
+        // Plan 154: a verified phone completes the review of a profile that
+        // was filled in from a résumé — the dashboard banner goes away.
+        await tx.candidateProfile.updateMany({
+          where: { userId, reviewPendingSince: { not: null } },
+          data: { reviewPendingSince: null },
+        });
       }
     });
   } catch (e) {

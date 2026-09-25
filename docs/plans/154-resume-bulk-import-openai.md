@@ -12,6 +12,14 @@ Part A built on branch `feat/resume-import-154` (from origin/master; the old
 Part B built on branch `feat/person-name-format` (worktree `../ABtalksapp-names`).
 Neither migration has been applied to any database yet.
 
+Added after revision 2, at the user's request: an admin-imported student who
+claims their account by Google sign-in skips /register (their profile already
+exists) and the dashboard shows a "check your profile and verify your phone"
+banner. It is driven by the new `CandidateProfile.reviewPendingSince`
+(migration `20260925140000_profile_review_pending`), set ONLY by admin
+registration and cleared when the phone is verified. Students who upload their
+own résumé keep the normal /register form, phone check included — unchanged.
+
 Deviations from the steps below, all deliberate:
 - Admin link lives in `features/admin/admin-nav.ts` (drives desktop and mobile
   nav), not an `admin/page.tsx` card.

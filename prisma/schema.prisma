@@ -2284,6 +2284,11 @@ model CandidateProfile {
   isCampusAmbassadorCandidate Boolean          @default(false)
   ambassadorAppliedAt         DateTime?
   ambassadorDismissedAt       DateTime?
+  /// Plan 154: an admin created this profile from an imported résumé, so the
+  /// student never saw the /register form. The dashboard asks them to check it
+  /// and verify their phone until this is cleared — which happens when their
+  /// phone is verified.
+  reviewPendingSince          DateTime?
   createdAt                   DateTime         @default(now())
   updatedAt                   DateTime         @updatedAt
 
