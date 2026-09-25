@@ -484,7 +484,7 @@ export async function runRecruiterSearchAudit(opts: AuditOptions): Promise<Audit
         check: "coverage:no-visibility-row",
         sample: s,
         productDecision: true,
-        message: `PRODUCT DECISION REQUIRED — ${noRow} candidate(s) have a usable profile but no CandidateVisibility row, so search hides them (plan 117 expected profile-only discoverability). Since 2026-09-17 a row is created on the candidate's next name or skill save (repositories/discovery-record.ts); these existing profiles need that save or a backfill`,
+        message: `PRODUCT DECISION REQUIRED: ${noRow} candidate(s) have a usable profile but no CandidateVisibility row, so search hides them (plan 117 expected profile-only discoverability). Since 2026-09-17 a row is created on the candidate's next name or skill save (repositories/discovery-record.ts); these existing profiles need that save or a backfill`,
       }));
     }
   }
@@ -502,7 +502,7 @@ export async function runRecruiterSearchAudit(opts: AuditOptions): Promise<Audit
         if (flipped.length) {
           const s = new IdSample();
           flipped.forEach((id) => s.add(id));
-          findings.push(finding({ category: "SEARCH_FILTER_ERROR", severity: "ERROR", searchVerdict: "FAIL", check: `case:${a.spec.id}`, sample: s, message: `${r.label} — a rank-only field changed who is admitted` }));
+          findings.push(finding({ category: "SEARCH_FILTER_ERROR", severity: "ERROR", searchVerdict: "FAIL", check: `case:${a.spec.id}`, sample: s, message: `${r.label}: a rank-only field changed who is admitted` }));
         }
       }
     }
@@ -590,7 +590,7 @@ export async function runRecruiterSearchAudit(opts: AuditOptions): Promise<Audit
         searchVerdict: v.category === "DATA_QUALITY_ERROR" || (v.category === "RANKING_ERROR" && v.severity === "INFO") ? "PASS" : "FAIL",
         check: `index:${cause}`,
         sample: v.sample,
-        message: `search document disagrees with the canonical profile (${cause}) — e.g. ${v.example}`,
+        message: `search document disagrees with the canonical profile (${cause}), e.g. ${v.example}`,
         knownIssue: v.knownIssue,
         productDecision: v.productDecision,
       }));
@@ -600,12 +600,12 @@ export async function runRecruiterSearchAudit(opts: AuditOptions): Promise<Audit
         const s = new IdSample();
         persisted.unsearchableSample.forEach((id) => s.add(id));
         s.count = persisted.matchesForUnsearchable;
-        findings.push(finding({ category: "SEARCH_INDEX_STALE", severity: "INFO", searchVerdict: "PASS", check: "index:persisted-unsearchable", sample: s, message: `${persisted.matchesForUnsearchable} saved match row(s) point at candidates no longer searchable — loadRequestMatches re-gates them on read` }));
+        findings.push(finding({ category: "SEARCH_INDEX_STALE", severity: "INFO", searchVerdict: "PASS", check: "index:persisted-unsearchable", sample: s, message: `${persisted.matchesForUnsearchable} saved match row(s) point at candidates no longer searchable. loadRequestMatches re-gates them on read` }));
       }
       if (persisted.enrollmentDomainMismatch > 0) {
         const s = new IdSample();
         s.count = persisted.enrollmentDomainMismatch;
-        findings.push(finding({ category: "DATA_QUALITY_ERROR", severity: "WARNING", searchVerdict: "PASS", check: "index:enrollment-domain", sample: s, message: "Enrollment.domain differs from its Challenge.domain — the challenge loader filters on one and labels by the other" }));
+        findings.push(finding({ category: "DATA_QUALITY_ERROR", severity: "WARNING", searchVerdict: "PASS", check: "index:enrollment-domain", sample: s, message: "Enrollment.domain differs from its Challenge.domain, and the challenge loader filters on one and labels by the other" }));
       }
     }
   }
@@ -641,7 +641,7 @@ export async function runRecruiterSearchAudit(opts: AuditOptions): Promise<Audit
       id: "probe-matches-service",
       label: "Audit probe page is identical to searchCandidates() (same refs, same order)",
       status: drift ? "FAIL" : "PASS",
-      detail: drift ? `drift on ${driftIds.join(", ")} — audit results for these cases are not trustworthy` : `${sampled.length} specs compared`,
+      detail: drift ? `drift on ${driftIds.join(", ")} . Audit results for these cases are not trustworthy` : `${sampled.length} specs compared`,
     });
     if (drift) {
       const s = new IdSample();
@@ -667,7 +667,7 @@ export async function runRecruiterSearchAudit(opts: AuditOptions): Promise<Audit
       const hidden = unscoped.ev.admitted.size - unscoped.ev.page.length;
       const s = new IdSample();
       unscoped.ev.ranked.filter((r) => unscoped.ev.admitted.has(r.userId) && !unscoped.ev.page.some((p) => p.userId === r.userId)).forEach((r) => s.add(r.userId));
-      findings.push(finding({ category: "PAGINATION_ERROR", severity: "WARNING", searchVerdict: "FAIL", check: "pagination:top-n", sample: s, productDecision: true, message: `PRODUCT DECISION REQUIRED — search is top-${RECRUITER_PAGE_LIMIT} with no page 2: ${hidden} of ${unscoped.ev.admitted.size} candidates cannot be reached by an unfiltered search` }));
+      findings.push(finding({ category: "PAGINATION_ERROR", severity: "WARNING", searchVerdict: "FAIL", check: "pagination:top-n", sample: s, productDecision: true, message: `PRODUCT DECISION REQUIRED: search is top-${RECRUITER_PAGE_LIMIT} with no page 2: ${hidden} of ${unscoped.ev.admitted.size} candidates cannot be reached by an unfiltered search` }));
       rows.push({ id: "top-n", label: "Every admitted candidate reachable across pages", status: "WARN", detail: `no pagination: ${hidden} admitted candidates beyond the page` });
     }
     const persisted = report.indexConsistency?.persisted ?? (await persistedResultHealth());
@@ -677,7 +677,7 @@ export async function runRecruiterSearchAudit(opts: AuditOptions): Promise<Audit
       persisted.sessionDuplicateSample.forEach((id) => s.add(id));
       findings.push(finding({ category: "PAGINATION_ERROR", severity: "ERROR", searchVerdict: "FAIL", check: "pagination:session-duplicates", sample: s, message: "saved search sessions contain duplicate candidate ids (ids are session ids)" }));
     }
-    rows.push({ id: "cursor-offset", label: "Out-of-range page / cursor / offset", status: "SKIPPED", detail: "not applicable — the search API has no page, offset or cursor parameter" });
+    rows.push({ id: "cursor-offset", label: "Out-of-range page / cursor / offset", status: "SKIPPED", detail: "not applicable, the search API has no page, offset or cursor parameter" });
   }
 
   /* ── sort ──────────────────────────────────────────────────────────────── */
@@ -706,7 +706,7 @@ export async function runRecruiterSearchAudit(opts: AuditOptions): Promise<Audit
     rows.push({ id: "service-order", label: "searchCandidates() page is tier, score desc, then name/ref", status: inversions ? "FAIL" : "PASS", detail: `${call.scores.length} cards` });
     const persisted = report.indexConsistency?.persisted ?? (await persistedResultHealth());
     rows.push({ id: "saved-ties", label: "Saved match lists order ties deterministically", status: "PASS", detail: `${persisted.scoreTieGroups} (request, score) tie group(s); loadRequestMatches breaks them by first seen, then candidate id (asserted by test:recruiter-search)` });
-    rows.push({ id: "other-sorts", label: "Newest / experience / completion / evidence sorts", status: "SKIPPED", detail: "not implemented — recruiter search exposes a single relevance order" });
+    rows.push({ id: "other-sorts", label: "Newest / experience / completion / evidence sorts", status: "SKIPPED", detail: "not implemented, recruiter search exposes a single relevance order" });
   }
 
   /* ── privacy ───────────────────────────────────────────────────────────── */
@@ -755,7 +755,7 @@ export async function runRecruiterSearchAudit(opts: AuditOptions): Promise<Audit
     }
     rows.push({ id: "non-candidate-roles", label: "Recruiter / admin accounts are not searchable candidates", status: roleIds.count ? "WARN" : "PASS", detail: `${roleIds.count} in pool` });
     if (roleIds.count) {
-      findings.push(finding({ category: "VISIBILITY_ERROR", severity: "ERROR", searchVerdict: "FAIL", check: "privacy:roles", sample: roleIds, productDecision: true, message: `PRODUCT DECISION REQUIRED — ${roleIds.count} RECRUITER/ADMIN account(s) are in the candidate pool; searchableUserWhere has no role rule` }));
+      findings.push(finding({ category: "VISIBILITY_ERROR", severity: "ERROR", searchVerdict: "FAIL", check: "privacy:roles", sample: roleIds, productDecision: true, message: `PRODUCT DECISION REQUIRED: ${roleIds.count} RECRUITER/ADMIN account(s) are in the candidate pool; searchableUserWhere has no role rule` }));
     }
     rows.push({ id: "test-accounts", label: "No test-domain accounts in the candidate pool", status: testIds.count ? "WARN" : "PASS", detail: `${testIds.count} in pool` });
     if (testIds.count) {
@@ -791,7 +791,7 @@ export async function runRecruiterSearchAudit(opts: AuditOptions): Promise<Audit
     if (payloadLeak) {
       findings.push(finding({ category: "VISIBILITY_ERROR", severity: "CRITICAL", searchVerdict: "FAIL", check: "privacy:payload", sample: new IdSample(), message: "a recruiter-facing match card contains contact-shaped data" }));
     }
-    rows.push({ id: "recruiter-auth", label: "Unauthorized / deleted / expired recruiter", status: "SKIPPED", detail: "needs a session — covered offline by test:recruiter-search source scan and npm run test:demo1-security" });
+    rows.push({ id: "recruiter-auth", label: "Unauthorized / deleted / expired recruiter", status: "SKIPPED", detail: "needs a session, covered offline by test:recruiter-search source scan and npm run test:demo1-security" });
   }
 
   /* ── performance ───────────────────────────────────────────────────────── */
@@ -878,7 +878,7 @@ export async function runRecruiterSearchAudit(opts: AuditOptions): Promise<Audit
       orphanCollegeRefs: orphans,
     };
     const membersNoProfile = await programMembersWithoutProfile();
-    if (membersNoProfile) report.environment.notes.push(`${membersNoProfile} enrolled cohort member(s) have no CandidateProfile — their cards fall back to legacy ProgramMember fields.`);
+    if (membersNoProfile) report.environment.notes.push(`${membersNoProfile} enrolled cohort member(s) have no CandidateProfile, their cards fall back to legacy ProgramMember fields.`);
   } else if (opts.lite && dqSearchable.profiles > 0) {
     report.dataQuality = {
       scope: "searchable",
@@ -1003,7 +1003,7 @@ export async function runRecruiterSearchAudit(opts: AuditOptions): Promise<Audit
         check: "normalization:skills-catalog",
         affected: folded,
         userIds: [],
-        message: `${folded} skill(s) exist as several catalog rows that search already matches to each other — merge them with prisma/scripts/dedupe-skills.ts`,
+        message: `${folded} skill(s) exist as several catalog rows that search already matches to each other. Merge them with prisma/scripts/dedupe-skills.ts`,
       });
     }
   }
