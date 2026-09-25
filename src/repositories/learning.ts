@@ -36,6 +36,14 @@ export type ChallengeEnrollmentRow = {
   challengeTitle: string;
   totalDays: number;
   startedAt: Date;
+  /**
+   * The cohort's own start, when the challenge is date-synchronised. Day 1 is
+   * this date rather than the join date, so any day-number arithmetic has to
+   * pass it to `getElapsedDayNumber` / `getCurrentDayNumber` or it will be a
+   * cohort's worth of days out. The query already selected it; it was simply
+   * never carried on the row.
+   */
+  challengeStartsAt: Date | null;
 };
 
 export type ProgramMembership = {
@@ -518,6 +526,7 @@ export async function listChallengeEnrollments(
       challengeTitle: pe.cohort.programVersion.program.title,
       totalDays: pe.cohort.programVersion.plannedDurationDays ?? 60,
       startedAt: overlay.startedAt,
+      challengeStartsAt: pe.cohort.startsAt,
     });
   }
   return out;
