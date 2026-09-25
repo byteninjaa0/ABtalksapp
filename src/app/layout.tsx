@@ -70,7 +70,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${fontVars} h-full antialiased`} suppressHydrationWarning>
-      <body className={`${fontVars} min-h-full flex flex-col font-sans`}>
+      {/* `suppressHydrationWarning` on <html> does not cover <body>: the flag
+          only silences the element it is on and its immediate text, not a
+          child element's attributes. Browser extensions (theme switchers,
+          readers, translators) commonly stamp their own attribute onto <body>
+          before React hydrates — `data-rm-theme` is one — and React then
+          reports a mismatch that no application change can fix, because the
+          markup we render is identical on both sides. Nothing in this codebase
+          writes to document.body, so suppressing here hides only that class of
+          third-party noise. */}
+      <body
+        className={`${fontVars} min-h-full flex flex-col font-sans`}
+        suppressHydrationWarning
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
