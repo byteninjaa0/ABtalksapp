@@ -51,6 +51,8 @@ export default async function AdminJobDetailPage({ params }: PageProps) {
       description: true,
       applyExternalUrl: true,
       isOpen: true,
+      skills: true,
+      workMode: true,
     },
   });
 
@@ -92,6 +94,8 @@ export default async function AdminJobDetailPage({ params }: PageProps) {
           type: job.type,
           description: job.description,
           applyExternalUrl: job.applyExternalUrl ?? "",
+          skills: job.skills,
+          workMode: job.workMode ?? "",
         }}
       />
 
