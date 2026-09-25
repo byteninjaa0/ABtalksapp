@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { DashboardShell } from "@/components/dashboard-hub/dashboard-shell";
 import { HeroGreeting } from "@/components/dashboard-hub/hero-greeting";
+import { DaySkySection } from "@/components/dashboard-hub/day-sky";
 import { StreakCard } from "@/components/dashboard-hub/streak-card";
 import { ActivityHeatmap } from "@/components/dashboard-hub/activity-heatmap";
 import { ContinueJourney } from "@/components/dashboard-hub/continue-journey";
@@ -15,6 +16,8 @@ import { HUB_CARD_HOVER_CLASS } from "@/components/dashboard-hub/nav-items";
 import { getHubData } from "@/features/dashboard/get-hub-data";
 import { registrationRedirect } from "@/features/registration/registration-gate";
 import type { Domain } from "@prisma/client";
+import { formatInTimeZone } from "date-fns-tz";
+import { IST } from "@/lib/date-utils";
 
 const TRACK_PATH: Record<Domain, string> = {
   AI: "/ai",
@@ -79,12 +82,31 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     image: session.user.image ?? null,
   };
   const isAdmin = session.user.isAdmin ?? false;
+  // IST minute-of-day seeds the greeting sky so the first paint is correct.
+  // Dev only: DASHBOARD_SKY_TIME="HH:mm" freezes the sky + greeting at that time;
+  // DASHBOARD_SKY_TIME=cycle plays the whole day on a 10s loop.
+  const skyDemo =
+    process.env.NODE_ENV !== "production" &&
+    process.env.DASHBOARD_SKY_TIME === "cycle";
+  const skyOverride =
+    process.env.NODE_ENV !== "production"
+      ? /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(process.env.DASHBOARD_SKY_TIME ?? "")
+      : null;
+  const [istHour, istMin] = skyOverride
+    ? [Number(skyOverride[1]), Number(skyOverride[2])]
+    : formatInTimeZone(new Date(), IST, "H:m").split(":").map(Number);
+  const istMinute = istHour * 60 + istMin;
 
   return (
     <DashboardShell user={shellUser} isAdmin={isAdmin} collapsible>
-      <section className="px-4 py-8 sm:px-6">
+      <DaySkySection
+        initialMinute={istMinute}
+        frozen={skyOverride !== null}
+        demo={skyDemo}
+        className="px-4 py-8 sm:px-6"
+      >
         <div className="w-full max-w-[1020px] lg:ml-5 2xl:mx-auto 2xl:max-w-[1600px]">
-          <HeroGreeting firstName={firstName} />
+          <HeroGreeting firstName={firstName} istHour={istHour} />
           <div className="mt-4 grid min-w-0 gap-6 lg:grid-cols-[1fr_320px] lg:items-center lg:gap-8 2xl:grid-cols-[minmax(0,1fr)_minmax(320px,360px)]">
             <div className="min-w-0 lg:pr-6">
               <ActivityHeatmap
@@ -98,7 +120,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
           </div>
         </div>
-      </section>
+      </DaySkySection>
 
       {notice ? (
         <section className="px-4 py-2 sm:px-6 lg:ml-4">

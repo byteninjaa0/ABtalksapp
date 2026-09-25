@@ -1,0 +1,339 @@
+/* =========================================================
+   DASHBOARD DAY SKY
+   Background scene behind the hub greeting. Colours arrive as
+   --sky-* custom properties from day-sky.tsx; the whole scene
+   is masked so its bottom edge dissolves into the page (#F4F4F4).
+   ========================================================= */
+
+.dsky {
+  position: relative;
+  isolation: isolate;
+}
+
+.dsky__scene {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 370px;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  container-type: inline-size;
+  /* Eased fade from 38% down: every dune below the far ridges is
+     visibly see-through, dissolving fully into the page. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 38%,
+    rgba(0, 0, 0, 0.9) 46%,
+    rgba(0, 0, 0, 0.76) 54%,
+    rgba(0, 0, 0, 0.6) 62%,
+    rgba(0, 0, 0, 0.44) 70%,
+    rgba(0, 0, 0, 0.29) 78%,
+    rgba(0, 0, 0, 0.16) 86%,
+    rgba(0, 0, 0, 0.07) 93%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 38%,
+    rgba(0, 0, 0, 0.9) 46%,
+    rgba(0, 0, 0, 0.76) 54%,
+    rgba(0, 0, 0, 0.6) 62%,
+    rgba(0, 0, 0, 0.44) 70%,
+    rgba(0, 0, 0, 0.29) 78%,
+    rgba(0, 0, 0, 0.16) 86%,
+    rgba(0, 0, 0, 0.07) 93%,
+    transparent 100%
+  );
+}
+
+.dsky__sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    var(--sky-top) 0%,
+    var(--sky-mid) 50%,
+    var(--sky-low) 100%
+  );
+  /* OKLab blending keeps mid-tones clean instead of greying out. */
+  background: linear-gradient(
+    in oklab 180deg,
+    var(--sky-top) 0%,
+    var(--sky-mid) 50%,
+    var(--sky-low) 100%
+  );
+}
+
+/* ---------- Stars ---------- */
+.dsky__stars {
+  position: absolute;
+  inset: 0;
+  transition: opacity 1.2s ease;
+}
+
+.dsky__stars span:not(.dsky__shooting) {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  animation: dsky-twinkle 4.2s ease-in-out infinite;
+}
+
+@keyframes dsky-twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* ---------- Shooting star ----------
+   Spawned by day-sky.tsx every 2 minutes at night with a random
+   top/left and --shoot-angle; plays once. Head leads, tail fades. */
+.dsky__shooting {
+  position: absolute;
+  width: 150px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffffff 0%, rgba(210, 228, 255, 0.6) 30%, rgba(210, 228, 255, 0) 100%);
+  transform-origin: left center;
+  transform: rotate(var(--shoot-angle, 204deg)) translateX(0);
+  opacity: 0;
+  animation: dsky-shoot 1.2s ease-in forwards;
+}
+
+.dsky__shooting::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px 3px rgba(220, 235, 255, 0.85);
+  transform: translateY(-50%);
+}
+
+@keyframes dsky-shoot {
+  0% { opacity: 0; transform: rotate(var(--shoot-angle, 204deg)) translateX(0); }
+  12% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--shoot-angle, 204deg)) translateX(-360px); }
+}
+
+/* ---------- Birds ----------
+   Two filled gull silhouettes that drift slowly and bob. */
+.dsky__birds {
+  position: absolute;
+  right: 20%;
+  top: 12%;
+  width: 150px;
+  height: 82px;
+  overflow: visible;
+  animation: dsky-birds-drift 26s ease-in-out infinite alternate;
+}
+
+.dsky__bird {
+  fill: rgba(255, 255, 255, 0.92);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dsky-bird-bob 3.2s ease-in-out infinite;
+}
+.dsky__bird--small { animation-delay: -1.4s; }
+
+@keyframes dsky-birds-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-90px); }
+}
+
+@keyframes dsky-bird-bob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -5px; }
+}
+
+/* ---------- Clouds ----------
+   Flat white silhouettes (bird style) drifting left → right across
+   the afternoon sky. */
+.dsky__clouds {
+  position: absolute;
+  inset: 0;
+  /* Sized container, so the drift can be measured in the sky's own width. */
+  container-type: size;
+  transition: opacity 1.2s ease;
+  /* Clouds drift in/out through soft side edges, never a hard cut. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+}
+
+.dsky__cloud {
+  position: absolute;
+  left: 0;
+  height: auto;
+  aspect-ratio: 240 / 64;
+  overflow: visible;
+  will-change: transform;
+  animation: dsky-cloud-drift var(--cloud-dur, 140s) linear infinite;
+  animation-delay: var(--cloud-delay, 0s);
+}
+
+/* Same flat white as the gulls; the streak is a quieter echo behind. */
+.dsky__cloud-body { fill: rgba(255, 255, 255, 0.88); }
+.dsky__cloud-streak { fill: rgba(255, 255, 255, 0.42); }
+
+/* Starts fully off the left edge (-100% of its own width) and ends
+   fully off the right edge (100cqw = the sky's width). */
+@keyframes dsky-cloud-drift {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100cqw); }
+}
+
+/* ---------- Sun & moon ---------- */
+.dsky__sun {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: left 1s linear, top 1s linear;
+}
+
+.dsky__sun {
+  width: 72px;
+  height: 72px;
+  background: radial-gradient(circle at 50% 40%, #ffffff 0%, #fffaf0 55%, var(--sky-glow) 100%);
+  box-shadow:
+    0 0 0 16px rgba(255, 255, 255, 0.2),
+    0 0 0 34px rgba(255, 255, 255, 0.09),
+    0 0 80px 30px var(--sky-glow);
+}
+
+/* Moon mirrors the sun: right edge → left edge across the night.
+   --moon-x / --moon-lift come from day-sky.tsx. */
+.dsky__moon {
+  position: absolute;
+  left: var(--moon-x, 50%);
+  top: calc(80% - var(--moon-lift, 1) * (52% + 10px));
+  transform: translate(-50%, -50%);
+  width: 72px;
+  height: 72px;
+  overflow: visible;
+  filter:
+    drop-shadow(0 0 6px rgba(255, 255, 255, 0.55))
+    drop-shadow(0 0 18px rgba(220, 232, 255, 0.45))
+    drop-shadow(0 0 42px rgba(190, 215, 255, 0.35));
+  transition: opacity 1.2s ease, left 1s linear, top 1s linear;
+  animation: dsky-moon-glow 6s ease-in-out infinite;
+}
+
+/* Narrower skies: the greeting spans more of the width, so keep the
+   moon's arc low enough to pass beneath it. */
+@container (max-width: 1000px) {
+  .dsky__moon { top: calc(80% - var(--moon-lift, 1) * 40%); }
+}
+
+/* Slow "breathing" glow. */
+@keyframes dsky-moon-glow {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 6px rgba(255, 255, 255, 0.55))
+      drop-shadow(0 0 18px rgba(220, 232, 255, 0.45))
+      drop-shadow(0 0 42px rgba(190, 215, 255, 0.35));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 8px rgba(255, 255, 255, 0.7))
+      drop-shadow(0 0 24px rgba(220, 232, 255, 0.55))
+      drop-shadow(0 0 56px rgba(190, 215, 255, 0.45));
+  }
+}
+
+/* Crater sparkles: quick flare, long rest. */
+.dsky__glint {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: dsky-glint 3.6s ease-in-out infinite;
+}
+.dsky__glint--late { animation-delay: 1.3s; }
+.dsky__glint--later { animation-delay: 2.4s; }
+
+@keyframes dsky-glint {
+  0%, 60%, 100% { opacity: 0; transform: scale(0.2) rotate(0deg); }
+  75% { opacity: 1; transform: scale(1) rotate(20deg); }
+  88% { opacity: 0.2; transform: scale(0.5) rotate(35deg); }
+}
+
+/* ---------- Hills / dunes ----------
+   Crest/base colours per ridge, mixed from the live palette. Back
+   ridges are darkest; each nearer ridge is lighter, and every crest
+   is lifted a touch above its own base so the overlaps read. */
+.dsky__hills {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 62%;
+
+  /* Each ridge colour is pulled 40% toward the horizon colour, so the
+     layers still read but stay quiet against the sky. (Blending, not
+     opacity — the sun must not show through the hills.) */
+  --hill-far-crest: color-mix(in oklab, color-mix(in oklab, var(--sky-front) 88%, #000000) 60%, var(--sky-low));
+  --hill-far-base: color-mix(in oklab, color-mix(in oklab, var(--sky-front) 78%, #000000) 60%, var(--sky-low));
+  --hill-back-crest: color-mix(in oklab, color-mix(in oklab, var(--sky-front) 82%, #f4f4f4) 60%, var(--sky-low));
+  --hill-back-base: color-mix(in oklab, var(--sky-front) 60%, var(--sky-low));
+  --hill-mid-crest: color-mix(in oklab, color-mix(in oklab, var(--sky-back) 78%, #f4f4f4) 60%, var(--sky-low));
+  --hill-mid-base: color-mix(in oklab, var(--sky-back) 60%, var(--sky-low));
+  --hill-front-crest: color-mix(in oklab, color-mix(in oklab, var(--sky-back) 52%, #f4f4f4) 60%, var(--sky-low));
+  --hill-front-base: color-mix(in oklab, color-mix(in oklab, var(--sky-back) 68%, #f4f4f4) 60%, var(--sky-low));
+  /* Nearest dune: a whisper of the sky over the page background.
+     Lightening mixes use the page colour (#f4f4f4), never white, so no
+     dune is lighter than the page — otherwise the fade shows an edge. */
+  --hill-base-crest: color-mix(in oklab, var(--sky-back) 48%, #f4f4f4);
+  --hill-base-base: #f4f4f4;
+}
+
+.dsky__hill {
+  transition: fill 1.2s ease;
+}
+
+/* ---------- Small screens ---------- */
+/* The two-line greeting fills the top of a phone's sky, so the scene is
+   taller and the hills shorter here — leaving a clear band between the
+   text and the ridges where the moon and the gulls can be seen. */
+@media (max-width: 640px) {
+  .dsky__scene { height: 340px; }
+  .dsky__hills { height: 45%; }
+  .dsky__sun { width: 52px; height: 52px; }
+  .dsky__moon {
+    width: 44px;
+    height: 44px;
+    left: var(--moon-x, 70%);
+    /* Rises from behind the ridges and peaks high — but never above the
+       greeting's measured bottom edge (--text-bottom, set in day-sky.tsx). */
+    top: max(
+      calc(80% - var(--moon-lift, 1) * 44%),
+      calc(var(--text-bottom, 0px) + 26px)
+    );
+  }
+  .dsky__birds { width: 84px; height: 46px; right: 8%; top: 40%; }
+}
+
+/* Dev demo loop drives every frame itself — easing would only lag it. */
+.dsky--demo .dsky__sun,
+.dsky--demo .dsky__moon,
+.dsky--demo .dsky__stars,
+.dsky--demo .dsky__hill,
+.dsky--demo h1,
+.dsky--demo p { transition: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dsky__birds,
+  .dsky__bird,
+  .dsky__cloud { animation: none; }
+  .dsky__cloud { transform: translateX(30vw); }
+  .dsky__shooting { display: none; }
+  .dsky__stars span,
+  .dsky__moon { animation: none; }
+  .dsky__glint { animation: none; opacity: 0.8; transform: scale(0.6); }
+  .dsky__sun,
+  .dsky__moon,
+  .dsky__stars,
+  .dsky__hill { transition: none; }
+}

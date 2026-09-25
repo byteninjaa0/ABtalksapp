@@ -1,26 +1,25 @@
-import { formatInTimeZone } from "date-fns-tz";
-import { IST } from "@/lib/date-utils";
-
 type HeroGreetingProps = {
   firstName: string | null;
+  /** Current IST hour (0–23), from the page — shared with the greeting sky. */
+  istHour: number;
 };
 
-function getGreeting(): string {
-  const hour = parseInt(formatInTimeZone(new Date(), IST, "H"), 10);
+function getGreeting(hour: number): string {
   if (hour < 12) return "Good Morning";
   if (hour < 17) return "Good Afternoon";
   return "Good Evening";
 }
 
-export function HeroGreeting({ firstName }: HeroGreetingProps) {
-  const greeting = getGreeting();
+export function HeroGreeting({ firstName, istHour }: HeroGreetingProps) {
+  const greeting = getGreeting(istHour);
 
   return (
-    <div>
-      <h1 className="font-inter text-3xl font-bold tracking-tight text-[#000000] sm:text-4xl">
+    // data-sky-text: the greeting sky measures this to keep the moon clear of it.
+    <div data-sky-text>
+      <h1 className="font-inter text-3xl font-bold tracking-tight text-[color:var(--hero-ink,#000000)] transition-colors duration-700 sm:text-4xl">
         {firstName ? `${greeting}, ${firstName}` : "Welcome"}
       </h1>
-      <p className="mt-2 text-[#4B4B4B]">
+      <p className="mt-2 text-[color:var(--hero-ink-soft,#4B4B4B)] transition-colors duration-700">
         {firstName
           ? "Pick up where you left off or explore something new."
           : "Sign in to your hub to browse challenges, events, and resources."}
