@@ -727,22 +727,37 @@ export async function listProgramRecentMissionAttempts(
       },
     },
     orderBy: { submittedAt: "desc" },
-    take,
   });
 
-  return rows.flatMap((row) => {
+  // Only cleared days belong in VIEW STATS, one row per day, newest first.
+  // Unlike the per-track repositories this cannot filter on
+  // `ActivityAttempt.passed` in the query: the authoritative evaluation is the
+  // source of truth here and can disagree with the attempt row in either
+  // direction, so the verdict has to be derived first and filtered after.
+  const seen = new Set<number>();
+  const out: Array<{
+    dayNumber: number;
+    passed: boolean;
+    verdict: Prisma.JsonValue | null;
+    createdAt: Date;
+    payload: unknown;
+  }> = [];
+  for (const row of rows) {
     const dayNumber = row.activity.dayNumber;
-    if (dayNumber == null) return [];
-    return [
-      {
-        dayNumber,
-        passed: row.evaluations[0]?.passed ?? row.passed,
-        verdict: row.evaluations[0]?.detailJson ?? null,
-        createdAt: row.submittedAt ?? row.createdAt,
-        payload: row.payload,
-      },
-    ];
-  });
+    if (dayNumber == null || seen.has(dayNumber)) continue;
+    const passed = row.evaluations[0]?.passed ?? row.passed;
+    if (!passed) continue;
+    seen.add(dayNumber);
+    out.push({
+      dayNumber,
+      passed,
+      verdict: row.evaluations[0]?.detailJson ?? null,
+      createdAt: row.submittedAt ?? row.createdAt,
+      payload: row.payload,
+    });
+    if (out.length === take) break;
+  }
+  return out;
 }
 
 export async function getProgramUnlockFloor(
