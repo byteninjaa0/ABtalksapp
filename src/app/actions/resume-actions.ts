@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { logger } from "@/lib/logger";
 import { resumeLinkSchema } from "@/lib/validations/resume";
 import {
+  getResumeView,
   removeResume,
   saveResumeLink,
   saveResumeUpload,
@@ -105,6 +106,42 @@ export async function saveResumeLinkAction(
       error: String(error),
     });
     return { ok: false, message: GENERIC_FAILURE };
+  }
+}
+
+/**
+ * What is actually stored for this user right now.
+ *
+ * The upload path replaces the stored résumé before it parses, so a failed
+ * upload can leave the row FAILED with the previous file already deleted. The
+ * client cannot infer that from an error message, so after a failure it asks.
+ *
+ * `ready` mirrors exactly what `register/page.tsx` computes for `resumeReady`,
+ * so the two agree by construction. It is the only truth signal: a FAILED row
+ * can still carry a `fileName`, which is why that is returned for display only.
+ *
+ * Read-only, and like every action here it takes no argument and works only
+ * from the session.
+ */
+export async function getResumeStateAction(): Promise<{
+  ready: boolean;
+  fileName: string | null;
+}> {
+  const authed = await requireUserId();
+  if (!authed.ok) return { ready: false, fileName: null };
+
+  try {
+    const view = await getResumeView(authed.userId);
+    return {
+      ready: view?.status === "READY",
+      fileName: view?.fileName ?? null,
+    };
+  } catch (error) {
+    logger.error("[resume] state action failed", {
+      userId: authed.userId,
+      error: String(error),
+    });
+    return { ready: false, fileName: null };
   }
 }
 

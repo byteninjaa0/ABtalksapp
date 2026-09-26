@@ -3,7 +3,11 @@
 import { useRef, useState } from "react";
 import { Check, FileText, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { uploadResumeAction } from "@/app/actions/resume-actions";
+import {
+  getResumeStateAction,
+  removeResumeAction,
+  uploadResumeAction,
+} from "@/app/actions/resume-actions";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -15,11 +19,12 @@ import {
  * Optional résumé upload on registration.
  *
  * Deliberately NOT `components/profile/resume-section.tsx`. That one shows a
- * strength breakdown, a "paste a link instead" alternative and a remove button
- * — all of which belong to a profile the candidate already has, and one of
- * which ("scroll up to review what we filled in") is a lie on a page where
- * there is no profile yet to scroll to. This is the same pipeline underneath:
- * the same `uploadResumeAction`, the same parse, the same additive merge.
+ * strength breakdown and a "paste a link instead" alternative — both of which
+ * belong to a profile the candidate already has, and one of which ("scroll up
+ * to review what we filled in") is a lie on a page where there is no profile
+ * yet to scroll to. This is the same pipeline underneath: the same
+ * `uploadResumeAction`, the same `removeResumeAction`, the same parse, the
+ * same additive merge.
  *
  * The upload runs on its own, before the form is submitted, because parsing
  * takes seconds and a candidate should watch that happen rather than watch a
@@ -46,6 +51,32 @@ export function ResumeUploadField({
   const fileRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(initialFileName);
   const [busy, setBusy] = useState(false);
+  const [removing, setRemoving] = useState(false);
+
+  /**
+   * Adopt whatever is actually stored.
+   *
+   * An upload replaces the stored résumé on the server BEFORE it parses, so a
+   * failure can leave the row FAILED with the previous file already deleted —
+   * while this component still shows a tick and the old filename. Some other
+   * failures (not a PDF, over the size limit) are rejected before anything is
+   * written and the previous résumé survives untouched. The error message does
+   * not distinguish the two, so ask rather than guess.
+   *
+   * `ready` is the only signal for the tick: a FAILED row can still carry a
+   * `fileName`, so the presence of a name means nothing on its own.
+   */
+  async function reconcileWithServer() {
+    try {
+      const state = await getResumeStateAction();
+      setFileName(state.fileName);
+      onUploadedChange(state.ready);
+    } catch {
+      // Called from an error path, including a catch block. If even this round
+      // trip fails we cannot know what is stored, so leave the field as it is
+      // rather than throwing a second error over the first.
+    }
+  }
 
   async function onFileChosen(file: File) {
     // Courtesy check only — `ingest.ts` re-checks the actual bytes server-side
@@ -62,6 +93,7 @@ export function ResumeUploadField({
       const result = await uploadResumeAction(formData);
       if (!result.ok) {
         toast.error(result.message);
+        await reconcileWithServer();
         return;
       }
       setFileName(result.data.fileName ?? file.name);
@@ -69,9 +101,28 @@ export function ResumeUploadField({
       toast.success("Resume analysed");
     } catch {
       toast.error("Something went wrong. Please try again.");
+      await reconcileWithServer();
     } finally {
       setBusy(false);
       if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  async function onRemove() {
+    setRemoving(true);
+    try {
+      const result = await removeResumeAction();
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      setFileName(null);
+      onUploadedChange(false);
+      toast.success("Resume removed");
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setRemoving(false);
     }
   }
 
@@ -102,15 +153,27 @@ export function ResumeUploadField({
               {fileName ?? "Resume uploaded"}
             </p>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => fileRef.current?.click()}
-            disabled={disabled}
-          >
-            Replace
-          </Button>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => fileRef.current?.click()}
+              disabled={disabled || removing}
+            >
+              Replace
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-destructive"
+              onClick={() => void onRemove()}
+              disabled={disabled || removing}
+            >
+              {removing ? "Removing…" : "Remove"}
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed px-4 py-6 text-center">
