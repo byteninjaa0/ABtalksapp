@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   adoptGuestScoutSessionAction,
@@ -46,7 +45,6 @@ import {
  * keep, silently, on the ordinary signup path.
  */
 export function MergeGuestCart() {
-  const router = useRouter();
   const running = useRef(false);
   const done = useRef(false);
 
@@ -99,16 +97,28 @@ export function MergeGuestCart() {
         }
 
         const guestBrief = readGuestSession();
+        // `searched` as well as a typed turn. The guard used to require a
+        // `role: "user"` message, so a guest who built their requirement
+        // entirely from the suggestion chips — never typing anything — had a
+        // finished search that adoption silently skipped, and it died with the
+        // browser copy. A search that ran is work worth keeping however the
+        // requirement was assembled.
         if (
           guestBrief &&
-          guestBrief.messages.some((m) => m.role === "user")
+          (guestBrief.searched ||
+            guestBrief.messages.some((m) => m.role === "user"))
         ) {
           // Identity only. The scores, tiers and ranking this browser is holding
           // are the server's to decide again — it re-tests every ref against the
           // same visibility and eligibility rules the search itself applies.
           const candidateRefs = (readGuestMatches()?.matches ?? [])
             .map((m) => m.candidateRef)
-            .filter(Boolean);
+            .filter(Boolean)
+            // A sample card names nobody — `decodeCandidateRef` rejects a
+            // `SAMPLE:` ref by design. Sending them anyway only inflates the
+            // server's `skipped` count and makes the "still available" message
+            // report a loss that never happened.
+            .filter((ref) => !ref.startsWith("SAMPLE:"));
 
           const adopted = await adoptGuestScoutSessionAction({
             spec: guestBrief.spec,
@@ -160,7 +170,20 @@ export function MergeGuestCart() {
           // Only on success. A recruiter still awaiting approval returned above
           // with everything untouched — that copy is the only one there is, and
           // it is what the next visit adopts.
-          router.replace(`/hire/${adopted.data.requestId}`);
+          // A full navigation, not router.replace. The session cookie is
+          // minutes old and `/hire/[requestId]` is server-rendered behind
+          // `requireRecruiter`; the sign-in forms already take this route for
+          // the same reason, noting that an App Router transition landing on a
+          // server-gated page does not settle. A soft transition here left the
+          // recruiter on /hire — the adopted search showed in the side panel,
+          // because the request really had been created, while the desk stayed
+          // empty. That is the reported bug.
+          //
+          // Navigate first, clear second, as before: if the unload beats these
+          // two calls the browser copy simply survives and the next visit
+          // re-adopts it, which the action already deduplicates. Clearing first
+          // would risk throwing away the only copy if the navigation failed.
+          window.location.href = `/hire/${adopted.data.requestId}`;
           clearGuestSession();
           clearGuestMatches();
         } else {
@@ -188,9 +211,11 @@ export function MergeGuestCart() {
         running.current = false;
       }
     })();
-    // `router` is stable across renders; the empty array is what keeps this a
-    // once-per-mount effect, which the `running`/`done` refs above depend on.
-  }, [router]);
+    // Once per mount, which is what the `running` / `done` refs above assume.
+    // The dependency used to be `[router]`, which was stable and so meant the
+    // same thing; the router is gone now that the hand-off is a full
+    // navigation.
+  }, []);
 
   return null;
 }
