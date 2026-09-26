@@ -18,7 +18,19 @@ import { cn } from "@/lib/utils";
  * verified this company" is different, because that is the one case where they
  * need to do something about it.
  */
-export function RecruiterLoginForm({ initialEmail = "" }: { initialEmail?: string }) {
+export function RecruiterLoginForm({
+  initialEmail = "",
+  /**
+   * Where to go once the session exists. Defaults to the desk, which is what
+   * the in-page dialog on /hire wants; the sign-in *page* passes the `from`
+   * middleware recorded, so a recruiter who was sent here from a candidate
+   * report lands back on that report instead of at the desk.
+   */
+  redirectTo = "/hire",
+}: {
+  initialEmail?: string;
+  redirectTo?: string;
+}) {
   const router = useRouter();
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState(initialEmail);
@@ -53,11 +65,11 @@ export function RecruiterLoginForm({ initialEmail = "" }: { initialEmail?: strin
       // A full navigation, not router.push: the session cookie has just been
       // set and every guard downstream reads it server-side.
       //
-      // Straight to the desk. This used to route through /talent/setup because
-      // signing in could land on any of three recruiter states — setup
-      // unfinished, application pending, approved — and only the server knew
-      // which. There is one state now, so there is one destination.
-      window.location.href = "/hire";
+      // This used to route through /talent/setup because signing in could land
+      // on any of three recruiter states — setup unfinished, application
+      // pending, approved — and only the server knew which. There is one state
+      // now, so the only question left is where the recruiter was headed.
+      window.location.href = redirectTo;
     });
   }
 

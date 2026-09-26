@@ -208,9 +208,12 @@ suite("registration signs in with the same code, not a second OTP", () => {
     body.includes('signIn("recruiter-otp"'),
     "registration opens the session with the same code",
   );
+  // The destination is now whatever `redirectTo` holds — "/hire" by default,
+  // or the page the recruiter was trying to reach when they were sent to sign
+  // in. What must not change is that it is a full navigation.
   assert(
-    body.includes('window.location.href = "/hire"'),
-    "a successful session goes to /hire with a full navigation",
+    body.includes("window.location.href = redirectTo"),
+    "a successful session navigates to the resolved destination",
   );
   assert(
     !body.includes("router.push(") && !body.includes("router.refresh("),
@@ -246,10 +249,11 @@ suite("recruiter sign-in lands on the desk", () => {
 
   // Sign-in used to route through /talent/setup because it could not know
   // which of three recruiter states the account was in. Plan 127 left one
-  // state, so the destination is unconditional.
+  // state; the destination now comes from `redirectTo`, which defaults to the
+  // desk and otherwise carries the page the recruiter was sent here from.
   assert(
-    body.includes('window.location.href = "/hire"'),
-    "a successful sign-in navigates to the Scout desk",
+    body.includes("window.location.href = redirectTo"),
+    "a successful sign-in navigates to the resolved destination",
   );
   // Still a full navigation, not an App Router transition: the session cookie
   // has just been set and every guard downstream reads it server-side.

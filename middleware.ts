@@ -34,6 +34,8 @@ function readConsentChoice(value: string | undefined): string | null {
  * `@/lib/*`. Keep the header name and the pattern in sync with that file.
  */
 const REQUEST_ID_HEADER = "x-request-id";
+/** Read by `requireRecruiter`; see `src/lib/program-auth.ts`. */
+const PATHNAME_HEADER = "x-pathname";
 const REQUEST_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 
 /**
@@ -48,6 +50,28 @@ function resolveRequestId(incoming: string | null): string {
   return incoming && REQUEST_ID_RE.test(incoming)
     ? incoming
     : crypto.randomUUID();
+}
+
+/**
+ * Duplicate of `safeRedirectPath` in `src/lib/safe-redirect.ts`, for the same
+ * reason the consent and request-id constants above are duplicated: middleware
+ * must not import from `@/lib/*` or it blows the 1 MB Edge bundle. That file is
+ * the source of truth — change the rule there and mirror it here.
+ *
+ * The check used to be `startsWith("/") && !startsWith("//")`, which a browser
+ * defeats: it normalises a backslash to a slash before resolving, so
+ * `/\\evil.com` passed and then resolved to another origin. Tab, newline and
+ * carriage return are stripped before resolving too, so they are refused as
+ * well.
+ */
+const UNSAFE_REDIRECT = /[\u0000-\u001F\u007F\\]/;
+
+function safeRedirectPath(from: string | null | undefined, fallback: string): string {
+  if (!from) return fallback;
+  if (!from.startsWith("/")) return fallback;
+  if (from.length > 1 && (from[1] === "/" || from[1] === "\\")) return fallback;
+  if (UNSAFE_REDIRECT.test(from)) return fallback;
+  return from;
 }
 
 const { auth } = NextAuth(authConfig);
@@ -245,10 +269,7 @@ export default auth((req) => {
     );
   } else if (isAuthPage && isLoggedIn) {
     const from = req.nextUrl.searchParams.get("from");
-    const destination =
-      from && from.startsWith("/") && !from.startsWith("//")
-        ? from
-        : "/";
+    const destination = safeRedirectPath(from, "/");
     response = withTracking(
       NextResponse.redirect(new URL(destination, req.nextUrl)),
       ref,
@@ -263,6 +284,10 @@ export default auth((req) => {
     // the id back out of `headers()` — see `@/lib/observability/request-id`.
     const forwarded = new Headers(req.headers);
     forwarded.set(REQUEST_ID_HEADER, requestId);
+    // A Server Component cannot read its own URL. `requireRecruiter` needs it
+    // to send someone back where they were going after they sign in, so the
+    // path rides along on the request it is already forwarding.
+    forwarded.set(PATHNAME_HEADER, pathname + req.nextUrl.search);
 
     response = withTracking(
       NextResponse.next({ request: { headers: forwarded } }),
