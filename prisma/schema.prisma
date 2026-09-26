@@ -517,6 +517,13 @@ model Job {
   type             JobType          @default(FULL_TIME)
   description      String
   skills           String[]         @default([])
+  /// Years of experience the role asks for. Null means the posting does not
+  /// say, which is every job written before this column existed — the card
+  /// shows no pill rather than inventing a "0+". Named to match
+  /// `TalentRequest.minExperience`, the recruiter-side request model, rather
+  /// than `yearsExperience`, which is already taken on the candidate side for
+  /// a derived value.
+  minExperience    Int?
   applyExternalUrl String?
   isOpen           Boolean          @default(true)
   status           JobStatus        @default(PUBLISHED)
