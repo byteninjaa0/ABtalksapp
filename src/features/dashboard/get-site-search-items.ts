@@ -70,6 +70,7 @@ export const getSiteSearchItems = cache(async (): Promise<HubSearchItem[]> => {
     challengeTitle: r.challengeTitle,
     daysCompleted: r.daysCompleted,
     currentStreak: r.currentStreak,
+    startedAt: r.startedAt,
   }));
 
   return buildHubSearchIndex({

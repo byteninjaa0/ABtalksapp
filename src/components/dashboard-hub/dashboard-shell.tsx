@@ -84,7 +84,11 @@ export function DashboardShell({
   }, [mobileOpen, closeMobile]);
 
   return (
-    <div className="theme-abtalks-light theme-abtalks-brand flex min-h-svh bg-[#F4F4F4] font-content text-black">
+    <div
+      className="theme-abtalks-light theme-abtalks-brand flex min-h-svh bg-[#F4F4F4] font-content text-black"
+      // Lets page content adapt to the sidebar (e.g. the hub's 60-day grid).
+      data-sidebar={collapsible && collapsed ? "collapsed" : "open"}
+    >
       <DashboardSidebar
         user={user}
         mobileOpen={mobileOpen}

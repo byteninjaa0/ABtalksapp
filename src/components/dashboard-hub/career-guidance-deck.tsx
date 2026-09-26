@@ -227,14 +227,11 @@ export function CareerGuidanceDeck({
   if (visible.length === 0) return null;
 
   return (
-    <section
-      id="career-guidance"
-      className="scroll-mt-20 px-4 py-8 sm:px-6 lg:ml-4"
-    >
-      <h2 className="font-heading text-xl font-semibold uppercase text-[#03535F]">
-        Career Guidance
-      </h2>
-      <ul className="no-scrollbar mt-4 flex gap-4 overflow-x-auto pb-1 snap-x snap-mandatory">
+    <section id="career-guidance" className="scroll-mt-24 space-y-4 pt-2">
+      <h3 className="font-heading text-2xl font-bold tracking-tight text-black">
+        Career <span className="text-[#03535F]">guidance</span>
+      </h3>
+      <ul className="no-scrollbar flex gap-4 overflow-x-auto pb-1 snap-x snap-mandatory">
         {visible.map((card) => (
           <DailyCardView key={card.id} card={card} onDismiss={dismiss} />
         ))}
@@ -253,7 +250,7 @@ function DailyCardView({
   return (
     <li
       className={cn(
-        "relative flex w-[min(100%,320px)] shrink-0 snap-start flex-col justify-between rounded-2xl border border-[#E0E0E0] bg-white p-5 sm:w-[300px]",
+        "relative flex w-[min(100%,320px)] shrink-0 snap-start flex-col justify-between rounded-3xl border border-[#E6E9E9] bg-white p-6 sm:w-[300px]",
         HUB_CARD_HOVER_CLASS,
       )}
     >
@@ -266,10 +263,10 @@ function DailyCardView({
         <X className="size-4" strokeWidth={2} aria-hidden />
       </button>
       <div className="min-h-0 pr-8">
-        <span className="inline-flex rounded-[4px] border border-[#03535F]/40 bg-[#EEF6F6] px-2 py-0.5 text-[11px] font-semibold text-[#03535F]">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#03535F]">
           {KIND_LABEL[card.kind]}
         </span>
-        <p className="mt-2 font-inter font-bold text-black">{card.title}</p>
+        <p className="mt-2 font-heading text-lg font-bold text-black">{card.title}</p>
         <p className="mt-1 text-sm text-[#4B4B4B]">{card.body}</p>
       </div>
       {card.ctaLabel && card.href ? (

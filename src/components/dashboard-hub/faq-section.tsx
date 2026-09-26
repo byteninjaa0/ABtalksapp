@@ -8,16 +8,15 @@ export function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="scroll-mt-20 px-4 py-12 sm:px-6 lg:ml-5">
-      <div className="grid gap-8 lg:grid-cols-[2fr_3fr] lg:items-center lg:gap-12">
+    <section id="faq" className="scroll-mt-24 pt-14">
+      <div className="grid gap-8 lg:grid-cols-[2fr_3fr] lg:items-start lg:gap-12">
         {/* Left column: heading + subtitle */}
         <div>
-          <h2 className="text-3xl font-fredoka font-bold leading-tight tracking-tight text-black sm:text-4xl">
-            Frequently asked
-            <br />
-            <span className="italic text-[#03535F]">questions</span>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#03535F]">FAQ</p>
+          <h2 className="mt-2 font-heading text-3xl font-bold leading-tight tracking-tight text-black sm:text-[40px]">
+            Questions, <span className="text-[#03535F]">answered.</span>
           </h2>
-          <p className="mt-4 font-fredoka text-sm leading-relaxed text-[#4B4B4B]">
+          <p className="mt-3 text-[15px] leading-relaxed text-[#4B4B4B]">
             Everything you need to know about the ABTalks 60-day challenge,
             submissions, streaks, and more.
           </p>
@@ -32,14 +31,14 @@ export function FaqSection() {
             return (
               <div
                 key={item.q}
-                className="overflow-hidden rounded-xl bg-[#E7F2F3]"
+                className="overflow-hidden rounded-2xl border border-[#E6E9E9] bg-white"
               >
                 <button
                   type="button"
                   aria-expanded={isOpen}
                   aria-controls={panelId}
                   onClick={() => setOpenIndex(isOpen ? null : index)}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-sm font-semibold font-inter text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#03535F]"
+                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-[15px] font-semibold text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#03535F]"
                 >
                   {item.q}
                   <span
