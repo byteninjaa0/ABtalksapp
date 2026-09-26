@@ -31,7 +31,14 @@ import { EMPTY_VISUAL, SupportingVisual } from "./supporting-visual";
  * registration), then sign in with the `recruiter-otp` provider.
  */
 
-export function SigninScreen({ initialEmail = "" }: { initialEmail?: string }) {
+export function SigninScreen({
+  initialEmail = "",
+  /** Where to go once the session exists; the desk unless `from` said otherwise. */
+  redirectTo = "/hire",
+}: {
+  initialEmail?: string;
+  redirectTo?: string;
+}) {
   const motionMode = useMotionMode();
   const [screen, setScreen] = useState<"email" | "code">("email");
   const [dir, setDir] = useState<Direction>(1);
@@ -90,7 +97,7 @@ export function SigninScreen({ initialEmail = "" }: { initialEmail?: string }) {
       // Full navigation: the session cookie was just set and every guard
       // downstream reads it server-side. Straight to the desk — registering
       // provisions the workspace, so there is no setup or review step.
-      window.location.href = "/hire";
+      window.location.href = redirectTo;
     });
   }
 
