@@ -9,6 +9,7 @@ import {
   formatPostedLabel,
   JOB_TYPE_LABEL,
   WORK_MODE_LABEL,
+  formatExperienceLabel,
 } from "@/components/jobs/job-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,7 @@ export default async function JobDetailPage({ params }: PageProps) {
     ["Location", job.location ?? "Not specified"],
     ["Work mode", job.workMode ? WORK_MODE_LABEL[job.workMode] : "Not specified"],
     ["Type", JOB_TYPE_LABEL[job.type]],
+    ["Experience", formatExperienceLabel(job.minExperience) ?? "Not specified"],
     ["Posted", formatDateIST(job.publishedAt ?? job.createdAt)],
   ];
 

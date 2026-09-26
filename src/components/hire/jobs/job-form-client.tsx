@@ -10,6 +10,7 @@ import {
   Bold,
   Briefcase,
   Check,
+  Clock,
   Eye,
   FileText,
   Italic,
@@ -38,6 +39,10 @@ type Initial = {
   workMode: JobWorkMode;
   type: JobType;
   skills: string[];
+  /** Held as a string because an empty input is "" and must stay distinct
+   *  from 0 — "not stated" and "no experience needed" are different answers.
+   *  Coerced once, in `payload()`. */
+  minExperience: string;
   applyExternalUrl: string;
 };
 
@@ -48,6 +53,7 @@ const DEFAULT_INITIAL: Initial = {
   workMode: "REMOTE",
   type: "FULL_TIME",
   skills: [],
+  minExperience: "",
   applyExternalUrl: "",
 };
 
@@ -152,6 +158,12 @@ export function JobFormClient({
       workMode: values.workMode,
       opportunityType: values.type,
       skills: parseSkills(skillsInput),
+      // "" means the recruiter left it alone, which is a real answer and must
+      // reach the server as null rather than as 0.
+      minExperience:
+        values.minExperience.trim() === ""
+          ? null
+          : Number(values.minExperience),
       applyExternalUrl: values.applyExternalUrl,
     };
   }
@@ -256,6 +268,23 @@ export function JobFormClient({
                 onChange={(e) => set("location", e.target.value)}
                 placeholder="e.g. Bengaluru, India"
                 maxLength={200}
+              />
+            </span>
+          </label>
+
+          <label className="hire-jobs-form__field">
+            <span>Minimum experience</span>
+            <span className="hire-jobs-form__control">
+              <Clock aria-hidden="true" />
+              <input
+                id="job-min-experience"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={50}
+                value={values.minExperience}
+                onChange={(e) => set("minExperience", e.target.value)}
+                placeholder="e.g. 2"
               />
             </span>
           </label>
