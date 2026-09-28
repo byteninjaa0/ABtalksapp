@@ -114,6 +114,10 @@ export function RecruiterLoginForm({
           email={email}
           onEmailChange={setEmail}
           afterSignIn="/hire"
+          onUseEmailCode={() => {
+            setMethod("code");
+            setStep("email");
+          }}
         />
       </div>
     );

@@ -173,6 +173,30 @@ async function main() {
     );
   });
 
+  await suite("the candidate door never touches a recruiter account", () => {
+    const actions = src("src/app/actions/email-auth-actions.ts");
+    const guard = actions.indexOf(
+      'if (audience === "candidate" && user?.recruiterProfile)',
+    );
+    assert(guard > 0, "a recruiter address on /login must be sent to Hire");
+    assert(
+      guard < actions.indexOf("await issueEmailCode("),
+      "the refusal must come before any code is issued, for either purpose",
+    );
+  });
+
+  await suite("a refused password sign-in offers the way out", () => {
+    const form = src("src/components/auth/password-sign-in.tsx");
+    assert(
+      form.includes("onUseEmailCode?: () => void"),
+      "an account with no password cannot be named — offer the code tab instead",
+    );
+    assert(
+      form.includes("disabled={pending || !emailOk}"),
+      "asking for a reset code must not wait on the Terms box",
+    );
+  });
+
   console.log(`\n${passed} passed, ${failed} failed\n`);
   if (failed > 0) process.exit(1);
 }

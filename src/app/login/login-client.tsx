@@ -306,6 +306,10 @@ export function LoginClient({
               afterSignIn={afterSignIn}
               disabled={!canSignIn}
               onBeforeSignIn={beforeCredentialsSignIn}
+              onUseEmailCode={() => {
+                setMethod("code");
+                setCodeStep("email");
+              }}
             />
           ) : codeStep === "email" ? (
             <form

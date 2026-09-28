@@ -485,6 +485,7 @@ export default async function ProfilePage({
         review={review}
         avatarUploadEnabled={isAvatarStorageConfigured()}
         performance={performance}
+        emailLoginEnabled={isEmailLoginEnabled()}
       />
       {isEmailLoginEnabled() ? (
         <div className="border-t px-4 py-6">

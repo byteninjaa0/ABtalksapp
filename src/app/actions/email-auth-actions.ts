@@ -62,9 +62,11 @@ async function clientRateLimit(): Promise<{ ok: true } | { ok: false; message: s
  * password from either door (`password-reset`).
  *
  * `candidate-login` to an unknown address is a signup and gets a code. A
- * recruiter address is told where to go — recruiter sign-in already says
- * which addresses are registered, so this reveals nothing new. Admin and
- * frozen accounts get the same answer as everyone else and no email.
+ * recruiter address is told where to go, whichever purpose it asked for —
+ * recruiter sign-in already says which addresses are registered, so this
+ * reveals nothing new, and the candidate door must neither open a recruiter
+ * account nor rewrite its password. Admin and frozen accounts get the same
+ * answer as everyone else and no email.
  *
  * `password-reset` always answers the same way, whether or not a code was
  * sent, so it cannot be used to learn who has an account.
@@ -95,10 +97,13 @@ export async function requestEmailCodeAction(
     const googleOnly = await isGoogleOnlyAccount(email, user);
     const silent: ActionResult<{ sent: true }> = { ok: true, data: { sent: true } };
 
+    // `candidate-login` already implies the candidate door (checked above);
+    // `password-reset` can arrive from either.
+    if (audience === "candidate" && user?.recruiterProfile) {
+      return { ok: false, message: RECRUITER_ACCOUNT_MESSAGE };
+    }
+
     if (purpose === "candidate-login") {
-      if (user?.recruiterProfile) {
-        return { ok: false, message: RECRUITER_ACCOUNT_MESSAGE };
-      }
       if (googleOnly || (user && isFrozen(user))) return silent;
     } else if (
       !user ||
@@ -110,12 +115,9 @@ export async function requestEmailCodeAction(
     }
 
     const issued = await issueEmailCode(email, purpose);
-    if (!issued.ok) {
-      return {
-        ok: false,
-        message: "Too many codes requested. Try again in a few minutes.",
-      };
-    }
+    // The limiter's own message: "too many" only when it really counted that
+    // many, and something else when it could not count at all.
+    if (!issued.ok) return { ok: false, message: issued.message };
     const { devCode } = await deliverEmailCode(
       email,
       issued.code,
@@ -293,12 +295,7 @@ export async function requestPasswordCodeAction(): Promise<
     }
 
     const issued = await issueEmailCode(user.email, "password-reset");
-    if (!issued.ok) {
-      return {
-        ok: false,
-        message: "Too many codes requested. Try again in a few minutes.",
-      };
-    }
+    if (!issued.ok) return { ok: false, message: issued.message };
     const { devCode } = await deliverEmailCode(user.email, issued.code, "password");
     return { ok: true, data: { sent: true, ...(devCode ? { devCode } : {}) } };
   } catch (error) {

@@ -93,7 +93,12 @@ export type IssueEmailCodeResult =
        */
       code: string;
     }
-  | { ok: false; reason: "rate-limited" };
+  | {
+      ok: false;
+      reason: "rate-limited";
+      /** The limiter's own words — a real quota, or the limiter being down. */
+      message: string;
+    };
 
 /**
  * Create a code for an email. One live code per address: issuing deletes any
@@ -114,7 +119,9 @@ export async function issueEmailCode(
     bucket: "EMAIL_CODE_ADDRESS",
     subjectId: emailRateLimitSubject(email),
   });
-  if (!allowed.ok) return { ok: false, reason: "rate-limited" };
+  if (!allowed.ok) {
+    return { ok: false, reason: "rate-limited", message: allowed.message };
+  }
 
   // randomInt, not Math.random: this is a credential, however short-lived.
   const code = String(randomInt(0, 10 ** CODE_LENGTH)).padStart(

@@ -74,6 +74,15 @@ export function isRateLimited(
   return recent.length >= max;
 }
 
+/**
+ * Shown when the limiter itself cannot answer — a database error, not a quota.
+ * It must never read like "too many": an unapplied enum migration once spent
+ * an afternoon looking exactly like a rate limit, because both came back in
+ * the same words.
+ */
+export const RATE_LIMIT_UNAVAILABLE_MESSAGE =
+  "Something went wrong on our side. Try again in a moment.";
+
 export function rateLimitMessage(bucket: RateLimitBucketName): string {
   switch (bucket) {
     case "UNLOCK":

@@ -334,6 +334,48 @@ body.pw-profile-page.pw-scrolling .abt-content-scroll::-webkit-scrollbar-thumb {
   color: var(--pw-primary);
 }
 
+/* ---- Account link (plan 154) ----
+   Not a step: it leaves the wizard for /settings/security, so it sits under a
+   hairline instead of in the checklist and never takes the clay active
+   treatment. Everything else matches .pw-check-item. */
+.pw-check-account {
+  flex: none;
+  margin: 10px 32px 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--pw-border-soft);
+}
+.pw-check-link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  /* Black like the tabs above it, not muted: the hairline already says this is
+     a different kind of destination, and a grey peer next to a genuinely
+     disabled grey would read as disabled too. */
+  color: #000000;
+  text-align: left;
+  text-decoration: none;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+.pw-check-link:hover {
+  background: var(--pw-primary-tint);
+  color: var(--pw-primary);
+}
+/* An open sheet with unsaved edits: leaving would drop them, and the leave
+   pop only knows how to hold a step, not a route. */
+.pw-check-link[aria-disabled="true"],
+.pw-check-link[aria-disabled="true"]:hover {
+  background: none;
+  color: #9a9a9a;
+  cursor: not-allowed;
+}
+
 /* ---- Profile performance (plan 120) ---- */
 .pw-performance-section {
   margin: 12px 16px 0;

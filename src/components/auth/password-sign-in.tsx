@@ -22,12 +22,14 @@ import {
 
 /**
  * A refused credentials sign-in, as a toast. A recruiter who typed their
- * details on the candidate door gets a way to the right one.
+ * details on the candidate door gets a way to the right one; everyone else
+ * gets `onUseEmailCode`, when the caller has one.
  */
 export function toastSignInError(
   code: string | undefined,
   method: "password" | "code",
   email: string,
+  onUseEmailCode?: () => void,
 ) {
   const message = signInErrorMessage(code, method);
   if (code === SIGN_IN_ERROR.recruiterAccount) {
@@ -39,6 +41,16 @@ export function toastSignInError(
             `/talent/login?email=${encodeURIComponent(email.trim())}`,
           ),
       },
+    });
+    return;
+  }
+  // "Email or password is incorrect." is also what an account that has never
+  // set a password gets, and what an address with no account gets. Which one
+  // it is cannot be said out loud without telling a stranger who has an
+  // account here, so the way out is offered to all three alike.
+  if (onUseEmailCode) {
+    toast.error(message, {
+      action: { label: "Email me a code", onClick: onUseEmailCode },
     });
     return;
   }
@@ -56,6 +68,8 @@ export async function signInWithPassword(input: {
   password: string;
   audience: AuthAudience;
   afterSignIn: string;
+  /** Offered on the refusal toast: switch to the emailed-code tab. */
+  onUseEmailCode?: () => void;
 }): Promise<boolean> {
   const res = await signIn("password", {
     email: input.email.trim(),
@@ -64,7 +78,7 @@ export async function signInWithPassword(input: {
     redirect: false,
   });
   if (!res || res.error) {
-    toastSignInError(res?.code, "password", input.email);
+    toastSignInError(res?.code, "password", input.email, input.onUseEmailCode);
     return false;
   }
   window.location.assign(input.afterSignIn);
@@ -85,6 +99,7 @@ export function PasswordSignIn({
   afterSignIn,
   disabled = false,
   onBeforeSignIn,
+  onUseEmailCode,
   idPrefix,
 }: {
   audience: AuthAudience;
@@ -96,6 +111,12 @@ export function PasswordSignIn({
   disabled?: boolean;
   /** Last check before any sign-in; return false to stop. */
   onBeforeSignIn?: () => boolean;
+  /**
+   * Send the person back to the parent's emailed-code tab, email intact. The
+   * only way out for someone who never set a password, or who has no account
+   * at all — neither can be named here without leaking who is registered.
+   */
+  onUseEmailCode?: () => void;
   idPrefix: string;
 }) {
   const [mode, setMode] = useState<Mode>("password");
@@ -105,7 +126,9 @@ export function PasswordSignIn({
   const [devCode, setDevCode] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  // `disabled` holds back the buttons only — typing is always allowed.
+  // `disabled` (the Terms box on /login) holds back the two buttons that sign
+  // someone in. Typing is always allowed, and so is asking for a reset code:
+  // an account old enough to have a password accepted the Terms at signup.
   const busy = pending || disabled;
   const emailOk = email.trim().length > 3;
 
@@ -117,6 +140,7 @@ export function PasswordSignIn({
         password,
         audience,
         afterSignIn,
+        onUseEmailCode,
       });
       if (!ok) setPassword("");
     });
@@ -249,12 +273,32 @@ export function PasswordSignIn({
           <button
             type="button"
             onClick={requestReset}
-            disabled={busy}
+            disabled={pending}
             className="text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
           >
             Send a new code
           </button>
         </div>
+        {onUseEmailCode ? (
+          // The one screen where a code may never arrive: the address has no
+          // account, and saying so is exactly what we refuse to do. The
+          // emailed-code tab is the honest way on — it answers the same for
+          // every address, and on the candidate door it opens the account.
+          <p className="text-center text-xs text-muted-foreground">
+            No code?{" "}
+            <button
+              type="button"
+              onClick={onUseEmailCode}
+              disabled={pending}
+              className="font-medium text-primary underline-offset-2 hover:underline"
+            >
+              Sign in with an emailed code
+            </button>{" "}
+            {audience === "candidate"
+              ? "— it also creates your account if you're new."
+              : "instead."}
+          </p>
+        ) : null}
       </form>
     );
   }
@@ -288,7 +332,11 @@ export function PasswordSignIn({
             disabled={pending}
           />
         </div>
-        <button type="submit" disabled={busy || !emailOk} className={submitClass}>
+        <button
+          type="submit"
+          disabled={pending || !emailOk}
+          className={submitClass}
+        >
           {spinner}
           Email me a code
         </button>
