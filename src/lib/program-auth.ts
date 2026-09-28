@@ -2,6 +2,7 @@ import "server-only";
 import { randomBytes } from "crypto";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { isRevokedSession } from "@/lib/account-status";
 import { PROGRAM_AI_COHORT_BASE } from "@/features/program/constants";
 import { ensureRecruiterWorkspace } from "@/features/hire/provision-recruiter";
 import {
@@ -54,6 +55,9 @@ export async function resolveProgramMemberForUser(userId: string) {
  */
 export async function requireProgramMember() {
   const session = await auth();
+  if (isRevokedSession(session)) {
+    redirect(`/api/auth/signout?callbackUrl=${encodeURIComponent("/login")}`);
+  }
   if (!session?.user?.id) redirect(PROGRAM_AI_COHORT_BASE);
 
   const resolved = await resolveProgramMemberForUser(session.user.id);
@@ -78,6 +82,14 @@ export async function requireProgramMember() {
  */
 export async function requireRecruiter() {
   const session = await auth();
+  // A secured or disabled recruiter keeps a valid-looking JWT, and Auth.js
+  // renews it on every read. Signout is what actually drops it; without this
+  // they bounce between the desk and the login page holding a dead session.
+  if (isRevokedSession(session)) {
+    redirect(
+      `/api/auth/signout?callbackUrl=${encodeURIComponent("/talent/login")}`,
+    );
+  }
   if (!session?.user?.id) redirect("/talent/login");
 
   const workspace = await ensureRecruiterWorkspace(session.user.id);

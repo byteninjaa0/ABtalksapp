@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { signIn } from "next-auth/react";
 import { ArrowLeft, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { ACCOUNT_DISABLED_MESSAGE } from "@/lib/account-status";
 import { requestEmailCodeAction } from "@/app/actions/email-auth-actions";
 import {
   PasswordSignIn,
@@ -74,6 +75,8 @@ function messageForAuthError(error: string | undefined): string | null {
       return "That Google account's email is already used by another ABTalks login. Sign in with the original method, or use a different Google account.";
     case "RecruiterAccount":
       return "That email belongs to a recruiter account. Sign in at ABTalks Hire instead.";
+    case "AccountDisabled":
+      return ACCOUNT_DISABLED_MESSAGE;
     case "AccessDenied":
       return "Sign-in was cancelled. Please try again.";
     case "Configuration":

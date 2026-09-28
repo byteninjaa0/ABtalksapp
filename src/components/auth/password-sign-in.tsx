@@ -44,6 +44,13 @@ export function toastSignInError(
     });
     return;
   }
+  // A disabled account is told why, and offered nothing: requestEmailCodeAction
+  // deliberately drops the request for a frozen account, so "Email me a code"
+  // would send them to wait for a code that is never issued.
+  if (code === SIGN_IN_ERROR.accountDisabled) {
+    toast.error(message);
+    return;
+  }
   // "Email or password is incorrect." is also what an account that has never
   // set a password gets, and what an address with no account gets. Which one
   // it is cannot be said out loud without telling a stranger who has an

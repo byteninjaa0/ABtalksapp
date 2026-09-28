@@ -61,6 +61,19 @@ class NotRecruiterSignIn extends CredentialsSignin {
   code = SIGN_IN_ERROR.notRecruiter;
 }
 
+/**
+ * An admin disabled this account.
+ *
+ * Only ever thrown AFTER the code or the password has verified, alongside the
+ * other specific refusals. Reaching it means the caller has proved the account
+ * is theirs, so naming the reason tells them nothing they could not already
+ * confirm — whereas saying it any earlier would turn the sign-in form into an
+ * oracle for which addresses exist and which are suspended.
+ */
+export class AccountDisabledSignIn extends CredentialsSignin {
+  code = SIGN_IN_ERROR.accountDisabled;
+}
+
 // ---------------------------------------------------------------------------
 // Accounts
 // ---------------------------------------------------------------------------
@@ -242,7 +255,7 @@ export async function authorizeEmailCode(raw: unknown): Promise<SessionUser | nu
     return createCandidateFromEmail(email);
   }
 
-  if (isFrozen(user)) return null;
+  if (isFrozen(user)) throw new AccountDisabledSignIn();
   if (await isGoogleOnlyAccount(email, user)) return null;
   if (user.recruiterProfile) throw new RecruiterAccountSignIn();
 
@@ -292,7 +305,7 @@ export async function authorizePassword(
   }
   if (!(await verifyPassword(password, user.password))) return null;
 
-  if (isFrozen(user)) return null;
+  if (isFrozen(user)) throw new AccountDisabledSignIn();
   if (await isGoogleOnlyAccount(email, user)) return null;
   if (audience === "candidate" && user.recruiterProfile) {
     throw new RecruiterAccountSignIn();

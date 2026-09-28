@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ACCOUNT_DISABLED_MESSAGE } from "@/lib/account-status";
 
 /*
  * Plan 154 — boundaries for password and emailed-code sign-in.
@@ -88,6 +89,7 @@ export const SIGN_IN_ERROR = {
   rateLimited: "rate_limited",
   recruiterAccount: "recruiter_account",
   notRecruiter: "not_recruiter",
+  accountDisabled: "account_disabled",
 } as const;
 
 export function signInErrorMessage(
@@ -101,6 +103,8 @@ export function signInErrorMessage(
       return "This is a recruiter account. Sign in at ABTalks Hire instead.";
     case SIGN_IN_ERROR.notRecruiter:
       return "This account isn't registered as a recruiter.";
+    case SIGN_IN_ERROR.accountDisabled:
+      return ACCOUNT_DISABLED_MESSAGE;
     default:
       return method === "password"
         ? "Email or password is incorrect."
