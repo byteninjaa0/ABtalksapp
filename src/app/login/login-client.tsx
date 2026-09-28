@@ -106,7 +106,9 @@ export function LoginClient({
   authError,
 }: LoginClientProps) {
   const [email, setEmail] = useState("");
-  const [method, setMethod] = useState<"code" | "password">("code");
+  // Password first: signing in is the common case, and it is the one door
+  // here that cannot create an account, so it needs no consent up front.
+  const [method, setMethod] = useState<"code" | "password">("password");
   const [codeStep, setCodeStep] = useState<"email" | "code">("email");
   const [code, setCode] = useState("");
   const [devCode, setDevCode] = useState<string | null>(null);
@@ -123,6 +125,16 @@ export function LoginClient({
   const afterSignIn = /^\/dashboard(?:[/?#]|$)/.test(target)
     ? `/welcome?next=${encodeURIComponent(target)}`
     : target;
+  /**
+   * Google (`events.createUser`) and an emailed code to an unknown address
+   * (`createCandidateFromEmail`) both create the account, and both write the
+   * consent record — so both wait for the box.
+   *
+   * A password never creates anything: `authorizePassword` only ever returns
+   * an account that already exists, and records no consent. Gating it asked
+   * someone to re-accept terms they agreed to at signup, and stored nothing
+   * for the trouble.
+   */
   const canSignIn = legalConsentAccepted(legalConsent);
   const authErrorMessage = messageForAuthError(authError);
 
@@ -155,7 +167,11 @@ export function LoginClient({
   }, [resendUntil]);
   const resendIn = Math.max(0, Math.ceil((resendUntil - now) / 1000));
 
-  /** Terms first, then the newsletter choice rides along to account creation. */
+  /**
+   * The emailed-code path only. Terms first, then the newsletter choice rides
+   * along to account creation — a code to an unknown address makes the
+   * account, so neither can be collected afterwards.
+   */
   function beforeCredentialsSignIn(): boolean {
     if (!ensureLegalAccepted()) return false;
     writeNewsletterPrefCookie(legalConsent.newsletterOptIn);
@@ -304,8 +320,6 @@ export function LoginClient({
               email={email}
               onEmailChange={setEmail}
               afterSignIn={afterSignIn}
-              disabled={!canSignIn}
-              onBeforeSignIn={beforeCredentialsSignIn}
               onUseEmailCode={() => {
                 setMethod("code");
                 setCodeStep("email");
@@ -439,7 +453,9 @@ export function LoginClient({
       />
       {!canSignIn ? (
         <p className="text-center text-xs text-muted-foreground">
-          Accept the Terms of Service and Privacy Policy to enable Sign in.
+          {method === "password"
+            ? "Signing in with a password needs no acceptance. Google and emailed codes do — either one creates your account if you're new."
+            : "Accept the Terms of Service and Privacy Policy to enable Sign in."}
         </p>
       ) : null}
     </div>

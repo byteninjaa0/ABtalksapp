@@ -197,6 +197,29 @@ async function main() {
     );
   });
 
+  await suite("consent gates account creation, not password sign-in", () => {
+    const login = src("src/app/login/login-client.tsx");
+    // Password is the default door and the only one that cannot create an
+    // account, so it must not wait on the Terms box.
+    assert(
+      login.includes('useState<"code" | "password">("password")'),
+      "password is the default method",
+    );
+    const form = login.slice(login.indexOf("<PasswordSignIn"), login.indexOf("/>", login.indexOf("<PasswordSignIn")));
+    assert(!form.includes("disabled="), "the password form is not consent-gated");
+    assert(!form.includes("onBeforeSignIn"), "and does not run the signup hook");
+    // The two doors that do create an account still wait for it.
+    assert(
+      login.includes("disabled={pending || !canSignIn}") ||
+        login.includes("disabled={emailPending || !canSignIn || !email.trim()}"),
+      "the emailed-code path still waits for consent",
+    );
+    assert(
+      login.includes("handleGoogleSignIn") && login.includes("ensureLegalAccepted"),
+      "Google still waits for consent",
+    );
+  });
+
   console.log(`\n${passed} passed, ${failed} failed\n`);
   if (failed > 0) process.exit(1);
 }
