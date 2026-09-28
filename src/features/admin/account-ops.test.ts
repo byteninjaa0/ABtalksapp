@@ -4,7 +4,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { isJwtInvalidated } from "@/lib/account-status";
+import { isJwtInvalidated, isRevokedSession } from "@/lib/account-status";
 
 let passed = 0;
 let failed = 0;
@@ -83,6 +83,49 @@ suite("auth.ts session callback reads disabledAt and sessionInvalidatedAt", () =
   assert(auth.includes("disabledAt: true"), "selects disabledAt");
   assert(auth.includes("sessionInvalidatedAt: true"), "selects sessionInvalidatedAt");
   assert(auth.includes("isJwtInvalidated"), "uses isJwtInvalidated");
+});
+
+/*
+ * #546. `isRevokedSession` is the whole reason the auth guards can drop a
+ * revoked cookie without a database read, so both halves of the contract it
+ * rests on are pinned here rather than assumed.
+ */
+suite("isRevokedSession tells a revoked cookie from being signed out", () => {
+  assert(isRevokedSession(null) === false, "no session is not revoked");
+  assert(isRevokedSession(undefined) === false, "undefined is not revoked");
+  assert(
+    isRevokedSession({ user: { id: "u1" } }) === false,
+    "a live session is not revoked",
+  );
+  assert(
+    isRevokedSession({ user: undefined }) === true,
+    "a session stripped of its user IS revoked",
+  );
+  assert(isRevokedSession({}) === true, "no user key at all is revoked");
+});
+
+suite("auth.ts strips the user rather than returning null", () => {
+  // If this ever becomes `return null`, isRevokedSession goes blind and the
+  // guards silently stop clearing revoked cookies.
+  assert(
+    auth.includes("user: undefined as never"),
+    "session callback must strip `user`, not replace the session",
+  );
+});
+
+suite("@auth/core still returns an empty body when there is no cookie", () => {
+  // The other half: a signed-out visitor must reach `auth()` as null, which
+  // only holds while the session action bails before the callback runs. A
+  // dependency bump that changes this should fail here, loudly, rather than
+  // turning every signed-out visitor into a "revoked" one.
+  const session = read("node_modules/@auth/core/lib/actions/session.js");
+  const bail = session.indexOf("if (!sessionToken)");
+  const callback = session.indexOf("callbacks.session(");
+  assert(bail !== -1, "session action still guards on a missing token");
+  assert(
+    bail < callback,
+    "the missing-token bail must come before the session callback",
+  );
 });
 
 if (failed > 0) {

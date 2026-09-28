@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { PlatformRole, RoleScopeType } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { isRevokedSession } from "@/lib/account-status";
 import { logger } from "@/lib/logger";
 
 function getAdminEmails(): string[] {
@@ -107,6 +108,13 @@ async function bootstrapAdminFromEnv(userId: string): Promise<boolean> {
 
 export async function requireAdmin() {
   const session = await auth();
+  // Signed out on the server but the browser still holds the cookie, and
+  // Auth.js re-signs it on every read — so redirecting straight to /login
+  // would leave a revoked session renewing itself forever. Route through
+  // signout, which is the one path that actually drops the cookie.
+  if (isRevokedSession(session)) {
+    redirect(`/api/auth/signout?callbackUrl=${encodeURIComponent("/login")}`);
+  }
   if (!session?.user?.id || !session.user.email) redirect("/login");
 
   const isAdmin = await hasPlatformAdmin(session.user.id);

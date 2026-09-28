@@ -216,7 +216,6 @@ export default auth((req) => {
     !isPublicCohortLanding &&
     (protectedPaths.some((p) => pathname.startsWith(p)) ||
       exactProtectedPaths.includes(pathname));
-  const isAuthPage = pathname === "/login";
 
   let response: NextResponse;
 
@@ -243,22 +242,14 @@ export default auth((req) => {
       hasAttributionCookies,
       requestId,
     );
-  } else if (isAuthPage && isLoggedIn) {
-    const from = req.nextUrl.searchParams.get("from");
-    const destination =
-      from && from.startsWith("/") && !from.startsWith("//")
-        ? from
-        : "/";
-    response = withTracking(
-      NextResponse.redirect(new URL(destination, req.nextUrl)),
-      ref,
-      src,
-      alreadyAttributed,
-      consent,
-      hasAttributionCookies,
-      requestId,
-    );
   } else {
+    // /login used to be redirected away from whenever a session cookie existed.
+    // That cookie is only a JWT, and middleware is edge-safe so it cannot ask
+    // the database whether the session is still valid — an account that was
+    // disabled or secured still presents a perfectly good token. The bounce
+    // therefore locked those people out of the only page that could let them
+    // sign in again. `app/login/page.tsx` makes the same redirect from a
+    // DB-checked `auth()`, `from` fallback included, so nothing is lost.
     // Forwarded so Server Components, Server Actions and route handlers can read
     // the id back out of `headers()` — see `@/lib/observability/request-id`.
     const forwarded = new Headers(req.headers);

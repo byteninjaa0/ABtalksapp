@@ -10,7 +10,11 @@ import { recordNewsletterOptIn } from "@/features/legal/record-newsletter-optin"
 import { logger } from "@/lib/logger";
 import { verifyRecruiterOtp } from "@/features/recruiter-auth/otp";
 import { isJwtInvalidated } from "@/lib/account-status";
-import { authorizeEmailCode, authorizePassword } from "@/lib/email-auth";
+import {
+  AccountDisabledSignIn,
+  authorizeEmailCode,
+  authorizePassword,
+} from "@/lib/email-auth";
 import { isEmailLoginEnabled } from "@/lib/feature-flags";
 //auth is the full config with PrismaAdapter and real Credentials authorize. Used everywhere else.
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -49,17 +53,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Unapproved profiles are allowed through so they can reach the
         // "we're reviewing you" page; every recruiter surface still checks
         // `approved` for itself.
+        // `disabledAt` is selected rather than filtered on: filtering made a
+        // suspended recruiter indistinguishable from an address with no
+        // account, so an admin's Disable looked to them like a broken code.
+        // The OTP has already verified above, so by the time the flag is read
+        // the caller has proved the mailbox is theirs.
         const existing = await prisma.user.findFirst({
-          where: { email, deletedAt: null, disabledAt: null },
+          where: { email, deletedAt: null },
           select: {
             id: true,
             email: true,
             name: true,
             role: true,
+            disabledAt: true,
             recruiterProfile: { select: { id: true } },
           },
         });
         if (!existing?.recruiterProfile) return null;
+        if (existing.disabledAt) throw new AccountDisabledSignIn();
 
         return {
           id: existing.id,
@@ -134,7 +145,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           },
         });
         if (existing && existing.accounts.length === 0) {
-          if (existing.deletedAt || existing.disabledAt) return false;
+          if (existing.deletedAt) return false;
+          // Google has already proved the address is theirs, so naming the
+          // reason leaks nothing. `false` lands on AccessDenied, which reads
+          // "Sign-in was cancelled" — wrong, and it sends a suspended user
+          // round the loop again instead of telling them to contact support.
+          // A deleted account stays generic: it should not confirm it existed.
+          if (existing.disabledAt) return "/login?error=AccountDisabled";
           if (existing.recruiterProfile) return "/login?error=RecruiterAccount";
           const verified = (profile as { email_verified?: boolean } | undefined)
             ?.email_verified;
@@ -147,7 +164,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         where: { id: user.id },
         select: { deletedAt: true, disabledAt: true },
       });
-      if (row?.deletedAt || row?.disabledAt) return false;
+      if (row?.deletedAt) return false;
+      // The already-linked-Google case. Credentials never reach here while
+      // disabled — `authorize` throws AccountDisabledSignIn first — so this
+      // is an OAuth caller whose identity the provider has just verified.
+      if (row?.disabledAt) return "/login?error=AccountDisabled";
       return true;
     },
     async session({ session, token }) {
