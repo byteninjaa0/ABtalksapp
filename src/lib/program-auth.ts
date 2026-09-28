@@ -1,7 +1,9 @@
 import "server-only";
 import { randomBytes } from "crypto";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import { PROGRAM_AI_COHORT_BASE } from "@/features/program/constants";
 import { ensureRecruiterWorkspace } from "@/features/hire/provision-recruiter";
 import {
@@ -67,6 +69,22 @@ export async function requireProgramMember() {
 }
 
 /**
+ * Where to send someone back to once they have signed in or registered.
+ *
+ * A Server Component cannot read its own URL, so `middleware.ts` forwards the
+ * path it already knows as `x-pathname`. Without this, both redirects below
+ * dropped the destination and every recruiter landed on the Scout desk no
+ * matter what they had clicked — and for a brand-new recruiter this is the
+ * only path that runs, because middleware sees a valid session and waves them
+ * through before `ensureRecruiterWorkspace` discovers there is no profile yet.
+ */
+async function returnToCurrentPage(base: string): Promise<string> {
+  const from = (await headers()).get("x-pathname");
+  const safe = safeRedirectPath(from, "");
+  return safe ? `${base}?from=${encodeURIComponent(safe)}` : base;
+}
+
+/**
  * Require a registered recruiter, and hand them a workspace.
  *
  * DB-checked rather than JWT-checked: the role in the token can be stale, and
@@ -78,10 +96,10 @@ export async function requireProgramMember() {
  */
 export async function requireRecruiter() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/talent/login");
+  if (!session?.user?.id) redirect(await returnToCurrentPage("/talent/login"));
 
   const workspace = await ensureRecruiterWorkspace(session.user.id);
-  if (!workspace) redirect("/talent/register");
+  if (!workspace) redirect(await returnToCurrentPage("/talent/register"));
 
   return {
     profile: {

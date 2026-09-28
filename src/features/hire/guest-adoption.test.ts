@@ -163,7 +163,14 @@ suite("the guest copy is dropped only after a successful adoption", () => {
   );
   // Clearing without landing somewhere server-rendered would be an empty desk,
   // which is worse than the silent drop this replaces.
-  const redirect = mergeCode.indexOf("router.replace(");
+  //
+  // The hand-off is a full navigation rather than `router.replace`: the
+  // session is minutes old and `/hire/[requestId]` renders behind
+  // `requireRecruiter`, and a soft transition onto a server-gated page was
+  // leaving the recruiter on /hire with an empty desk while the adopted search
+  // showed in the side panel. What this pins is the ordering, not the
+  // mechanism — the move must still happen before the browser copy is dropped.
+  const redirect = mergeCode.indexOf("window.location.href = `/hire/${");
   assert(
     redirect > -1 && redirect < clear,
     "the recruiter must be moved to the saved request before the browser copy is dropped",

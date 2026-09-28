@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import {
@@ -51,13 +52,6 @@ function GoogleMark({ className }: { className?: string }) {
       />
     </svg>
   );
-}
-
-function safeRedirectPath(from: string | undefined, fallback: string) {
-  if (!from || !from.startsWith("/") || from.startsWith("//")) {
-    return fallback;
-  }
-  return from;
 }
 
 /** Auth.js maps InvalidCheck / PKCE failures to error=Configuration. */

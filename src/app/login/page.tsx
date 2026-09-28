@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { setReferralCookie } from "@/app/actions/referral-actions";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -26,15 +27,11 @@ type Props = {
   }>;
 };
 
-/** Valid same-origin `from`, or null. */
-function safeFrom(from: string | undefined): string | null {
-  if (!from || !from.startsWith("/") || from.startsWith("//")) return null;
-  return from;
-}
-
 export default async function LoginPage({ searchParams }: Props) {
   const params = await searchParams;
-  const from = safeFrom(params.from);
+  // Empty string as the fallback keeps the "was one supplied?" distinction
+  // the branches below rely on, while the validation lives in one place.
+  const from = safeRedirectPath(params.from, "") || null;
   // This page is the candidate door and nothing else. Recruiters have their own,
   // and the old `?as=recruiter` links are forwarded there rather than left to
   // land on a Google button that was never meant for them.

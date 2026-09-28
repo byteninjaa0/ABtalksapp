@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -15,11 +16,6 @@ export const metadata: Metadata = {
 
 type Props = { searchParams: Promise<{ from?: string; email?: string }> };
 
-function safeFrom(from: string | undefined): string {
-  if (!from || !from.startsWith("/") || from.startsWith("//")) return "/hire";
-  return from;
-}
-
 /**
  * Dedicated recruiter sign-in. Public.
  *
@@ -28,7 +24,7 @@ function safeFrom(from: string | undefined): string {
  */
 export default async function RecruiterLoginPage({ searchParams }: Props) {
   const params = await searchParams;
-  const redirectTo = safeFrom(params.from);
+  const redirectTo = safeRedirectPath(params.from, "/hire");
 
   const session = await auth();
   if (session?.user?.id) {
@@ -57,7 +53,10 @@ export default async function RecruiterLoginPage({ searchParams }: Props) {
       </header>
 
       <div className="rounded-xl border bg-card p-5">
-        <RecruiterLoginForm initialEmail={params.email ?? ""} />
+        <RecruiterLoginForm
+          initialEmail={params.email ?? ""}
+          redirectTo={redirectTo}
+        />
       </div>
 
       <p className="text-center text-sm text-muted-foreground">

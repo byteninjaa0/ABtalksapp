@@ -24,7 +24,17 @@ import { cn } from "@/lib/utils";
  * whole point of the review step that follows. Phone is a contact detail, not a
  * credential, so it is optional and unverified.
  */
-export function RecruiterRegisterForm() {
+export function RecruiterRegisterForm({
+  /**
+   * Where to go once the session exists. Defaults to the desk, which is what
+   * the in-page dialog on /hire wants; the register *page* passes the `from`
+   * middleware recorded, so a recruiter sent here from a candidate report
+   * lands back on that report.
+   */
+  redirectTo = "/hire",
+}: {
+  redirectTo?: string;
+} = {}) {
   const track = useTrack();
   const [step, setStep] = useState<"form" | "code">("form");
   const [fullName, setFullName] = useState("");
@@ -84,13 +94,17 @@ export function RecruiterRegisterForm() {
         // Account exists; this code did not open a session. Sign-in can
         // issue a fresh one so they are not stranded.
         toast.error("Account created. Sign in with a new code.");
-        window.location.href = `/talent/login?email=${encodeURIComponent(email)}`;
+        // Carry the destination across the hand-off, or the detour through
+        // sign-in silently costs them the page they were trying to reach.
+        window.location.href = `/talent/login?email=${encodeURIComponent(
+          email,
+        )}&from=${encodeURIComponent(redirectTo)}`;
         return;
       }
       // Full navigation: the session cookie is new and every guard downstream
       // reads it server-side. An App Router transition that lands on a
       // server redirect leaves useTransition pending forever.
-      window.location.href = "/hire";
+      window.location.href = redirectTo;
     });
   }
 
