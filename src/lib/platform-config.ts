@@ -68,11 +68,11 @@ export const PLATFORM_CONFIG_KEYS = {
    */
   "credits.starting_grant_minor": {
     kind: "int",
-    default: 2_000_000,
+    default: 20_000,
     min: 0,
     max: 10_000_000,
     description:
-      "Credits granted once, when a recruiter workspace is created. USD cents. 2000000 = $20000.00.",
+      "Credits granted once, when a recruiter workspace is created. USD cents. 20000 = $200.00.",
   },
   /**
    * What one contact unlock costs.
@@ -90,7 +90,7 @@ export const PLATFORM_CONFIG_KEYS = {
    */
   "credits.contact_unlock_cost_minor": {
     kind: "int",
-    default: 1_000,
+    default: 50,
     min: 1,
     max: 1_000_000,
     description:

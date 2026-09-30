@@ -76,16 +76,16 @@ console.log("\nT-228 credits foundation\n");
 
 console.log("Starting credits");
 
-suite("the starting grant is $20,000.00, expressed in integer minor units", () => {
+suite("the starting grant is $200.00, expressed in integer minor units", () => {
   const spec = PLATFORM_CONFIG_KEYS[STARTING_GRANT_KEY];
   assert(spec.kind === "int", "the starting grant must be an integer setting");
   assert(
-    spec.default === 2_000_000,
-    `expected 2000000 minor units, got ${String(spec.default)}`,
+    spec.default === 20_000,
+    `expected 20000 minor units, got ${String(spec.default)}`,
   );
   assert(
-    formatCreditsMinor(spec.default) === "$20,000.00",
-    `2000000 minor units must read as $20,000.00, got ${formatCreditsMinor(spec.default)}`,
+    formatCreditsMinor(spec.default) === "$200.00",
+    `20000 minor units must read as $200.00, got ${formatCreditsMinor(spec.default)}`,
   );
 });
 
