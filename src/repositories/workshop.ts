@@ -1,6 +1,7 @@
 import "server-only";
 import type { Prisma, WorkshopEvent as WorkshopEventRow } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import type {
   WorkshopEvent,
   WorkshopResource,
@@ -106,21 +107,31 @@ export function toWorkshopEvent(row: Row): WorkshopEvent {
  * answers only "may the public see this row at all".
  */
 export async function listPublicEvents(): Promise<WorkshopEvent[]> {
-  const rows = await prisma.workshopEvent.findMany({
-    where: { publishedAt: { not: null }, archivedAt: null },
-    orderBy: { date: "asc" },
-    select: SELECT,
-  });
-  return rows.map(toWorkshopEvent);
+  try {
+    const rows = await prisma.workshopEvent.findMany({
+      where: { publishedAt: { not: null }, archivedAt: null },
+      orderBy: { date: "asc" },
+      select: SELECT,
+    });
+    return rows.map(toWorkshopEvent);
+  } catch (error) {
+    logger.warn({ error }, "Failed to fetch public workshop events from database");
+    return [];
+  }
 }
 
 /** Every event, archived and unpublished included. Admin surfaces only. */
 export async function listAllEvents(): Promise<WorkshopEvent[]> {
-  const rows = await prisma.workshopEvent.findMany({
-    orderBy: { date: "desc" },
-    select: SELECT,
-  });
-  return rows.map(toWorkshopEvent);
+  try {
+    const rows = await prisma.workshopEvent.findMany({
+      orderBy: { date: "desc" },
+      select: SELECT,
+    });
+    return rows.map(toWorkshopEvent);
+  } catch (error) {
+    logger.warn({ error }, "Failed to fetch all workshop events from database");
+    return [];
+  }
 }
 
 /**
@@ -132,11 +143,16 @@ export async function listAllEvents(): Promise<WorkshopEvent[]> {
 export async function getEventById(
   id: string,
 ): Promise<WorkshopEvent | null> {
-  const row = await prisma.workshopEvent.findUnique({
-    where: { id },
-    select: SELECT,
-  });
-  return row ? toWorkshopEvent(row) : null;
+  try {
+    const row = await prisma.workshopEvent.findUnique({
+      where: { id },
+      select: SELECT,
+    });
+    return row ? toWorkshopEvent(row) : null;
+  } catch (error) {
+    logger.warn({ error, id }, "Failed to fetch workshop event by id from database");
+    return null;
+  }
 }
 
 /** Titles for a set of ids, for admin roster tables. Avoids N reads. */

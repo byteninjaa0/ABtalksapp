@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -54,6 +54,29 @@ export function HireChrome({
   const [overlayCount, setOverlayCount] = useState(0);
   const [starCount, setStarCount] = useState(0);
   const [podDismissed, setPodDismissed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("abtalks.hireSidebarCollapsed");
+      if (stored === "1") setSidebarCollapsed(true);
+      else if (stored === "0") setSidebarCollapsed(false);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem("abtalks.hireSidebarCollapsed", next ? "1" : "0");
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     const sync = () => {
@@ -344,6 +367,9 @@ export function HireChrome({
               unreadMessages={unreadMessages}
               projects={projects}
               openProjectId={openProjectId}
+              collapsible
+              collapsed={sidebarCollapsed}
+              onToggleCollapse={toggleSidebar}
             />
           )}
           {/* On desktop the results screen hides this rail behind the nav card;
@@ -401,6 +427,9 @@ export function HireChrome({
                 // No project is "open" on a plain page, so the sidebar lists
                 // projects without pretending one of them is current.
                 openProjectId={null}
+                collapsible
+                collapsed={sidebarCollapsed}
+                onToggleCollapse={toggleSidebar}
               />
             </div>
           )}
