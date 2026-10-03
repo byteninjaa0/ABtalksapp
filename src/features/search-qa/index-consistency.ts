@@ -155,7 +155,7 @@ export function documentDrift(c: CanonicalCandidate, m: ScoreableMember): Docume
       category: "DATA_QUALITY_ERROR",
       severity: "WARNING",
       cause: "CANONICAL_PROFILE_MISSING_COHORT_SKILLS",
-      canonical: "— (no claimed skills)",
+      canonical: "n/a (no claimed skills)",
       document: doc.slice(0, 10).join(", "),
     });
   } else if (fromLegacy && (missing.length || extras.length)) {
@@ -164,7 +164,7 @@ export function documentDrift(c: CanonicalCandidate, m: ScoreableMember): Docume
       category: "SEARCH_INDEX_STALE",
       severity: "ERROR",
       cause: "LEGACY_MIRROR_READ",
-      canonical: claimed.slice(0, 10).join(", ") || "—",
+      canonical: claimed.slice(0, 10).join(", ") || "n/a",
       document: doc.slice(0, 10).join(", "),
     });
   } else if (missing.length && doc.length === 0) {
@@ -174,7 +174,7 @@ export function documentDrift(c: CanonicalCandidate, m: ScoreableMember): Docume
       severity: "ERROR",
       cause: "DOCUMENT_HAS_NO_SKILLS",
       canonical: missing.join(", "),
-      document: "—",
+      document: "n/a",
     });
   } else if (missing.length) {
     out.push({
@@ -203,7 +203,7 @@ export function documentDrift(c: CanonicalCandidate, m: ScoreableMember): Docume
       category: "SEARCH_INDEX_STALE",
       severity: "ERROR",
       cause: source === "PROGRAM" ? "COHORT_SKILLS_FALLBACK" : "LEGACY_MIRROR_SKILL",
-      canonical: claimed.slice(0, 10).join(", ") || "—",
+      canonical: claimed.slice(0, 10).join(", ") || "n/a",
       document: foreignExtras.slice(0, 10).join(", "),
     });
   }
@@ -225,8 +225,8 @@ export function documentDrift(c: CanonicalCandidate, m: ScoreableMember): Docume
         : source === "PROGRAM"
           ? "COHORT_EDUCATION_FALLBACK"
           : "EDUCATION_DRIFT",
-      canonical: String(canonGrad ?? "—"),
-      document: String(docGrad ?? "—"),
+      canonical: String(canonGrad ?? "n/a"),
+      document: String(docGrad ?? "n/a"),
     });
   }
 
@@ -281,7 +281,7 @@ export function documentDrift(c: CanonicalCandidate, m: ScoreableMember): Docume
         severity: "ERROR",
         cause: "ROLE_TITLES_NOT_ATTACHED",
         canonical: canonTitles.slice(0, 5).join(" | "),
-        document: "— (attachRoleTitles did not run)",
+        document: "n/a (attachRoleTitles did not run)",
       });
     } else {
       const docKeys = new Set(m.roleTitles.map((t) => t.trim().toLowerCase()));
@@ -293,7 +293,7 @@ export function documentDrift(c: CanonicalCandidate, m: ScoreableMember): Docume
           severity: "WARNING",
           cause: "ROLE_TITLE_MISSING",
           canonical: missingTitles.slice(0, 5).join(" | "),
-          document: m.roleTitles.slice(0, 5).join(" | ") || "—",
+          document: m.roleTitles.slice(0, 5).join(" | ") || "n/a",
         });
       }
     }

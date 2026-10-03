@@ -294,7 +294,7 @@ export function dataQualityIssues(
     // Skills.
     const claimed = c.skills.filter((s) => s.claimed);
     if (claimed.length === 0) {
-      push("SKILLS_EMPTY", "INFO", "CandidateSkill", "no claimed skills — cannot match any skill requirement");
+      push("SKILLS_EMPTY", "INFO", "CandidateSkill", "no claimed skills, cannot match any skill requirement");
     }
     const byCanonical = new Map<string, string[]>();
     for (const s of claimed) {
@@ -367,7 +367,7 @@ export function dataQualityIssues(
       "VISIBILITY_ROW_MISSING",
       "WARNING",
       "CandidateVisibility",
-      "usable profile but no visibility row — invisible to recruiters (fails closed)",
+      "usable profile but no visibility row, invisible to recruiters (fails closed)",
     );
   }
 

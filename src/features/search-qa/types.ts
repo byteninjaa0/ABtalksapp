@@ -119,7 +119,7 @@ function summariseReasons(findings: QaFinding[]): string[] {
     .sort((a, b) => b[1].n - a[1].n)
     .map(
       ([key, v]) =>
-        `${v.n} ${key} finding${v.n === 1 ? "" : "s"} (${v.affected} candidate-level hits) — e.g. ${v.sample}`,
+        `${v.n} ${key} finding${v.n === 1 ? "" : "s"} (${v.affected} candidate-level hits), e.g. ${v.sample}`,
     );
 }
 

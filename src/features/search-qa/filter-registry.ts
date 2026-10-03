@@ -379,7 +379,7 @@ const locationCity: FilterDef = {
     surfaces: ["Scout chat", "filter dialog (City)"],
   },
   productQuestions: [
-    "CandidateProfile.locationCity (where the candidate lives) is never read by search — only preferred cities are.",
+    "CandidateProfile.locationCity (where the candidate lives) is never read by search; only preferred cities are.",
     "Delhi NCR vs Noida / Gurugram / Ghaziabad: region or city? Reported as ambiguous, not merged.",
     "A candidate who never stated preferences passes every location filter.",
   ],
@@ -712,7 +712,7 @@ const role: FilterDef = {
     surfaces: ["Scout chat (spec.title)"],
   },
   productQuestions: [
-    "A candidate with no connection to the role scores low enough to be NONE, and NONE is only shown as padding when fewer than five better matches exist — so a title-only search can show fewer cards than before.",
+    "A candidate with no connection to the role scores low enough to be NONE, and NONE is only shown as padding when fewer than five better matches exist, so a title-only search can show fewer cards than before.",
   ],
   apply: (spec, v) => ({ ...spec, title: String(v) }),
   describe: (v) => `role "${String(v)}" (rank only)`,
@@ -746,8 +746,8 @@ function notImplemented(id: string, label: string, note: string): FilterDef {
     semantics: {
       valueType: "text",
       logic: "N/A",
-      match: "—",
-      nullPolicy: "—",
+      match: "n/a",
+      nullPolicy: "n/a",
       implementedAt: note,
       surfaces: [],
     },
