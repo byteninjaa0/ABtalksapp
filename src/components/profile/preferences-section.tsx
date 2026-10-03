@@ -10,6 +10,7 @@ import { useServerFieldErrors } from "./field-issues";
 import { useSectionSave } from "./use-section-save";
 import { useProfileWizard } from "./wizard-context";
 import {
+  CURRENT_YEAR,
   PwCheckGroup,
   PwCheckbox,
   PwField,
@@ -20,6 +21,16 @@ import {
   PwTags,
   PwTogglePanel,
 } from "./wizard-fields";
+
+/**
+ * "Available from" is a date you become free, so it cannot be in the past.
+ * The picker defaulted to the shared 1975 floor that education and work
+ * history need, which offered every year back to 1975 — a profile could say it
+ * was available from May 2017 and read as current (issue #483).
+ *
+ * Month index, 1-based, to match `PwMonthYear`.
+ */
+const CURRENT_MONTH = new Date().getMonth() + 1;
 
 export type PreferencesFormValues = {
   openToWork: boolean;
@@ -183,8 +194,27 @@ export function PreferencesSection({
                   <PwMonthYear
                     month={month.value}
                     year={year.value}
+                    fromYear={CURRENT_YEAR}
+                    // Only the current year is part-spent; every later year is
+                    // open from January.
+                    minMonth={
+                      year.value === CURRENT_YEAR ? CURRENT_MONTH : undefined
+                    }
                     onMonthChange={month.onChange}
-                    onYearChange={year.onChange}
+                    onYearChange={(next) => {
+                      year.onChange(next);
+                      // Coming back from a future year can strand a month that
+                      // has already passed — "2027, February" becoming "this
+                      // year, February". The month list no longer offers it, so
+                      // the stale value has to go with it.
+                      if (
+                        next === CURRENT_YEAR &&
+                        month.value !== null &&
+                        month.value < CURRENT_MONTH
+                      ) {
+                        month.onChange(null);
+                      }
+                    }}
                   />
                 )}
               />

@@ -586,6 +586,7 @@ export function PwMonthYear({
   fromYear = 1975,
   toYear = CURRENT_YEAR + 6,
   maxMonth,
+  minMonth,
 }: {
   monthId?: string;
   yearId?: string;
@@ -602,10 +603,15 @@ export function PwMonthYear({
   toYear?: number;
   /** Caps the month list — used to stop "this year, next month". */
   maxMonth?: number;
+  /** Floors the month list — used to stop "this year, last month". */
+  minMonth?: number;
 }) {
   const years = yearRange(Math.min(fromYear, toYear), toYear);
-  const months =
-    maxMonth === undefined ? MONTHS : MONTHS.filter((m) => Number(m) <= maxMonth);
+  const months = MONTHS.filter(
+    (m) =>
+      (maxMonth === undefined || Number(m) <= maxMonth) &&
+      (minMonth === undefined || Number(m) >= minMonth),
+  );
   return (
     <div className="pw-date-pair">
       <PwMenuSelect
