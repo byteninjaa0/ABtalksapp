@@ -49,7 +49,10 @@ const EMPTY_FILTERS: Filters = {
 };
 
 const FILTER_LABEL: Record<FilterKey, string> = {
-  location: "Location",
+  // Not "Location": the free-text box beside the search bar is also a location
+  // control, and two controls wearing one name is why people concluded there
+  // was no way to type a city. This one is the cities present in the listings.
+  location: "Listed cities",
   workMode: "Work mode",
   type: "Job type",
   skill: "Skills",
@@ -273,6 +276,9 @@ export function JobsBrowser({ jobs, applications, initialTab = "jobs" }: Props) 
     (key) => filters[key],
   );
 
+  /** Render-scope: `loc` inside the visibleJobs memo is not visible here. */
+  const searchedLocation = locationQuery.trim();
+
   function clearFilters() {
     setFilters(EMPTY_FILTERS);
     setQuery("");
@@ -345,7 +351,7 @@ export function JobsBrowser({ jobs, applications, initialTab = "jobs" }: Props) 
                 <input
                   value={locationQuery}
                   onChange={(e) => setLocationQuery(e.target.value)}
-                  placeholder="Location"
+                  placeholder="City, or type Remote"
                   autoComplete="off"
                   className="w-full min-w-0 bg-transparent text-[15px] outline-none placeholder:text-[#8F8F8F]"
                 />
@@ -532,18 +538,46 @@ export function JobsBrowser({ jobs, applications, initialTab = "jobs" }: Props) 
               </button>
 
               {visibleJobs.length === 0 ? (
+                /*
+                  Name the location when one was typed. "No jobs found" alone
+                  cannot tell someone whether their city was the constraint or
+                  one of the other filters, and Clear filters throws the search
+                  away with it - so a location search gets its own way out.
+                */
                 <EmptyState
                   icon={<Search aria-hidden className="size-6" />}
-                  title="No jobs found"
-                  body="Try changing your search or removing one of the filters."
+                  title={
+                    searchedLocation
+                      ? `No jobs in "${searchedLocation}"`
+                      : "No jobs found"
+                  }
+                  body={
+                    searchedLocation
+                      ? "Try a nearby city or search for Remote."
+                      : "Try changing your search or removing one of the filters."
+                  }
                   action={
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className={cn(dsButtonVariants({ size: "sm" }), CLAY_CTA)}
-                    >
-                      Clear filters
-                    </button>
+                    <>
+                      {searchedLocation ? (
+                        <button
+                          type="button"
+                          onClick={() => setLocationQuery("")}
+                          className={cn(
+                            dsButtonVariants({ size: "sm" }),
+                            CLAY_CTA,
+                          )}
+                        >
+                          Clear location
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className={cn(dsButtonVariants({ size: "sm" }), CLAY_CTA)}
+                      >
+                        Clear filters
+                      </button>
+                    </>
                   }
                 />
               ) : (
