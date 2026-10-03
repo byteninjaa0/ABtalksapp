@@ -20,7 +20,6 @@ const SLIDES = ["welcome", "why", "audience", "roadmap", "cta"] as const;
 
 const LOGIN_HREF = `/login?from=${encodeURIComponent("/register?domain=CLAUDE")}`;
 
-const CHALLENGE_START = new Date("2026-06-01T00:00:00+05:30");
 
 const TRANSITION_MS = 600;
 
@@ -43,87 +42,6 @@ const slideVariants = {
     scale: 0.96,
   }),
 };
-
-function useCountdown(target: Date) {
-  const [time, setTime] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
-
-  useEffect(() => {
-    const tick = () => {
-      const diff = Math.max(0, target.getTime() - Date.now());
-      setTime({
-        days: Math.floor(diff / 86_400_000),
-        hours: Math.floor((diff % 86_400_000) / 3_600_000),
-        minutes: Math.floor((diff % 3_600_000) / 60_000),
-        seconds: Math.floor((diff % 60_000) / 1000),
-      });
-    };
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, [target]);
-
-  return time;
-}
-
-function CountdownDisplay() {
-  const time = useCountdown(CHALLENGE_START);
-
-  return (
-    <>
-      <div
-        className="hidden items-center gap-3 rounded-2xl border bg-card/80 px-5 py-2.5 backdrop-blur-sm md:flex"
-        aria-live="polite"
-      >
-        <div className="text-xs font-medium text-muted-foreground">Starts in</div>
-        <div className="flex items-center gap-3 font-display font-bold tabular-nums">
-          <div className="flex flex-col items-center">
-            <span className="text-lg md:text-xl">
-              {String(time.days).padStart(2, "0")}
-            </span>
-            <span className="text-[9px] font-normal tracking-wider text-muted-foreground">
-              DAYS
-            </span>
-          </div>
-          <span className="text-muted-foreground">:</span>
-          <div className="flex flex-col items-center">
-            <span className="text-lg md:text-xl">
-              {String(time.hours).padStart(2, "0")}
-            </span>
-            <span className="text-[9px] font-normal tracking-wider text-muted-foreground">
-              HRS
-            </span>
-          </div>
-          <span className="text-muted-foreground">:</span>
-          <div className="flex flex-col items-center">
-            <span className="text-lg md:text-xl">
-              {String(time.minutes).padStart(2, "0")}
-            </span>
-            <span className="text-[9px] font-normal tracking-wider text-muted-foreground">
-              MIN
-            </span>
-          </div>
-          <span className="text-muted-foreground">:</span>
-          <div className="flex flex-col items-center">
-            <span className="text-lg md:text-xl text-[#03535F]">
-              {String(time.seconds).padStart(2, "0")}
-            </span>
-            <span className="text-[9px] font-normal tracking-wider text-muted-foreground">
-              SEC
-            </span>
-          </div>
-        </div>
-      </div>
-      <div className="text-xs text-muted-foreground md:hidden" aria-live="polite">
-        Starts in {time.days}d {time.hours}h
-      </div>
-    </>
-  );
-}
 
 function renderSlide(slide: (typeof SLIDES)[number], totalCount: number) {
   switch (slide) {
@@ -227,7 +145,6 @@ export function ClaudeOnboardingClient() {
                   CLAUDE
                 </span>
               </div>
-              <CountdownDisplay />
             </div>
             <SiteSearchSlot />
           </div>
