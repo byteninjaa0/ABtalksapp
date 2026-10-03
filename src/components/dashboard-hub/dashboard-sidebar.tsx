@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -19,6 +19,7 @@ import {
   Zap,
 } from "lucide-react";
 import { signOutAction } from "@/app/actions/auth-actions";
+import { getOpenJobsCountAction } from "@/app/actions/job-actions";
 import { cn } from "@/lib/utils";
 import {
   NAV_ITEMS,
@@ -115,6 +116,34 @@ export function DashboardSidebar({
   const displayName = user.name.trim() || user.email || "User";
   const isCollapsed = collapsible && collapsed;
 
+  /**
+   * Open-job count for the Jobs badge.
+   *
+   * `null` until it arrives, and the badge renders nothing in that state —
+   * a "0" that turns into "7" a moment later reads as jobs disappearing.
+   * Re-read on navigation and when the tab regains focus, the same way the
+   * notification bell refreshes, so applying for the last open role or an
+   * admin closing one is reflected without a reload.
+   */
+  const [openJobs, setOpenJobs] = useState<number | null>(null);
+
+  const loadOpenJobs = useCallback(() => {
+    if (!signedIn) return;
+    void getOpenJobsCountAction().then((res) => {
+      if (res.ok) setOpenJobs(res.data.count);
+    });
+  }, [signedIn]);
+
+  useEffect(() => {
+    loadOpenJobs();
+  }, [loadOpenJobs, pathname]);
+
+  useEffect(() => {
+    if (!signedIn) return;
+    window.addEventListener("focus", loadOpenJobs);
+    return () => window.removeEventListener("focus", loadOpenJobs);
+  }, [loadOpenJobs, signedIn]);
+
   function renderNav(compact: boolean) {
     return (
       <nav
@@ -157,6 +186,17 @@ export function DashboardSidebar({
               >
                 {label}
               </span>
+              {/* Only Jobs carries a count today. Hidden while collapsed —
+                  there is no room beside a centred icon — and hidden at zero,
+                  because an empty board is not news worth a badge. */}
+              {href === "/jobs" && !compact && openJobs !== null && openJobs > 0 ? (
+                <span className="abt-nav-count" aria-hidden>
+                  {openJobs}
+                </span>
+              ) : null}
+              {href === "/jobs" && openJobs !== null && openJobs > 0 ? (
+                <span className="sr-only">{`, ${openJobs} open`}</span>
+              ) : null}
             </Link>
           );
         })}
