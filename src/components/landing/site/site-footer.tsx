@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { FOOTER_COLUMNS } from "./landing-content";
 
@@ -12,7 +13,15 @@ export function SiteFooter({
     <footer className="footer">
       <div className="container footer__grid">
         <div className="footer__brand">
-          <span className="footer__logo">AB TALKS</span>
+          {/* The same brand mark the nav uses, not a typeset stand-in. */}
+          <span className="footer__logo">
+            <Image
+              src="/landing/abtalks-logo-mark.png"
+              alt="ABTalks"
+              width={561}
+              height={168}
+            />
+          </span>
         </div>
 
         {FOOTER_COLUMNS.map((col) => (
