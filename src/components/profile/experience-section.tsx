@@ -53,6 +53,15 @@ export const emptyExperienceRow: ExperienceFormRow = {
   description: "",
 };
 
+/**
+ * `PwMonthYear` caps the YEAR but not the month, so in the current year every
+ * month stayed selectable — in September you could still pick December and
+ * claim a date that has not happened yet. `maxMonth` is only applied when the
+ * selected year IS the current year; every earlier year is complete and
+ * offers all twelve. Same guard `accomplishments-section` already uses.
+ */
+const CURRENT_MONTH = new Date().getMonth() + 1;
+
 export function ExperienceSection({
   initial,
   hasNoWorkExperience: initialSkip,
@@ -252,6 +261,11 @@ export function ExperienceSection({
                               void trigger(`rows.${index}.endYear`);
                             }}
                             toYear={CURRENT_YEAR}
+                            maxMonth={
+                              year.value === CURRENT_YEAR
+                                ? CURRENT_MONTH
+                                : undefined
+                            }
                           />
                         )}
                       />
@@ -304,6 +318,11 @@ export function ExperienceSection({
                               disabled={isCurrent}
                               fromYear={startYear ?? 1975}
                               toYear={CURRENT_YEAR}
+                              maxMonth={
+                                year.value === CURRENT_YEAR
+                                  ? CURRENT_MONTH
+                                  : undefined
+                              }
                               invalid={Boolean(errors.rows?.[index]?.endYear)}
                             />
                           )}
