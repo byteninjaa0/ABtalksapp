@@ -118,7 +118,7 @@ export function explainFromPool(input: {
         id: f.id,
         label: def?.label ?? f.id,
         value,
-        expected: { pass: true, ambiguous: null, reason: def ? `${def.kind.toLowerCase().replace("_", " ")} — not a pass/fail filter` : "unknown filter" },
+        expected: { pass: true, ambiguous: null, reason: def ? `${def.kind.toLowerCase().replace("_", " ")} is not a pass/fail filter` : "unknown filter" },
         service: null,
         verdict: "NOT_EVALUATED",
         diagnosis: null,
@@ -189,16 +189,16 @@ export function explainFromPool(input: {
   if (!c) summary = "No canonical user with this id.";
   else if (e && e.gate.length > 0) {
     summary = member
-      ? `LEAK: must never appear (${e.gate.join(", ")}) but the search loaded them — VISIBILITY_ERROR.`
+      ? `LEAK: must never appear (${e.gate.join(", ")}) but the search loaded them. VISIBILITY_ERROR.`
       : `Not discoverable: ${e.gate.join(", ")}. Correctly absent.`;
   } else if (e && e.tracks.length === 0) {
     summary = `Not in any searched track (expected tracks: none for ${spec.tracks.join(", ") || "all tracks"}).`;
   } else if (!member) {
-    summary = `Eligible via ${e?.tracks.join(", ")} but not loaded by the search (${loadedIn.length ? "" : "no loader returned them"}) — see coverage.`;
+    summary = `Eligible via ${e?.tracks.join(", ")} but not loaded by the search (${loadedIn.length ? "" : "no loader returned them"}). See coverage.`;
   } else if (pageIdx >= 0) {
     summary = `On the page at #${pageIdx + 1} of ${ev.page.length} (score ${scored?.score}, ${scored?.tier}).`;
   } else if (ev.admitted.has(input.userId)) {
-    summary = `Passes every filter and ranks #${admittedIdx + 1} among ${admittedList.length} matches — beyond the ${ev.page.length}-result page (no pagination).`;
+    summary = `Passes every filter and ranks #${admittedIdx + 1} among ${admittedList.length} matches, beyond the ${ev.page.length}-result page (no pagination).`;
   } else {
     const reasons = [
       ...(scored?.hardFilterReasons ?? []),
@@ -207,7 +207,7 @@ export function explainFromPool(input: {
     const disagreement = filters.find((f) => f.verdict === "DISAGREE");
     summary = `Excluded: ${reasons.join("; ") || "no reason recorded"}.${
       disagreement?.diagnosis
-        ? ` Expected to pass ${disagreement.label} — ${disagreement.diagnosis.category}${disagreement.diagnosis.knownIssue ? ` (${disagreement.diagnosis.knownIssue})` : ""}: ${disagreement.diagnosis.message}.`
+        ? ` Expected to pass ${disagreement.label}: ${disagreement.diagnosis.category}${disagreement.diagnosis.knownIssue ? ` (${disagreement.diagnosis.knownIssue})` : ""}: ${disagreement.diagnosis.message}.`
         : " The canonical profile agrees."
     }`;
   }

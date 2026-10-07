@@ -386,7 +386,7 @@ export class CaseAccumulator {
         check: `case:${this.spec.id}`,
         affected: b.sample.count,
         userIds: b.sample.ids,
-        message: `${label} — ${b.message}`,
+        message: `${label} · ${b.message}`,
         knownIssue: b.knownIssue,
         productDecision: b.productDecision,
         detail: { cause: b.cause },
@@ -400,7 +400,7 @@ export class CaseAccumulator {
         check: `case:${this.spec.id}`,
         affected: this.unknownAvailability.count,
         userIds: this.unknownAvailability.ids,
-        message: `${label} — "open to work only" included ${this.unknownAvailability.count} candidate(s) who never stated availability`,
+        message: `${label} · "open to work only" included ${this.unknownAvailability.count} candidate(s) who never stated availability`,
         productDecision: true,
         detail: { cause: "OPEN_TO_WORK_UNKNOWN_INCLUDED" },
       });
@@ -413,7 +413,7 @@ export class CaseAccumulator {
         check: `case:${this.spec.id}`,
         affected: this.dataQualityOnReturned.count,
         userIds: this.dataQualityOnReturned.ids,
-        message: `${label} — correctly returned, but the filtered field itself looks wrong on these profiles`,
+        message: `${label} · correctly returned, but the filtered field itself looks wrong on these profiles`,
         detail: { cause: "SUSPECT_VALUE_ON_RETURNED_CANDIDATE" },
       });
     }
@@ -425,7 +425,7 @@ export class CaseAccumulator {
         check: `case:${this.spec.id}`,
         affected: this.ambiguousIds.count,
         userIds: this.ambiguousIds.ids,
-        message: `${label} — semantics undecidable for these candidates (excluded from scoring)`,
+        message: `${label} · semantics undecidable for these candidates (excluded from scoring)`,
         productDecision: true,
         detail: { cause: "AMBIGUOUS_SEMANTICS" },
       });
@@ -479,7 +479,7 @@ function absenceDiagnosis(expectedTracks: TrackSlug[], pool: PoolSnapshot): Diag
     return {
       category: "PAGINATION_ERROR",
       cause: "POOL_CAP",
-      message: `eligible via ${expectedTracks.join(", ")} but every such track was loaded to its cap (${loads.map((l) => `${l.slug} ${l.count}/${l.cap}`).join(", ")}) — rows past the cap are never searched`,
+      message: `eligible via ${expectedTracks.join(", ")} but every such track was loaded to its cap (${loads.map((l) => `${l.slug} ${l.count}/${l.cap}`).join(", ")}). Rows past the cap are never searched`,
     };
   }
   return {

@@ -205,7 +205,7 @@ export default async function SearchHealthPage({
     <div className="space-y-6">
       <AdminPageHeader
         title="Recruiter Search Health"
-        description="Does recruiter search return exactly the candidates it should? Coverage, filter correctness against the canonical profile, privacy, and search-document drift — with the candidate ids behind every number. Read-only."
+        description="Does recruiter search return exactly the candidates it should? Coverage, filter correctness against the canonical profile, privacy, and search-document drift, with the candidate ids behind every number. Read-only."
         actions={
           <Link href="/admin/search-health?run=lite" className={cn(buttonVariants({ variant: "default" }), "h-10 px-5")}>
             {report ? "Re-run health check" : "Run health check"}
@@ -222,8 +222,8 @@ export default async function SearchHealthPage({
           <p className="text-sm leading-6 text-[#787878]">
             The health check loads the search pool through the same track loaders recruiters use, compares every searchable
             candidate against the canonical 078 profile, and classifies each disagreement as a search bug, a stale search
-            document, a normalization gap, a ranking issue or bad candidate data. It takes up to a minute. The full audit —
-            every combination, data quality across all profiles, normalization and latency — runs from the CLI:{" "}
+            document, a normalization gap, a ranking issue or bad candidate data. It takes up to a minute. The full audit,
+            every combination, data quality across all profiles, normalization and latency, runs from the CLI:{" "}
             <code className="font-mono text-xs">npm run audit:recruiter-search</code>.
           </p>
         </Card>
@@ -273,7 +273,7 @@ export default async function SearchHealthPage({
                         {f.label} <span className="text-xs text-[#787878]">{f.kind.replace("_", " ").toLowerCase()}</span>
                       </p>
                       <p className="text-xs text-[#787878]">
-                        {f.cases ? `${f.cases} case(s) · expected ${f.expected} · actual ${f.actual} · FP ${f.falsePositives} · FN ${f.falseNegatives}` : "ranking / paging only — tested separately"}
+                        {f.cases ? `${f.cases} case(s) · expected ${f.expected} · actual ${f.actual} · FP ${f.falsePositives} · FN ${f.falseNegatives}` : "ranking / paging only, tested separately"}
                         {f.knownIssues.length ? ` · ${f.knownIssues.join(", ")}` : ""}
                       </p>
                     </div>
@@ -316,7 +316,7 @@ export default async function SearchHealthPage({
                 {report.indexConsistency.byCause.map((b) => (
                   <li key={b.cause} className="py-2">
                     <p className="text-sm text-[#353535]">
-                      <span className="font-mono text-xs">{b.category}</span> {b.cause} — {b.count}
+                      <span className="font-mono text-xs">{b.category}</span> {b.cause} · {b.count}
                     </p>
                     <p className="text-xs text-[#787878]">{b.example}</p>
                     <IdList ids={b.userIds} total={b.count} />
@@ -334,7 +334,7 @@ export default async function SearchHealthPage({
           ) : null}
 
           {report.dataQuality ? (
-            <Card title="Data quality (searchable candidates — full scan in CLI)">
+            <Card title="Data quality (searchable candidates, full scan in CLI)">
               <div className="grid grid-cols-3 gap-3">
                 <Metric label="Healthy" value={report.dataQuality.healthy} tone="good" />
                 <Metric label="With warnings" value={report.dataQuality.warnings} tone="warn" />
@@ -344,7 +344,7 @@ export default async function SearchHealthPage({
                 {report.dataQuality.rules.filter((r) => r.severity !== "INFO").map((r) => (
                   <li key={r.rule} className="py-2">
                     <p className="text-sm text-[#353535]">
-                      <span className="font-mono text-xs">{r.rule}</span> · {r.count} — {r.example}
+                      <span className="font-mono text-xs">{r.rule}</span> · {r.count} · {r.example}
                     </p>
                     <IdList ids={r.userIds} total={r.count} />
                   </li>
@@ -402,7 +402,7 @@ export default async function SearchHealthPage({
                   <span className="font-mono text-xs text-[#B45309]">{k.id}</span> {k.title}{" "}
                   <span className="text-xs text-[#787878]">· {k.category} · {k.severity}</span>
                 </p>
-                <p className="text-xs text-[#787878]">{k.location} — {k.proposedFix}</p>
+                <p className="text-xs text-[#787878]">{k.location} · {k.proposedFix}</p>
               </li>
             ))}
           </ul>
@@ -419,7 +419,7 @@ function ExplainView({ r }: { r: ExplainResult }) {
         <p className="text-sm font-semibold text-[#353535]">{r.summary}</p>
         <p className="mt-1 text-xs text-[#787878]">
           {r.publicId} · search: {r.search} · gate {r.gate.pass ? "passes" : `fails (${r.gate.reasons.join(", ")})`} · expected tracks{" "}
-          {r.tracks.expected.join(", ") || "none"} · loaded as {r.document.loadedAs ?? "—"}
+          {r.tracks.expected.join(", ") || "none"} · loaded as {r.document.loadedAs ?? "n/a"}
         </p>
       </div>
 
@@ -433,8 +433,8 @@ function ExplainView({ r }: { r: ExplainResult }) {
               {r.filters.map((f) => (
                 <tr key={f.id}>
                   <td className="py-2 pr-3">{f.label}: <span className="font-mono text-xs">{f.value}</span></td>
-                  <td className="pr-3 text-xs">{f.expected.ambiguous ? `ambiguous — ${f.expected.ambiguous}` : `${f.expected.pass ? "PASS" : "FAIL"} — ${f.expected.reason}`}</td>
-                  <td className="pr-3 text-xs">{f.service ? `${f.service.pass ? "PASS" : "FAIL"}${f.service.reason ? ` — ${f.service.reason}` : ""}` : "—"}</td>
+                  <td className="pr-3 text-xs">{f.expected.ambiguous ? `ambiguous: ${f.expected.ambiguous}` : `${f.expected.pass ? "PASS" : "FAIL"}: ${f.expected.reason}`}</td>
+                  <td className="pr-3 text-xs">{f.service ? `${f.service.pass ? "PASS" : "FAIL"}${f.service.reason ? `: ${f.service.reason}` : ""}` : "n/a"}</td>
                   <td className="text-xs">
                     <Badge status={f.verdict === "AGREE" ? "PASS" : f.verdict === "DISAGREE" ? "FAIL" : "SKIPPED"} label={f.verdict} />
                     {f.diagnosis ? <p className="mt-1 text-[#787878]">{f.diagnosis.category}{f.diagnosis.knownIssue ? ` ${f.diagnosis.knownIssue}` : ""}: {f.diagnosis.message}</p> : null}
@@ -449,7 +449,7 @@ function ExplainView({ r }: { r: ExplainResult }) {
       {r.ranking ? (
         <div className="overflow-x-auto">
           <p className="text-sm text-[#353535]">
-            Score <strong>{r.ranking.score}</strong> · tier {r.ranking.tier} · rank {r.position.rank ?? "—"} of {r.position.rankedOf} ·{" "}
+            Score <strong>{r.ranking.score}</strong> · tier {r.ranking.tier} · rank {r.position.rank ?? "n/a"} of {r.position.rankedOf} ·{" "}
             {r.position.admitted ? `match #${r.position.admittedRank} of ${r.position.admittedOf}` : "not a match"} ·{" "}
             {r.position.onPage ? `on page at #${r.position.pageRank}` : `not on the ${r.position.pageSize}-card page`}
             {r.ranking.hardFilterReasons.length ? ` · excluded by ${r.ranking.hardFilterReasons.join("; ")}` : ""}

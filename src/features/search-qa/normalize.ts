@@ -257,7 +257,7 @@ export function skillMatchesToken(skillName: string, token: string): SkillTokenM
     !normalized &&
     s.length >= MIN_WORD_TOKEN &&
     containsWholeWordsLoose(t, s)
-      ? `"${skillName}" appears inside the requirement "${token}" — e.g. React for React Native`
+      ? `"${skillName}" appears inside the requirement "${token}", e.g. React for React Native`
       : null;
   return { literal, normalized, ambiguous };
 }
