@@ -60,7 +60,8 @@ export function routesViaAbtMailer(
  */
 const ESSENTIAL_KINDS = abtMailerKinds(
   "recruiter.otp,auth.signin_code,auth.password_code,auth.password_reset," +
-    "account.admin_update,account.admin_update.*,account.self_deleted,recruiter.welcome",
+    "account.admin_update,account.admin_update.*,account.self_deleted,account.password_changed," +
+    "recruiter.welcome",
 );
 
 /**

@@ -76,6 +76,7 @@ suite("codes and account notices are essential; notices are not", () => {
   assert(abtMailerCategory("recruiter.otp") === "TRANSACTIONAL_ESSENTIAL", "otp");
   assert(abtMailerCategory("auth.password_reset") === "TRANSACTIONAL_ESSENTIAL", "reset");
   assert(abtMailerCategory("account.admin_update.account_disabled") === "TRANSACTIONAL_ESSENTIAL", "account notice");
+  assert(abtMailerCategory("account.password_changed") === "TRANSACTIONAL_ESSENTIAL", "password changed notice");
   assert(abtMailerCategory("profile.viewed") === "TRANSACTIONAL_NONESSENTIAL", "profile view");
   assert(abtMailerCategory("workshop.confirmation") === "TRANSACTIONAL_NONESSENTIAL", "workshop");
 });
