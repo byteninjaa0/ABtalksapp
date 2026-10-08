@@ -31,6 +31,7 @@ import { recordLegalConsents } from "@/features/legal/record-consent";
 import { recordNewsletterOptIn } from "@/features/legal/record-newsletter-optin";
 import { attributeUtmToUser } from "@/features/utm/attribute";
 import { claimImportOnSignIn } from "@/features/resume/import/claim";
+import { sendPasswordChangedEmail } from "@/features/notification/password-changed-email";
 
 /*
  * Password and emailed-code sign-in (plan 154). The two Credentials providers
@@ -378,4 +379,7 @@ export async function storePassword(input: {
       metadata: { sessionsInvalidated: input.invalidateSessions },
     });
   });
+  // Security notice to the account's own address. After the transaction, so
+  // a failed send can never undo the password change. Never throws.
+  await sendPasswordChangedEmail({ userId: input.userId, kind: input.kind });
 }
