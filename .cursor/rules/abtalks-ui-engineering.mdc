@@ -21,7 +21,7 @@ Do not treat UI requests as isolated page-level styling tasks.
   - STANDARD → `DUR.slow` (0.32) + `EASE_SPARK`
   - GENTLE → `DUR.celebrate` (0.48); `EASE_SPARK_OUT` only for celebration/pop
 - UI Lab does not exist. Do not create `/ui-lab` or a demo page unless a `docs/plans/` file lists it. Demonstrate states on the feature under change.
-- Shallika owns UI/UX. This rule is Sohail workspace guidance. Follow `.cursor/rules/abtalks-sohail-ownership.mdc` stop-on-cross-module for product UI files; this `.mdc` itself is infrastructure.
+- Sohail owns UI/UX (formerly Shallika). This rule is Sohail workspace guidance. Follow `.cursor/rules/abtalks-sohail-ownership.mdc` for product UI files; this `.mdc` itself is infrastructure.
 
 Before making any visual or animation change, determine which layer owns
 the behavior.

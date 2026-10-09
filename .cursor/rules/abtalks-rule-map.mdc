@@ -18,7 +18,7 @@ This workspace is **Sohail**. Follow `CLAUDE.md` for architecture, auth split, P
 
 ## Pull in when relevant, or @-mention
 - `abtalks-sohail-tasks.mdc` — Sohail T-IDs for isolation, admin, audit, config
-- `figma-shallika-team.mdc` — Figma MCP team (Shallika only)
+- `figma-shallika-team.mdc` — Figma MCP team (legacy Shallika team credentials; UI ownership is now Sohail)
 - `.cursor/sources/ABTalks88-task-index.md` — every T-ID / owner / date (use this, not the xlsx)
 - `.cursor/sources/ABTalks_UI_Design_System_FINAL_Forest_Green.md` — full design spec
 

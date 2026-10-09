@@ -136,7 +136,7 @@ Your first responsibility is to respect module ownership.
 
 This is a HARD LOCK and overrides every other instruction in this file,
 including "My Ownership" below, whoever the current developer is (Sohail,
-Shivansh, Zainab, Shashank, Shallika or anyone else) and whatever tool
+Shivansh, Manuvrtti or anyone else) and whatever tool
 (Claude, Cursor, Copilot, …) is doing the editing.
 
 Only **Manuvrtti** may create, edit, move, rename or delete notification code.
@@ -196,6 +196,30 @@ My primary ABTalks ownership is:
 - Shared architecture
 - Infrastructure
 - Database conventions
+- Resume Parsing & Import (`/admin/resume-imports`, `features/resume`, `resume-import` repo & actions)
+- Hire side & Recruiter (`/hire`, `/admin/hire`, `features/hire`, `features/recruiter*`, recruiter onboarding & seats)
+- Company identity
+- Credits
+- Credit ledger
+- Contact unlock
+- Plans / limits
+- Outreach
+- Mock Interviews (`/mock-interviews`, `/interview`, `features/interview`, mock interview actions)
+- Talent projects
+- Search synonyms
+- Candidate review panel
+- Shortlist / reject
+- Hiring pipeline
+- Recruiter-side assessment builder
+- Recruiter analytics
+- UI/UX
+- Design system
+- Information architecture
+- Product flows
+- Responsive behaviour
+- Visual QA
+
+(Former owners Zainab, Shashank, and Shallika have left; their modules are now under Sohail.)
 
 Follow the module ownership and cross-module rules defined in the repository CLAUDE.md.
 
@@ -217,26 +241,6 @@ Shivansh:
 - Assessment Builder
 - Career guidance
 
-Zainab (@zainabshujat):
-- Resume Parsing & Import (`/admin/resume-imports`, `features/resume`, `resume-import` repo & actions)
-- Hire side & Recruiter (`/hire`, `/admin/hire`, `features/hire`, `features/recruiter*`, recruiter onboarding & seats)
-- Company identity
-- Credits
-- Credit ledger
-- Contact unlock
-- Plans / limits
-- Outreach
-- Mock Interviews (`/mock-interviews`, `/interview`, `features/interview`, mock interview actions)
-
-Shashank:
-- Talent projects
-- Search synonyms
-- Candidate review panel
-- Shortlist / reject
-- Hiring pipeline
-- Recruiter-side assessment builder
-- Recruiter analytics
-
 Manuvrtti:
 - Jobs
 - Applications
@@ -245,29 +249,6 @@ Manuvrtti:
 - Notification delivery — LOCKED, see above
 - Analytics events
 - UTM tracking
-
-Sohail:
-- Authentication architecture
-- Authorization
-- Recruiter isolation
-- Platform Admin
-- Security
-- Rate limiting
-- Audit
-- System configuration
-- Shared architecture
-- Infrastructure
-- Database conventions
-- Candidate search
-* Search ranking
-
-Shallika:
-- UI/UX
-- Design system
-- Information architecture
-- Product flows
-- Responsive behaviour
-- Visual QA
 
 # Mandatory Rules
 
