@@ -1,84 +1,108 @@
 # ==============================================================================
 # GitHub Code Owners Configuration
 #
-# Any Pull Request modifying files in these paths will automatically request
-# review from @zainabshujat. When "Require review from Code Owners" is enabled
-# in GitHub repository branch protection rules, PRs cannot be merged without
-# approval from @zainabshujat.
+# A PR touching a listed path automatically requests review from that path's
+# owner. With "Require review from Code Owners" enabled in branch protection,
+# it cannot merge without them.
+#
+# LAST RECONCILED WITH CLAUDE.md: 2026-10-09.
+#
+# Three things were wrong before that date, all of them silent:
+#
+#   - 67 of 92 rules named @zainabshujat, who has left. CLAUDE.md moved those
+#     modules to Sohail; this file still routed every one of those PRs to an
+#     account that could not approve them.
+#   - @Shivansh-Rai and @manuVrtti were not in this file AT ALL, so the modules
+#     CLAUDE.md assigns them had no code owner.
+#   - The Notifications module is a HARD LOCK in CLAUDE.md ("Only Manuvrtti may
+#     create, edit, move, rename or delete notification code") and had exactly
+#     one rule here, pointing at the wrong person. The lock was prose only.
+#
+# Keep this file and CLAUDE.md's ownership section in step — CLAUDE.md rule 13
+# makes that the owner's job. The last rule that matches a file wins, so the
+# catch-all below is a floor, never a ceiling.
 # ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 0. Default
+#
+# Everything not matched below. Without this, a new path has NO owner and its PR
+# needs nobody's approval, which is how a review requirement quietly stops being
+# one. Specific rules further down still take precedence.
+# ------------------------------------------------------------------------------
+*                                                   @byteninjaa0
 
 # ------------------------------------------------------------------------------
 # 1. Resume Parsing & Import Domain
 # ------------------------------------------------------------------------------
-/src/features/resume/                               @zainabshujat
-/src/repositories/resume-import.ts                  @zainabshujat
-/src/repositories/candidate-resume.ts               @zainabshujat
-/src/app/admin/resume-imports/                      @zainabshujat
-/src/app/api/admin/resume-imports/                  @zainabshujat
-/src/app/api/cron/resume-imports/                   @zainabshujat
-/src/app/api/internal/resume-imports/               @zainabshujat
-/src/app/api/profile/resume/                        @zainabshujat
-/src/app/actions/admin-resume-import-actions.ts     @zainabshujat
-/src/app/actions/import-claim-actions.ts            @zainabshujat
-/src/app/claim/                                     @zainabshujat
-/src/app/api/webhooks/brevo/                        @zainabshujat
-/src/app/actions/resume-actions.ts                  @zainabshujat
+/src/features/resume/                               @byteninjaa0
+/src/repositories/resume-import.ts                  @byteninjaa0
+/src/repositories/candidate-resume.ts               @byteninjaa0
+/src/app/admin/resume-imports/                      @byteninjaa0
+/src/app/api/admin/resume-imports/                  @byteninjaa0
+/src/app/api/cron/resume-imports/                   @byteninjaa0
+/src/app/api/internal/resume-imports/               @byteninjaa0
+/src/app/api/profile/resume/                        @byteninjaa0
+/src/app/actions/admin-resume-import-actions.ts     @byteninjaa0
+/src/app/actions/import-claim-actions.ts            @byteninjaa0
+/src/app/claim/                                     @byteninjaa0
+/src/app/api/webhooks/brevo/                        @byteninjaa0
+/src/app/actions/resume-actions.ts                  @byteninjaa0
 
 # ------------------------------------------------------------------------------
 # 2. Hire Side & Recruiter Domain
 # ------------------------------------------------------------------------------
-/src/app/hire/                                      @zainabshujat
-/src/app/admin/hire/                                @zainabshujat
-/src/app/admin/recruiter-seats/                     @zainabshujat
-/src/app/admin/recruiters/                          @zainabshujat
-/src/app/admin/program/recruiters/                  @zainabshujat
-/src/app/api/hire/                                  @zainabshujat
-/src/app/api/cron/hire-alerts/                      @zainabshujat
-/src/app/recruiter-onboarding/                      @zainabshujat
-/src/features/hire/                                 @zainabshujat
-/src/features/recruiter/                            @zainabshujat
-/src/features/recruiter-assessments/                @zainabshujat
-/src/features/recruiter-auth/                       @zainabshujat
-/src/features/recruiter-jobs/                       @zainabshujat
-/src/features/recruiter-notifications/              @zainabshujat
-/src/features/recruiter-workspace/                  @zainabshujat
-/src/components/hire/                               @zainabshujat
-/src/components/recruiter-onboarding/               @zainabshujat
-/src/components/profile/recruiter-view/             @zainabshujat
-/src/repositories/hire.ts                           @zainabshujat
-/src/repositories/talent-pipeline.ts                @zainabshujat
-/src/repositories/talent.ts                         @zainabshujat
-/src/app/actions/hire-actions.ts                    @zainabshujat
-/src/app/actions/hire-guest-actions.ts              @zainabshujat
-/src/app/actions/hire-request-actions.ts            @zainabshujat
-/src/app/actions/hire-unlock-actions.ts             @zainabshujat
-/src/app/actions/hire-view-actions.ts               @zainabshujat
-/src/app/actions/recruiter-assessment-actions.ts    @zainabshujat
-/src/app/actions/recruiter-auth-actions.ts          @zainabshujat
-/src/app/actions/recruiter-job-actions.ts           @zainabshujat
-/src/app/actions/recruiter-pipeline-actions.ts      @zainabshujat
-/src/app/actions/recruiter-profile-actions.ts       @zainabshujat
-/src/app/actions/recruiter-review-actions.ts        @zainabshujat
-/src/app/actions/recruiter-seat-actions.ts          @zainabshujat
+/src/app/hire/                                      @byteninjaa0
+/src/app/admin/hire/                                @byteninjaa0
+/src/app/admin/recruiter-seats/                     @byteninjaa0
+/src/app/admin/recruiters/                          @byteninjaa0
+/src/app/admin/program/recruiters/                  @byteninjaa0
+/src/app/api/hire/                                  @byteninjaa0
+/src/app/api/cron/hire-alerts/                      @byteninjaa0
+/src/app/recruiter-onboarding/                      @byteninjaa0
+/src/features/hire/                                 @byteninjaa0
+/src/features/recruiter/                            @byteninjaa0
+/src/features/recruiter-assessments/                @byteninjaa0
+/src/features/recruiter-auth/                       @byteninjaa0
+/src/features/recruiter-jobs/                       @byteninjaa0
+/src/features/recruiter-workspace/                  @byteninjaa0
+/src/components/hire/                               @byteninjaa0
+/src/components/recruiter-onboarding/               @byteninjaa0
+/src/components/profile/recruiter-view/             @byteninjaa0
+/src/repositories/hire.ts                           @byteninjaa0
+/src/repositories/talent-pipeline.ts                @byteninjaa0
+/src/repositories/talent.ts                         @byteninjaa0
+/src/app/actions/hire-actions.ts                    @byteninjaa0
+/src/app/actions/hire-guest-actions.ts              @byteninjaa0
+/src/app/actions/hire-request-actions.ts            @byteninjaa0
+/src/app/actions/hire-unlock-actions.ts             @byteninjaa0
+/src/app/actions/hire-view-actions.ts               @byteninjaa0
+/src/app/actions/recruiter-assessment-actions.ts    @byteninjaa0
+/src/app/actions/recruiter-auth-actions.ts          @byteninjaa0
+/src/app/actions/recruiter-job-actions.ts           @byteninjaa0
+/src/app/actions/recruiter-pipeline-actions.ts      @byteninjaa0
+/src/app/actions/recruiter-profile-actions.ts       @byteninjaa0
+/src/app/actions/recruiter-review-actions.ts        @byteninjaa0
+/src/app/actions/recruiter-seat-actions.ts          @byteninjaa0
 
 # ------------------------------------------------------------------------------
 # 3. Mock Interviews Domain
 # ------------------------------------------------------------------------------
-/src/app/mock-interviews/                           @zainabshujat
-/src/app/interview/                                 @zainabshujat
-/src/app/admin/mock-interview/                      @zainabshujat
-/src/app/api/mock-interview/                        @zainabshujat
-/src/app/api/interview/                             @zainabshujat
-/src/components/mock-interview/                     @zainabshujat
-/src/components/interview/                          @zainabshujat
-/src/features/interview/                            @zainabshujat
-/src/app/actions/mock-interview-actions.ts          @zainabshujat
-/src/app/actions/interview-actions.ts               @zainabshujat
-/src/app/actions/admin-mock-interview-actions.ts    @zainabshujat
-/src/app/actions/dev-interview-agent-actions.ts     @zainabshujat
-/src/app/dev/interview-agent/                       @zainabshujat
-/src/app/dev/mock-voice-poc/                        @zainabshujat
-/src/app/program/ai-cohort/(interview)/             @zainabshujat
+/src/app/mock-interviews/                           @byteninjaa0
+/src/app/interview/                                 @byteninjaa0
+/src/app/admin/mock-interview/                      @byteninjaa0
+/src/app/api/mock-interview/                        @byteninjaa0
+/src/app/api/interview/                             @byteninjaa0
+/src/components/mock-interview/                     @byteninjaa0
+/src/components/interview/                          @byteninjaa0
+/src/features/interview/                            @byteninjaa0
+/src/app/actions/mock-interview-actions.ts          @byteninjaa0
+/src/app/actions/interview-actions.ts               @byteninjaa0
+/src/app/actions/admin-mock-interview-actions.ts    @byteninjaa0
+/src/app/actions/dev-interview-agent-actions.ts     @byteninjaa0
+/src/app/dev/interview-agent/                       @byteninjaa0
+/src/app/dev/mock-voice-poc/                        @byteninjaa0
+/src/app/program/ai-cohort/(interview)/             @byteninjaa0
 
 # ------------------------------------------------------------------------------
 # 4. Platform Admin / Candidate Search Domain
@@ -111,10 +135,10 @@
 # Text-first course reader and course content. Visual components under
 # src/components/course/visuals/ are shared across courses.
 # ------------------------------------------------------------------------------
-/src/app/learn/                                     @zainabshujat
-/src/features/courses/                              @zainabshujat
-/src/components/course/                             @zainabshujat
-/src/components/dashboard-hub/learn-courses.tsx     @zainabshujat
+/src/app/learn/                                     @byteninjaa0
+/src/features/courses/                              @byteninjaa0
+/src/components/course/                             @byteninjaa0
+/src/components/dashboard-hub/learn-courses.tsx     @byteninjaa0
 
 # ------------------------------------------------------------------------------
 # 7. Shared App Shell (plan 168)
@@ -128,29 +152,6 @@
 /src/components/shared/page-skeleton.tsx            @byteninjaa0
 
 # ------------------------------------------------------------------------------
-# 7b. Candidate search & ranking
-#
-# CODEOWNERS routes all of /src/features/hire/ to the hire owner, but CLAUDE.md
-# assigns "Candidate search" and "Search ranking" to Sohail. Both statements were
-# true at once, so a fix to the ranker needed an approval the two records defined
-# differently — which blocked the 2026-10-07 search-quality pass until it was
-# resolved. These are the files that decide WHO is considered and in WHAT ORDER,
-# as opposed to what the recruiter can then do with them.
-#
-# Later lines win in CODEOWNERS, so these override the /src/features/hire/ line
-# above. Everything else under features/hire stays with the hire owner.
-# ------------------------------------------------------------------------------
-/src/features/hire/score-candidate.ts               @byteninjaa0
-/src/features/hire/search-candidates.ts             @byteninjaa0
-/src/features/hire/track-loaders.ts                 @byteninjaa0
-/src/features/hire/track-registry.ts                @byteninjaa0
-/src/features/hire/pool-brief.ts                    @byteninjaa0
-/src/features/hire/pool-policy.ts                   @byteninjaa0
-/src/features/hire/search-visibility.test.ts        @byteninjaa0
-/src/repositories/talent.ts                         @byteninjaa0
-/src/lib/skill-catalog.ts                           @byteninjaa0
-
-# ------------------------------------------------------------------------------
 # 8. Recruiter-search QA
 #
 # The search quality harness: the golden fixture pool, the filter truth tables,
@@ -162,3 +163,72 @@
 /scripts/search-qa/                                 @byteninjaa0
 /src/repositories/search-audit.ts                   @byteninjaa0
 /docs/qa/search-e2e/                                @byteninjaa0
+
+# ------------------------------------------------------------------------------
+# 9. Notifications — LOCKED MODULE (owner: @manuVrtti)
+#
+# CLAUDE.md states this as a hard lock that overrides every other instruction in
+# that file: "Only Manuvrtti may create, edit, move, rename or delete
+# notification code", for anyone and any tool, with approval required per change
+# and never carried over.
+#
+# Until 2026-10-09 that lock existed only as prose. This file had ONE
+# notification rule, `/src/features/recruiter-notifications/`, and it pointed at
+# a departed owner — so a PR rewriting the notification feed, the delivery
+# pipeline or the Prisma models could merge without @manuVrtti ever seeing it.
+#
+# The paths below are copied from the lock list in CLAUDE.md, verified to exist
+# on 2026-10-09. Calling the public API (notifyUser / notify.ts, the
+# notification-service dispatch functions, rendering <NotificationBellButton />)
+# is explicitly NOT a locked change and does not touch these paths.
+# ------------------------------------------------------------------------------
+/src/features/notification/                         @manuVrtti
+/src/features/recruiter-notifications/              @manuVrtti
+/src/features/profile-view-notification/            @manuVrtti
+/src/app/actions/notification-actions.ts            @manuVrtti
+/src/app/actions/admin-notification-actions.ts      @manuVrtti
+/src/app/actions/admin-notify-actions.ts            @manuVrtti
+/src/app/admin/notifications/                       @manuVrtti
+/src/app/settings/notifications/                    @manuVrtti
+/src/app/api/notification-preferences/              @manuVrtti
+/src/components/shared/notification-provider.tsx    @manuVrtti
+/src/components/shared/notification-bell-button.tsx @manuVrtti
+/src/components/shared/notification-analytics-tracker.tsx @manuVrtti
+/src/components/admin/notification-composer.tsx     @manuVrtti
+/src/components/admin/notifications-table.tsx       @manuVrtti
+/src/components/settings/notification-preferences-form.tsx @manuVrtti
+/src/lib/observability/notification-delivery.ts     @manuVrtti
+/src/lib/observability/notification-failure.test.ts @manuVrtti
+
+# ------------------------------------------------------------------------------
+# 10. Jobs, applications and analytics (owner: @manuVrtti)
+#
+# CLAUDE.md: Jobs, Applications, Job alerts, Analytics events, UTM tracking.
+# `features/recruiter-jobs` is deliberately NOT here — CLAUDE.md gives Sohail
+# "Hire side & Recruiter (features/recruiter*)", and the recruiter's own job
+# posting flow sits on that side of the line.
+# ------------------------------------------------------------------------------
+/src/features/jobs/                                 @manuVrtti
+/src/app/jobs/                                      @manuVrtti
+/src/lib/analytics/                                 @manuVrtti
+/src/components/analytics/                          @manuVrtti
+
+# ------------------------------------------------------------------------------
+# 11. Candidate profile and candidate-side assessments (owner: @Shivansh-Rai)
+#
+# CLAUDE.md: candidate profile, candidate skills, education / experience /
+# projects, opportunity preferences, candidate-side assessments, evidence,
+# Assessment Builder, career guidance.
+#
+# `repositories/candidate.ts` is NOT listed: it is the shared read/write boundary
+# that recruiter search, the talent pool and the hire side all read through, so
+# it stays with the database-conventions owner under the default rule above.
+# ------------------------------------------------------------------------------
+/src/features/profile/                              @Shivansh-Rai
+/src/app/profile/                                   @Shivansh-Rai
+/src/components/profile/                            @Shivansh-Rai
+/src/app/actions/candidate-profile-actions.ts       @Shivansh-Rai
+/src/features/skill/                                @Shivansh-Rai
+/src/features/career-guidance/                      @Shivansh-Rai
+/src/features/assessment-attempts/                  @Shivansh-Rai
+/src/features/platform-assessments/                 @Shivansh-Rai
