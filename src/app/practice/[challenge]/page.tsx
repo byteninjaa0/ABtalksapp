@@ -117,8 +117,7 @@ export default async function PracticeChallengePage({ params }: Props) {
     {
       Icon: Code2,
       text: challenge.languages.map((l) => CODE_LANGUAGES[l].label).join(", "),
-    },
-    { Icon: ListChecks, text: "A new day opens at 5:30 AM IST" },
+    }
   ];
 
   return (

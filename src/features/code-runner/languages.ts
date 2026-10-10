@@ -9,7 +9,7 @@
  * `GET {JUDGE0_URL}/languages` and update the ids here.
  */
 export const CODE_LANGUAGES = {
-  python: { id: "python", label: "Python 3", judge0Id: 100 }, // Python 3.12.5
+  python: { id: "python", label: "Python", judge0Id: 100 }, // Python 3.12.5
   java: { id: "java", label: "Java", judge0Id: 91 }, // JDK 17.0.6
   cpp: { id: "cpp", label: "C++", judge0Id: 105 }, // GCC 14.1.0
   javascript: { id: "javascript", label: "JavaScript", judge0Id: 102 }, // Node.js 22.08.0
