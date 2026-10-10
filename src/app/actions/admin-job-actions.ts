@@ -2,12 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { JobType } from "@prisma/client";
+import { JobType, JobWorkMode } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { requireAdmin } from "@/lib/admin-auth";
 import { formatDateTimeIST } from "@/lib/date-utils";
 import { getJobApplicants } from "@/features/jobs/get-job-applicants";
+// The recruiter path's own normaliser, imported rather than reimplemented:
+// two job-creation paths writing `skills` in subtly different shapes is how
+// the matcher starts disagreeing with itself. `lifecycle.ts` is pure and
+// type-only in its imports, so it costs nothing to pull in here.
+import { normalizeSkills } from "@/features/recruiter-jobs/lifecycle";
 import { prismaJobAlertStore } from "@/features/job-alerts/prisma-store";
 import { fanoutOnJobPublished } from "@/features/job-alerts/service";
 import type { MatchableJob } from "@/features/job-alerts/types";
@@ -54,6 +59,21 @@ const jobTypeSchema = z.nativeEnum(JobType);
 
 const optionalUrl = z.union([z.literal(""), z.string().url()]).optional();
 
+/**
+ * Mirrors the recruiter form's bounds exactly — `z.array(z.string().max(60))
+ * .max(25)` — so the same input is accepted on both paths.
+ */
+const skillsSchema = z.array(z.string().max(60)).max(25).optional().default([]);
+
+/**
+ * Empty string means "not specified", which is a real answer here: an admin
+ * posting an external listing often does not know the work mode, and
+ * `Job.workMode` is nullable for exactly that case.
+ */
+const workModeSchema = z
+  .union([z.literal(""), z.nativeEnum(JobWorkMode)])
+  .optional();
+
 const jobFieldsSchema = z.object({
   title: z.string().min(1).max(200),
   company: z.string().min(1).max(200),
@@ -61,6 +81,12 @@ const jobFieldsSchema = z.object({
   type: jobTypeSchema,
   description: z.string().min(1).max(20000),
   applyExternalUrl: optionalUrl,
+  // Without these two an admin-posted job reaches the alert matcher as
+  // `skills: []` / `workMode: null`, and `matches()` scores only the criteria
+  // a candidate set: an alert naming a skill and a work mode can then never
+  // reach the 0.6 threshold, so admin jobs notified almost nobody.
+  skills: skillsSchema,
+  workMode: workModeSchema,
 });
 
 function revalidateJobViews(jobId?: string) {
@@ -79,6 +105,8 @@ export async function createJobAction(input: {
   type: JobType;
   description: string;
   applyExternalUrl?: string;
+  skills?: string[];
+  workMode?: JobWorkMode | "";
 }) {
   const admin = await requireAdmin();
   const parsed = jobFieldsSchema.safeParse(input);
@@ -86,8 +114,16 @@ export async function createJobAction(input: {
     return { ok: false as const, message: "Invalid input" };
   }
 
-  const { title, company, location, type, description, applyExternalUrl } =
-    parsed.data;
+  const {
+    title,
+    company,
+    location,
+    type,
+    description,
+    applyExternalUrl,
+    skills,
+    workMode,
+  } = parsed.data;
 
   try {
     const job = await prisma.job.create({
@@ -98,6 +134,8 @@ export async function createJobAction(input: {
         type,
         description,
         applyExternalUrl: applyExternalUrl?.trim() || null,
+        skills: normalizeSkills(skills),
+        workMode: workMode || null,
         createdByAdminId: admin.userId,
         status: "PUBLISHED",
         isOpen: true,
@@ -124,6 +162,8 @@ export async function updateJobAction(input: {
   type: JobType;
   description: string;
   applyExternalUrl?: string;
+  skills?: string[];
+  workMode?: JobWorkMode | "";
 }) {
   await requireAdmin();
   const parsed = jobFieldsSchema
@@ -133,8 +173,17 @@ export async function updateJobAction(input: {
     return { ok: false as const, message: "Invalid input" };
   }
 
-  const { jobId, title, company, location, type, description, applyExternalUrl } =
-    parsed.data;
+  const {
+    jobId,
+    title,
+    company,
+    location,
+    type,
+    description,
+    applyExternalUrl,
+    skills,
+    workMode,
+  } = parsed.data;
 
   try {
     await prisma.job.update({
@@ -146,6 +195,10 @@ export async function updateJobAction(input: {
         type,
         description,
         applyExternalUrl: applyExternalUrl?.trim() || null,
+        // Editable after the fact, so a job posted before this change can be
+        // given its skills from the UI instead of from the database.
+        skills: normalizeSkills(skills),
+        workMode: workMode || null,
       },
     });
     revalidateJobViews(jobId);
