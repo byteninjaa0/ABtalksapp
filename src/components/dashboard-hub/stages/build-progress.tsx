@@ -212,9 +212,16 @@ function milestoneTier(streakDay: number): Tier | null {
 /** Plain badge for an ordinary day — white body, black number. */
 const PLAIN: Tier = { name: "Streak", a: "#FFFFFF", b: "#F2F4F5", c: "#FFFFFF", rim: "#E3E7EA", ink: "#111111", wash: "rgba(0,0,0,0)" };
 
-function StreakBadge({ days, milestone }: { days: number; milestone: boolean }) {
+/** Brand green → teal, used for a lit flame and today's completed hexagon. */
+const BRAND_GREEN = "#22C58B";
+const BRAND_TEAL = "#008C94";
+
+function StreakBadge({ days, milestone, lit }: { days: number; milestone: boolean; lit: boolean }) {
   const t = milestone ? tierOf(days) : PLAIN;
   const id = `badge-${t.name}`;
+  // A lit flame burns brand green on the plain badge; a milestone keeps its metal.
+  const green = lit && !milestone;
+  const flameFill = green ? `url(#${id}-flame)` : `url(#${id}-fill)`;
   return (
     <svg
       viewBox="0 0 60 68"
@@ -228,18 +235,31 @@ function StreakBadge({ days, milestone }: { days: number; milestone: boolean }) 
             <stop key={st.offset} offset={st.offset} stopColor={st.color} />
           ))}
         </linearGradient>
+        {green ? (
+          <linearGradient id={`${id}-flame`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={BRAND_GREEN} />
+            <stop offset="1" stopColor={BRAND_TEAL} />
+          </linearGradient>
+        ) : null}
       </defs>
       {/* Hexagon body with a light rim */}
       <polygon points="30,14 55,28 55,54 30,67 5,54 5,28" fill={`url(#${id}-fill)`} stroke={t.rim} strokeWidth="2.5" strokeLinejoin="round" />
-      {/* Flame cresting the top point */}
-      <path
-        d="M30 1 C 36 9 42 13 42 21 C 42 28 36.5 32 30 32 C 23.5 32 18 28 18 21 C 18 16 21 13 23 11 C 23.5 15 25.5 17 27 17 C 26 11 28 6 30 1 Z"
-        fill={`url(#${id}-fill)`}
-        stroke={t.rim}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path d="M30 17 C 33 21 35 23 35 26 C 35 29 32.5 31 30 31 C 27.5 31 25 29 25 26 C 25 23 27 21 30 17 Z" fill={t.rim} opacity="0.75" />
+      {/* Flame cresting the top point; it flickers and glows while the streak is alive. */}
+      <g className={lit ? "streak-flame streak-flame--lit" : "streak-flame"}>
+        <path
+          d="M30 1 C 36 9 42 13 42 21 C 42 28 36.5 32 30 32 C 23.5 32 18 28 18 21 C 18 16 21 13 23 11 C 23.5 15 25.5 17 27 17 C 26 11 28 6 30 1 Z"
+          fill={flameFill}
+          stroke={green ? "#FFFFFF" : t.rim}
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+        <path
+          className="streak-flame__core"
+          d="M30 17 C 33 21 35 23 35 26 C 35 29 32.5 31 30 31 C 27.5 31 25 29 25 26 C 25 23 27 21 30 17 Z"
+          fill={green ? "#E4FBF1" : t.rim}
+          opacity={green ? 0.9 : 0.75}
+        />
+      </g>
       {/* Number + label drawn inside the hexagon, so they can't drift out. */}
       <text x="30" y="46" textAnchor="middle" fontSize="15" fontWeight="800" fontStyle="italic" fill={t.ink} className="font-heading">
         {days}
@@ -304,8 +324,10 @@ function DayHex({ tick, streakDay }: { tick: WeekDayTick; streakDay: number | nu
   // Reached today → thick border + sparkles; otherwise a thin metal outline.
   const live = Boolean(metal) && today && tick.status === "complete";
   const gid = `hex-${tick.date}-${metal?.name ?? "plain"}`;
+  // Today, done, no milestone → filled with the brand green gradient.
+  const active = today && tick.status === "complete" && !metal;
   // Green marks today only; a milestone day wears its metal instead.
-  const stroke = metal ? `url(#${gid}-metal)` : today ? "#22C58B" : "#E5E7EB";
+  const stroke = metal ? `url(#${gid}-metal)` : active ? `url(#${gid}-active)` : today ? BRAND_GREEN : "#E5E7EB";
   const width = live ? 4 : metal ? 2 : today ? 2.5 : 1.5;
   return (
     <li className="flex flex-col items-center gap-1">
@@ -313,9 +335,17 @@ function DayHex({ tick, streakDay }: { tick: WeekDayTick; streakDay: number | nu
         <svg
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
-          className={cn("block overflow-visible", today ? "week-hex-today" : "week-hex")}
+          className={cn("block overflow-visible", today ? "week-hex-today" : "week-hex", active && "week-hex-active")}
           aria-hidden="true"
         >
+          {active ? (
+            <defs>
+              <linearGradient id={`${gid}-active`} x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor={BRAND_GREEN} />
+                <stop offset="1" stopColor={BRAND_TEAL} />
+              </linearGradient>
+            </defs>
+          ) : null}
           {metal ? (
             <defs>
               {/* Banded metal: light → deep → bright → deep → light. */}
@@ -328,12 +358,23 @@ function DayHex({ tick, streakDay }: { tick: WeekDayTick; streakDay: number | nu
           ) : null}
           <polygon
             points={HEX}
-            fill="#fff"
+            fill={active ? `url(#${gid}-active)` : "#fff"}
             stroke={stroke}
             strokeWidth={width}
             strokeLinejoin="round"
             vectorEffect="non-scaling-stroke"
           />
+          {active ? (
+            <path
+              d="M32 51 L45 64 L69 38"
+              fill="none"
+              stroke="#fff"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          ) : null}
           {live && metal ? (
             /* Thin inner highlight line — reads as a polished bevel. */
             <polygon
@@ -381,6 +422,7 @@ function DayHex({ tick, streakDay }: { tick: WeekDayTick; streakDay: number | nu
         <span className="block text-[#6B7280]">{date}</span>
       </span>
       {metal ? <span className="sr-only">{`${streakDay}-day milestone, ${metal.name}`}</span> : null}
+      {active ? <span className="sr-only">Completed today</span> : null}
     </li>
   );
 }
@@ -404,6 +446,8 @@ export function StreakBox({ streak }: { streak: ActivityStreak }) {
   // A milestone is "live" only on the day it's reached.
   const milestoneToday =
     streak.todayCompleted && milestoneTier(streak.currentStreak) !== null;
+  // The flame burns for as long as there is a live streak (1 day or more).
+  const lit = !broken && streak.currentStreak > 0;
   const headline =
     streak.state === "empty" ? "Start your streak." : broken ? "Streak lost." : "Keep showing up.";
   return (
@@ -416,7 +460,7 @@ export function StreakBox({ streak }: { streak: ActivityStreak }) {
       />
       <div className="relative">
       <div className="flex items-start gap-4">
-        <StreakBadge days={streak.currentStreak} milestone={milestoneToday} />
+        <StreakBadge days={streak.currentStreak} milestone={milestoneToday} lit={lit} />
         <div className="min-w-0 flex-1 pt-1">
           <p
             className={cn(
@@ -424,7 +468,7 @@ export function StreakBox({ streak }: { streak: ActivityStreak }) {
               broken ? "text-[#E0532C]" : "text-[#03535F]",
             )}
           >
-            {broken ? <AlertCircle className="size-5" strokeWidth={2.2} aria-hidden="true" /> : <Flame className="size-5" aria-hidden="true" />}
+            {broken ? <AlertCircle className="size-5" strokeWidth={2.2} aria-hidden="true" /> : <Flame className={cn("size-5", lit && "fill-[#22C58B]/25 text-[#22C58B]")} aria-hidden="true" />}
             {broken ? "Streak broken" : "Day streak"}
           </p>
           <p className="mt-0.5 text-sm text-[#6B7280]">{headline}</p>

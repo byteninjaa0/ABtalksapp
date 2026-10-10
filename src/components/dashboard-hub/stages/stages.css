@@ -47,6 +47,36 @@
 .week-label { font-size: clamp(9px, 3.5cqw, 12px); }
 .streak-badge { width: clamp(64px, 26cqw, 92px); aspect-ratio: 60 / 68; height: auto; }
 
+/* Lit flame: sways from its base while a soft green glow breathes. */
+.streak-badge { overflow: visible; }
+.streak-flame { transform-box: fill-box; transform-origin: 50% 100%; }
+.streak-flame--lit {
+  filter: drop-shadow(0 0 2px rgba(34, 197, 139, 0.55));
+  animation: flame-burn 1.8s ease-in-out infinite;
+}
+.streak-flame--lit .streak-flame__core {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: flame-core 1.2s ease-in-out infinite;
+}
+@keyframes flame-burn {
+  0%, 100% { transform: scale(1, 1) rotate(0deg); filter: drop-shadow(0 0 2px rgba(34, 197, 139, 0.5)); }
+  30% { transform: scale(0.97, 1.05) rotate(-1.5deg); filter: drop-shadow(0 0 5px rgba(34, 197, 139, 0.75)); }
+  60% { transform: scale(1.03, 0.97) rotate(1.5deg); filter: drop-shadow(0 0 3px rgba(34, 197, 139, 0.55)); }
+  80% { transform: scale(0.99, 1.03) rotate(-0.5deg); filter: drop-shadow(0 0 4px rgba(34, 197, 139, 0.7)); }
+}
+@keyframes flame-core {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.88, 1.08); }
+}
+
+/* Today's completed hexagon: brand gradient with a soft green halo. */
+.week-hex-active { filter: drop-shadow(0 3px 6px rgba(34, 197, 139, 0.4)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .streak-flame--lit, .streak-flame--lit .streak-flame__core { animation: none; }
+}
+
 
 /* ─── Library rows (Netflix-style) ───────────────────────────── */
 .lib-frame { overflow-x: clip; overflow-y: visible; }
