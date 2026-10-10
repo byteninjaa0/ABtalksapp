@@ -379,9 +379,25 @@ async function listLangchainAttemptTimes(userId: string): Promise<Date[]> {
 }
 
 /**
+ * Coding practice (plan 186): accepted submissions only. A Run never creates a
+ * row and a failed Submit is never stored, so neither can count here.
+ */
+async function listCodingPracticeAttemptTimes(userId: string): Promise<Date[]> {
+  const rows = await prisma.activityAttempt.findMany({
+    where: {
+      enrollment: { userId },
+      activityId: { startsWith: "act_dsa_" },
+    },
+    select: { submittedAt: true, createdAt: true },
+  });
+  return rows.map((r) => r.submittedAt ?? r.createdAt);
+}
+
+/**
  * Every submission the hub heatmap and streak card count, across all tracks
  * the user can be in: 60-Day Challenge, AI Cohort, Databricks, DS Architect,
- * Power BI, Snowflake, Databricks Data & AI, LangChain & LangGraph.
+ * Power BI, Snowflake, Databricks Data & AI, LangChain & LangGraph, and
+ * coding practice.
  */
 export async function listHubSubmissionTimes(
   userId: string,
@@ -395,6 +411,7 @@ export async function listHubSubmissionTimes(
     snowflake,
     databricksAi,
     langchain,
+    codingPractice,
   ] = await Promise.all([
     listChallengeSubmissionTimes(userId),
     listProgramMissionTimes(userId),
@@ -404,6 +421,7 @@ export async function listHubSubmissionTimes(
     listSnowflakeAttemptTimes(userId),
     listDatabricksAiAttemptTimes(userId),
     listLangchainAttemptTimes(userId),
+    listCodingPracticeAttemptTimes(userId),
   ]);
   return [
     ...challenge,
@@ -414,6 +432,7 @@ export async function listHubSubmissionTimes(
     ...snowflake,
     ...databricksAi,
     ...langchain,
+    ...codingPractice,
   ];
 }
 

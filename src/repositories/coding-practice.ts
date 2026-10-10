@@ -15,6 +15,7 @@ import {
 } from "@prisma/client";
 import type { CodeLanguageId } from "@/features/code-runner/languages";
 import { savedSolutionSchema } from "@/lib/validations/coding-practice";
+import { getIstDateKey } from "@/lib/date-utils";
 import { prisma, writeClient } from "@/lib/db";
 import { cohortSlugFor } from "@/features/coding-practice/constants";
 
@@ -91,14 +92,14 @@ export type SavedSolution = {
   submittedAt: Date | null;
 };
 
-/** The learner's saved accepted solution for one question, if any. */
+/** The learner's latest accepted solution for one question, if any. */
 export async function getSavedSolution(
   enrollmentId: string,
   activityId: string,
 ): Promise<SavedSolution | null> {
   const row = await prisma.activityAttempt.findFirst({
     where: { enrollmentId, activityId, passed: true },
-    orderBy: { attemptNumber: "asc" },
+    orderBy: { attemptNumber: "desc" },
     select: { payload: true, submittedAt: true },
   });
   const parsed = savedSolutionSchema.safeParse(row?.payload);
@@ -109,9 +110,13 @@ export async function getSavedSolution(
 /**
  * Save an accepted solution. The ONLY write a submission ever makes.
  *
- * Always attempt number 1: the unique index on (enrollment, activity, attempt
- * number) is what guarantees one saved row per question, so a second accepted
- * Submit (another tab, a double click) lands on P2002 and stores nothing.
+ * A problem can be submitted again after it is solved. Each accepted
+ * submission is its own attempt row, so the dashboard heatmap and streak see
+ * activity on the day it happened and earlier days keep theirs. The one
+ * exception keeps the table small and the heatmap honest: a second accepted
+ * submission for the same problem on the same IST day replaces that day's row
+ * instead of adding another. So there is at most one row per problem per day,
+ * and the latest row is the solution the learner sees.
  */
 export async function recordAcceptedSubmission(input: {
   enrollmentId: string;
@@ -124,16 +129,47 @@ export async function recordAcceptedSubmission(input: {
   completesChallenge: boolean;
 }): Promise<{ stored: boolean }> {
   const now = new Date();
+  const payload = { code: input.code, language: input.language };
+  const detailJson = {
+    language: input.language,
+    passedCount: input.passedCount,
+    total: input.total,
+  };
   try {
     await writeClient().$transaction(async (tx) => {
+      const latest = await tx.activityAttempt.findFirst({
+        where: {
+          enrollmentId: input.enrollmentId,
+          activityId: input.activityId,
+        },
+        orderBy: { attemptNumber: "desc" },
+        select: { id: true, attemptNumber: true, submittedAt: true },
+      });
+
+      if (
+        latest?.submittedAt &&
+        getIstDateKey(latest.submittedAt) === getIstDateKey(now)
+      ) {
+        await tx.activityAttempt.update({
+          where: { id: latest.id },
+          data: { payload, submittedAt: now },
+          select: { id: true },
+        });
+        await tx.activityEvaluation.updateMany({
+          where: { attemptId: latest.id, isAuthoritative: true },
+          data: { detailJson },
+        });
+        return;
+      }
+
       const attempt = await tx.activityAttempt.create({
         data: {
           enrollmentId: input.enrollmentId,
           activityId: input.activityId,
-          attemptNumber: 1,
+          attemptNumber: (latest?.attemptNumber ?? 0) + 1,
           status: AttemptStatus.EVALUATED,
           lateness: AttemptLateness.NOT_APPLICABLE,
-          payload: { code: input.code, language: input.language },
+          payload,
           passed: true,
           score: 100,
           pointsAwarded: 0,
@@ -149,11 +185,7 @@ export async function recordAcceptedSubmission(input: {
           score: 100,
           maxScore: 100,
           isAuthoritative: true,
-          detailJson: {
-            language: input.language,
-            passedCount: input.passedCount,
-            total: input.total,
-          },
+          detailJson,
         },
         select: { id: true },
       });
@@ -167,6 +199,8 @@ export async function recordAcceptedSubmission(input: {
     });
     return { stored: true };
   } catch (error) {
+    // Two accepted submissions racing for the same attempt number: the other
+    // one is saved, this one is not.
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"

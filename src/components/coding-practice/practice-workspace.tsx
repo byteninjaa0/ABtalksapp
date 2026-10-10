@@ -81,23 +81,15 @@ export function PracticeWorkspace({
     if (!outcome.ok) return outcome;
 
     const data = outcome.data;
-    if (data.kind === "already_solved") {
-      return {
-        ok: true,
-        data: {
-          result: null,
-          note: "You have already solved this question. Your first accepted solution is saved.",
-          solved: true,
-        },
-      };
-    }
     if (data.kind === "not_accepted") {
       return {
         ok: true,
         data: {
           result: data.result,
-          note: "Not accepted yet. Nothing was saved.",
-          solved: false,
+          note: data.alreadySolved
+            ? "Not accepted. Your saved solution is unchanged."
+            : "Not accepted yet. Nothing was saved.",
+          solved: data.alreadySolved,
         },
       };
     }
@@ -107,9 +99,11 @@ export function PracticeWorkspace({
       ok: true,
       data: {
         result: data.result,
-        note: data.dayComplete
-          ? `Accepted. Your solution is saved. Day ${day} is complete.`
-          : "Accepted. Your solution is saved.",
+        note: !data.firstSolve
+          ? "Accepted. Your saved solution has been replaced with this one."
+          : data.dayComplete
+            ? `Accepted. Your solution is saved. Day ${day} is complete.`
+            : "Accepted. Your solution is saved.",
         solved: true,
       },
     };

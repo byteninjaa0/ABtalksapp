@@ -243,7 +243,8 @@ export async function judge(input: {
               ...(skipCompare
                 ? {}
                 : { expected_output: encode(t.expectedOutput) }),
-              cpu_time_limit: timeLimitSec,
+              cpu_time_limit:
+                timeLimitSec + CODE_LANGUAGES[language].startupSec,
               enable_network: false,
             })),
           }),

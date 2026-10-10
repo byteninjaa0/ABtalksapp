@@ -46,7 +46,9 @@ Worked example. Enrol on 8 Oct at 14:00 IST (08:30 UTC). Day 1 is open. Day 2's 
 
 - **Run** executes the code against the question's visible sample tests and shows output, errors and per-test results. It is temporary: it creates no database record and performs no database read.
 - **Submit** executes against all tests, hidden ones included, on the server. Only an **accepted** Submit is saved. A failed Submit shows results and writes nothing.
-- One saved row per learner per question: the first accepted solution. Once a question is solved, the Submit button is replaced by a "Solved" state; Run stays available.
+- **Revised 2026-10-10 (replaces "one saved row per question").** A solved question can be submitted again. A failed re-submission changes nothing. An accepted one becomes the saved solution the learner sees. Each accepted submission is its own `ActivityAttempt` row, except that a second accepted submission for the same question on the same IST day replaces that day's row, so there is at most one row per question per day.
+- **Heatmap and streak (2026-10-10).** `listHubSubmissionTimes` in `src/repositories/progress.ts` includes coding practice attempts (`act_dsa_*`), so the dashboard heatmap and the weekly streak count accepted submissions, including accepted re-submissions on a later day. Runs and failed submits never count because they are never stored. The heatmap uses IST calendar days like every other track; practice day unlocks still use UTC.
+- **Runtimes (2026-10-10).** Python runs on 3.8.1 and JavaScript on Node.js 12.14, because every newer image on ce.judge0.com spends 2.0 to 2.7 s of CPU starting up, which made correct solutions hit the 2 s limit. The language dropdown shows the versions. JavaScript reference solutions must stay Node 12 compatible.
 
 - The **Submissions** tab shows the learner's saved accepted solution for that question (date, language, code). Failed attempts are not listed because they are never stored.
 - **Custom input** (Phase 5): Run once against input the learner types, showing output only. Also never stored.

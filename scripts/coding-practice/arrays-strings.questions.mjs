@@ -1,5 +1,8 @@
 // The 30 questions of "Array and String Mastery in 15 Days".
 //
+// The JavaScript reference solutions are also run on Judge0's Node.js 12, so
+// they must not use syntax newer than that (no `??`, `?.`, `replaceAll`, `.at`).
+//
 // Each entry is the single source for one question: statement, typed
 // signature, a JavaScript reference solution (it computes every expected
 // output), a Python solution (stored with the question and re-checked by
@@ -151,8 +154,8 @@ function subarraySum(nums, k) {
   let count = 0;
   for (const x of nums) {
     sum += x;
-    count += seen.get(sum - k) ?? 0;
-    seen.set(sum, (seen.get(sum) ?? 0) + 1);
+    count += seen.get(sum - k) || 0;
+    seen.set(sum, (seen.get(sum) || 0) + 1);
   }
   return count;
 }
@@ -293,9 +296,9 @@ function longestPalindrome(s) {
 function isAnagram(s, t) {
   if (s.length !== t.length) return false;
   const count = new Map();
-  for (const c of s) count.set(c, (count.get(c) ?? 0) + 1);
+  for (const c of s) count.set(c, (count.get(c) || 0) + 1);
   for (const c of t) {
-    const left = (count.get(c) ?? 0) - 1;
+    const left = (count.get(c) || 0) - 1;
     if (left < 0) return false;
     count.set(c, left);
   }
@@ -327,15 +330,15 @@ function lengthOfLongestSubstring(s) {
 
 function minWindow(s, t) {
   const need = new Map();
-  for (const c of t) need.set(c, (need.get(c) ?? 0) + 1);
+  for (const c of t) need.set(c, (need.get(c) || 0) + 1);
   let missing = t.length;
   let bestStart = 0;
   let bestLen = Infinity;
   let l = 0;
   for (let h = 0; h < s.length; h++) {
     const c = s[h];
-    if ((need.get(c) ?? 0) > 0) missing--;
-    need.set(c, (need.get(c) ?? 0) - 1);
+    if ((need.get(c) || 0) > 0) missing--;
+    need.set(c, (need.get(c) || 0) - 1);
     while (missing === 0) {
       if (h - l + 1 < bestLen) {
         bestLen = h - l + 1;

@@ -589,7 +589,7 @@ export function CodeWorkspace({
                   Solved
                 </span>
               ) : null}
-              {onSubmit && !isSolved ? (
+              {onSubmit ? (
                 <button
                   type="button"
                   onClick={submitCode}
@@ -603,7 +603,9 @@ export function CodeWorkspace({
                   )}
                   {run.kind === "running" && run.action === "submit"
                     ? "Submitting..."
-                    : "Submit"}
+                    : isSolved
+                      ? "Submit again"
+                      : "Submit"}
                 </button>
               ) : null}
             </div>
