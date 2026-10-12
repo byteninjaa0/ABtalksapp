@@ -460,6 +460,29 @@
     box-shadow: inset 0 -3px 10px rgba(0, 0, 0, 0.42);
   }
 
+  /* Open-job count on the Jobs row. `margin-left: auto` rather than a grid
+     column, because the row is a flex line whose label already truncates. */
+  .abt-nav-count {
+    flex: none;
+    margin-left: auto;
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--pw-primary-soft, #e7f2f3);
+    color: #03535f;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* On the clay tile the tint would sit teal-on-teal, so it inverts. */
+  .abt-nav-active .abt-nav-count {
+    background: #ffffff;
+    color: #03535f;
+  }
+
   /* Raster nav icons (Dashboard) — Lucide uses currentColor; imgs need invert on the clay tile. */
   .abt-nav-active img {
     filter: invert(1);

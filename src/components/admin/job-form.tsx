@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import type { JobType } from "@prisma/client";
+import type { JobType, JobWorkMode } from "@prisma/client";
 import {
   createJobAction,
   updateJobAction,
@@ -12,6 +12,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
+/** Empty means "not specified": `Job.workMode` is nullable for that case. */
+const WORK_MODES: { value: JobWorkMode | ""; label: string }[] = [
+  { value: "", label: "Not specified" },
+  { value: "REMOTE", label: "Remote" },
+  { value: "HYBRID", label: "Hybrid" },
+  { value: "ONSITE", label: "On-site" },
+];
 
 const JOB_TYPES: { value: JobType; label: string }[] = [
   { value: "FULL_TIME", label: "Full-time" },
@@ -28,6 +36,8 @@ type JobFormValues = {
   type: JobType;
   description: string;
   applyExternalUrl: string;
+  skills: string[];
+  workMode: JobWorkMode | "";
 };
 
 type Props =
@@ -48,6 +58,8 @@ export function JobForm(props: Props) {
           type: "FULL_TIME" as JobType,
           description: "",
           applyExternalUrl: "",
+          skills: [] as string[],
+          workMode: "" as JobWorkMode | "",
         };
 
   const [title, setTitle] = useState(initial.title);
@@ -58,6 +70,11 @@ export function JobForm(props: Props) {
   const [applyExternalUrl, setApplyExternalUrl] = useState(
     initial.applyExternalUrl,
   );
+  // Held as the raw comma-separated string the admin is typing, so a trailing
+  // comma mid-edit does not keep re-splitting under them. It is split on
+  // submit and `normalizeSkills` on the server has the final say.
+  const [skillsText, setSkillsText] = useState(initial.skills.join(", "));
+  const [workMode, setWorkMode] = useState<JobWorkMode | "">(initial.workMode);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,6 +86,11 @@ export function JobForm(props: Props) {
         type,
         description,
         applyExternalUrl,
+        skills: skillsText
+          .split(",")
+          .map((v) => v.trim())
+          .filter(Boolean),
+        workMode,
       };
 
       if (props.mode === "create") {
@@ -132,7 +154,7 @@ export function JobForm(props: Props) {
             placeholder="Remote, Bangalore, …"
           />
         </div>
-        <div className="space-y-2 sm:col-span-2">
+        <div className="space-y-2">
           <Label htmlFor="job-type">Type</Label>
           <select
             id="job-type"
@@ -147,6 +169,36 @@ export function JobForm(props: Props) {
               </option>
             ))}
           </select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="job-work-mode">Work mode</Label>
+          <select
+            id="job-work-mode"
+            value={workMode}
+            onChange={(e) => setWorkMode(e.target.value as JobWorkMode | "")}
+            disabled={pending}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          >
+            {WORK_MODES.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="job-skills">Skills</Label>
+          <Input
+            id="job-skills"
+            value={skillsText}
+            onChange={(e) => setSkillsText(e.target.value)}
+            disabled={pending}
+            placeholder="React, Node.js, SQL"
+          />
+          <p className="text-xs text-muted-foreground">
+            Comma separated. Candidates&apos; job alerts match on these, so a
+            job posted without them reaches almost nobody.
+          </p>
         </div>
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="job-description">Description *</Label>
