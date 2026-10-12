@@ -40,9 +40,9 @@ export const BRIDGE_PANELS = [
     title: "Make yourself visible by building.",
     body: null,
     items: [
-      "Hackathons — weekend builds, judged and archived",
-      "Cohorts — multi-week programs with mentors",
-      "Challenges — scoped problems from real companies",
+      "Hackathons: weekend builds, judged and archived",
+      "Cohorts: multi-week programs with mentors",
+      "Challenges: scoped problems from real companies",
     ],
   },
   {
