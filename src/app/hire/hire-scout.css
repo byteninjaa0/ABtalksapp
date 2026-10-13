@@ -3300,6 +3300,50 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-app .hire-podbar button:not(.hir
   margin: 20px 0;
 }
 
+/* Resume typography inside the review panel.
+   Two things made this the smallest text in the product: the labels and
+   section headings are 9px/11px, sized for the 820px standalone card, and the
+   panel sits inside `.hire-app--results`, which carries `zoom: var(--hire-zoom)`
+   — 0.75 at 1440px. Together they rendered the labels at about 6.7px and the
+   headings at 8.2px.
+   The two small styles are raised for every embed (the panel is also used on
+   /hire/jobs and in the admin project inspector, neither of which is zoomed),
+   and the desk then divides by the zoom so the panel reads the same physical
+   size there as it does on those pages. */
+.hire-sheet--embed .hire-sheet__k {
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.hire-sheet--embed .hire-sheet__h {
+  font-size: 13px;
+}
+
+.hire-app--results .hire-sheet--embed .hire-sheet__k {
+  font-size: calc(11px / var(--hire-zoom, 1));
+  line-height: calc(14px / var(--hire-zoom, 1));
+}
+
+.hire-app--results .hire-sheet--embed .hire-sheet__v {
+  font-size: calc(16px / var(--hire-zoom, 1));
+  line-height: calc(22px / var(--hire-zoom, 1));
+}
+
+.hire-app--results .hire-sheet--embed .hire-sheet__h {
+  font-size: calc(13px / var(--hire-zoom, 1));
+}
+
+.hire-app--results .hire-sheet--embed .hire-sheet__p,
+.hire-app--results .hire-sheet--embed .hire-sheet__li {
+  font-size: calc(15px / var(--hire-zoom, 1));
+  line-height: calc(24px / var(--hire-zoom, 1));
+}
+
+.hire-app--results .hire-sheet--embed .hire-sheet__note {
+  font-size: calc(13px / var(--hire-zoom, 1));
+  line-height: calc(21px / var(--hire-zoom, 1));
+}
+
 .hire-sheet__top {
   display: flex;
   align-items: flex-start;
