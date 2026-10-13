@@ -224,7 +224,14 @@ export function PipelineBoard({ rows, companyName }: PipelineBoardProps) {
   );
 }
 
-/** Muted "nothing here" mark. Inline so the page ships no extra asset. */
+/**
+ * Muted "nothing here" mark. Inline so the page ships no extra asset.
+ *
+ * The lens sweeps slowly as though still looking, its shadow drifts with it,
+ * and the dashed card behind breathes. All of it lives in hire-scout.css
+ * behind `prefers-reduced-motion: no-preference`, so it is a still drawing for
+ * anyone who asked for less movement.
+ */
 function EmptyIllustration() {
   return (
     <svg
@@ -233,9 +240,15 @@ function EmptyIllustration() {
       viewBox="0 0 92 92"
       fill="none"
       aria-hidden="true"
-      className="opacity-70"
+      className="hire-empty-mark opacity-70"
     >
+      <defs>
+        <clipPath id="hire-empty-lens-clip">
+          <circle cx="40" cy="62" r="11" />
+        </clipPath>
+      </defs>
       <rect
+        className="hire-empty-mark__ghost"
         x="16.5"
         y="12.5"
         width="42"
@@ -245,25 +258,72 @@ function EmptyIllustration() {
         strokeWidth="2"
         strokeDasharray="5 4"
       />
-      <rect
-        x="30.5"
-        y="20.5"
-        width="42"
-        height="52"
-        rx="4"
-        fill="#fff"
-        stroke="#9aa4aa"
-        strokeWidth="2"
+      {/* Front card and its cross rock together, counter to the ghost. */}
+      <g className="hire-empty-mark__card">
+        <rect
+          x="30.5"
+          y="20.5"
+          width="42"
+          height="52"
+          rx="4"
+          fill="#fff"
+          stroke="#9aa4aa"
+          strokeWidth="2"
+        />
+        <path
+          className="hire-empty-mark__cross"
+          d="M44 36l14 14M58 36L44 50"
+          stroke="#9aa4aa"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </g>
+      <ellipse
+        className="hire-empty-mark__shadow"
+        cx="48"
+        cy="84"
+        rx="22"
+        ry="3"
+        fill="#e6eaec"
       />
-      <path
-        d="M44 36l14 14M58 36L44 50"
-        stroke="#9aa4aa"
-        strokeWidth="2"
-        strokeLinecap="round"
+      {/* Rings pushing out from the lens, staggered so one is always going. */}
+      <circle
+        className="hire-empty-mark__ripple"
+        cx="40"
+        cy="62"
+        r="12"
+        fill="none"
+        stroke="#6b7a82"
+        strokeWidth="1.5"
       />
-      <circle cx="40" cy="62" r="12" fill="#fff" stroke="#6b7a82" strokeWidth="2.5" />
-      <path d="M49 71l7 7" stroke="#6b7a82" strokeWidth="3" strokeLinecap="round" />
-      <ellipse cx="48" cy="84" rx="22" ry="3" fill="#e6eaec" />
+      <circle
+        className="hire-empty-mark__ripple hire-empty-mark__ripple--late"
+        cx="40"
+        cy="62"
+        r="12"
+        fill="none"
+        stroke="#6b7a82"
+        strokeWidth="1.5"
+      />
+      {/* Lens last so it sweeps over the cards rather than under them. */}
+      <g className="hire-empty-mark__lens">
+        <circle cx="40" cy="62" r="12" fill="#fff" stroke="#6b7a82" strokeWidth="2.5" />
+        {/* A light travelling across the glass, clipped to it. Tilted by the
+            wrapping <g> so the CSS transform is free to do the travelling. */}
+        <g clipPath="url(#hire-empty-lens-clip)">
+          <g transform="rotate(22 40 62)">
+            <rect
+              className="hire-empty-mark__glint"
+              x="30"
+              y="48"
+              width="5"
+              height="28"
+              fill="#ffffff"
+            />
+          </g>
+        </g>
+        <path d="M49 71l7 7" stroke="#6b7a82" strokeWidth="3" strokeLinecap="round" />
+      </g>
     </svg>
   );
 }
