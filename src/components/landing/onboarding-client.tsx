@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Rocket } from "lucide-react";
@@ -14,6 +13,7 @@ import { ProgressDots } from "./progress-dots";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SiteSearchSlot } from "@/components/dashboard-hub/site-search-slot";
+import { Wordmark } from "@/components/shared/wordmark";
 
 const SLIDES = ["welcome", "about", "rules", "community", "cta"] as const;
 type SlideKey = (typeof SLIDES)[number];
@@ -100,14 +100,7 @@ export function OnboardingClient() {
         <header className="abt-header shrink-0">
           <div className="abt-header-inner">
             <Link href="/" aria-label="Klymb AI home" className="logo-link">
-              <Image
-                src="/abtalks-logo.png"
-                alt="Klymb AI"
-                width={300}
-                height={84}
-                priority
-                className="logo-image"
-              />
+              <Wordmark size="lg" className="logo-image" />
             </Link>
             <SiteSearchSlot />
           </div>

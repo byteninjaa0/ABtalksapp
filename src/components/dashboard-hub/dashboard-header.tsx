@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Menu } from "lucide-react";
 import { NotificationBellButton } from "@/components/shared/notification-bell-button";
 import { SiteSearchSlot } from "@/components/dashboard-hub/site-search-slot";
+import { Wordmark } from "@/components/shared/wordmark";
 
 export type HeaderSectionNavItem = {
   href: string;
@@ -64,13 +64,7 @@ export function DashboardHeader({
             className="inline-flex h-8 shrink-0 items-center md:hidden"
             aria-label="Klymb AI dashboard"
           >
-            <Image
-              src="/abtalks-logo.png"
-              alt="Klymb AI"
-              width={120}
-              height={32}
-              className="block h-6 w-auto brightness-0"
-            />
+            <Wordmark size="sm" className="block h-6 w-auto brightness-0" />
           </Link>
 
           {customNav ? (

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import {
   Sparkles,
   FileText,
@@ -20,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { acknowledgeClaimProfileAction } from "@/app/actions/claim-profile-actions";
+import { Wordmark } from "@/components/shared/wordmark";
 
 type ClaimSummary = {
   fullName: string;
@@ -95,14 +95,7 @@ export function ClaimProfileClient({ summary, userEmail, isPreview = false }: Pr
         {/* Universal Top Brand Logo */}
         <div className="mb-6 sm:mb-8 flex justify-center">
           <Link href="/" className="inline-flex items-center gap-2 focus-visible:outline-none">
-            <Image
-              src="/abtalks-logo.png"
-              alt="Klymb AI"
-              width={130}
-              height={36}
-              className="h-7 sm:h-8 w-auto object-contain"
-              priority
-            />
+            <Wordmark size="md" className="h-7 sm:h-8 w-auto object-contain" />
           </Link>
         </div>
 

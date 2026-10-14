@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Wordmark } from "@/components/shared/wordmark";
 
 type Props = {
   className?: string;
@@ -61,14 +61,7 @@ export function EcosystemPageHeader({ className }: Props) {
             className="logo-link focus-spark shrink-0"
             aria-label="Klymb AI home"
           >
-            <Image
-              src="/abtalks-logo.png"
-              alt="Klymb AI"
-              width={300}
-              height={84}
-              priority
-              className="logo-image"
-            />
+            <Wordmark size="lg" className="logo-image" />
           </Link>
         </div>
 

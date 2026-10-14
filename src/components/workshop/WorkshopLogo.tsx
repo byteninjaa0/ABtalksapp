@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { Wordmark } from "@/components/shared/wordmark";
 
 export default function WorkshopLogo() {
   return (
@@ -28,14 +28,7 @@ export default function WorkshopLogo() {
         }
         .wk-logo:hover img { transform: scale(1.03); }
       `}</style>
-      <Image
-        src="/abtalks-logo.png"
-        alt="Klymb AI"
-        width={300}
-        height={84}
-        priority
-        className="logo-image !h-6 w-auto sm:!h-7"
-      />
+      <Wordmark size="lg" className="logo-image !h-6 w-auto sm:!h-7" />
     </Link>
   );
 }

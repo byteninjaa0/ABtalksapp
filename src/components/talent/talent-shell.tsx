@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { signOutAction } from "@/app/actions/auth-actions";
@@ -8,6 +7,7 @@ import { RecruiterAccountMenu } from "@/components/hire/recruiter-account-menu";
 import { useHireAuth } from "@/components/hire/hire-auth-provider";
 import type { RecruiterAccountSnapshot } from "@/features/hire/recruiter-account-types";
 import { SiteSearchSlot } from "@/components/dashboard-hub/site-search-slot";
+import { Wordmark } from "@/components/shared/wordmark";
 
 const NAV = [
   // The pool browser is not linked anywhere while it has nothing useful to
@@ -38,14 +38,7 @@ export function TalentShell({
           <div className="inline-flex items-center gap-2 font-display text-base font-semibold tracking-tight">
             <Link href="/" aria-label="Klymb AI home">
             <span className="logo-link">
-              <Image
-                src="/abtalks-logo.png"
-                alt="Klymb AI"
-                width={300}
-                height={84}
-                priority
-                className="logo-image"
-              />
+              <Wordmark size="lg" className="logo-image" />
             </span>
             </Link>
             {/* /talent is gone — the pool browser was removed. Scout is the

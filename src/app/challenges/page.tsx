@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -16,6 +15,7 @@ import { FaqAccordion } from "@/components/shared/faq-accordion";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SiteSearchSlot } from "@/components/dashboard-hub/site-search-slot";
+import { Wordmark } from "@/components/shared/wordmark";
 
 export const metadata: Metadata = {
   title: "60-Day Coding Challenge | Klymb AI",
@@ -63,14 +63,7 @@ export default function ChallengesPage() {
           >
             <ArrowLeft className="h-4 w-4 shrink-0" />
             <span className="logo-link">
-              <Image
-                src="/abtalks-logo.png"
-                alt="Klymb AI"
-                width={300}
-                height={84}
-                priority
-                className="logo-image"
-              />
+              <Wordmark size="lg" className="logo-image" />
             </span>
           </Link>
           <div className="flex items-center gap-2">

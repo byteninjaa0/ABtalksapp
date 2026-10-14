@@ -1,12 +1,12 @@
 "use client";
 
 import { useId } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Users } from "lucide-react";
 import { HOW_IT_WORKS_STEPS } from "@/data/roadmap";
 import { Roadmap } from "@/components/program/roadmap/Roadmap";
 import { cn } from "@/lib/utils";
+import { Wordmark } from "@/components/shared/wordmark";
 
 type Cta = { label: string; href: string };
 
@@ -277,14 +277,7 @@ export function ProgramLanding({ cta }: { cta: Cta }) {
 
         <div className="relative mx-auto max-w-7xl px-5 pt-6 md:px-10 md:pt-8">
           <Link href="/" className="inline-block">
-            <Image
-              src="/abtalks-logo.png"
-              alt="Klymb AI"
-              width={202}
-              height={53}
-              className="h-9 w-auto md:h-10"
-              priority
-            />
+            <Wordmark size="md" className="h-9 w-auto md:h-10" />
           </Link>
         </div>
 

@@ -29,6 +29,7 @@ import {
   HUB_NAV_IDLE_CLASS,
   type NavIconKey,
 } from "./nav-items";
+import { Wordmark } from "@/components/shared/wordmark";
 
 type NavIconProps = { className?: string; "aria-hidden"?: boolean };
 
@@ -271,13 +272,7 @@ export function DashboardSidebar({
           onClick={onNavigate}
           className="inline-flex h-8 items-center"
         >
-          <Image
-            src="/abtalks-logo.png"
-            alt="Klymb AI"
-            width={120}
-            height={32}
-            className="block h-7 w-auto brightness-0"
-          />
+          <Wordmark size="sm" className="block h-7 w-auto brightness-0" />
         </Link>
       </div>
       {renderNav(false)}
@@ -321,13 +316,7 @@ export function DashboardSidebar({
             aria-label="Klymb AI dashboard"
             className="relative block h-6 w-[28px] overflow-hidden"
           >
-            <Image
-              src="/abtalks-logo.png"
-              alt=""
-              width={120}
-              height={32}
-              className="absolute left-0 top-1/2 h-6 w-auto max-w-none -translate-y-1/2 brightness-0"
-            />
+            <Wordmark size="sm" className="absolute left-0 top-1/2 h-6 w-auto max-w-none -translate-y-1/2 brightness-0" />
           </Link>
         )}
       </div>

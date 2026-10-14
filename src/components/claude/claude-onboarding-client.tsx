@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Rocket } from "lucide-react";
@@ -15,6 +14,7 @@ import { ProgressDots } from "@/components/landing/progress-dots";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SiteSearchSlot } from "@/components/dashboard-hub/site-search-slot";
+import { Wordmark } from "@/components/shared/wordmark";
 
 const SLIDES = ["welcome", "why", "audience", "roadmap", "cta"] as const;
 
@@ -131,14 +131,7 @@ export function ClaudeOnboardingClient() {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <Link href="/" aria-label="Klymb AI home" className="logo-link">
-                  <Image
-                    src="/abtalks-logo.png"
-                    alt="Klymb AI"
-                    width={300}
-                    height={84}
-                    priority
-                    className="logo-image"
-                  />
+                  <Wordmark size="lg" className="logo-image" />
                 </Link>
                 <span className="rounded bg-[#03535F]/10 px-2 py-0.5 text-[10px] font-bold text-[#02434D] dark:text-[#076573]">
                   CLAUDE
