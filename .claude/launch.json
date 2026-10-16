@@ -2,6 +2,15 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "abtalks-test-env",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "test:env:dev"
+      ],
+      "port": 3100
+    },
+    {
       "name": "abtalks-interview-latency",
       "runtimeExecutable": "npx",
       "runtimeArgs": [

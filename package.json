@@ -185,7 +185,15 @@
     "test:legacy-source-guard": "NODE_OPTIONS=--conditions=react-server tsx src/repositories/dual-write.test.ts",
     "db:probe:canonical:production": "cross-env PHASE2_ALLOW_PRODUCTION=1 NODE_OPTIONS=--conditions=react-server tsx prisma/scripts/probe-canonical-post-drop.ts",
     "db:check:canonical-dropped-schema": "tsx prisma/scripts/verify-canonical-dropped-schema.ts",
-    "qa:search:e2e": "cross-env NODE_OPTIONS=--conditions=react-server tsx scripts/search-qa/e2e-queries.ts --profile=production"
+    "qa:search:e2e": "cross-env NODE_OPTIONS=--conditions=react-server tsx scripts/search-qa/e2e-queries.ts --profile=production",
+    "test:env:setup": "bash scripts/test-env/setup.sh",
+    "test:env:bootstrap": "cross-env NODE_OPTIONS=--conditions=react-server tsx scripts/test-env/bootstrap.ts",
+    "test:env:dev": "tsx scripts/test-env/dev.ts",
+    "test:env:reset": "cross-env NODE_OPTIONS=--conditions=react-server tsx scripts/test-env/reset.ts",
+    "test:env:fixture": "cross-env NODE_OPTIONS=--conditions=react-server tsx scripts/test-env/apply-fixture.ts",
+    "test:env:smoke": "cross-env NODE_OPTIONS=--conditions=react-server tsx scripts/test-env/smoke.ts",
+    "test:env:e2e": "playwright test",
+    "test:env:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

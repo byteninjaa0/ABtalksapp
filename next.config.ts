@@ -24,6 +24,17 @@ function localNetworkHosts(): string[] {
 }
 
 const nextConfig: NextConfig = {
+  /**
+   * Plan 195. Next 16 permits ONE `next dev` per build directory and refuses
+   * the second with "Another next dev server is already running" — the lock
+   * lives under `<distDir>/dev`. The test environment (port 3100, local test
+   * database) therefore cannot run alongside the ordinary dev server on 3000
+   * unless it builds somewhere else.
+   *
+   * Unset — which is every case except `npm run test:env:dev` — this is
+   * `.next`, exactly as before.
+   */
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // React Compiler runs a Babel pass over all 169 client components, which costs
   // ~2 min per route on cold dev compiles. Production builds compile once ahead
   // of time, so keep it on there and skip it in dev.
