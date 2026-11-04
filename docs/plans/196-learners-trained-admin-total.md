@@ -5,9 +5,9 @@
 > the user's request (exception to the architect-only rule, this change only).
 >
 > Decisions locked with the user:
-> - The admin side shows the full learners-trained figure (15,113 on
->   4 Nov 2026): platform registrations + learners trained who are not
->   registered on the platform yet.
+> - The admin side shows the full learners-trained figure: platform
+>   registrations + learners trained who are not registered on the
+>   platform yet.
 > - It is labelled **"Learners Trained"**, with no breakdown on screen.
 > - It is never labelled as candidates and never added to candidate, filtered,
 >   exported or recruiter-facing counts — those stay live database counts.
@@ -23,8 +23,7 @@ the Candidates page, while every candidate count stays a true database count.
 ## 2. Current behavior
 
 - `src/app/admin/page.tsx` (Server): first `<StatCard>` is "Total Candidates" =
-  `data.stats.totalStudents` (`countRegisteredUsers()` via `getOverviewStats()`),
-  11,636 on 4 Nov 2026.
+  `data.stats.totalStudents` (`countRegisteredUsers()` via `getOverviewStats()`).
 - `src/app/admin/students/page.tsx` (Server): header description
   "Showing X of N matching candidates" where N is a track/domain-filtered count.
 - `src/lib/feature-flags.ts`: server env helpers; not imported by `middleware.ts`.
@@ -63,9 +62,9 @@ Nothing new crosses a Server→Client boundary.
    prefix the description with `` `${registeredTotal + trainedBaseline} learners trained. ` ``.
    `filteredCount`, filters and table unchanged.
 4. `.env.example`: document `LEARNERS_TRAINED_BASELINE`.
-5. Vercel (user): set `LEARNERS_TRAINED_BASELINE=3477` for Production
-   (15,113 − 11,636 registered on 4 Nov 2026) and redeploy. The figure then
-   grows with new registrations; lower the baseline as those learners sign up.
+5. Vercel (user): set `LEARNERS_TRAINED_BASELINE` for Production to the
+   agreed baseline and redeploy. The figure then grows with new
+   registrations; lower the baseline as those learners sign up.
 
 ## 6. Guardrails (DO NOT)
 
@@ -85,8 +84,8 @@ Not applicable — no schema, migration or data change.
 
 1. Unset → `/admin` shows "Total Candidates" with the registration count;
    `/admin/students` header unchanged.
-2. `LEARNERS_TRAINED_BASELINE=3477` → `/admin` first card "Learners Trained"
-   = registrations + 3,477; `/admin/students` header starts "N learners trained."
+2. `LEARNERS_TRAINED_BASELINE=1000` → `/admin` first card "Learners Trained"
+   = registrations + 1,000; `/admin/students` header starts "N learners trained."
    and the "Showing … of … matching candidates" count still changes with filters.
 3. `abc` / `-5` → same as unset.
 4. `npx tsc --noEmit` and `npx eslint` on the changed files pass; `npm run build`
