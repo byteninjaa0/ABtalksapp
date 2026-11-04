@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 /**
  * Server-side feature flags (read from process.env).
  * For client components, pass boolean props from a Server Component parent.
@@ -347,4 +349,22 @@ export function isRecruiterSignupEnabled(): boolean {
  */
 export function isGetHiredHidden(): boolean {
   return process.env.HIDE_GET_HIRED !== "false";
+}
+
+/**
+ * Plan 196: learners ABTalks has trained who are not registered on the
+ * platform yet. Added to the platform registration count ONLY for the
+ * "Learners Trained" figure on /admin and /admin/students. Never add it to
+ * candidate, filtered, exported or recruiter-facing counts — those stay live
+ * database counts.
+ *
+ * Unset, empty or invalid → 0, which shows the plain "Total Candidates" card.
+ */
+export function learnersTrainedBaseline(): number {
+  const parsed = z.coerce
+    .number()
+    .int()
+    .min(0)
+    .safeParse(process.env.LEARNERS_TRAINED_BASELINE ?? "");
+  return parsed.success ? parsed.data : 0;
 }

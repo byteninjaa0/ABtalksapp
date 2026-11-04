@@ -20,6 +20,8 @@ import {
   parseStudentEvent,
   type StudentTrack,
 } from "@/features/admin/get-students";
+import { countRegisteredUsers } from "@/features/admin/get-registration-dates";
+import { learnersTrainedBaseline } from "@/lib/feature-flags";
 
 function isSortBy(
   value: string | undefined,
@@ -74,8 +76,9 @@ export default async function AdminStudentsPage({
   const domain = sp.domain ?? "ALL";
   const status = sp.status ?? "ALL";
   const event = parseStudentEvent(sp.event);
+  const trainedBaseline = learnersTrainedBaseline();
 
-  const [students, domainCounts, trackCounts] = await Promise.all([
+  const [students, domainCounts, trackCounts, registeredTotal] = await Promise.all([
     getStudents({
       search: sp.q,
       domain,
@@ -91,7 +94,14 @@ export default async function AdminStudentsPage({
       status,
       event,
     }),
+    // Same base as the overview card, so both show the same "Learners Trained" figure.
+    trainedBaseline > 0 ? countRegisteredUsers() : Promise.resolve(0),
   ]);
+
+  const trainedLine =
+    trainedBaseline > 0
+      ? `${registeredTotal + trainedBaseline} learners trained. `
+      : "";
 
   const filteredCount =
     track === "CHALLENGE"
@@ -106,7 +116,7 @@ export default async function AdminStudentsPage({
     <div className="space-y-6">
       <AdminPageHeader
         title="Candidates"
-        description={`Showing ${Math.min(students.length, 100)} of ${filteredCount} matching candidates${students.length >= 100 ? " (max 100)" : ""}.`}
+        description={`${trainedLine}Showing ${Math.min(students.length, 100)} of ${filteredCount} matching candidates${students.length >= 100 ? " (max 100)" : ""}.`}
       />
 
       <StudentsFilters domainCounts={domainCounts} trackCounts={trackCounts} />

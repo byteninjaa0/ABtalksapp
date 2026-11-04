@@ -21,6 +21,7 @@ import { PlatformActivityKpis } from "@/components/admin/platform-activity-kpis"
 import { TrafficAnalyticsLoader } from "@/components/admin/traffic-analytics-loader";
 import { getOverviewStats } from "@/features/admin/get-overview-stats";
 import { getAdminGaTraffic } from "@/features/admin/get-ga-traffic";
+import { learnersTrainedBaseline } from "@/lib/feature-flags";
 import {
   formatCompactNumber,
   formatDuration,
@@ -70,6 +71,7 @@ export default async function AdminHomePage() {
   ]);
   const firstName = (admin.name ?? "there").trim().split(/\s+/)[0];
   const ga = gaTraffic.data.available ? gaTraffic.data : null;
+  const trainedBaseline = learnersTrainedBaseline();
 
   return (
     <div className="space-y-6">
@@ -80,8 +82,8 @@ export default async function AdminHomePage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Total Candidates"
-          value={data.stats.totalStudents}
+          label={trainedBaseline > 0 ? "Learners Trained" : "Total Candidates"}
+          value={data.stats.totalStudents + trainedBaseline}
           delta={data.stats.totalStudentsDelta}
           accent="green"
           icon={<Users className="h-4 w-4" />}
