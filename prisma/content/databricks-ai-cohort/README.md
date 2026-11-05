@@ -6,7 +6,7 @@ Files:
 - `modules.json` — the 6 modules, one per program phase (title, subtitle, color, start/end day).
 - `days.json` — per-day mission briefs (`briefMd`) plus server-only `missionSpec` (`answers` for the Submit-your-answers questions and `repoChecks` for GitHub verification), `objectives`, `tools`, `estimatedMin`, `missionPoints`, `isProjectDay`, `missionType` (DATA_ROOM for the Day 1 setup day, SHIP_IT for build days).
 - `concept-questions.json` — 5 multiple-choice concept questions per day (`options`, `correctIndex`, `explanation`).
-- `entry-questions.json` — empty. This cohort is open to anyone with a completed ABTalks profile, and there is no entrance exam.
+- `entry-questions.json` — empty. This cohort is open to anyone with a completed Klymb AI profile, and there is no entrance exam.
 - `exercises.json` — empty. The work happens in the learner's own Free Edition workspace, so the daily repo artifacts are the signal, not isolated practice-arena snippets.
 - `videos.json` — per-day YouTube resources (`youtubeId`) taken from the program document (28, all checked live via YouTube oEmbed on 2026-09-22). **Re-check each one before every cohort run** — channel-owner takedowns and re-uploads are common.
 - `rubrics.json` — milestone rubrics grouped into 4 milestones (Governed Platform Foundations, Data Engineering Pipelines, Analytics & ML Engineering, Generative AI Capstone), loaded at grade time.

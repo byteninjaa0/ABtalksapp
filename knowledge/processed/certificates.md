@@ -25,7 +25,7 @@ PDF certificate — the core outcome there is visible proof of work
 
 Cohort and workshop certificate types exist in the platform but are not
 being issued automatically today. If you attended an AI Cohort or a
-workshop and need a certificate, email team@abtalks.in.
+workshop and need a certificate, email team@klymb.ai.
 
 ## What a certificate is — and is not
 
@@ -53,7 +53,7 @@ Four different things get confused with each other — keep them apart:
 Klymb AI never charges to issue, unlock, release, or verify a certificate.
 Every Klymb AI program is free to participate in. If anyone asks you for
 money to release a certificate, it is a scam — do not pay, and forward the
-message to team@abtalks.in.
+message to team@klymb.ai.
 
 ## How to claim a certificate (step by step)
 
@@ -112,7 +112,7 @@ the public verification page.
 
 If your team submitted but you have no certificate after the batch is
 issued, the usual cause is a missing repo URL or live URL on the
-submission. Email team@abtalks.in.
+submission. Email team@klymb.ai.
 
 ## Certificate ID format
 
@@ -158,19 +158,19 @@ without asking you for the PDF.
 
 **Q: I finished the challenge but `/achievements` shows nothing.**
 A: Check that you actually have a Day 60 submission and at least 50 days
-completed — both are required. If both are true, email team@abtalks.in with
+completed — both are required. If both are true, email team@klymb.ai with
 the email address on your Klymb AI account.
 
 **Q: The name on my certificate is wrong / missing.**
 A: The certificate uses the full name on your Klymb AI profile. Update it at
 `/profile`. If a certificate was already issued with the wrong name, email
-team@abtalks.in to have it re-issued.
+team@klymb.ai to have it re-issued.
 
 **Q: The download fails with a message about my name.**
 A: Certificate PDFs can only print Latin characters. If your profile name
 is written entirely in a non-Latin script, the PDF cannot be generated —
 change your profile name to its Latin spelling and contact
-team@abtalks.in so the certificate can be re-issued.
+team@klymb.ai so the certificate can be re-issued.
 
 **Q: Do I need to pay or apply to get my certificate?**
 A: No. There is no fee and no application. Certificates are issued
@@ -183,4 +183,4 @@ of work rather than an auto-issued PDF certificate. The Claude Challenge is
 the track with the automatic verified Certificate of Completion.
 
 **Q: Where do I ask about anything else certificate-related?**
-A: team@abtalks.in.
+A: team@klymb.ai.

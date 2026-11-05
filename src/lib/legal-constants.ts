@@ -66,11 +66,11 @@ export const LEGAL_ENTITY = {
    * different mailbox — we publish the product support address only.
    * Never publish PAN, bank account, IFSC, or the personal mobile from the certificate.
    */
-  email: "team@abtalks.in",
+  email: "team@klymb.ai",
   grievanceOfficer: {
     name: "Suman Shukla",
     designation: "Proprietor and Grievance Officer",
-    email: "team@abtalks.in",
+    email: "team@klymb.ai",
     acknowledgeWithin: "24 hours",
     resolveWithin: "15 days",
   },

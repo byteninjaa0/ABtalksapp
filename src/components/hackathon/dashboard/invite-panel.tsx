@@ -58,7 +58,7 @@ export function InvitePanel({ teamCode, spotsLeft }: Props) {
       </div>
 
       <p className="mt-3 text-sm text-[#626262]">
-        Teammates register at abtalks.in/hackathon and enter this code in the
+        Teammates register at app.klymb.ai/hackathon and enter this code in the
         popup.
       </p>
     </section>

@@ -1,5 +1,5 @@
 {
-  "name": "ABTalks Program Lab",
+  "name": "Klymb AI Program Lab",
   "image": "mcr.microsoft.com/devcontainers/python:3.11",
   "features": {},
   "postCreateCommand": "pip install -r requirements.txt",

@@ -17,18 +17,18 @@ function safeHref(raw: string): string | null {
   // A site path, but not a protocol-relative "//evil.com".
   if (/^\/(?!\/)[\w\-./?#=&%]*$/.test(href)) return href;
   // Our own absolute URL is followed as a path, so it works on previews too.
-  const own = /^(?:https?:\/\/)?(?:www\.)?Klymb AI\.in(\/[\w\-./?#=&%]*)?$/i.exec(href);
+  const own = /^(?:https?:\/\/)?app\.klymb\.ai(\/[\w\-./?#=&%]*)?$/i.exec(href);
   if (own) return own[1] || "/";
   return null;
 }
 
 /**
- * `[label](href)`, `**bold**`, bare abtalks.in URLs and email addresses. The
- * answer used to render as raw text, so "Learn more: [abtalks.in/workshop]
+ * `[label](href)`, `**bold**`, bare app.klymb.ai URLs and email addresses. The
+ * answer used to render as raw text, so "Learn more: [app.klymb.ai/workshop]
  * (/workshop)" showed its brackets and nothing was clickable (issue #576).
  */
 const TOKEN =
-  /\[([^\]\n]+)\]\(([^)\s]+)\)|\*\*([^*\n]+)\*\*|((?:https?:\/\/)?(?:www\.)?Klymb AI\.in(?:\/[\w\-./?#=&%]*)?)|([\w.%+-]+@[\w.-]+\.[a-z]{2,})/gi;
+  /\[([^\]\n]+)\]\(([^)\s]+)\)|\*\*([^*\n]+)\*\*|((?:https?:\/\/)?app\.klymb\.ai(?:\/[\w\-./?#=&%]*)?)|([\w.%+-]+@[\w.-]+\.[a-z]{2,})/gi;
 
 const LINK_CLASS = "font-medium underline underline-offset-2 hover:opacity-80";
 

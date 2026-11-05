@@ -6,7 +6,7 @@
  * depend on which upstream happened to be up.
  */
 
-export const SUPPORT_EMAIL = "team@abtalks.in";
+export const SUPPORT_EMAIL = "team@klymb.ai";
 
 export const FALLBACK_MESSAGE =
   `I couldn't find enough information about that. ` +

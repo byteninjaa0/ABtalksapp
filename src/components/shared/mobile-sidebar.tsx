@@ -181,7 +181,7 @@ export function MobileSidebar({ user }: Props) {
                     type="button"
                     onClick={() => {
                       window.location.href =
-                        "mailto:team@abtalks.in?subject=Klymb AI Issue Report&body=Please describe the issue you're experiencing:%0D%0A%0D%0A";
+                        "mailto:team@klymb.ai?subject=Klymb AI Issue Report&body=Please describe the issue you're experiencing:%0D%0A%0D%0A";
                     }}
                     className={cn(ROW_CLASS, "text-left")}
                   >

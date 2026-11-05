@@ -37,7 +37,7 @@ import { routesViaAbtMailer, sendViaAbtMailer } from "@/lib/abt-mailer";
  * The result shape only gained fields, so no caller had to move.
  */
 
-const FROM_EMAIL = process.env.FROM_EMAIL || "team@abtalks.in";
+const FROM_EMAIL = process.env.FROM_EMAIL || "team@klymb.ai";
 const FROM_NAME = process.env.FROM_NAME || "Klymb AI";
 const REPLY_TO = process.env.REPLY_TO_EMAIL || FROM_EMAIL;
 

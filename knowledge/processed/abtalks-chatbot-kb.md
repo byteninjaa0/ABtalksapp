@@ -14,7 +14,7 @@
 **Purpose:** Ground truth for an Klymb AI helper chatbot serving four audiences: students, recruiters, working professionals, and investors.
 **Sources:** abtalks.in (all public pages) + 60-Day Claude AI Challenge tracker.
 **Currency:** Reflects state as of Aug 10, 2026. Update numbers on `10,000+ members / 500+ projects / 100+ hiring partners` if the site changes.
-**Anti-hallucination rule for the bot:** Never invent numbers, testimonial names, program dates, or curriculum items not present in this document. If asked something outside this KB, say so and offer to route to `team@abtalks.in`.
+**Anti-hallucination rule for the bot:** Never invent numbers, testimonial names, program dates, or curriculum items not present in this document. If asked something outside this KB, say so and offer to route to `team@klymb.ai`.
 
 ---
 
@@ -37,7 +37,7 @@ Flagship products:
 - **Core team member surfaced publicly:** Sarthak Gupta (Founding Member)
 - **Location / focus market:** India
 - **Website:** https://abtalks.in
-- **Contact:** team@abtalks.in
+- **Contact:** team@klymb.ai
 - **Auth:** Google OAuth (single sign-in method site-wide)
 - **Tech stack signal:** Next.js on Vercel (deployment IDs visible in HTML)
 
@@ -268,10 +268,10 @@ A: Foul language / harassment → **permanent ban**. Plagiarism or platform misu
 A: WhatsApp community: chat.whatsapp.com/LSru1BgvifpEB4OMZsaZEi. Also Discord, LinkedIn, Instagram, YouTube, X — all under `Klymb AI`.
 
 **Q: How do I apply for placements or internships through Klymb AI?**
-A: Email your resume, cover letter, and anything else relevant (portfolio link, GitHub, LinkedIn, project links) to **team@abtalks.in**. The team reviews applications and routes strong profiles to the hiring partner network. Openings themselves — internships, full-time roles, freelance briefs — are shared inside the **Klymb AI WhatsApp community** (chat.whatsapp.com/LSru1BgvifpEB4OMZsaZEi), so join it if you haven't already, so you don't miss role announcements.
+A: Email your resume, cover letter, and anything else relevant (portfolio link, GitHub, LinkedIn, project links) to **team@klymb.ai**. The team reviews applications and routes strong profiles to the hiring partner network. Openings themselves — internships, full-time roles, freelance briefs — are shared inside the **Klymb AI WhatsApp community** (chat.whatsapp.com/LSru1BgvifpEB4OMZsaZEi), so join it if you haven't already, so you don't miss role announcements.
 
 **Q: Do I need to have finished a program before applying?**
-A: No — you can email team@abtalks.in anytime. But a completed program (any of the four) gives you public artifacts to point to in your application, which is exactly the signal recruiters in the network are looking for.
+A: No — you can email team@klymb.ai anytime. But a completed program (any of the four) gives you public artifacts to point to in your application, which is exactly the signal recruiters in the network are looking for.
 
 **Q: What should go in the application email?**
 A: Resume, cover letter, and links that prove work — GitHub, deployed projects, LinkedIn build log, Klymb AI profile, portfolio site. Anything else material to the role you're targeting.
@@ -284,10 +284,10 @@ A: Resume, cover letter, and links that prove work — GitHub, deployed projects
 A: Indian college students and early-career professionals who have shipped 50+ public artifacts + a deployed v1.0.0 product with full SDLC documentation. See **Section 5** for the full skills matrix.
 
 **Q: How do I access candidates?**
-A: Klymb AI maintains a hiring partner network (stated: 100+ hiring partners). Top portfolios get **exclusive visibility** to partner recruiters. Contact team@abtalks.in to be onboarded. Candidates themselves apply by emailing resume + cover letter + work links to the same address, so profiles come in pre-curated.
+A: Klymb AI maintains a hiring partner network (stated: 100+ hiring partners). Top portfolios get **exclusive visibility** to partner recruiters. Contact team@klymb.ai to be onboarded. Candidates themselves apply by emailing resume + cover letter + work links to the same address, so profiles come in pre-curated.
 
 **Q: How do openings get to candidates?**
-A: Openings shared by partners are announced inside the **Klymb AI WhatsApp community**, which is where active candidates already are. That's the primary distribution channel; team@abtalks.in handles the intake side.
+A: Openings shared by partners are announced inside the **Klymb AI WhatsApp community**, which is where active candidates already are. That's the primary distribution channel; team@klymb.ai handles the intake side.
 
 **Q: What signal does an Klymb AI profile give?**
 A: **Consistency** (visible streak across 60+ days), **shipping ability** (deployed URLs, not just repos), **modern AI stack fluency** (Claude, MCP, RAG, agents, prompt engineering), and **SDLC discipline** (versioned releases, docs, retrospectives).
@@ -399,8 +399,8 @@ A: Anthropic (Claude is the primary AI stack — programs are Claude-native). Br
 - Answer directly and briefly. Match Klymb AI's brevity-first tone.
 - Route users to the right program based on their stated goal (see the "Route this program to" lines in Section 3).
 - Quote the exact community rules and sanctions when asked about conduct.
-- Refer people to `team@abtalks.in` for anything commercial or partnership-related.
-- **For placement / internship / job questions:** always give both channels — email resume + cover letter + work links to `team@abtalks.in`, and join the WhatsApp community for live opening announcements. Never send just one side.
+- Refer people to `team@klymb.ai` for anything commercial or partnership-related.
+- **For placement / internship / job questions:** always give both channels — email resume + cover letter + work links to `team@klymb.ai`, and join the WhatsApp community for live opening announcements. Never send just one side.
 
 **Do NOT:**
 - Invent member counts, program dates, curriculum items, testimonial names, or founder details not in this document.
@@ -410,7 +410,7 @@ A: Anthropic (Claude is the primary AI stack — programs are Claude-native). Br
 - Speculate about Anil Bajpai's or Sarthak Gupta's backgrounds beyond what's on the site.
 - Provide legal, financial, or medical advice — even though several curriculum apps model those domains, they're educational simulators only.
 
-**When you don't know:** Say so, and offer `team@abtalks.in` for follow-up or point to the specific program page URL.
+**When you don't know:** Say so, and offer `team@klymb.ai` for follow-up or point to the specific program page URL.
 
 **Length default:** 2–5 sentences. Never describe the content of a specific day, week, phase or task, and never list a curriculum; give general program information only.
 
@@ -429,7 +429,7 @@ A: Anthropic (Claude is the primary AI stack — programs are Claude-native). Br
 
 ## 12. CANONICAL CONTACT & LINKS
 
-- **Email:** team@abtalks.in
+- **Email:** team@klymb.ai
 - **Homepage:** https://abtalks.in
 - **LinkedIn (for graduation posts / Certificate of Completion links):** https://www.linkedin.com/company/abtalks-on-ai/
 - **Founder attribution line:** "Built by Anil Bajpai's Klymb AI community" (appears on auth pages)

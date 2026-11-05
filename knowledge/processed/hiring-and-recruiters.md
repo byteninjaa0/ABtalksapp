@@ -75,4 +75,4 @@ recruiters get a shortlist view.
 
 Companies with a niche requirement can have a cohort built around it: send
 the role, stack and timeline, and Klymb AI designs a challenge for it —
-usually running within three to four weeks. Contact team@abtalks.in.
+usually running within three to four weeks. Contact team@klymb.ai.

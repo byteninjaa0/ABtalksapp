@@ -1,7 +1,7 @@
 # Klymb AI Social & Contact Links (live site footer)
 
 ## Support email
-team@abtalks.in
+team@klymb.ai
 
 ## Official social channels
 - Instagram: https://www.instagram.com/abtalksonai/

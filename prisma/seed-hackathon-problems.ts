@@ -17,7 +17,7 @@ const CANONICAL = [
   {
     id: "HACKPS2608001",
     sortOrder: 1,
-    title: "Redesign ABTalks",
+    title: "Redesign Klymb AI",
     statement: loadStatement("HACKPS2608001"),
   },
   {

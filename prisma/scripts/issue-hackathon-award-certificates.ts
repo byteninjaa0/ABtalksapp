@@ -279,7 +279,7 @@ async function main() {
     } else {
       issued += 1;
       console.log(`  OK   ${row.email}: ${result.data.certificateId}`);
-      console.log(`https://abtalks.in/verify/${result.data.certificateId}`);
+      console.log(`https://app.klymb.ai/verify/${result.data.certificateId}`);
     }
   }
 

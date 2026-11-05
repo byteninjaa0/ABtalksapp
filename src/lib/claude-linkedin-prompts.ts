@@ -55,7 +55,7 @@ Personal Statement:
 
 Bottom CTA:
 “If you also don’t want to feel left behind in the AI era, join the challenge now.”
-abtalks.in/claude-signup
+app.klymb.ai/claude-signup
 
 The final design should feel cinematic, founder-focused, futuristic, intelligent, premium, and like a Silicon Valley AI launch campaign.`,
 
@@ -100,7 +100,7 @@ Personal Statement:
 10 days in. 8 skills & projects completed. 50 days of building still ahead. Every day is another step toward becoming an AI-first builder.
 Bottom CTA:
 AI is moving faster than ever. While you're thinking about it, we're already building. Don't get left behind — join now.
-abtalks.in/claude-signup`,
+app.klymb.ai/claude-signup`,
 
   30: `Halfway Milestone Achievement Poster – 60 Days Claude AI Challenge by Klymb AI
 

@@ -199,7 +199,7 @@ suite("recruiter-written text is escaped in the HTML email", () => {
 
 suite("outreach mail goes to no-reply and says so, above the message (A-3)", () => {
   assert(feature.includes("replyTo: OUTREACH_REPLY_TO"), "sendEmail must pass the outreach Reply-To");
-  assert(feature.includes('"no-reply@abtalks.in"'), "default no-reply address missing");
+  assert(feature.includes('"no-reply@klymb.ai"'), "default no-reply address missing");
   const html = feature.slice(feature.indexOf("const html = `"), feature.indexOf("const text = ["));
   const warning = html.indexOf("Do not reply to this email");
   const message = html.indexOf("${bodyHtml}");

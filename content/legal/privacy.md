@@ -5,7 +5,7 @@
 
 This Privacy Policy explains how **Klymb AI** (“we”, “us”) collects, uses, shares, and protects personal data when you use our Service. It is designed around our actual product practices and India’s Digital Personal Data Protection Act, 2023 (DPDP), with disclosures relevant to US-facing cohort and program features.
 
-**Contact for privacy / data rights:** [team@abtalks.in](mailto:team@abtalks.in)  
+**Contact for privacy / data rights:** [team@klymb.ai](mailto:team@klymb.ai)  
 You can also submit a request in-product at [/privacy/requests](/privacy/requests).
 
 > **How to read this Policy.** Each section starts with a short plain-English note, then the full detail. The short notes are guides only - the full text is what governs.
@@ -14,7 +14,7 @@ You can also submit a request in-product at [/privacy/requests](/privacy/request
 
 ## 1. Who we are - Data Fiduciary identification
 
-> **In plain English:** We are Klymb AI (registered as Klymb AI), a sole proprietorship. We decide why and how your data is used for this Service. You can contact our Grievance Officer at team@abtalks.in.
+> **In plain English:** We are Klymb AI (registered as Klymb AI), a sole proprietorship. We decide why and how your data is used for this Service. You can contact our Grievance Officer at team@klymb.ai.
 
 We are the **Data Fiduciary** for the personal data described in this Policy.
 
@@ -32,7 +32,7 @@ We are the **Data Fiduciary** for the personal data described in this Policy.
 | **Udyam registration number** | UDYAM-UP-29-0250625 |
 | **Udyam registration date** | 01 August 2026 |
 | **Date of incorporation** | 25 July 2026 |
-| **Contact** | [team@abtalks.in](mailto:team@abtalks.in) |
+| **Contact** | [team@klymb.ai](mailto:team@klymb.ai) |
 
 Klymb AI operates learning challenges, workshops, hackathons, an AI cohort program, and related recruiter/community features at our websites (including app.klymb.ai and related domains).
 
@@ -44,7 +44,7 @@ In accordance with the Digital Personal Data Protection Act, 2023, the Informati
 |---|---|
 | **Name** | Suman Shukla |
 | **Designation** | Proprietor and Grievance Officer |
-| **Email** | [team@abtalks.in](mailto:team@abtalks.in) |
+| **Email** | [team@klymb.ai](mailto:team@klymb.ai) |
 | **Address** | Crossing Republic, Ghaziabad, Uttar Pradesh 201016, India |
 
 We **acknowledge grievances within 24 hours** of receipt and aim to **resolve them within 15 days**. Full contact details are also published at [/contact](/contact).
@@ -152,7 +152,7 @@ Under India’s DPDP framework and related rules, we process personal data where
 2. **Necessary for the Service you request** - processing that is needed to create and run your account, deliver the track or event you registered for, authenticate you, enable candidate profile discoverability for recruiters on the talent platform, prevent abuse, issue certificates you earned, and respond to support or rights requests. Without this processing we cannot provide those features.  
 3. **Compliance and security** - limited processing required to meet legal obligations (where applicable) or to protect the security and integrity of the Service (for example audit logs, anti-cheat, hackathon removal records as disclosed in §7).  
 
-Counsel may refine the wording of lawful bases as DPDP rules and guidance evolve. If you have questions about the basis for a specific use, contact [team@abtalks.in](mailto:team@abtalks.in).
+Counsel may refine the wording of lawful bases as DPDP rules and guidance evolve. If you have questions about the basis for a specific use, contact [team@klymb.ai](mailto:team@klymb.ai).
 
 ---
 
@@ -236,7 +236,7 @@ Subject to applicable law, you may exercise the following rights:
 - **Grievance redressal (DPDP §13)** - you may raise a grievance with our Grievance Officer (§1.1) about our handling of your data or your rights request, regardless of whether you have used any other remedy. We acknowledge within **24 hours** and aim to resolve within **15 days**. If you are not satisfied with our response, you may escalate to the **Data Protection Board of India**.
 - **Nomination (DPDP §14)** - you may nominate another individual to exercise these rights on your behalf in the event of your death or incapacity. Submit a nomination through [/privacy/requests](/privacy/requests).
 
-Submit requests at [/privacy/requests](/privacy/requests) or email [team@abtalks.in](mailto:team@abtalks.in). We may need to verify your identity. We aim to respond within a reasonable period (target: 30 days).
+Submit requests at [/privacy/requests](/privacy/requests) or email [team@klymb.ai](mailto:team@klymb.ai). We may need to verify your identity. We aim to respond within a reasonable period (target: 30 days).
 
 **Your duties.** Under DPDP §15, please do not impersonate another person when providing data, suppress material information, or file false or frivolous grievances.
 
@@ -277,9 +277,9 @@ We will use personal data in line with the Policy that applied when you submitte
 
 ## 14. Contact
 
-> **In plain English:** Questions or rights requests → team@abtalks.in, /contact, or /privacy/requests.
+> **In plain English:** Questions or rights requests → team@klymb.ai, /contact, or /privacy/requests.
 
 Grievance Officer and full entity details: [/contact](/contact)  
 Data rights requests: [/privacy/requests](/privacy/requests)  
 Cookie choices: [/cookies](/cookies)  
-Email: [team@abtalks.in](mailto:team@abtalks.in)
+Email: [team@klymb.ai](mailto:team@klymb.ai)

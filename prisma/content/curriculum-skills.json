@@ -3,7 +3,7 @@
     "Curriculum → core skills. Seeded into the EXISTING ProgramSkill join table",
     "(LearningProgram → Skill) by `npm run db:seed:curriculum-skills`.",
     "",
-    "`program` is LearningProgram.slug. Every ABTalks track already has one:",
+    "`program` is LearningProgram.slug. Every Klymb AI track already has one:",
     "the four 60-day challenges and the AI cohort were given LearningProgram",
     "rows by the 078 migration (migrate-2d-learning-content.ts), and the newer",
     "cohorts create their own in their seed scripts.",

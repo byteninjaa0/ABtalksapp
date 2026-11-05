@@ -377,7 +377,7 @@ function WorkspaceWindow({ stage, data }: { stage: VisualStage; data: VisualData
           <span key={i} className="size-2 rounded-full bg-[#E3E8E8]" />
         ))}
         <span className="ml-3 flex h-5 w-44 items-center rounded-full bg-[#F4F7F7] px-3 text-[10px] text-[#8F8F8F]">
-          abtalks.in/hire
+          app.klymb.ai/hire
         </span>
       </div>
       <div className="flex h-[340px]">

@@ -17,7 +17,7 @@ import { getHackathonLinkStats } from "@/features/hackathon/get-link-stats";
 
 export default async function AdminHackathonLinksPage() {
   const headersList = await headers();
-  const host = headersList.get("host") ?? "abtalks.in";
+  const host = headersList.get("host") ?? "app.klymb.ai";
   const protocol = host.includes("localhost") ? "http" : "https";
   const baseUrl = `${protocol}://${host}`;
 

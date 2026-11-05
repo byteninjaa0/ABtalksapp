@@ -52,7 +52,7 @@ import { dispatch } from "@/features/notification/notification-service";
 const TX = { maxWait: 20000, timeout: 20000 } as const;
 
 const OUTREACH_REPLY_TO =
-  process.env.OUTREACH_REPLY_TO_EMAIL || "no-reply@abtalks.in";
+  process.env.OUTREACH_REPLY_TO_EMAIL || "no-reply@klymb.ai";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://app.klymb.ai";
 

@@ -3,7 +3,7 @@ import type { ScoredChunk } from "@/lib/chatbot/engine";
 
 /**
  * Which public page an answer came from, so the reply can end with a link to
- * it (issue #576: picking "4. Workshops" should also give abtalks.in/workshop).
+ * it (issue #576: picking "4. Workshops" should also give app.klymb.ai/workshop).
  *
  * The link is chosen HERE, from the retrieved chunks, never by the model. A
  * model asked to "add a link" will eventually write a plausible URL that does
@@ -13,7 +13,7 @@ import type { ScoredChunk } from "@/lib/chatbot/engine";
  */
 
 /** Shown in the link text. The href stays relative, so it works on previews. */
-export const SITE_HOST = "abtalks.in";
+export const SITE_HOST = "app.klymb.ai";
 
 /**
  * Pages the assistant may link to. Public routes only — every one must be
@@ -117,7 +117,7 @@ export function learnMorePage(
   return best ? pageForChunk(best.chunk) : null;
 }
 
-/** "abtalks.in/workshop" for display; the homepage is just the host. */
+/** "app.klymb.ai/workshop" for display; the homepage is just the host. */
 export function pageLabel(route: string): string {
   return route === "/" ? SITE_HOST : `${SITE_HOST}${route}`;
 }

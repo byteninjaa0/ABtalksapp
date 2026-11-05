@@ -56,7 +56,7 @@ resume-based or job-description-based interview available to users — a
 general challenge interview route existed previously and now redirects to
 the program dashboard. Do not tell users they can upload a resume or paste a
 job description for an interview; if they ask for that, say it is not
-currently offered and point them at team@abtalks.in.
+currently offered and point them at team@klymb.ai.
 
 ## What you get afterwards — the report
 

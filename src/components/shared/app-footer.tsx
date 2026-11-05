@@ -146,7 +146,7 @@ export function AppFooter() {
     pathname === "/hackathon" || pathname.startsWith("/hackathon/");
   // the Modernist landing ships its own footer
   const isLanding = pathname === "/";
-  const supportEmail = "team@abtalks.in";
+  const supportEmail = "team@klymb.ai";
 
 // Landing hub ships its own footer.
   if (isLanding) return null;

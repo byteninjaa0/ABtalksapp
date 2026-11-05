@@ -1,4 +1,4 @@
-export const SUPPORT_EMAIL = "team@abtalks.in";
+export const SUPPORT_EMAIL = "team@klymb.ai";
 
 export type ChatbotCategory = {
   id: string;

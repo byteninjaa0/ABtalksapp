@@ -25,7 +25,7 @@ export const DASHBOARD_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How do I contact support?",
-    a: "Email us at team@abtalks.in for any questions, technical issues, or feedback. We typically respond within one business day.",
+    a: "Email us at team@klymb.ai for any questions, technical issues, or feedback. We typically respond within one business day.",
   },
 ];
 

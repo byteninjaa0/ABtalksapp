@@ -51,7 +51,7 @@ export async function submitContactMessage(
 
   try {
     const result = await sendEmail({
-      to: "team@abtalks.in",
+      to: "team@klymb.ai",
       subject,
       html,
       text,
