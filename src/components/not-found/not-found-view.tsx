@@ -185,10 +185,10 @@ export function NotFoundView() {
               Looks like you&apos;ve taken a wrong turn. The page you requested
               could not be found. Please try again later or reach out to{" "}
               <a
-                href="mailto:team@abtalks.in"
+                href="mailto:team@klymb.ai"
                 className="text-[#03535F] underline-offset-2 hover:underline"
               >
-                team@abtalks.in
+                team@klymb.ai
               </a>
             </p>
           </div>

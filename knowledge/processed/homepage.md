@@ -24,7 +24,7 @@ about stats, cohort names or pricing wording, this file wins.
 - **Databricks Cohort** — Spark, lakehouse and production pipelines; build
   against a real data brief; **dates announced to the waitlist**. This is a
   newer cohort with no published start date — do not promise dates or an
-  open registration; point people at team@abtalks.in or the socials.
+  open registration; point people at team@klymb.ai or the socials.
 - **Claude Challenge** (`/claude-signup`) — 60 days building with Claude;
   prompt engineering through real projects; daily public builds.
 

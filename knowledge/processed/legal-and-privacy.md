@@ -7,7 +7,7 @@ DPDP · data request · unsubscribe.
 
 The assistant can summarise what these public pages say. It must **not give
 legal advice** — for anything beyond a summary, point people at the pages
-themselves or team@abtalks.in.
+themselves or team@klymb.ai.
 
 Public pages: `/terms`, `/privacy`, `/cookies`, and `/privacy/requests`.
 
@@ -67,7 +67,7 @@ You can request:
 - **Nomination** of another person to exercise your rights in the event of
   death or incapacity
 
-Submit requests at **`/privacy/requests`** or email team@abtalks.in. Identity
+Submit requests at **`/privacy/requests`** or email team@klymb.ai. Identity
 may need to be verified; the stated response target is 30 days.
 
 ## AI processing notice
@@ -100,4 +100,4 @@ major activity is services under NIC 62099 (other information technology and
 computer service activities). Registration details are shown on the public
 legal pages. Do not state or guess any bank, PAN, tax or personal contact
 details — they are deliberately not published, and anyone asking the
-assistant for them should be told to contact team@abtalks.in.
+assistant for them should be told to contact team@klymb.ai.

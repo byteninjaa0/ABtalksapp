@@ -6,7 +6,7 @@ import { isKnownIndianState } from "@/data/india-locations";
  * dialog copy rather than becoming an order we cannot fulfil.
  */
 export const SHIPPING_COUNTRY = "India";
-export const SHIPPING_SUPPORT_EMAIL = "team@abtalks.in";
+export const SHIPPING_SUPPORT_EMAIL = "team@klymb.ai";
 
 /**
  * A Redemption's primary key, which is NOT one shape.

@@ -1,4 +1,4 @@
-const SUPPORT_EMAIL = "team@abtalks.in";
+const SUPPORT_EMAIL = "team@klymb.ai";
 
 export function RecruiterAuthClosed({ compact = false }: { compact?: boolean }) {
   const body = (

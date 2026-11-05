@@ -18,14 +18,14 @@ Key facts:
 - Former name: **ABTalks**. The platform was renamed to **Klymb AI** in
   October 2026. ABTalks and Klymb AI are the same organisation — if someone
   asks about ABTalks, answer about Klymb AI. The registered entity is still
-  Klymb AI and the support address is still team@abtalks.in.
+  Klymb AI and the support address is team@klymb.ai.
 - Audience: college students, recent graduates, and working professionals in live sessions
 - Cost to participate: free — the Terms state the service is **currently
   provided free of charge**, and Klymb AI does not process payments. The
   homepage phrases it as "most challenges are free to join; paid cohorts are
   always priced up front", and nobody placed through the recruiter network
   pays a placement fee. See `legal-and-privacy.md`.
-- Contact: team@abtalks.in
+- Contact: team@klymb.ai
 
 ## Mission / why it exists
 

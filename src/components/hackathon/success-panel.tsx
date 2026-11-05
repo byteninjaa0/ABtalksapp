@@ -104,7 +104,7 @@ export function SuccessPanel({ entryType, teamCode, teamName }: Props) {
             {entryType === "TEAM_CREATE" ? (
               <>
                 Share this with your teammates. They open the Register popup on
-                abtalks.in/hackathon and enter it to join you.
+                app.klymb.ai/hackathon and enter it to join you.
               </>
             ) : (
               <>

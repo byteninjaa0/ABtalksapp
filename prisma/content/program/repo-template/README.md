@@ -1,4 +1,4 @@
-# ABTalks Program Repository
+# Klymb AI Program Repository
 
 Your program repo holds notebooks, code, and project deliverables for the 60-day AI Mastery cohort.
 

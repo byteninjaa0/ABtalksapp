@@ -58,7 +58,7 @@ Klymb AI programs are built around shipping real work in public: daily or timed 
 - Status: announced on the homepage, **waitlist only** — dates announced to
   the waitlist
 - Cost, duration, eligibility, curriculum and application route: **not
-  published**. If asked, say so and point to team@abtalks.in rather than
+  published**. If asked, say so and point to team@klymb.ai rather than
   reusing another cohort's rules.
 
 ## Free AI Bootcamp / AI Tools Workshop

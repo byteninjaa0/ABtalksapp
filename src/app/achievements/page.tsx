@@ -41,7 +41,7 @@ export default async function AchievementsPage() {
   const earnedCount = achievements.filter((a) => a.status !== "REVOKED").length;
 
   const headersList = await headers();
-  const host = headersList.get("host") ?? "abtalks.in";
+  const host = headersList.get("host") ?? "app.klymb.ai";
   const protocol = host.includes("localhost") ? "http" : "https";
   const verifyBaseUrl = `${protocol}://${host}`;
 

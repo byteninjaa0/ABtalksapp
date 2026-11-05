@@ -233,7 +233,7 @@ export function UnlockContactDialog({
                   <Link href="/hire/credits" onClick={() => setOpen(false)}>
                     View credits
                   </Link>{" "}
-                  or contact Klymb AI at team@abtalks.in for more credits.
+                  or contact Klymb AI at team@klymb.ai for more credits.
                 </p>
               ) : null}
             </>

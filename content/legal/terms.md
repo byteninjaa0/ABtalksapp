@@ -19,7 +19,7 @@ These Terms of Service (“Terms”) govern your access to and use of Klymb AI w
 | **Udyam registration number** | UDYAM-UP-29-0250625 |
 | **Udyam registration date** | 01 August 2026 |
 | **Date of incorporation** | 25 July 2026 |
-| **Contact** | [team@abtalks.in](mailto:team@abtalks.in) · [/contact](/contact) |
+| **Contact** | [team@klymb.ai](mailto:team@klymb.ai) · [/contact](/contact) |
 
 By creating an account, registering for a track, or clicking “I agree”, you accept these Terms and our [Privacy Policy](/privacy).
 
@@ -134,7 +134,7 @@ We may suspend, terminate, or remove you from a challenge, program, or hackathon
 
 These Terms are governed by the laws of **India**, without regard to conflict-of-law rules. Courts in India shall have exclusive jurisdiction, subject to mandatory consumer protections that cannot be waived.
 
-**Notice before proceedings.** Before commencing any legal proceeding, the party raising the dispute will give the other **30 days' prior written notice** describing the dispute and the relief sought, and both parties will attempt in good faith to resolve it during that period. Notice to us goes to our Grievance Officer at [team@abtalks.in](mailto:team@abtalks.in) - see [/contact](/contact). Nothing in this clause prevents either party from seeking urgent interim relief, or a consumer from approaching a consumer forum.
+**Notice before proceedings.** Before commencing any legal proceeding, the party raising the dispute will give the other **30 days' prior written notice** describing the dispute and the relief sought, and both parties will attempt in good faith to resolve it during that period. Notice to us goes to our Grievance Officer at [team@klymb.ai](mailto:team@klymb.ai) - see [/contact](/contact). Nothing in this clause prevents either party from seeking urgent interim relief, or a consumer from approaching a consumer forum.
 
 ## 17. Changes
 
@@ -148,7 +148,7 @@ For complaints about the Service, your content, or your data:
 |---|---|
 | **Name** | Suman Shukla |
 | **Designation** | Proprietor and Grievance Officer |
-| **Email** | [team@abtalks.in](mailto:team@abtalks.in) |
+| **Email** | [team@klymb.ai](mailto:team@klymb.ai) |
 | **Address** | Crossing Republic, Ghaziabad, Uttar Pradesh 201016, India |
 
 We acknowledge complaints within **24 hours** and aim to resolve them within **15 days**.

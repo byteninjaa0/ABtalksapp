@@ -34,7 +34,7 @@ import {
 
 type ActionResult<T> = { ok: true; data: T } | { ok: false; message: string };
 
-const SUPPORT_EMAIL = "team@abtalks.in";
+const SUPPORT_EMAIL = "team@klymb.ai";
 
 
 /**

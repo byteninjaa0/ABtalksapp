@@ -80,13 +80,13 @@ Also Discord, LinkedIn, Instagram, YouTube, X — all under `Klymb AI`. See
 
 **Q: How do I apply for placements or internships through Klymb AI?**
 A: Email your resume, cover letter, and anything else relevant (portfolio
-link, GitHub, LinkedIn, project links) to team@abtalks.in. The team reviews
+link, GitHub, LinkedIn, project links) to team@klymb.ai. The team reviews
 applications and routes strong profiles to the hiring partner network.
 Openings themselves are also shared inside the Klymb AI WhatsApp community,
 so it's worth joining if you haven't already.
 
 **Q: Do I need to have finished a program before applying?**
-A: No — you can email team@abtalks.in anytime. But a completed program gives
+A: No — you can email team@klymb.ai anytime. But a completed program gives
 you public artifacts to point to, which is exactly the signal recruiters in
 the network look for.
 
@@ -105,13 +105,13 @@ v1.0.0 release with documentation.
 
 **Q: How do I access candidates?**
 A: Klymb AI maintains a hiring partner network (100+ hiring partners, per
-`community.md`). Contact team@abtalks.in to be onboarded. Candidates apply
+`community.md`). Contact team@klymb.ai to be onboarded. Candidates apply
 by emailing their resume, cover letter, and work links to the same address,
 so profiles arrive pre-curated.
 
 **Q: How do openings get to candidates?**
 A: Openings shared by partners are announced inside the Klymb AI WhatsApp
-community. team@abtalks.in handles the intake side.
+community. team@klymb.ai handles the intake side.
 
 **Q: What signal does an Klymb AI profile give?**
 A: Consistency (a visible streak across the program's duration), shipping
@@ -146,7 +146,7 @@ AI Cohort assumes roughly 2–4 hours/day for 31 days.
 The statements below describe how Klymb AI presents itself publicly — they
 are Klymb AI's own positioning, not independently verified external claims.
 For anything commercial, partnership-related, or beyond what's here, direct
-the person to team@abtalks.in rather than answering further.
+the person to team@klymb.ai rather than answering further.
 
 **Q: What is Klymb AI in one sentence?**
 A: An India-focused, community-first AI upskilling platform that turns

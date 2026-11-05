@@ -39,7 +39,7 @@ Entity details and grievance contacts, published in accordance with India's Digi
 **Date of incorporation**
 - 2026-07-25
 **Email**
-- [team@abtalks.in](mailto:team@abtalks.in)
+- [team@klymb.ai](mailto:team@klymb.ai)
 
 ## Grievance Officer
 
@@ -50,7 +50,7 @@ For complaints about the Service, your content, or how we handle your personal d
 **Designation**
 - Proprietor and Grievance Officer
 **Email**
-- [team@abtalks.in](mailto:team@abtalks.in)
+- [team@klymb.ai](mailto:team@klymb.ai)
 **Address**
 - Crossing Republic, Ghaziabad, Uttar Pradesh 201016, India
 
@@ -89,7 +89,7 @@ Entity details and grievance contacts, published in accordance with India's Digi
 **Date of incorporation**
 - 2026-07-25
 **Email**
-- [team@abtalks.in](mailto:team@abtalks.in)
+- [team@klymb.ai](mailto:team@klymb.ai)
 
 ## Grievance Officer
 
@@ -100,7 +100,7 @@ For complaints about the Service, your content, or how we handle your personal d
 **Designation**
 - Proprietor and Grievance Officer
 **Email**
-- [team@abtalks.in](mailto:team@abtalks.in)
+- [team@klymb.ai](mailto:team@klymb.ai)
 **Address**
 - Crossing Republic, Ghaziabad, Uttar Pradesh 201016, India
 

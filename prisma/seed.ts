@@ -158,7 +158,7 @@ function placeholderDailyTaskData(domain: Domain, dayNumber: number) {
     resources: [],
     difficulty,
     estimatedMinutes,
-    linkedinTemplate: `Day ${dayNumber} of my 60 Days of Code with ABtalks 🚀\n\nMade progress today. Check my work: {{github_link}}\n\n#ABtalks #60DaysOfCode`,
+    linkedinTemplate: `Day ${dayNumber} of my 60 Days of Code with Klymb AI 🚀\n\nMade progress today. Check my work: {{github_link}}\n\n#ABtalks #60DaysOfCode`,
     solutionApproach: null,
     tags: ["placeholder", `day-${dayNumber}`],
   };

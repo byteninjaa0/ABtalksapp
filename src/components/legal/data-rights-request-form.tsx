@@ -47,7 +47,7 @@ export function DataRightsRequestForm({ defaultEmail = "" }: Props) {
         return;
       }
       setDone(true);
-      toast.success("Request submitted. We’ll email you from team@abtalks.in.");
+      toast.success("Request submitted. We’ll email you from team@klymb.ai.");
     });
   }
 
@@ -57,8 +57,8 @@ export function DataRightsRequestForm({ defaultEmail = "" }: Props) {
         <p className="font-medium text-foreground">Request received</p>
         <p className="text-muted-foreground">
           We aim to respond within 30 days. You can also email{" "}
-          <a href="mailto:team@abtalks.in" className="text-primary hover:underline">
-            team@abtalks.in
+          <a href="mailto:team@klymb.ai" className="text-primary hover:underline">
+            team@klymb.ai
           </a>
           .
         </p>

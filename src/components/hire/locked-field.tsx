@@ -71,7 +71,7 @@ export function UpgradeNotice({
         </div>
       </div>
       <div className="hire-upgrade__actions">
-        <a href="mailto:team@abtalks.in?subject=Klymb AI%20Hire%20Pro" className="hire-upgrade__cta">
+        <a href="mailto:team@klymb.ai?subject=Klymb AI%20Hire%20Pro" className="hire-upgrade__cta">
           Talk to us about Pro
         </a>
         <button type="button" onClick={onDismiss} className="hire-upgrade__close">

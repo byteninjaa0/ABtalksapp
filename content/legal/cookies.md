@@ -65,4 +65,4 @@ We do **not** sell personal data. We do **not** use Meta Pixel, cross-site adver
 
 ## 7. Contact
 
-Questions about this Policy: [team@abtalks.in](mailto:team@abtalks.in) · [/contact](/contact) · [Data rights requests](/privacy/requests)
+Questions about this Policy: [team@klymb.ai](mailto:team@klymb.ai) · [/contact](/contact) · [Data rights requests](/privacy/requests)

@@ -86,7 +86,7 @@ export function insufficientCreditsMessage(
   return (
     `${REFUSAL_MESSAGE.INSUFFICIENT_CREDITS} This unlock costs ` +
     `${formatCreditsMinor(costMinor)} and you have ${formatCreditsMinor(balanceMinor)} ` +
-    "remaining. Nothing was charged. Contact Klymb AI at team@abtalks.in for more credits."
+    "remaining. Nothing was charged. Contact Klymb AI at team@klymb.ai for more credits."
   );
 }
 

@@ -62,4 +62,4 @@ authoritative than any hand-written file above if the two ever disagree:
 
 ## Out of scope
 
-Questions not covered by any canonical file above (revenue, investors, private business details, unpublished roadmap, personal information about Anil Bajpai beyond his public role) must not be answered from general knowledge — direct the user to team@abtalks.in per the Core Rule in `src/components/chatbot/implementation.md`.
+Questions not covered by any canonical file above (revenue, investors, private business details, unpublished roadmap, personal information about Anil Bajpai beyond his public role) must not be answered from general knowledge — direct the user to team@klymb.ai per the Core Rule in `src/components/chatbot/implementation.md`.

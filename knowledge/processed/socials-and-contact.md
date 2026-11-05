@@ -12,11 +12,11 @@ do I contact you · support email · customer care.
 - YouTube: https://www.youtube.com/@ABTalksOnAI
 - X (Twitter): https://x.com/abtalksonai
 - Discord: https://discord.gg/j4Q8tvDj6
-- Email: team@abtalks.in
+- Email: team@klymb.ai
 - Website: abtalks.in
 
 Official public contact and channels, cross-checked against the live site (abtalks.in, checked 2026-08-10):
-- Email: team@abtalks.in
+- Email: team@klymb.ai
 - Website: abtalks.in
 - LinkedIn: linkedin.com/company/abtalks-on-ai/ (Klymb AI)
 - YouTube: @ABTalksOnAI

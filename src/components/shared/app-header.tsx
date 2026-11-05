@@ -198,7 +198,7 @@ export function AppHeader({
                 <DropdownMenuItem
                   onClick={() => {
                     window.location.href =
-                      "mailto:team@abtalks.in?subject=Klymb AI Issue Report&body=Please describe the issue you're experiencing:%0D%0A%0D%0A";
+                      "mailto:team@klymb.ai?subject=Klymb AI Issue Report&body=Please describe the issue you're experiencing:%0D%0A%0D%0A";
                   }}
                 >
                   <AlertCircle className="mr-2 h-4 w-4" />
