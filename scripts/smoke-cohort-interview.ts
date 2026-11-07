@@ -208,7 +208,7 @@ async function main() {
         status: "ENROLLED",
         fullName: `Smoke ${label}`,
         jobRole: "Engineer",
-        company: "ABTalks Test",
+        company: "Klymb AI Test",
         yearsExperience: 3,
         githubUsername: `${RUN}-${label}`,
         githubRepoUrl: `https://github.com/${RUN}/${label}`,

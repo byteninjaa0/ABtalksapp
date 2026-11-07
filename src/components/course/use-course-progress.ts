@@ -9,10 +9,10 @@ import { useCallback, useEffect, useState } from "react";
 type Progress = { done: string[]; quiz: Record<string, { score: number; total: number }> };
 
 const EMPTY: Progress = { done: [], quiz: {} };
-const EVENT = "abtalks-course-progress";
+const EVENT = "klymb-course-progress";
 
 function key(course: string) {
-  return `abtalks.course.${course}.v1`;
+  return `klymb.course.${course}.v1`;
 }
 
 function read(course: string): Progress {

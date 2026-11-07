@@ -138,7 +138,7 @@ type Turn = {
 
 type Phase = "idle" | "listening" | "processing" | "speaking";
 
-const ROOM_THEME_KEY = "abtalks.interviewRoomTheme";
+const ROOM_THEME_KEY = "klymb.interviewRoomTheme";
 
 function readStoredRoomTheme(): OrbPalette {
   try {

@@ -62,7 +62,7 @@ export function WorkshopRegistrationsView({
         role: r.role,
         organization: r.organization ?? "",
         graduationYear: r.graduationYear ?? "",
-        abtalksMember: r.isMember ? "yes" : "no",
+        klymbMember: r.isMember ? "yes" : "no",
         registeredAt: r.createdAt,
       })),
     );

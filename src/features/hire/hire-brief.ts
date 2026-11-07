@@ -244,7 +244,7 @@ export const NO_FLAGS: SpokenBriefFlags = {
   skills: false,
   availability: false,
   compensation: false,
-  abtalks: false,
+  klymb: false,
 };
 
 /** Which strip criteria a patch answers. */
@@ -264,7 +264,7 @@ export function briefFlags(patch: JobSpec, rawText: string): SpokenBriefFlags {
       patch.employmentType != null,
     compensation: patch.salaryMin != null || patch.salaryMax != null,
     // A platform phrase, not a hiring facet the model extracts.
-    abtalks: detectSpokenBrief(rawText).abtalks,
+    klymb: detectSpokenBrief(rawText).klymb,
   };
 }
 

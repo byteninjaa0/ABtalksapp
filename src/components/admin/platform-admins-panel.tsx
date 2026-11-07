@@ -81,7 +81,7 @@ export function PlatformAdminsPanel({
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="person@abtalks.com"
+            placeholder="person@klymb.ai"
             className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm"
           />
         </div>

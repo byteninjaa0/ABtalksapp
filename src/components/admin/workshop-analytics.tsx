@@ -23,7 +23,7 @@ export function WorkshopAnalyticsPanel({ analytics, eventLabels }: Props) {
     uniqueAttendees,
     repeatPeople,
     memberRegistrations,
-    newToABTalks,
+    newToKlymb,
     existingMembers,
     convertedToChallenge,
     workshopCount,
@@ -86,8 +86,8 @@ export function WorkshopAnalyticsPanel({ analytics, eventLabels }: Props) {
         <div className="grid gap-4 sm:grid-cols-3">
           <StatCard
             label="New to Klymb AI"
-            value={newToABTalks}
-            delta={pct(newToABTalks)}
+            value={newToKlymb}
+            delta={pct(newToKlymb)}
             deltaSuffix="% of attendees"
             accent="green"
             icon={<UserPlus className="h-4 w-4" />}

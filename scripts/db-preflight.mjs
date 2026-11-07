@@ -11,7 +11,7 @@
  *
  * The check is on DATA SHAPE, not on a hostname allowlist: hostnames rotate and
  * hard-coding the production host would put infrastructure detail in source
- * control. A real ABTalks production database has tens of thousands of users; a
+ * control. A real Klymb AI production database has tens of thousands of users; a
  * test database has a handful. That difference is unambiguous and needs no
  * secret to detect.
  */

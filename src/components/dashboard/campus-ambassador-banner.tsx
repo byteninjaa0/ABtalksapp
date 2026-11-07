@@ -5,7 +5,7 @@ import { Users, X } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const DISMISS_KEY = "abtalks-ca-onboarding-dismissed";
+const DISMISS_KEY = "klymb-ca-onboarding-dismissed";
 const ONBOARDING_URL = "https://abtalksca.netlify.app/";
 
 export function CampusAmbassadorBanner({

@@ -6,7 +6,7 @@ import { logger } from "@/lib/logger";
 import { parseCookie, toColumns, UTM_COOKIE, type UtmColumns } from "@/lib/utm";
 
 /**
- * T-254 first-touch attribution write. Reads the abtalks_utm cookie set by
+ * T-254 first-touch attribution write. Reads the klymb_utm cookie set by
  * `UtmCapture` on the landing page and writes the five UTM columns onto the
  * user row — but ONLY if the row currently has no UTM values. This is what
  * makes it first-touch: the second, third, nth signup path attempt does not

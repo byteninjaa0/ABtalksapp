@@ -15,7 +15,7 @@ export function MainShell({ children }: { children: React.ReactNode }) {
   // Design System v2 is light-only: every route, Marketplace and Hackathon
   // included, renders on the one forest-green light theme.
   return (
-    <main className="theme-abtalks-light theme-abtalks-brand flex-1">
+    <main className="theme-klymb-light theme-klymb-brand flex-1">
       {children}
     </main>
   );

@@ -79,7 +79,7 @@ export function CohortRosterFilters({
         }
 
         const date = new Date().toISOString().split("T")[0];
-        downloadCSV(`abtalks-cohort-${cohortSlug}-${date}.csv`, toCSV(data));
+        downloadCSV(`klymb-cohort-${cohortSlug}-${date}.csv`, toCSV(data));
         toast.success(`Exported ${data.length} enrollments`);
       } catch {
         toast.error("Export failed");

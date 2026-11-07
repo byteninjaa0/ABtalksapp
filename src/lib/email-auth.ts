@@ -160,7 +160,7 @@ export async function isGoogleOnlyAccount(
 }
 
 /** Cookie `login-client.tsx` writes so a newsletter opt-out survives sign-in. */
-const NEWSLETTER_PREF_COOKIE = "abtalks_newsletter_pref";
+const NEWSLETTER_PREF_COOKIE = "klymb_newsletter_pref";
 
 /**
  * A first sign-in by emailed code. Credentials providers bypass the adapter,

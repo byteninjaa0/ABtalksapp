@@ -163,8 +163,8 @@ suite("project card keeps the T-149 writer and its label", () => {
 
 suite("Save for Later stays device-local and separate", () => {
   assert(
-    !/desk-shortlist|abtalks-hire-star/.test(reader) &&
-      !/abtalks-hire-star/.test(layout),
+    !/desk-shortlist|klymb-hire-star/.test(reader) &&
+      !/klymb-hire-star/.test(layout),
     "Save for Later must not be folded into the DB-backed shortlist",
   );
 });

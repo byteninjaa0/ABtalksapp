@@ -30,7 +30,7 @@ import {
  * Renders inside the Hire shell, so it keeps the recruiter header and sidebar.
  *
  * The brand teal is used directly rather than `hsl(var(--primary))`: this tree
- * renders under `theme-abtalks-light`, where that token is not the same colour
+ * renders under `theme-klymb-light`, where that token is not the same colour
  * the admin charts get.
  */
 const TEAL = "#03535F";

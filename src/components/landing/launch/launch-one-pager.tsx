@@ -19,7 +19,7 @@ import "./launch.css";
  * marketing landing while `LANDING_ONE_PAGER` is on.
  *
  * Server Component. It reuses `landing.css` for the brand tokens and button
- * classes (hence the `.abtalks-landing` wrapper, still the shared landing
+ * classes (hence the `.klymb-landing` wrapper, still the shared landing
  * wrapper's class name after the Klymb AI rename) and adds only its own layout
  * on top, so nothing in `components/landing/site/**` had to change to put this
  * page up — flip the flag off and that landing is back, untouched.
@@ -47,7 +47,7 @@ export function LaunchOnePager({
   const year = new Date().getFullYear();
 
   return (
-    <div className="abtalks-landing launch">
+    <div className="klymb-landing launch">
       <a className="skip-link" href="#main">
         Skip to content
       </a>

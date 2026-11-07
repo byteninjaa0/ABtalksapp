@@ -57,7 +57,7 @@ export function CookieConsentModal() {
         "left-3 right-auto sm:left-4",
         "bottom-3 sm:bottom-5 md:bottom-6",
         "overflow-hidden rounded-lg border border-border/80 bg-background shadow-xl sm:rounded-xl sm:shadow-2xl",
-        "theme-abtalks-brand",
+        "theme-klymb-brand",
       )}
     >
       <div className="h-1 w-full bg-primary sm:h-1.5" aria-hidden="true" />

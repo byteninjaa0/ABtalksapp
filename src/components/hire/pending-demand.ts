@@ -1,6 +1,6 @@
 import { jobSpecSchema, type JobSpec } from "@/lib/validations/hire";
 
-export const PENDING_DEMAND_KEY = "abtalks-hire-pending-demand";
+export const PENDING_DEMAND_KEY = "klymb-hire-pending-demand";
 
 /**
  * A requirement the recruiter asked us to capture before they had an account.

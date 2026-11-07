@@ -141,7 +141,7 @@ export default async function RegisterPage({ searchParams }: PageProps) {
     !(await isGoogleOnlyAccount(userExists.email, userExists));
 
   return (
-    <div className="theme-abtalks-light theme-abtalks-brand flex min-h-svh flex-col bg-[#F4F4F4]">
+    <div className="theme-klymb-light theme-klymb-brand flex min-h-svh flex-col bg-[#F4F4F4]">
       <div className="flex flex-1 flex-col items-center justify-center p-6">
         <Card className="w-full max-w-2xl border-border/60 shadow-md">
           <CardHeader className="space-y-2">

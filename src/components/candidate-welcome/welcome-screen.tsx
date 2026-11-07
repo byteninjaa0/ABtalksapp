@@ -26,7 +26,7 @@ export function WelcomeScreen({ name }: WelcomeScreenProps) {
       aria-busy="true"
       aria-live="polite"
       role="status"
-      className="cwelcome theme-abtalks-light"
+      className="cwelcome theme-klymb-light"
     >
       {ELLIPSES.map((n) => (
         <div key={n} aria-hidden className={`cwelcome__ellipse cwelcome__ellipse--${n}`} />

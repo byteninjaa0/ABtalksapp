@@ -6,7 +6,7 @@ import { DashboardSidebar } from "./dashboard-sidebar";
 import { DashboardFooter } from "./dashboard-footer";
 import { cn } from "@/lib/utils";
 
-const CLAUDE_SIDEBAR_COLLAPSED_KEY = "abtalks.claudeSidebarCollapsed";
+const CLAUDE_SIDEBAR_COLLAPSED_KEY = "klymb.claudeSidebarCollapsed";
 
 export type DashboardShellUser = {
   name: string;
@@ -91,7 +91,7 @@ export function DashboardShell({
 
   return (
     <div
-      className="theme-abtalks-light theme-abtalks-brand flex min-h-svh bg-[#F4F4F4] font-content text-black"
+      className="theme-klymb-light theme-klymb-brand flex min-h-svh bg-[#F4F4F4] font-content text-black"
       // Lets page content adapt to the sidebar (e.g. the hub's 60-day grid).
       data-sidebar={collapsible && collapsed ? "collapsed" : "open"}
     >

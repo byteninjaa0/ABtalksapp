@@ -1,7 +1,7 @@
 /** Candidate refs this recruiter has already asked about, on this device. */
 
-export const DESK_REQUESTED_EVENT = "abtalks-hire-requested";
-const KEY = "abtalks-hire-requested";
+export const DESK_REQUESTED_EVENT = "klymb-hire-requested";
+const KEY = "klymb-hire-requested";
 
 function canUseStorage(): boolean {
   return typeof window !== "undefined";

@@ -2,9 +2,9 @@
  * Interview room styles.
  *
  * Scoped entirely to `.interview-room`. Imported by the room component only,
- * never by globals.css, so nothing here can reach another AB Talks page.
+ * never by globals.css, so nothing here can reach another Klymb AI page.
  *
- * The palette is the ABTalks design system (docs/design-system.md, plan 071):
+ * The palette is the Klymb AI design system (docs/design-system.md, plan 071):
  * #F4F4F4 cream page, #FFFFFF cards, #E0E0E0 border, #03535F orange accent,
  * #000000 / #4B4B4B / #8F8F8F text. It was previously a dark navy palette
  * copied from the old program shell — that shell has since been rebuilt on

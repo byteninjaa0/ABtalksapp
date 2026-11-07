@@ -5,9 +5,9 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, X } from "lucide-react";
 
-const TOUR_KEY = "abtalks_tour_done"; // set by DashboardWalkthrough when finished
+const TOUR_KEY = "klymb_tour_done"; // set by DashboardWalkthrough when finished
 // Bump the version suffix to re-show the popup to everyone after a change.
-const SEEN_KEY = "abtalks_figma_workshop_promo_v2";
+const SEEN_KEY = "klymb_figma_workshop_promo_v2";
 // Aug 1, 2026 · 6:00 PM IST
 const TARGET = new Date("2026-08-01T12:30:00Z").getTime();
 

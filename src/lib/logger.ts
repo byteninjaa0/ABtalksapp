@@ -75,7 +75,7 @@ export const loggerOptions: pino.LoggerOptions = {
     process.env.LOG_LEVEL ??
     (process.env.NODE_ENV === "production" ? "info" : "debug"),
   base: {
-    service: process.env.OTEL_SERVICE_NAME ?? "abtalks-web",
+    service: process.env.OTEL_SERVICE_NAME ?? "klymb-web",
     env:
       process.env.NEXT_PUBLIC_APP_ENV ?? process.env.NODE_ENV ?? "development",
   },

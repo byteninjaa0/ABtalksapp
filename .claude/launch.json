@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "abtalks-test-env",
+      "name": "klymb-test-env",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "run",

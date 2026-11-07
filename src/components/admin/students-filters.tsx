@@ -174,7 +174,7 @@ export function StudentsFilters({
 
         const csv = toCSV(data);
         const date = new Date().toISOString().split("T")[0];
-        const filename = `abtalks-students-${track}-${date}.csv`;
+        const filename = `klymb-students-${track}-${date}.csv`;
         downloadCSV(filename, csv);
         toast.success(`Exported ${data.length} students`);
       } catch {

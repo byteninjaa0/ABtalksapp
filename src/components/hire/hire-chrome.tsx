@@ -63,7 +63,7 @@ export function HireChrome({
 
   useEffect(() => {
     try {
-      const stored = window.localStorage.getItem("abtalks.hireSidebarCollapsed");
+      const stored = window.localStorage.getItem("klymb.hireSidebarCollapsed");
       if (stored === "1") setSidebarCollapsed(true);
       else if (stored === "0") setSidebarCollapsed(false);
     } catch {
@@ -75,7 +75,7 @@ export function HireChrome({
     setSidebarCollapsed((prev) => {
       const next = !prev;
       try {
-        window.localStorage.setItem("abtalks.hireSidebarCollapsed", next ? "1" : "0");
+        window.localStorage.setItem("klymb.hireSidebarCollapsed", next ? "1" : "0");
       } catch {
         // ignore
       }
@@ -90,11 +90,11 @@ export function HireChrome({
       setStarCount(readDeskShortlist().length);
     };
     sync();
-    window.addEventListener("abtalks-hire-cart", sync);
+    window.addEventListener("klymb-hire-cart", sync);
     window.addEventListener(DESK_SHORTLIST_EVENT, sync);
     window.addEventListener("storage", sync);
     return () => {
-      window.removeEventListener("abtalks-hire-cart", sync);
+      window.removeEventListener("klymb-hire-cart", sync);
       window.removeEventListener(DESK_SHORTLIST_EVENT, sync);
       window.removeEventListener("storage", sync);
     };

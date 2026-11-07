@@ -123,10 +123,10 @@ export function HireTalentPod({
 
     };
     sync();
-    window.addEventListener("abtalks-hire-cart", sync);
+    window.addEventListener("klymb-hire-cart", sync);
 
     return () => {
-      window.removeEventListener("abtalks-hire-cart", sync);
+      window.removeEventListener("klymb-hire-cart", sync);
 
     };
   }, []);

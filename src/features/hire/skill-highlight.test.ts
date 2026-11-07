@@ -209,7 +209,7 @@ suite("the hit chip styles exist in both themes", () => {
   for (const cls of [".desk-chip--hit", ".hire-profile__chip--hit"]) {
     assert(css.includes(cls), `${cls} is missing from hire-scout.css`);
     assert(
-      css.includes(`html.dark:not(:has(.theme-abtalks-light)) ${cls}`),
+      css.includes(`html.dark:not(:has(.theme-klymb-light)) ${cls}`),
       `${cls} has no dark-mode rule`,
     );
   }

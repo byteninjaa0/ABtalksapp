@@ -67,7 +67,7 @@ export const KNOWLEDGE_SOURCES: KnowledgeSource[] = [
     routes: ["/challenges", "/claude-signup"],
     async load() {
       const m = await import("../src/components/shared/app-footer");
-      return `# ABTalks Social & Contact Links (live site footer)
+      return `# Klymb AI Social & Contact Links (live site footer)
 
 ## Support email
 ${m.SUPPORT_EMAIL}
@@ -82,7 +82,7 @@ ${m.SOCIAL_LINKS.map((s) => `- ${s.label}: ${s.href}`).join("\n")}
     routes: ["/"],
     async load() {
       const m = await import("../src/components/landing/modernist/landing-content");
-      return `# ABTalks Homepage (live site content, "/")
+      return `# Klymb AI Homepage (live site content, "/")
 
 ## Stats
 ${mdList(m.STATS.map((s) => `${s.figure} — ${s.label}`))}

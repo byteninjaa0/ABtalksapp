@@ -7,18 +7,18 @@ These Terms of Service (“Terms”) govern your access to and use of Klymb AI w
 
 | Field | Detail |
 |---|---|
-| **Registered entity** | Klymb AI |
+| **Registered entity** | Klymb.AI |
 | **Entity type** | Sole Proprietorship (Proprietary) |
 | **Enterprise scale** | Micro (Udyam) |
 | **Major activity** | Services |
-| **Industry (NIC)** | 62099 - Other information technology and computer service activities n.e.c. |
-| **Proprietor** | Suman Shukla |
+| **Industry (NIC)** | 62011 - Writing, modifying and testing of computer programs (excluding web-page designing); 62012 - Web-page designing services; 62091 - Software installation services |
+| **Proprietor** | Tarun Kumar Singh |
 | **Trading name** | Klymb AI |
-| **Unit name** | Klymb AI |
-| **Registered address** | Crossing Republic, Ghaziabad, Uttar Pradesh 201016, India |
-| **Udyam registration number** | UDYAM-UP-29-0250625 |
-| **Udyam registration date** | 01 August 2026 |
-| **Date of incorporation** | 25 July 2026 |
+| **Unit name** | Klymb.AI |
+| **Registered address** | Crossing Republik, Ghaziabad, Uttar Pradesh 201016, India |
+| **Udyam registration number** | UDYAM-UP-29-0268341 |
+| **Udyam registration date** | 03 November 2026 |
+| **Date of incorporation** | 01 October 2026 |
 | **Contact** | [team@klymb.ai](mailto:team@klymb.ai) · [/contact](/contact) |
 
 By creating an account, registering for a track, or clicking “I agree”, you accept these Terms and our [Privacy Policy](/privacy).
@@ -146,10 +146,10 @@ For complaints about the Service, your content, or your data:
 
 | Field | Detail |
 |---|---|
-| **Name** | Suman Shukla |
+| **Name** | Tarun Kumar Singh |
 | **Designation** | Proprietor and Grievance Officer |
 | **Email** | [team@klymb.ai](mailto:team@klymb.ai) |
-| **Address** | Crossing Republic, Ghaziabad, Uttar Pradesh 201016, India |
+| **Address** | Crossing Republik, Ghaziabad, Uttar Pradesh 201016, India |
 
 We acknowledge complaints within **24 hours** and aim to resolve them within **15 days**.
 

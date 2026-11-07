@@ -11,8 +11,8 @@
  * guarded the same way `evidence-cache.ts` guards its own storage writes.
  */
 
-/** Namespaced with the other `abtalks-hire-*` keys the desk already owns. */
-export const PANEL_WIDTH_KEY = "abtalks-hire-panel-w";
+/** Namespaced with the other `klymb-hire-*` keys the desk already owns. */
+export const PANEL_WIDTH_KEY = "klymb-hire-panel-w";
 
 export const PANEL_MIN = 360;
 export const PANEL_MAX = 720;

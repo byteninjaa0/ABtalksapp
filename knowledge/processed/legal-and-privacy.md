@@ -94,7 +94,7 @@ version 2026-08-10. Policies can change; the live pages are authoritative.
 
 ## Who Klymb AI is, legally
 
-Klymb AI is the trading name of **Klymb AI**, a sole proprietorship
+Klymb AI is the trading name of **Klymb.AI**, a sole proprietorship
 (proprietary) registered in India, classified as a Micro enterprise, whose
 major activity is services under NIC 62099 (other information technology and
 computer service activities). Registration details are shown on the public

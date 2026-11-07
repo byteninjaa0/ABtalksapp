@@ -12,7 +12,7 @@ export default function SnowflakeLayout({
   if (!isSnowflakeEnabled()) notFound();
 
   return (
-    <div className="theme-abtalks-light theme-abtalks-brand min-h-svh bg-[#F4F4F4] font-content text-black">
+    <div className="theme-klymb-light theme-klymb-brand min-h-svh bg-[#F4F4F4] font-content text-black">
       <header className="abt-header">
         <div className="abt-header-inner">
           <Link href="/" className="shrink-0" aria-label="Klymb AI home">

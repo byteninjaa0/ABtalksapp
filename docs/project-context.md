@@ -433,13 +433,13 @@ Original tables `StudentProfile`, `Enrollment`, `ProgramMember`, `Certificate`,
 
 ### Referrals
 - 6-char uppercase alphanumeric code per `CandidateProfile`; reward at referred user's Day 7
-- Persisted via `abtalks_ref` httpOnly cookie (7 days, set in middleware)
+- Persisted via `klymb_ref` httpOnly cookie (7 days, set in middleware)
 - Badges: bronze (1), silver (5), gold (10), platinum (25)
 
 ### Hackathon
 - Solo or team entry; team joined by `teamCode`; duplicate team names blocked case-insensitively
 - Registration requires a Google session; one participant row per user globally
-- Share-link attribution: `?s=<slug>` → `abtalks_src` httpOnly cookie, **first touch wins**, 30 days, copied to `HackathonParticipant.sourceSlug`
+- Share-link attribution: `?s=<slug>` → `klymb_src` httpOnly cookie, **first touch wins**, 30 days, copied to `HackathonParticipant.sourceSlug`
 - Removal hard-deletes the participant and writes a `HackathonRemoval` row (leader or admin); rejoin re-uses the preserved `sourceSlug`
 - A logged-in user with a hackathon registration but no `CandidateProfile` is diverted to `/hackathon/dashboard` (not `/register`) from `/`, `/dashboard` and `/login`
 
@@ -499,7 +499,7 @@ it is *not* solved.
 ### Legal / consent
 - `TERMS_VERSION` `2026-08-10`, `PRIVACY_VERSION` `2026-08-11` (client-safe constants live in `src/lib/legal-constants.ts` — importing `@/lib/legal` from a client component pulls `node:fs/promises` into the browser bundle)
 - Consent is recorded at OAuth signup: `auth.ts` `events.createUser` writes TERMS+PRIVACY rows under source `oauth_signup`. `/login` carries a notice, not a checkbox
-- Cookie chooser is a small bottom-right banner (all | limited | essential), stored in the `abtalks_consent` cookie with no DB row; it gates `abtalks_ref` / `abtalks_src` in middleware
+- Cookie chooser is a small bottom-right banner (all | limited | essential), stored in the `klymb_consent` cookie with no DB row; it gates `klymb_ref` / `klymb_src` in middleware
 - Newsletter opt-in is pre-checked on all signup funnels and excluded from the submit gate
 - Bumping a version triggers the reconsent banner
 
@@ -576,7 +576,7 @@ it is *not* solved.
     `User` row let the next sign-in re-grant admin. Do not reintroduce a
     runtime env grant.
 - **Program / recruiter:** `lib/program-auth.ts` (node-only) — `requireProgramMember` (resolved by membership, not by role) and `requireRecruiter` (DB-checked, `Role.RECRUITER` + admin approval)
-- **Middleware:** path-prefix list only (`/dashboard`, `/explore`, `/challenge/`, `/profile`, `/achievements`, `/quiz`, `/register`, `/admin`, `/jobs`, `/mission`, `/program/*` app routes, `/talent`, `/hackathon/register`, `/hackathon/dashboard`) — redirects to `/login?from=…`. It also sets the `abtalks_ref` and `abtalks_src` tracking cookies on every request.
+- **Middleware:** path-prefix list only (`/dashboard`, `/explore`, `/challenge/`, `/profile`, `/achievements`, `/quiz`, `/register`, `/admin`, `/jobs`, `/mission`, `/program/*` app routes, `/talent`, `/hackathon/register`, `/hackathon/dashboard`) — redirects to `/login?from=…`. It also sets the `klymb_ref` and `klymb_src` tracking cookies on every request.
 
 ### Stale session warning
 - JWT sessions don't verify the user still exists in the DB per request. Deleted users keep a valid cookie until expiry; FK violations are possible. Cleanup-script deletions require clearing cookies / incognito.

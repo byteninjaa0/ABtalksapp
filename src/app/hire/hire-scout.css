@@ -32,7 +32,7 @@
   --h-pill-ink: #4B4B4B;
   --h-on-primary: #000000;
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
-  /* Hire desk uses the shared ABTalks primary actions (Primary Teal). */
+  /* Hire desk uses the shared Klymb AI primary actions (Primary Teal). */
   --primary: 188 94% 19%;
   --color-primary: #03535F;
   min-height: 100dvh;
@@ -42,7 +42,7 @@
   color: var(--h-ink);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-app {
+html.dark:not(:has(.theme-klymb-light)) .hire-app {
   --h-toolbar: #03535F;
   --h-toolbar-2: #02434D;
   --h-peach: #02434D;
@@ -76,7 +76,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-app {
 
 /* The desk wordmark is type now and inherits currentColor, so it needs no
    invert; the header icon is still a bitmap and does. */
-html.dark:not(:has(.theme-abtalks-light)) .hire-hbtn__icon img {
+html.dark:not(:has(.theme-klymb-light)) .hire-hbtn__icon img {
   filter: invert(1);
   mix-blend-mode: screen;
 }
@@ -184,7 +184,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-hbtn__icon img {
   white-space: nowrap;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-app__badge {
+html.dark:not(:has(.theme-klymb-light)) .hire-app__badge {
   background: #02434D;
   border-color: rgba(166, 210, 213, 0.55);
   color: #A6D2D5;
@@ -708,7 +708,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-app__badge {
   color: #fff;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-node--off {
+html.dark:not(:has(.theme-klymb-light)) .hire-node--off {
   background: #02434D;
   color: #A6D2D5;
 }
@@ -1467,14 +1467,14 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-node--off {
 
 /* The tints are light-mode inks on light-mode grounds; on dark they would sit
    at roughly 2:1. Same hue family, inverted, so a skill keeps its identity. */
-html.dark:not(:has(.theme-abtalks-light)) .desk-pill--c0 { background: #02434D; color: #D4EBEC; }
-html.dark:not(:has(.theme-abtalks-light)) .desk-pill--c1 { background: #03535F; color: #D4EBEC; }
-html.dark:not(:has(.theme-abtalks-light)) .desk-pill--c2 { background: #02434D; color: #D6F7EC; }
-html.dark:not(:has(.theme-abtalks-light)) .desk-pill--c3 { background: #03535F; color: #E7F2F3; }
-html.dark:not(:has(.theme-abtalks-light)) .desk-pill--c4 { background: #AA821D; color: #FFEDB0; }
-html.dark:not(:has(.theme-abtalks-light)) .desk-pill--c5 { background: #D92D20; color: #D92D2014; }
+html.dark:not(:has(.theme-klymb-light)) .desk-pill--c0 { background: #02434D; color: #D4EBEC; }
+html.dark:not(:has(.theme-klymb-light)) .desk-pill--c1 { background: #03535F; color: #D4EBEC; }
+html.dark:not(:has(.theme-klymb-light)) .desk-pill--c2 { background: #02434D; color: #D6F7EC; }
+html.dark:not(:has(.theme-klymb-light)) .desk-pill--c3 { background: #03535F; color: #E7F2F3; }
+html.dark:not(:has(.theme-klymb-light)) .desk-pill--c4 { background: #AA821D; color: #FFEDB0; }
+html.dark:not(:has(.theme-klymb-light)) .desk-pill--c5 { background: #D92D20; color: #D92D2014; }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-pill--warn {
+html.dark:not(:has(.theme-klymb-light)) .desk-pill--warn {
   background: #AA821D;
   color: #FFEDB0;
 }
@@ -1486,23 +1486,23 @@ html.dark:not(:has(.theme-abtalks-light)) .desk-pill--warn {
   font-weight: 700;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-pill--hit {
+html.dark:not(:has(.theme-klymb-light)) .desk-pill--hit {
   background: #A6D2D5;
   color: #000000;
   border-color: transparent;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-pill--good {
+html.dark:not(:has(.theme-klymb-light)) .desk-pill--good {
   background: #197E23;
   color: #D6F7EC;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-card__top {
+html.dark:not(:has(.theme-klymb-light)) .desk-card__top {
   background: #A6D2D5;
   color: #000000;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-card__partial {
+html.dark:not(:has(.theme-klymb-light)) .desk-card__partial {
   background: rgba(255, 255, 255, 0.14);
   color: #F4F4F4;
 }
@@ -1638,11 +1638,11 @@ html.dark:not(:has(.theme-abtalks-light)) .desk-card__partial {
   opacity: 1;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-shortlist {
+html.dark:not(:has(.theme-klymb-light)) .desk-shortlist {
   background: transparent;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-shortlist.is-on {
+html.dark:not(:has(.theme-klymb-light)) .desk-shortlist.is-on {
   background: var(--h-primary);
   color: #fff;
 }
@@ -1840,8 +1840,8 @@ html.dark:not(:has(.theme-abtalks-light)) .desk-shortlist.is-on {
   text-decoration: none;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-app a.hire-detail__resume,
-html.dark:not(:has(.theme-abtalks-light)) .hire-detail__resume {
+html.dark:not(:has(.theme-klymb-light)) .hire-app a.hire-detail__resume,
+html.dark:not(:has(.theme-klymb-light)) .hire-detail__resume {
   background: #02434D;
   color: #A6D2D5;
   border-color: rgba(166, 210, 213, 0.4);
@@ -1883,7 +1883,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-detail__resume {
   transition: bottom var(--dur-3) var(--ease-spark);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-podbar {
+html.dark:not(:has(.theme-klymb-light)) .hire-podbar {
   background: #353535;
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -2519,13 +2519,13 @@ body:has(.hire-app--desk) button.fixed.bottom-4.right-4 {
   color: #03535F;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-pod__privacy {
+html.dark:not(:has(.theme-klymb-light)) .hire-pod__privacy {
   background: #353535;
   border-color: #03535F;
   color: #A6D2D5;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-pod__privacy strong {
+html.dark:not(:has(.theme-klymb-light)) .hire-pod__privacy strong {
   color: #A6D2D5;
 }
 
@@ -2619,7 +2619,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-pod__privacy strong {
   font-weight: 700;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-pod__status {
+html.dark:not(:has(.theme-klymb-light)) .hire-pod__status {
   background: #197E23;
   color: #D6F7EC;
 }
@@ -2685,7 +2685,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-pod__status {
   stroke-width: 2;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .pe__paper rect {
+html.dark:not(:has(.theme-klymb-light)) .pe__paper rect {
   stroke: #626262;
 }
 
@@ -2891,13 +2891,13 @@ html.dark:not(:has(.theme-abtalks-light)) .pe__paper rect {
   z-index: 1;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-pod__request {
+html.dark:not(:has(.theme-klymb-light)) .hire-pod__request {
   background: #353535;
   border-color: rgba(166, 210, 213, 0.32);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-pod__request::before {
+html.dark:not(:has(.theme-klymb-light)) .hire-pod__request::before {
   background:
     radial-gradient(
       90% 70% at 100% -10%,
@@ -2963,7 +2963,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-pod__request::before {
   color: var(--h-gray-400);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-pod__request textarea {
+html.dark:not(:has(.theme-klymb-light)) .hire-pod__request textarea {
   background: #000000;
   border-color: rgba(166, 210, 213, 0.22);
   box-shadow: none;
@@ -2979,7 +2979,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-pod__request textarea {
   color: var(--h-gray-600);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-pod__note {
+html.dark:not(:has(.theme-klymb-light)) .hire-pod__note {
   background: rgba(255, 255, 255, 0.04);
   color: var(--h-gray-500);
 }
@@ -3047,7 +3047,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-pod__note {
   cursor: pointer;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-app .hire-podbar button:not(.hire-podbar__close) {
+html.dark:not(:has(.theme-klymb-light)) .hire-app .hire-podbar button:not(.hire-podbar__close) {
   background: #03535F;
   color: #fff;
 }
@@ -3287,7 +3287,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-app .hire-podbar button:not(.hir
   color: var(--h-gray-500);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-sheet {
+html.dark:not(:has(.theme-klymb-light)) .hire-sheet {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
@@ -3306,7 +3306,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-sheet {
   background: rgba(0, 0, 0, 0.4);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) [data-slot="dialog-overlay"]:has(+ .hire-auth) {
+html.dark:not(:has(.theme-klymb-light)) [data-slot="dialog-overlay"]:has(+ .hire-auth) {
   background: rgba(0, 0, 0, 0.62);
 }
 
@@ -3328,7 +3328,7 @@ html.dark:not(:has(.theme-abtalks-light)) [data-slot="dialog-overlay"]:has(+ .hi
   box-shadow: 0 18px 48px rgba(3, 83, 95, 0.14);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-app.hire-auth {
+html.dark:not(:has(.theme-klymb-light)) .hire-app.hire-auth {
   background: #000000;
   border-color: rgba(166, 210, 213, 0.28);
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
@@ -3354,7 +3354,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-app.hire-auth {
   gap: 6px;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-detail__contact {
+html.dark:not(:has(.theme-klymb-light)) .hire-detail__contact {
   background: rgba(255, 176, 140, 0.08);
 }
 
@@ -3411,7 +3411,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-detail__contact {
   background: rgba(24, 24, 27, 0.4);
 }
 
-html.dark:not(:has(.theme-abtalks-light))
+html.dark:not(:has(.theme-klymb-light))
   [data-slot="dialog-overlay"]:has(+ .hire-unlock) {
   background: rgba(9, 9, 11, 0.62);
 }
@@ -3474,7 +3474,7 @@ html.dark:not(:has(.theme-abtalks-light))
   color: var(--h-ink);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-app.hire-unlock {
+html.dark:not(:has(.theme-klymb-light)) .hire-app.hire-unlock {
   background: #1c1614;
   border-color: rgba(255, 176, 140, 0.28);
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
@@ -3538,7 +3538,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-app.hire-unlock {
   letter-spacing: -0.01em;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-unlock__row.is-strong {
+html.dark:not(:has(.theme-klymb-light)) .hire-unlock__row.is-strong {
   background: rgba(255, 176, 140, 0.08);
 }
 
@@ -3562,7 +3562,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-unlock__row.is-strong {
   color: var(--h-gray-700);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-unlock__notice {
+html.dark:not(:has(.theme-klymb-light)) .hire-unlock__notice {
   background: rgba(255, 255, 255, 0.04);
 }
 
@@ -3693,7 +3693,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-unlock__notice {
   box-shadow: none;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-app.hire-auth .bg-card {
+html.dark:not(:has(.theme-klymb-light)) .hire-app.hire-auth .bg-card {
   background: #353535;
   border-color: rgba(166, 210, 213, 0.22);
 }
@@ -3719,7 +3719,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-app.hire-auth .bg-card {
   box-shadow: 0 0 0 3px rgba(3, 83, 95, 0.18);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-app.hire-auth [data-slot="input"] {
+html.dark:not(:has(.theme-klymb-light)) .hire-app.hire-auth [data-slot="input"] {
   background: #000000;
   border-color: #353535;
 }
@@ -4051,22 +4051,22 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-app.hire-auth [data-slot="input"
   color: #03535F;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-meta--exp {
+html.dark:not(:has(.theme-klymb-light)) .hire-meta--exp {
   background: #03535F;
   color: #D4EBEC;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-meta--location {
+html.dark:not(:has(.theme-klymb-light)) .hire-meta--location {
   background: #02434D;
   color: #D6F7EC;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-meta--employment {
+html.dark:not(:has(.theme-klymb-light)) .hire-meta--employment {
   background: #02434D;
   color: #D4EBEC;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-meta--education {
+html.dark:not(:has(.theme-klymb-light)) .hire-meta--education {
   background: #03535F;
   color: #E7F2F3;
 }
@@ -4139,7 +4139,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-meta--education {
   box-shadow: 0 12px 32px rgba(3, 83, 95, 0.12);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-app.hire-menu {
+html.dark:not(:has(.theme-klymb-light)) .hire-app.hire-menu {
   background: #000000;
   border-color: rgba(166, 210, 213, 0.28);
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
@@ -9390,7 +9390,7 @@ button.hire-side__me {
   font-weight: 700;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-chip--hit {
+html.dark:not(:has(.theme-klymb-light)) .desk-chip--hit {
   border-color: transparent;
   background: #A6D2D5;
   color: #000000;
@@ -10467,11 +10467,11 @@ button.hire-profile__in:focus-visible {
   padding: 4px 0;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-profile__ai-tab {
+html.dark:not(:has(.theme-klymb-light)) .hire-profile__ai-tab {
   color: #d4ebec;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-profile__ai-body {
+html.dark:not(:has(.theme-klymb-light)) .hire-profile__ai-body {
   background: rgba(3, 83, 95, 0.22);
   color: #d4ebec;
   box-shadow: none;
@@ -10520,7 +10520,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-profile__ai-body {
   font-weight: 600;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-profile__chip--hit {
+html.dark:not(:has(.theme-klymb-light)) .hire-profile__chip--hit {
   border-color: transparent;
   background: #A6D2D5;
   color: #000000;
@@ -17381,8 +17381,8 @@ a.hire-credits:hover { border-color: var(--h-primary); }
   color: var(--h-primary);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-review__tag,
-html.dark:not(:has(.theme-abtalks-light)) .hire-review__edit {
+html.dark:not(:has(.theme-klymb-light)) .hire-review__tag,
+html.dark:not(:has(.theme-klymb-light)) .hire-review__edit {
   color: var(--h-toolbar);
 }
 
@@ -17583,12 +17583,12 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-review__edit {
   line-height: 1;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .scout-mark--k {
+html.dark:not(:has(.theme-klymb-light)) .scout-mark--k {
   background: #f4f4f4;
   color: #111414;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .scout-mark--viewer {
+html.dark:not(:has(.theme-klymb-light)) .scout-mark--viewer {
   background: #02434d;
   color: #e7f2f3;
 }
@@ -17625,7 +17625,7 @@ html.dark:not(:has(.theme-abtalks-light)) .scout-mark--viewer {
   color: var(--h-primary);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-found strong {
+html.dark:not(:has(.theme-klymb-light)) .hire-found strong {
   color: var(--h-toolbar);
 }
 
@@ -17744,17 +17744,17 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-found strong {
     color 150ms var(--ease);
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-row.is-selected,
-html.dark:not(:has(.theme-abtalks-light)) .desk-row.is-selected:hover {
+html.dark:not(:has(.theme-klymb-light)) .desk-row.is-selected,
+html.dark:not(:has(.theme-klymb-light)) .desk-row.is-selected:hover {
   background: #1a2627;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-row.is-selected .desk-row__avatar {
+html.dark:not(:has(.theme-klymb-light)) .desk-row.is-selected .desk-row__avatar {
   background: #a6d2d5;
   color: #000000;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-row.is-selected .desk-row__name {
+html.dark:not(:has(.theme-klymb-light)) .desk-row.is-selected .desk-row__name {
   color: #a6d2d5;
 }
 
@@ -18044,24 +18044,24 @@ html.dark:not(:has(.theme-abtalks-light)) .desk-row.is-selected .desk-row__name 
   opacity: 0.5;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-row.is-clickable:hover {
+html.dark:not(:has(.theme-klymb-light)) .desk-row.is-clickable:hover {
   background: #1d1f1f;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-row__avatar {
+html.dark:not(:has(.theme-klymb-light)) .desk-row__avatar {
   background: #02434d;
   color: #e7f2f3;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-row__chip.is-hit,
-html.dark:not(:has(.theme-abtalks-light)) .desk-save.is-on,
-html.dark:not(:has(.theme-abtalks-light)) .hire-app .desk-row__btn--primary.is-on {
+html.dark:not(:has(.theme-klymb-light)) .desk-row__chip.is-hit,
+html.dark:not(:has(.theme-klymb-light)) .desk-save.is-on,
+html.dark:not(:has(.theme-klymb-light)) .hire-app .desk-row__btn--primary.is-on {
   border-color: transparent;
   background: #a6d2d5;
   color: #000000;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-row__meta svg {
+html.dark:not(:has(.theme-klymb-light)) .desk-row__meta svg {
   color: var(--h-toolbar);
 }
 
@@ -18133,7 +18133,7 @@ html.dark:not(:has(.theme-abtalks-light)) .desk-row__meta svg {
   overflow-wrap: anywhere;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .scout-turn--user .scout-turn__text {
+html.dark:not(:has(.theme-klymb-light)) .scout-turn--user .scout-turn__text {
   border-color: transparent;
   background: #17403a;
   color: #e7f2f3;
@@ -18230,7 +18230,7 @@ html.dark:not(:has(.theme-abtalks-light)) .scout-turn--user .scout-turn__text {
   }
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .scout-typing__caret {
+html.dark:not(:has(.theme-klymb-light)) .scout-typing__caret {
   background: var(--h-toolbar);
 }
 
@@ -18259,7 +18259,7 @@ html.dark:not(:has(.theme-abtalks-light)) .scout-typing__caret {
   --pool-muted: #5c5c5c;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .hire-app {
+html.dark:not(:has(.theme-klymb-light)) .hire-app {
   --pool-teal: #a6d2d5;
   --pool-teal-tint: #142a2c;
   --pool-teal-line: #24474a;
@@ -18439,7 +18439,7 @@ html.dark:not(:has(.theme-abtalks-light)) .hire-app {
   color: #ffffff;
 }
 
-html.dark:not(:has(.theme-abtalks-light)) .desk-row__badge {
+html.dark:not(:has(.theme-klymb-light)) .desk-row__badge {
   color: #000000;
 }
 

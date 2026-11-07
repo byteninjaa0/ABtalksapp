@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ABTalks — Student Dashboard
+   Klymb AI — Student Dashboard
    Hackathon page stylesheet
    --------------------------------------------------------------------------
    The dashboard shell (tokens, sidebar, header, buttons, clay) is taken from
@@ -277,7 +277,7 @@ img, svg { display: block; max-width: 100%; }
   background: var(--ab-app-bg);
 }
 
-/* The nav column is the shared ABTalks `DashboardSidebar` (Tailwind, w-64,
+/* The nav column is the shared Klymb AI `DashboardSidebar` (Tailwind, w-64,
    sticky, md: breakpoint). Nothing here styles it — keeping a second copy of
    those rules is exactly how this route drifted from the rest of the app. */
 

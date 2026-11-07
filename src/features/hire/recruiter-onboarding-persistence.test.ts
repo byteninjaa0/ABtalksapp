@@ -352,7 +352,7 @@ async function runtimeSuites() {
 
   suite("clearDraft clears both stores", () => {
     writeDraft(filled);
-    session.raw.set("abtalks-recruiter-onboarding", JSON.stringify(filled));
+    session.raw.set("klymb-recruiter-onboarding", JSON.stringify(filled));
     clearDraft();
     assert(local.size === 0, "the current key must go");
     assert(session.size === 0, "and so must the one the old version left");

@@ -19,7 +19,7 @@ export default async function ProgramAppLayout({
   await requireProgramMember();
 
   return (
-    <div className="theme-abtalks-light theme-abtalks-brand min-h-svh bg-[#F4F4F4] font-content text-black">
+    <div className="theme-klymb-light theme-klymb-brand min-h-svh bg-[#F4F4F4] font-content text-black">
       <header className="abt-header">
         <div className="abt-header-inner justify-start md:gap-8">
           <Link href="/" className="shrink-0" aria-label="Klymb AI home">

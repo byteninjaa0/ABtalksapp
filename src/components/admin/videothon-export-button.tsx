@@ -31,7 +31,7 @@ export function VideothonExportButton({ rows }: { rows: AdminVideoRegistration[]
       })),
     );
     const date = new Date().toISOString().split("T")[0];
-    downloadCSV(`abtalks-videothon-${date}.csv`, csv);
+    downloadCSV(`klymb-videothon-${date}.csv`, csv);
     toast.success(`Exported ${rows.length} participants`);
   }
 

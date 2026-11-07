@@ -21,7 +21,7 @@ Key points:
 
 ## Official challenge guidelines
 
-Source: `public/documents/ABTalks-60-Day-Challenge-Guidelines.pdf` (present in this repository and linked from the live site — authoritative for this program).
+Source: `public/documents/Klymb-AI-60-Day-Challenge-Guidelines.pdf` (present in this repository and linked from the live site — authoritative for this program).
 
 ### GitHub repository setup
 

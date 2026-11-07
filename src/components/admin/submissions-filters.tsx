@@ -86,7 +86,7 @@ export function SubmissionsFilters() {
 
         const csv = toCSV(data);
         const date = new Date().toISOString().split("T")[0];
-        const filename = `abtalks-submissions-${includeAll ? "all" : currentDomain}-${date}.csv`;
+        const filename = `klymb-submissions-${includeAll ? "all" : currentDomain}-${date}.csv`;
         downloadCSV(filename, csv);
         toast.success(`Exported ${data.length} submissions`);
         if (data.length >= EXPORT_CAP) {

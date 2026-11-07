@@ -62,7 +62,7 @@ type ReviewData = {
   assessmentDate: string;
   interviewerName: string;
   challengeRound: string;
-  abtalksId: string;
+  klymbId: string;
   logistics: Logistics;
   compensation: Compensation;
   adminNote: string;
@@ -644,7 +644,7 @@ export function RecruiterReviewPanel({ studentId, studentName, review }: Props) 
   const [assessmentDate, setAssessmentDate] = useState(review.assessmentDate);
   const [interviewerName, setInterviewerName] = useState(review.interviewerName);
   const [challengeRound, setChallengeRound] = useState(review.challengeRound);
-  const [abtalksId, setAbtalksId] = useState(review.abtalksId);
+  const [klymbId, setKlymbId] = useState(review.klymbId);
   const [logistics, setLogistics] = useState(review.logistics);
   const [compensation, setCompensation] = useState(review.compensation);
   const [adminNote, setAdminNote] = useState(review.adminNote);
@@ -692,7 +692,7 @@ export function RecruiterReviewPanel({ studentId, studentName, review }: Props) 
         assessmentDate: assessmentDate || "",
         interviewerName: interviewerName || undefined,
         challengeRound: challengeRound || undefined,
-        abtalksId: abtalksId || undefined,
+        klymbId: klymbId || undefined,
         logistics,
         compensation,
       });
@@ -949,11 +949,11 @@ export function RecruiterReviewPanel({ studentId, studentName, review }: Props) 
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="abtalksId">Klymb AI ID</Label>
+                  <Label htmlFor="klymbId">Klymb AI ID</Label>
                   <Input
-                    id="abtalksId"
-                    value={abtalksId}
-                    onChange={(e) => setAbtalksId(e.target.value)}
+                    id="klymbId"
+                    value={klymbId}
+                    onChange={(e) => setKlymbId(e.target.value)}
                     placeholder="Leave blank to auto-generate"
                   />
                 </div>

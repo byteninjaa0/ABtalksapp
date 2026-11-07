@@ -12,7 +12,7 @@ import { logger } from "@/lib/logger";
 import { getCandidateProfile } from "@/repositories/candidate";
 import { revalidatePath } from "next/cache";
 
-const GUIDELINES_FILE = "ABTalks-60-Day-Challenge-Guidelines.pdf";
+const GUIDELINES_FILE = "Klymb-AI-60-Day-Challenge-Guidelines.pdf";
 
 /**
  * The Challenge Guidelines PDF from `public/documents`. `public/` is not

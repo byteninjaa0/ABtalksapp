@@ -2,8 +2,8 @@ import type { MatchCardData } from "@/components/hire/match-card";
 import { readPoolExtra } from "@/features/hire/pool-brief";
 import type { JobSpec } from "@/lib/validations/hire";
 
-export const GUEST_MATCHES_KEY = "abtalks-hire-guest-matches";
-export const GUEST_SEARCHES_EVENT = "abtalks-hire-searches";
+export const GUEST_MATCHES_KEY = "klymb-hire-guest-matches";
+export const GUEST_SEARCHES_EVENT = "klymb-hire-searches";
 
 /** Enough to compare two searches; oldest drop off after this. */
 export const MAX_GUEST_SEARCH_TABS = 8;

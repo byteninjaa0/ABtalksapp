@@ -29,7 +29,7 @@ import {
 import { recordLegalConsents } from "@/features/legal/record-consent";
 import { recordNewsletterOptIn } from "@/features/legal/record-newsletter-optin";
 
-const SRC_COOKIE_NAME = "abtalks_src";
+const SRC_COOKIE_NAME = "klymb_src";
 
 async function readSourceSlug(): Promise<string | null> {
   const raw = (await cookies()).get(SRC_COOKIE_NAME)?.value;

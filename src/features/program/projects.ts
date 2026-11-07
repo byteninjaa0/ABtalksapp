@@ -64,7 +64,7 @@ async function githubFetch<T>(url: string): Promise<T | null> {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/vnd.github+json",
-        "User-Agent": "abtalks-program",
+        "User-Agent": "klymb-program",
       },
       signal: AbortSignal.timeout(20000),
     });
@@ -83,7 +83,7 @@ async function fetchRepoFileRaw(
   const token = process.env.GITHUB_API_TOKEN;
   const headers: Record<string, string> = {
     Accept: "application/vnd.github.raw",
-    "User-Agent": "abtalks-program",
+    "User-Agent": "klymb-program",
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 

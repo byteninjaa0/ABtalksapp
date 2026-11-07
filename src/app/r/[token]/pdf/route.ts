@@ -13,7 +13,7 @@ function safePdfFilename(fullName: string): string {
       .replace(/[^\w\s-]/g, "")
       .replace(/\s+/g, "-")
       .slice(0, 80) || "candidate";
-  return `${base}-abtalks.pdf`;
+  return `${base}-klymb.pdf`;
 }
 
 export async function GET(

@@ -14,24 +14,24 @@ You can also submit a request in-product at [/privacy/requests](/privacy/request
 
 ## 1. Who we are - Data Fiduciary identification
 
-> **In plain English:** We are Klymb AI (registered as Klymb AI), a sole proprietorship. We decide why and how your data is used for this Service. You can contact our Grievance Officer at team@klymb.ai.
+> **In plain English:** We are Klymb AI (registered as Klymb.AI), a sole proprietorship. We decide why and how your data is used for this Service. You can contact our Grievance Officer at team@klymb.ai.
 
 We are the **Data Fiduciary** for the personal data described in this Policy.
 
 | Field | Detail |
 |---|---|
-| **Registered entity** | Klymb AI |
+| **Registered entity** | Klymb.AI |
 | **Entity type** | Sole Proprietorship (Proprietary) |
 | **Enterprise scale** | Micro (Udyam) |
 | **Major activity** | Services |
-| **Industry (NIC)** | 62099 - Other information technology and computer service activities n.e.c. |
-| **Proprietor** | Suman Shukla |
+| **Industry (NIC)** | 62011 - Writing, modifying and testing of computer programs (excluding web-page designing); 62012 - Web-page designing services; 62091 - Software installation services |
+| **Proprietor** | Tarun Kumar Singh |
 | **Trading name** | Klymb AI |
-| **Unit name** | Klymb AI |
-| **Registered address** | Crossing Republic, Ghaziabad, Uttar Pradesh 201016, India |
-| **Udyam registration number** | UDYAM-UP-29-0250625 |
-| **Udyam registration date** | 01 August 2026 |
-| **Date of incorporation** | 25 July 2026 |
+| **Unit name** | Klymb.AI |
+| **Registered address** | Crossing Republik, Ghaziabad, Uttar Pradesh 201016, India |
+| **Udyam registration number** | UDYAM-UP-29-0268341 |
+| **Udyam registration date** | 03 November 2026 |
+| **Date of incorporation** | 01 October 2026 |
 | **Contact** | [team@klymb.ai](mailto:team@klymb.ai) |
 
 Klymb AI operates learning challenges, workshops, hackathons, an AI cohort program, and related recruiter/community features at our websites (including app.klymb.ai and related domains).
@@ -42,10 +42,10 @@ In accordance with the Digital Personal Data Protection Act, 2023, the Informati
 
 | Field | Detail |
 |---|---|
-| **Name** | Suman Shukla |
+| **Name** | Tarun Kumar Singh |
 | **Designation** | Proprietor and Grievance Officer |
 | **Email** | [team@klymb.ai](mailto:team@klymb.ai) |
-| **Address** | Crossing Republic, Ghaziabad, Uttar Pradesh 201016, India |
+| **Address** | Crossing Republik, Ghaziabad, Uttar Pradesh 201016, India |
 
 We **acknowledge grievances within 24 hours** of receipt and aim to **resolve them within 15 days**. Full contact details are also published at [/contact](/contact).
 
@@ -87,11 +87,11 @@ We **acknowledge grievances within 24 hours** of receipt and aim to **resolve th
 | Cookie | Purpose | Category |
 |--------|---------|----------|
 | Auth.js session cookie | Keep you signed in (httpOnly) | Strictly necessary |
-| `abtalks_consent` | Stores your cookie choice so we don’t ask again (~180 days, readable by the page) | Strictly necessary |
-| `abtalks_ref` | Referral code from `?ref=` (httpOnly, ~7 days) | Attribution & Media - set only with your consent |
-| `abtalks_src` | First-touch share attribution from `?s=` (httpOnly, ~30 days) | Attribution & Media - set only with your consent |
+| `klymb_consent` | Stores your cookie choice so we don’t ask again (~180 days, readable by the page) | Strictly necessary |
+| `klymb_ref` | Referral code from `?ref=` (httpOnly, ~7 days) | Attribution & Media - set only with your consent |
+| `klymb_src` | First-touch share attribution from `?s=` (httpOnly, ~30 days) | Attribution & Media - set only with your consent |
 
-**Your choice.** On your first visit we present our cookie banner with three straightforward options: **Accept all**, **Necessary only**, and **Manage preferences** (which opens our category-level preference center). Attribution cookies (`abtalks_ref`, `abtalks_src`) and optional analytics are set only if you grant consent; choosing **Necessary only** keeps optional analytics and attribution turned off. Strictly necessary cookies are required for sign-in and session security and cannot be switched off. You can review or adjust your preferences at any time at [/cookies](/cookies). Full details: [Cookie Policy](/cookies).
+**Your choice.** On your first visit we present our cookie banner with three straightforward options: **Accept all**, **Necessary only**, and **Manage preferences** (which opens our category-level preference center). Attribution cookies (`klymb_ref`, `klymb_src`) and optional analytics are set only if you grant consent; choosing **Necessary only** keeps optional analytics and attribution turned off. Strictly necessary cookies are required for sign-in and session security and cannot be switched off. You can review or adjust your preferences at any time at [/cookies](/cookies). Full details: [Cookie Policy](/cookies).
 
 **Third-party scripts and embeds.**
 

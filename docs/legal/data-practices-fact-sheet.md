@@ -50,11 +50,11 @@
 | Cookie | Purpose | Max-age | Consent |
 |--------|---------|---------|---------|
 | Auth.js session | Login | session/JWT policy | Strictly necessary |
-| `abtalks_consent` | Stores cookie choice + policy version (`<choice>.<version>`) | 180 days, **not** httpOnly (client must read it) | Strictly necessary |
-| `abtalks_ref` | Referral `?ref=` | 7 days, httpOnly | Set only on `all` / `limited` |
-| `abtalks_src` | Share attribution `?s=` | 30 days, httpOnly, first-touch | Set only on `all` / `limited` |
+| `klymb_consent` | Stores cookie choice + policy version (`<choice>.<version>`) | 180 days, **not** httpOnly (client must read it) | Strictly necessary |
+| `klymb_ref` | Referral `?ref=` | 7 days, httpOnly | Set only on `all` / `limited` |
+| `klymb_src` | Share attribution `?s=` | 30 days, httpOnly, first-touch | Set only on `all` / `limited` |
 
-Since plan 060, `middleware.ts` reads `abtalks_consent` and sets no attribution cookies until the user chooses; on `essential` it actively expires both. Consent choice is **not** persisted to the database — the cookie is the record.
+Since plan 060, `middleware.ts` reads `klymb_consent` and sets no attribution cookies until the user chooses; on `essential` it actively expires both. Consent choice is **not** persisted to the database — the cookie is the record.
 
 No Google Analytics / PostHog / ad pixels in app code today.
 

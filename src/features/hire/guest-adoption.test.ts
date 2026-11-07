@@ -200,7 +200,7 @@ suite("the cart merge is untouched and the star is not read here", () => {
     "the star must not be read or moved by sign-in — it is device-local",
   );
   assert(
-    !mergeCode.includes("abtalks-hire-star"),
+    !mergeCode.includes("klymb-hire-star"),
     "sign-in must not touch the star's storage key",
   );
 });

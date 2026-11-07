@@ -30,10 +30,10 @@ export function GuestMatchesPage() {
     syncCart();
     setReady(true);
     window.addEventListener(GUEST_SEARCHES_EVENT, syncSearches);
-    window.addEventListener("abtalks-hire-cart", syncCart);
+    window.addEventListener("klymb-hire-cart", syncCart);
     return () => {
       window.removeEventListener(GUEST_SEARCHES_EVENT, syncSearches);
-      window.removeEventListener("abtalks-hire-cart", syncCart);
+      window.removeEventListener("klymb-hire-cart", syncCart);
     };
   }, []);
 
