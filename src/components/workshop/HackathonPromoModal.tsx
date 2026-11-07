@@ -12,7 +12,7 @@ import {
 } from "@/components/workshop/events-data";
 
 // Bump the version suffix to show the popup again after changing its content.
-const SEEN_KEY = "abtalks_hackathon_promo_v1";
+const SEEN_KEY = "klymb_hackathon_promo_v1";
 const EVENT_ID = "ai-hackathon-48h";
 
 /**

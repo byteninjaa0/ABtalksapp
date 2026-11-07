@@ -77,7 +77,7 @@ export const VIDEOTHON = {
   tempMailUrl: "https://temp-mail.org",
   // Served from public/hackathon-v2/. The file name carries spaces.
   guidePdf: "/hackathon-v2/VideoThon%20Demo%20Guide%20-%20ABTalks.pdf",
-  guidePdfFileName: "VideoThon Demo Guide - ABTalks.pdf",
+  guidePdfFileName: "VideoThon Demo Guide - Klymb AI.pdf",
   // TODO(organizer): sponsor slot. Set `enabled: false` to hide the panel.
   sponsor: {
     enabled: false as boolean,

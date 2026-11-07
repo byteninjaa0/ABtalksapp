@@ -383,7 +383,7 @@ suite("the grip is mounted outside the scrolling region", () => {
 
 suite("the resizer persists under a namespaced key and adds no dependency", () => {
   assert(
-    PANEL_WIDTH_KEY.startsWith("abtalks-hire-"),
+    PANEL_WIDTH_KEY.startsWith("klymb-hire-"),
     "storage keys are namespaced with the rest of the desk",
   );
   assert(

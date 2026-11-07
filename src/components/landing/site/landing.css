@@ -1,11 +1,11 @@
 /* =========================================================
-   ABTalks — Landing Page
-   Built on the ABTalks Complete UI Design System
+   Klymb AI — Landing Page
+   Built on the Klymb AI Complete UI Design System
    Tokens: colour, type scale, spacing, radius, shadow, motion
    ========================================================= */
 
 /* ---------- 1. TOKENS ---------- */
-.abtalks-landing {
+.klymb-landing {
   /* Colour */
   --lp-color-primary: #03535F;
   --lp-color-primary-hover: #076573;
@@ -65,9 +65,9 @@
 }
 
 /* ---------- 2. RESET ---------- */
-.abtalks-landing *, .abtalks-landing *::before, .abtalks-landing *::after { box-sizing: border-box; }
-.abtalks-landing { -webkit-text-size-adjust: 100%; }
-.abtalks-landing {
+.klymb-landing *, .klymb-landing *::before, .klymb-landing *::after { box-sizing: border-box; }
+.klymb-landing { -webkit-text-size-adjust: 100%; }
+.klymb-landing {
   margin: 0;
   font-family: var(--lp-font-body);
   font-size: 17px;
@@ -77,46 +77,46 @@
   background: var(--lp-color-background);
   -webkit-font-smoothing: antialiased;              /* motion system must never cause h-scroll */
 }
-.abtalks-landing img { max-width: 100%; display: block; }
-.abtalks-landing ul, .abtalks-landing ol { margin: 0; padding: 0; list-style: none; }
-.abtalks-landing a { color: inherit; text-decoration: none; }
-.abtalks-landing button { font: inherit; color: inherit; }
+.klymb-landing img { max-width: 100%; display: block; }
+.klymb-landing ul, .klymb-landing ol { margin: 0; padding: 0; list-style: none; }
+.klymb-landing a { color: inherit; text-decoration: none; }
+.klymb-landing button { font: inherit; color: inherit; }
 
-.abtalks-landing .skip-link {
+.klymb-landing .skip-link {
   position: absolute; left: -9999px; top: 0; z-index: 200;
   background: var(--lp-color-primary); color: #fff;
   padding: var(--lp-space-12) var(--lp-space-20); border-radius: 0 0 var(--lp-radius-sm) 0;
 }
-.abtalks-landing .skip-link:focus { left: 0; }
+.klymb-landing .skip-link:focus { left: 0; }
 
 /* ---------- 3. LAYOUT PRIMITIVES ---------- */
-.abtalks-landing .container {
+.klymb-landing .container {
   width: 100%;
   max-width: calc(var(--lp-container) + var(--lp-pad) * 2);
   margin-inline: auto;
   padding-inline: var(--lp-pad);
 }
-.abtalks-landing .section { padding-block: var(--lp-section-gap); }
+.klymb-landing .section { padding-block: var(--lp-section-gap); }
 
 /* ---------- 4. TYPOGRAPHY ---------- */
-.abtalks-landing .h2 {
+.klymb-landing .h2 {
   font-family: var(--lp-font-display);
   font-size: 40px; line-height: 48px; font-weight: 700;
   color: var(--lp-color-text-primary);
   margin: 0 0 var(--lp-space-16);
   letter-spacing: -0.01em;
 }
-.abtalks-landing .h3 {
+.klymb-landing .h3 {
   font-family: var(--lp-font-display);
   font-size: 24px; line-height: 30px; font-weight: 600;
   color: var(--lp-color-text-primary);
   margin: 0 0 var(--lp-space-12);
 }
-.abtalks-landing .p  { font-size: 17px; line-height: 28px; margin: 0; max-width: 65ch; }
-.abtalks-landing .p-sm { font-size: 14px; line-height: 21px; margin: 0; max-width: 60ch; color: var(--lp-color-text-secondary); }
-.abtalks-landing .accent { color: var(--lp-color-primary); }
+.klymb-landing .p  { font-size: 17px; line-height: 28px; margin: 0; max-width: 65ch; }
+.klymb-landing .p-sm { font-size: 14px; line-height: 21px; margin: 0; max-width: 60ch; color: var(--lp-color-text-secondary); }
+.klymb-landing .accent { color: var(--lp-color-primary); }
 
-.abtalks-landing .section-label {
+.klymb-landing .section-label {
   font-size: 13px; line-height: 18px; font-weight: 600;
   letter-spacing: .03em; text-transform: uppercase;
   color: var(--lp-color-primary);
@@ -125,7 +125,7 @@
 }
 
 /* ---------- 5. BUTTONS ---------- */
-.abtalks-landing .btn {
+.klymb-landing .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--lp-space-8);
   height: 44px; padding-inline: 20px;
   font-family: var(--lp-font-body);
@@ -139,54 +139,54 @@
               transform var(--lp-dur-fast) var(--lp-ease);
   white-space: nowrap;
 }
-.abtalks-landing .btn:active { transform: translateY(1px); }
-.abtalks-landing .btn:focus-visible { outline: 2px solid var(--lp-color-primary); outline-offset: 4px; }
+.klymb-landing .btn:active { transform: translateY(1px); }
+.klymb-landing .btn:focus-visible { outline: 2px solid var(--lp-color-primary); outline-offset: 4px; }
 
-.abtalks-landing .btn--sm { height: 36px; padding-inline: 16px; font-size: 14px; }
-.abtalks-landing .btn--lg { height: 48px; padding-inline: 24px; }
-.abtalks-landing .btn--nav { height: 40px; padding-inline: 20px; font-size: 14px; }
-.abtalks-landing .btn--block { width: 100%; }
+.klymb-landing .btn--sm { height: 36px; padding-inline: 16px; font-size: 14px; }
+.klymb-landing .btn--lg { height: 48px; padding-inline: 24px; }
+.klymb-landing .btn--nav { height: 40px; padding-inline: 20px; font-size: 14px; }
+.klymb-landing .btn--block { width: 100%; }
 
-.abtalks-landing .btn--primary { background: var(--lp-color-primary); color: #fff; }
-.abtalks-landing .btn--primary:hover { background: var(--lp-color-primary-hover); }
-.abtalks-landing .btn--primary:active { background: var(--lp-color-primary-active); }
+.klymb-landing .btn--primary { background: var(--lp-color-primary); color: #fff; }
+.klymb-landing .btn--primary:hover { background: var(--lp-color-primary-hover); }
+.klymb-landing .btn--primary:active { background: var(--lp-color-primary-active); }
 
-.abtalks-landing .btn--ghost { background: transparent; color: var(--lp-color-text-primary); border-color: var(--lp-color-border); }
-.abtalks-landing .btn--ghost:hover { border-color: var(--lp-color-text-primary); }
+.klymb-landing .btn--ghost { background: transparent; color: var(--lp-color-text-primary); border-color: var(--lp-color-border); }
+.klymb-landing .btn--ghost:hover { border-color: var(--lp-color-text-primary); }
 
 /* Clay chip CTA — same treatment as .pw-check-item.pw-current in
    profile-wizard.css, so the nav CTA matches the rest of the product. */
-.abtalks-landing .btn--clay {
+.klymb-landing .btn--clay {
   background: #D4EBEC; color: #03535F;
   border-color: transparent; border-radius: 12px; font-weight: 700;
   box-shadow: inset 0 -4px 15px 0 #A6D2D5;
 }
-.abtalks-landing .btn--clay:hover { background: #C8E5E7; }
+.klymb-landing .btn--clay:hover { background: #C8E5E7; }
 
-.abtalks-landing .btn--ghost-light { background: rgba(255,255,255,.10); color: #fff; border-color: rgba(255,255,255,.55); backdrop-filter: blur(4px); }
-.abtalks-landing .btn--ghost-light:hover { background: rgba(255,255,255,.20); }
+.klymb-landing .btn--ghost-light { background: rgba(255,255,255,.10); color: #fff; border-color: rgba(255,255,255,.55); backdrop-filter: blur(4px); }
+.klymb-landing .btn--ghost-light:hover { background: rgba(255,255,255,.20); }
 
-.abtalks-landing .btn--white { background: #fff; color: var(--lp-color-primary); }
-.abtalks-landing .btn--white:hover { background: var(--lp-color-primary-light); }
+.klymb-landing .btn--white { background: #fff; color: var(--lp-color-primary); }
+.klymb-landing .btn--white:hover { background: var(--lp-color-primary-light); }
 
-.abtalks-landing .btn--outline-light { background: transparent; color: #fff; border-color: rgba(255,255,255,.75); }
-.abtalks-landing .btn--outline-light:hover { background: rgba(255,255,255,.14); }
+.klymb-landing .btn--outline-light { background: transparent; color: #fff; border-color: rgba(255,255,255,.75); }
+.klymb-landing .btn--outline-light:hover { background: rgba(255,255,255,.14); }
 
-.abtalks-landing .btn--whatsapp { background: #27CA37; color: #000000; }
-.abtalks-landing .btn--whatsapp:hover { background: #27CA37; }
+.klymb-landing .btn--whatsapp { background: #27CA37; color: #000000; }
+.klymb-landing .btn--whatsapp:hover { background: #27CA37; }
 
 /* =========================================================
    6. NAVBAR — frosted glass
    ========================================================= */
-.abtalks-landing .nav-wrap {
+.klymb-landing .nav-wrap {
   position: fixed; inset: 0 0 auto 0; z-index: 100;
   padding-block: var(--lp-space-16);
   transition: padding-block var(--lp-dur) var(--lp-ease);
   will-change: padding;
 }
-.abtalks-landing .nav-wrap.is-stuck { padding-block: var(--lp-space-8); }
+.klymb-landing .nav-wrap.is-stuck { padding-block: var(--lp-space-8); }
 
-.abtalks-landing .nav {
+.klymb-landing .nav {
   height: 68px;
   display: flex; align-items: center; gap: var(--lp-space-24);
   padding-inline: var(--lp-space-24);
@@ -209,7 +209,7 @@
 }
 
 /* Scrolled state: denser glass, stronger blur, subtle shadow */
-.abtalks-landing .nav-wrap.is-stuck .nav {
+.klymb-landing .nav-wrap.is-stuck .nav {
   height: 60px;
   background: rgba(255,255,255,.62);
   border-color: rgba(255,255,255,.7);
@@ -218,10 +218,10 @@
   backdrop-filter: blur(22px) saturate(180%);
 }
 
-.abtalks-landing .nav__logo {
+.klymb-landing .nav__logo {
   display: flex; align-items: center; flex-shrink: 0;
 }
-.abtalks-landing .nav__logo img {
+.klymb-landing .nav__logo img {
   height: 32px; width: auto; object-fit: contain;
   /* The mark is solid black. Over the hero the nav pill is only 42% white on
      a dark photo, so black-on-dark barely reads; invert lifts it to a light
@@ -229,62 +229,62 @@
   filter: invert(88%);
   transition: filter var(--lp-dur) var(--lp-ease), height var(--lp-dur) var(--lp-ease);
 }
-.abtalks-landing .nav-wrap.is-stuck .nav__logo img {
+.klymb-landing .nav-wrap.is-stuck .nav__logo img {
   height: 28px;
   filter: none;
 }
-.abtalks-landing .nav__links {
+.klymb-landing .nav__links {
   display: flex; align-items: center; gap: var(--lp-space-24);
   margin-inline: auto;
 }
-.abtalks-landing .nav__links-cta { display: none; }
+.klymb-landing .nav__links-cta { display: none; }
 /* …except Sign in. The two `.nav__links-cta` items are the mobile drawer's
    copies of the Get Started CTA and of Sign in; the CTA is already rendered
    at desktop as `.nav__cta`, so un-hiding both would double it. Sign in has
    no desktop twin, which left a signed-out visitor on a wide screen with no
    way into /login at all — the `:has()` keeps the exemption to that one. */
 @media (min-width: 861px) {
-  .abtalks-landing .nav__links-cta:has(> a[href="/login"]) {
+  .klymb-landing .nav__links-cta:has(> a[href="/login"]) {
     display: inline-flex;
     align-items: center;
   }
 }
-.abtalks-landing .nav__link {
+.klymb-landing .nav__link {
   font-size: 14px; line-height: 20px; font-weight: 500;
   color: var(--lp-color-text-secondary);
   padding: var(--lp-space-8) var(--lp-space-16);
   border-radius: var(--lp-radius-pill);
   transition: background-color var(--lp-dur-fast) var(--lp-ease), color var(--lp-dur-fast) var(--lp-ease);
 }
-.abtalks-landing .nav__link:hover { color: var(--lp-color-text-primary); background: rgba(255,255,255,.55); }
-.abtalks-landing .nav__link.is-active {
+.klymb-landing .nav__link:hover { color: var(--lp-color-text-primary); background: rgba(255,255,255,.55); }
+.klymb-landing .nav__link.is-active {
   color: var(--lp-color-text-primary);
   background: rgba(255,255,255,.78);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
-.abtalks-landing .nav__burger {
+.klymb-landing .nav__burger {
   display: none;
   width: 44px; height: 44px;
   background: none; border: 0; cursor: pointer;
   flex-direction: column; justify-content: center; align-items: center; gap: 5px;
 }
-.abtalks-landing .nav__burger span {
+.klymb-landing .nav__burger span {
   display: block; width: 20px; height: 2px; border-radius: 2px;
   background: var(--lp-color-text-primary);
   transition: transform var(--lp-dur-fast) var(--lp-ease), opacity var(--lp-dur-fast) var(--lp-ease);
 }
-.abtalks-landing .nav__burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-.abtalks-landing .nav__burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
-.abtalks-landing .nav__burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.klymb-landing .nav__burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.klymb-landing .nav__burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.klymb-landing .nav__burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-.abtalks-landing .nav__cta-menu {
+.klymb-landing .nav__cta-menu {
   position: relative;
   display: inline-flex;
   flex-direction: column;
   align-items: stretch;
 }
-.abtalks-landing .nav__cta-caret {
+.klymb-landing .nav__cta-caret {
   display: inline-block;
   width: 6px; height: 6px;
   border-right: 1.5px solid currentColor;
@@ -292,17 +292,17 @@
   transform: rotate(45deg) translateY(-1px);
   transition: transform var(--lp-dur-fast) var(--lp-ease);
 }
-.abtalks-landing .nav__cta-menu:hover .btn--clay,
-.abtalks-landing .nav__cta-menu:focus-within .btn--clay,
-.abtalks-landing .nav__cta-menu.is-open .btn--clay {
+.klymb-landing .nav__cta-menu:hover .btn--clay,
+.klymb-landing .nav__cta-menu:focus-within .btn--clay,
+.klymb-landing .nav__cta-menu.is-open .btn--clay {
   background: #C8E5E7;
 }
-.abtalks-landing .nav__cta-menu:hover .nav__cta-caret,
-.abtalks-landing .nav__cta-menu:focus-within .nav__cta-caret,
-.abtalks-landing .nav__cta-menu.is-open .nav__cta-caret {
+.klymb-landing .nav__cta-menu:hover .nav__cta-caret,
+.klymb-landing .nav__cta-menu:focus-within .nav__cta-caret,
+.klymb-landing .nav__cta-menu.is-open .nav__cta-caret {
   transform: rotate(-135deg) translateY(-1px);
 }
-.abtalks-landing .nav__cta-dropdown {
+.klymb-landing .nav__cta-dropdown {
   display: none;
   position: absolute;
   top: 100%;
@@ -322,16 +322,16 @@
   backdrop-filter: blur(22px) saturate(180%);
 }
 @media (hover: hover) and (pointer: fine) {
-  .abtalks-landing .nav__cta-menu:hover .nav__cta-dropdown,
-  .abtalks-landing .nav__cta-menu:focus-within .nav__cta-dropdown {
+  .klymb-landing .nav__cta-menu:hover .nav__cta-dropdown,
+  .klymb-landing .nav__cta-menu:focus-within .nav__cta-dropdown {
     display: flex;
   }
 }
-.abtalks-landing .nav__cta-menu:focus-within .nav__cta-dropdown,
-.abtalks-landing .nav__cta-menu.is-open .nav__cta-dropdown {
+.klymb-landing .nav__cta-menu:focus-within .nav__cta-dropdown,
+.klymb-landing .nav__cta-menu.is-open .nav__cta-dropdown {
   display: flex;
 }
-.abtalks-landing .nav__cta-item {
+.klymb-landing .nav__cta-item {
   display: flex; align-items: center; justify-content: center;
   padding: var(--lp-space-8) var(--lp-space-12);
   font-size: 14px; line-height: 20px; font-weight: 500;
@@ -341,7 +341,7 @@
   transition: background-color var(--lp-dur-fast) var(--lp-ease),
               color var(--lp-dur-fast) var(--lp-ease);
 }
-.abtalks-landing .nav__cta-item:hover {
+.klymb-landing .nav__cta-item:hover {
   background: var(--lp-color-primary-light);
   color: var(--lp-color-primary);
 }
@@ -349,7 +349,7 @@
 /* =========================================================
    7. HERO
    ========================================================= */
-.abtalks-landing .hero {
+.klymb-landing .hero {
   position: relative;
   /* The hero owns the whole first screen, so the video is never cut short and
      the Stats band always starts below the fold. svh = smallest viewport
@@ -363,13 +363,13 @@
 }
 
 /* Gradient fallback — always present, video paints over it */
-.abtalks-landing .hero__bg {
+.klymb-landing .hero__bg {
   position: absolute; inset: 0; z-index: -3;
   background:
     radial-gradient(1200px 600px at 78% 30%, rgba(3, 83, 95, 0.2), transparent 60%),
     linear-gradient(180deg, #A5A5A5 0%, #8F8F8F 55%, #626262 100%);
 }
-.abtalks-landing .hero__bg::after {
+.klymb-landing .hero__bg::after {
   content: ""; position: absolute; inset: 0;
   background-image:
     radial-gradient(closest-side at 30% 78%, rgba(0, 0, 0, 0.55), transparent 70%),
@@ -377,7 +377,7 @@
 }
 
 /* Background video — pure background layer, never affects layout */
-.abtalks-landing .hero__video {
+.klymb-landing .hero__video {
   position: absolute; inset: 0; z-index: -2;
   width: 100%; height: 100%;
   object-fit: cover;
@@ -385,19 +385,19 @@
   opacity: 0;
   transition: opacity 1.2s var(--lp-ease);
 }
-.abtalks-landing .hero.has-video .hero__video { opacity: 1; }
-.abtalks-landing .hero__video::-webkit-media-controls { display: none !important; }
+.klymb-landing .hero.has-video .hero__video { opacity: 1; }
+.klymb-landing .hero__video::-webkit-media-controls { display: none !important; }
 
-.abtalks-landing .hero__scrim {
+.klymb-landing .hero__scrim {
   position: absolute; inset: 0; z-index: -1;
   background: linear-gradient(90deg, rgba(0, 0, 0, 0.74) 0%, rgba(0, 0, 0, 0.42) 46%, rgba(0, 0, 0, 0.12) 72%);
 }
-.abtalks-landing .hero__inner { position: relative; }
-.abtalks-landing .hero__content { max-width: 620px; }
+.klymb-landing .hero__inner { position: relative; }
+.klymb-landing .hero__content { max-width: 620px; }
 
 /* --- Eyebrow: "Interview" + hand-drawn strike --- */
-.abtalks-landing .hero__eyebrow { margin: 0 0 var(--lp-space-12); }
-.abtalks-landing .strike {
+.klymb-landing .hero__eyebrow { margin: 0 0 var(--lp-space-12); }
+.klymb-landing .strike {
   position: relative;
   display: inline-block;
   font-family: var(--lp-font-display);
@@ -406,19 +406,19 @@
   font-size: 48px; line-height: 56px;
   color: rgba(255,255,255,.92);
 }
-.abtalks-landing .strike__word {
+.klymb-landing .strike__word {
   display: inline-block;
   opacity: 0;
   transform: translateY(14px);
 }
-.abtalks-landing .strike__line {
+.klymb-landing .strike__line {
   position: absolute; left: -6px; right: -8px; top: 50%;
   height: 22px; width: calc(100% + 14px);
   transform: translateY(-40%) rotate(-2.2deg);
   overflow: visible;
   pointer-events: none;
 }
-.abtalks-landing .strike__line path {
+.klymb-landing .strike__line path {
   fill: none;
   stroke: var(--lp-color-primary);
   stroke-width: 3.4;
@@ -429,19 +429,19 @@
 }
 
 /* --- Title with marker highlight --- */
-.abtalks-landing .hero__title {
+.klymb-landing .hero__title {
   font-family: var(--lp-font-display);
   font-size: 64px; line-height: 70px; font-weight: 700;
   color: var(--lp-color-text-primary);
   margin: 0 0 var(--lp-space-16);
   letter-spacing: -0.02em;
 }
-.abtalks-landing .hl {
+.klymb-landing .hl {
   position: relative;
   display: table;          /* hugs the text so the ink matches the word width */
   isolation: isolate;
 }
-.abtalks-landing .hl__ink {
+.klymb-landing .hl__ink {
   position: absolute;
   inset: -2px -12px;
   background: var(--lp-color-primary-light);
@@ -450,18 +450,18 @@
   z-index: -1;
   border-radius: 2px;
 }
-.abtalks-landing .hl__text { position: relative; opacity: 0; }
+.klymb-landing .hl__text { position: relative; opacity: 0; }
 
-.abtalks-landing .hero__desc {
+.klymb-landing .hero__desc {
   font-size: 17px; line-height: 28px;
   color: rgba(255,255,255,.86);
   max-width: 58ch; margin: 0 0 var(--lp-space-24);
   opacity: 0; transform: translateY(16px);
 }
-.abtalks-landing .hero__actions { display: flex; flex-wrap: wrap; gap: var(--lp-space-16); }
-.abtalks-landing .hero__actions .btn { opacity: 0; transform: translateY(8px) scale(.92); }
+.klymb-landing .hero__actions { display: flex; flex-wrap: wrap; gap: var(--lp-space-16); }
+.klymb-landing .hero__actions .btn { opacity: 0; transform: translateY(8px) scale(.92); }
 
-.abtalks-landing .hero__stamp {
+.klymb-landing .hero__stamp {
   position: absolute; right: 0; top: -24px;
   font-family: var(--lp-font-display);
   font-size: 92px; font-weight: 700; letter-spacing: .04em;
@@ -482,22 +482,22 @@
    ------------------------------------------------------------------------ */
 
 /* Nothing of the headline block may paint before stage 2 */
-.abtalks-landing .hero__title { visibility: hidden; }
-.abtalks-landing .hero.is-headline-ready .hero__title,
-.abtalks-landing .no-js-hero .hero__title { visibility: visible; }
+.klymb-landing .hero__title { visibility: hidden; }
+.klymb-landing .hero.is-headline-ready .hero__title,
+.klymb-landing .no-js-hero .hero__title { visibility: visible; }
 
-.abtalks-landing .hero.is-playing .strike__word      { animation: heroRise .62s var(--lp-ease) .10s forwards; }
-.abtalks-landing .hero.is-playing .strike__line path { animation: drawLine .68s var(--lp-ease-inout) .82s forwards; }
-.abtalks-landing .hero.is-playing .hero__stamp       { animation: stampIn .70s var(--lp-ease-soft) 1.05s forwards; }
+.klymb-landing .hero.is-playing .strike__word      { animation: heroRise .62s var(--lp-ease) .10s forwards; }
+.klymb-landing .hero.is-playing .strike__line path { animation: drawLine .68s var(--lp-ease-inout) .82s forwards; }
+.klymb-landing .hero.is-playing .hero__stamp       { animation: stampIn .70s var(--lp-ease-soft) 1.05s forwards; }
 
 /* t = 0 is the video's 4.000s mark */
-.abtalks-landing .hero.is-headline-ready .hl[data-hl="1"] .hl__text { animation: heroFade .42s var(--lp-ease) 0s   forwards; }
-.abtalks-landing .hero.is-headline-ready .hl[data-hl="2"] .hl__text { animation: heroFade .42s var(--lp-ease) .14s forwards; }
-.abtalks-landing .hero.is-headline-ready .hl[data-hl="1"] .hl__ink  { animation: marker .72s var(--lp-ease-inout) .34s forwards; }
-.abtalks-landing .hero.is-headline-ready .hl[data-hl="2"] .hl__ink  { animation: marker .72s var(--lp-ease-inout) .52s forwards; }
-.abtalks-landing .hero.is-headline-ready .hero__desc                { animation: heroRise .60s var(--lp-ease) 1.32s forwards; }
-.abtalks-landing .hero.is-headline-ready .hero__actions .btn:nth-child(1) { animation: heroPop .58s var(--lp-ease-soft) 1.90s forwards; }
-.abtalks-landing .hero.is-headline-ready .hero__actions .btn:nth-child(2) { animation: heroPop .58s var(--lp-ease-soft) 2.02s forwards; }
+.klymb-landing .hero.is-headline-ready .hl[data-hl="1"] .hl__text { animation: heroFade .42s var(--lp-ease) 0s   forwards; }
+.klymb-landing .hero.is-headline-ready .hl[data-hl="2"] .hl__text { animation: heroFade .42s var(--lp-ease) .14s forwards; }
+.klymb-landing .hero.is-headline-ready .hl[data-hl="1"] .hl__ink  { animation: marker .72s var(--lp-ease-inout) .34s forwards; }
+.klymb-landing .hero.is-headline-ready .hl[data-hl="2"] .hl__ink  { animation: marker .72s var(--lp-ease-inout) .52s forwards; }
+.klymb-landing .hero.is-headline-ready .hero__desc                { animation: heroRise .60s var(--lp-ease) 1.32s forwards; }
+.klymb-landing .hero.is-headline-ready .hero__actions .btn:nth-child(1) { animation: heroPop .58s var(--lp-ease-soft) 1.90s forwards; }
+.klymb-landing .hero.is-headline-ready .hero__actions .btn:nth-child(2) { animation: heroPop .58s var(--lp-ease-soft) 2.02s forwards; }
 
 @keyframes heroRise { to { opacity: 1; transform: translateY(0); } }
 @keyframes heroFade { to { opacity: 1; } }
@@ -507,18 +507,18 @@
 @keyframes stampIn  { to { opacity: .95; transform: rotate(-8deg) scale(1); } }
 
 /* Static fallback if JS never runs */
-.abtalks-landing .no-js-hero .strike__word,
-.abtalks-landing .no-js-hero .hl__text,
-.abtalks-landing .no-js-hero .hero__desc,
-.abtalks-landing .no-js-hero .hero__actions .btn { opacity: 1; transform: none; }
+.klymb-landing .no-js-hero .strike__word,
+.klymb-landing .no-js-hero .hl__text,
+.klymb-landing .no-js-hero .hero__desc,
+.klymb-landing .no-js-hero .hero__actions .btn { opacity: 1; transform: none; }
 
 /* ---------- 8. STATS ---------- */
-.abtalks-landing .stats {
+.klymb-landing .stats {
   background: linear-gradient(180deg, #076573 0%, #03535F 45%, #076573 100%);
   /* Breathing gap so the hero video frame completes before the band starts */
   margin-top: 0px;
 }
-.abtalks-landing .stats__grid {
+.klymb-landing .stats__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--lp-gutter);
@@ -527,19 +527,19 @@
   justify-items: center;
   align-items: start;
 }
-.abtalks-landing .stat {
+.klymb-landing .stat {
   display: flex;
   flex-direction: column;
   align-items: center;
   max-width: 28ch;
   width: 100%;
 }
-.abtalks-landing .stat__num {
+.klymb-landing .stat__num {
   font-family: var(--lp-font-display);
   font-size: 48px; line-height: 52px; font-weight: 700; color: #fff;
   margin-bottom: var(--lp-space-8);
 }
-.abtalks-landing .stat__label {
+.klymb-landing .stat__label {
   font-size: 12px; line-height: 18px; font-weight: 600;
   letter-spacing: .06em; text-transform: uppercase;
   color: rgba(255,255,255,.88); margin: 0;
@@ -549,19 +549,19 @@
 /* =========================================================
    9. THE BRIDGE — scroll-driven, pinned
    ========================================================= */
-.abtalks-landing .bridge {
+.klymb-landing .bridge {
   background: linear-gradient(180deg, #ffffff 0%, #ffffff 100%);
   --lp-bridge-track: 340vh;
 }
-.abtalks-landing .bridge__track { height: var(--lp-bridge-track); position: relative; }
-.abtalks-landing .bridge__pin {
+.klymb-landing .bridge__track { height: var(--lp-bridge-track); position: relative; }
+.klymb-landing .bridge__pin {
   /* 20px tighter top and bottom; the track height (scroll duration) is unchanged */
   position: sticky; top: -20px;
   height: calc(100vh - 40px);
   display: flex; align-items: center;
   overflow: hidden;
 }
-.abtalks-landing .bridge__grid {
+.klymb-landing .bridge__grid {
   position: relative;              /* containing block for the connector overlay */
   display: grid; grid-template-columns: 1fr 1fr;
   gap: var(--lp-space-64); align-items: center;
@@ -576,15 +576,15 @@
    overflow:visible lets the stroke's round cap sit flush at the edges without
    widening the page — the svg box itself is exactly the grid box.
    ---------------------------------------------------------------------- */
-.abtalks-landing .bridge__links {
+.klymb-landing .bridge__links {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   overflow: visible;
   pointer-events: none;
   z-index: 3;
 }
-.abtalks-landing .blink { opacity: 0; }
-.abtalks-landing .blink__line {
+.klymb-landing .blink { opacity: 0; }
+.klymb-landing .blink__line {
   fill: none;
   stroke: url(#bridgeLinkGrad);
   stroke-width: 2;
@@ -600,14 +600,14 @@
    so exactly the two walls facing the viewer render — giving genuine
    thickness rather than a flat rotated rectangle.
    ---------------------------------------------------------------------- */
-.abtalks-landing .bridge__visual { position: relative; height: 440px; }
-.abtalks-landing .stack {
+.klymb-landing .bridge__visual { position: relative; height: 440px; }
+.klymb-landing .stack {
   position: absolute; inset: 0;
   perspective: 1500px;
   perspective-origin: 50% 42%;
   transform-style: preserve-3d;
 }
-.abtalks-landing .slab {
+.klymb-landing .slab {
   --lp-slab-w: 210px;       /* square platform footprint */
   --lp-slab-t: 16px;        /* thickness — thin, but clearly visible */
   position: absolute; left: 50%;
@@ -621,7 +621,7 @@
 }
 
 /* Cast shadow on the ground plane, strengthens as a platform comes forward */
-.abtalks-landing .slab__shadow {
+.klymb-landing .slab__shadow {
   position: absolute; inset: 0;
   background: rgba(53, 53, 53, 0.3);
   border-radius: 10px;
@@ -630,20 +630,20 @@
   opacity: calc(.30 + var(--lp-lift, 0) * .30);
 }
 
-.abtalks-landing .slab__face {
+.klymb-landing .slab__face {
   position: absolute;
   backface-visibility: hidden;
   background: var(--lp-face-base);
 }
 /* Tint overlay — fades in with --lift so the active layer picks up its colour */
-.abtalks-landing .slab__face::after {
+.klymb-landing .slab__face::after {
   content: ""; position: absolute; inset: 0;
   background: var(--lp-face-tint, transparent);
   opacity: var(--lp-lift, 0);
 }
 
 /* Top face */
-.abtalks-landing .slab__face--top {
+.klymb-landing .slab__face--top {
   inset: 0;
   border-radius: 3px;
   transform: translateZ(var(--lp-slab-t));
@@ -659,7 +659,7 @@
    rather than floating over it; scaleY gives back a little of that squash for
    legibility. Opacity comes from --label, which the scroll engine drives from
    this platform's own pull-out progress. */
-.abtalks-landing .slab__label {
+.klymb-landing .slab__label {
   position: absolute; inset: 0;
   display: grid; place-items: center;
   z-index: 2;
@@ -679,13 +679,13 @@
 /* Only the bottom platform's tint lands dark enough to flip the label. At its
    mid-tone (#055C69) white scores 7.6:1 against black's 2.8:1. Middle and top
    keep black: at their mid-tones black still wins (6.6:1 vs white's 3.2:1). */
-.abtalks-landing .slab--bottom .slab__label { color: #FFFFFF; }
+.klymb-landing .slab--bottom .slab__label { color: #FFFFFF; }
 
 /* Side walls — each hinges up from the edge it sits on, filling the gap
    between the ground plane and the raised top face. Only the two walls the
    isometric camera can actually see are drawn; the far two would sit behind
    the top face anyway. */
-.abtalks-landing .slab__face--s {
+.klymb-landing .slab__face--s {
   top: 100%; left: 0;
   width: var(--lp-slab-w); height: var(--lp-slab-t);
   transform-origin: top center; transform: rotateX(90deg);
@@ -693,7 +693,7 @@
   --lp-face-base: linear-gradient(180deg, #E0E0E0, #D2D2D2);
   --lp-face-tint: var(--lp-tint-side-a);
 }
-.abtalks-landing .slab__face--w {
+.klymb-landing .slab__face--w {
   top: 0; left: 0;
   width: var(--lp-slab-t); height: var(--lp-slab-w);
   transform-origin: left center; transform: rotateY(-90deg);
@@ -702,19 +702,19 @@
 }
 
 /* Same three layer colours as before, now split into top / side tones */
-.abtalks-landing .slab--top {
+.klymb-landing .slab--top {
   top: 30px;
   --lp-tint-top:    linear-gradient(155deg, #E7F2F3, #A6D2D5);
   --lp-tint-side-a: linear-gradient(180deg, #A6D2D5, #8DB3B5);
   --lp-tint-side-b: linear-gradient(180deg, #8DB3B5, #749395);
 }
-.abtalks-landing .slab--middle {
+.klymb-landing .slab--middle {
   top: 130px;
   --lp-tint-top:    linear-gradient(155deg, #A6D2D5, #076573);
   --lp-tint-side-a: linear-gradient(180deg, #076573, #03535F);
   --lp-tint-side-b: linear-gradient(180deg, #076573, #787878);
 }
-.abtalks-landing .slab--bottom {
+.klymb-landing .slab--bottom {
   top: 230px;
   --lp-tint-top:    linear-gradient(155deg, #076573, #03535F);
   --lp-tint-side-a: linear-gradient(180deg, #A6D2D5, #076573);
@@ -731,12 +731,12 @@
    share one alignment system. Horizontal alignment is untouched — text stays
    flush left. Set to 0 below 1080px, where the grid is a single column and the
    stack sits above the text rather than beside it. */
-.abtalks-landing .bridge__panels {
+.klymb-landing .bridge__panels {
   position: relative; min-height: 300px;
   --lp-stack-offset: 15px;
   transform: translateY(var(--lp-stack-offset));
 }
-.abtalks-landing .bpanel {
+.klymb-landing .bpanel {
   position: absolute; inset: 0;
   display: flex; flex-direction: column; justify-content: center;
   text-align: left;
@@ -745,13 +745,13 @@
   pointer-events: none;
   will-change: transform, opacity;
 }
-.abtalks-landing .bpanel.is-current { pointer-events: auto; }
-.abtalks-landing .bpanel__list { display: grid; gap: var(--lp-space-12); margin-top: var(--lp-space-16); }
-.abtalks-landing .bpanel__list li {
+.klymb-landing .bpanel.is-current { pointer-events: auto; }
+.klymb-landing .bpanel__list { display: grid; gap: var(--lp-space-12); margin-top: var(--lp-space-16); }
+.klymb-landing .bpanel__list li {
   position: relative; padding-left: 20px;
   font-size: 14px; line-height: 21px; color: var(--lp-color-text-secondary);
 }
-.abtalks-landing .bpanel__list li::before {
+.klymb-landing .bpanel__list li::before {
   content: ""; position: absolute; left: 0; top: 7px;
   width: 8px; height: 8px; border-radius: 2px;
   background: var(--lp-color-primary);
@@ -767,7 +767,7 @@
    Deliberately NOT --section-gap (global) and NOT the --*-track values (scroll
    duration). The pin's own height and its centred content are untouched — the
    overlap lands entirely in the empty band below the outgoing pin's content. */
-.abtalks-landing .how {
+.klymb-landing .how {
   background: linear-gradient(180deg, #EEF6F6 0%, #EEF6F6 100%);
   --lp-how-track: 320vh;
   --lp-face-h: 380px;
@@ -775,28 +775,28 @@
   margin-top: calc(var(--lp-tighten-above) * -1);
   position: relative; z-index: 1;
 }
-.abtalks-landing .how__track { height: var(--lp-how-track); position: relative; }
-.abtalks-landing .how__pin {
+.klymb-landing .how__track { height: var(--lp-how-track); position: relative; }
+.klymb-landing .how__pin {
   position: sticky; top: 20px;
   height: calc(100vh - 40px);
   display: flex; align-items: center;
   overflow: hidden;
 }
-.abtalks-landing .how__label { margin-bottom: var(--lp-space-32); }
+.klymb-landing .how__label { margin-bottom: var(--lp-space-32); }
 
-.abtalks-landing .roller__stage {
+.klymb-landing .roller__stage {
   perspective: 1600px;
   perspective-origin: 50% 50%;
   height: var(--lp-face-h);
 }
-.abtalks-landing .roller__cube {
+.klymb-landing .roller__cube {
   position: relative;
   width: 100%; height: 100%;
   transform-style: preserve-3d;
   transform: rotateX(var(--lp-rot, 0deg));
   will-change: transform;
 }
-.abtalks-landing .roller__face {
+.klymb-landing .roller__face {
   position: absolute; inset: 0;
   display: grid; grid-template-columns: 1fr 1fr;
   gap: var(--lp-space-48); align-items: center;
@@ -811,11 +811,11 @@
   transform: rotateX(calc(var(--lp-i) * 120deg)) translateZ(calc(var(--lp-face-h) / 3.4641));
   transform-style: preserve-3d;
 }
-.abtalks-landing .roller__face[data-face="0"] { --lp-i: 0; }
-.abtalks-landing .roller__face[data-face="1"] { --lp-i: 1; }
-.abtalks-landing .roller__face[data-face="2"] { --lp-i: 2; }
+.klymb-landing .roller__face[data-face="0"] { --lp-i: 0; }
+.klymb-landing .roller__face[data-face="1"] { --lp-i: 1; }
+.klymb-landing .roller__face[data-face="2"] { --lp-i: 2; }
 
-.abtalks-landing .how__media {
+.klymb-landing .how__media {
   height: calc(var(--lp-face-h) - 40px);
   border-radius: var(--lp-radius-lg);
   background: linear-gradient(145deg, #E0E0E0, #D2D2D2);
@@ -826,59 +826,59 @@
 }
 /* The image is plain content inside the face — no transition, no animation of
    its own, so it simply rides the cube's existing rotation. */
-.abtalks-landing .how__media img {
+.klymb-landing .how__media img {
   width: 100%; height: 100%;
   display: block;
   object-fit: cover;
   object-position: center;
   border-radius: inherit;
 }
-.abtalks-landing .how__media--alt  { background: linear-gradient(145deg, #D4EBEC, #A6D2D5); }
-.abtalks-landing .how__media--alt2 { background: linear-gradient(145deg, #D4EBEC, #A6D2D5); }
-.abtalks-landing .how__num {
+.klymb-landing .how__media--alt  { background: linear-gradient(145deg, #D4EBEC, #A6D2D5); }
+.klymb-landing .how__media--alt2 { background: linear-gradient(145deg, #D4EBEC, #A6D2D5); }
+.klymb-landing .how__num {
   display: block;
   font-family: var(--lp-font-display);
   font-size: 40px; line-height: 48px; font-weight: 700;
   color: var(--lp-color-primary);
 }
 
-.abtalks-landing .roller__dots {
+.klymb-landing .roller__dots {
   display: flex; gap: var(--lp-space-8);
   margin-top: var(--lp-space-32);
 }
-.abtalks-landing .roller__dots li {
+.klymb-landing .roller__dots li {
   width: 26px; height: 3px; border-radius: var(--lp-radius-pill);
   background: rgba(0, 0, 0, 0.14);
   transition: background-color var(--lp-dur) var(--lp-ease), width var(--lp-dur) var(--lp-ease);
 }
-.abtalks-landing .roller__dots li.is-active { background: var(--lp-color-primary); width: 44px; }
+.klymb-landing .roller__dots li.is-active { background: var(--lp-color-primary); width: 44px; }
 
 /* =========================================================
    11. KEEP THE THREE — scroll-driven pipeline
    ========================================================= */
-.abtalks-landing .keep {
+.klymb-landing .keep {
   background: #FFFFFF;
   --lp-keep-track: 460vh;
   --lp-tighten-above: 88px;
   margin-top: calc(var(--lp-tighten-above) * -1);
   position: relative; z-index: 1;
 }
-.abtalks-landing .keep__track { height: var(--lp-keep-track); position: relative; }
-.abtalks-landing .keep__pin {
+.klymb-landing .keep__track { height: var(--lp-keep-track); position: relative; }
+.klymb-landing .keep__pin {
   position: sticky; top: 20px;
   height: calc(100vh - 40px);
   display: flex; align-items: center;
   overflow: hidden;
 }
-.abtalks-landing .keep__grid {
+.klymb-landing .keep__grid {
   display: grid; grid-template-columns: 0.85fr 1.15fr;
   gap: var(--lp-space-64); align-items: center;
   width: 100%;
 }
-.abtalks-landing .pipeline { margin-top: var(--lp-space-24); display: grid; gap: var(--lp-space-8); }
+.klymb-landing .pipeline { margin-top: var(--lp-space-24); display: grid; gap: var(--lp-space-8); }
 /* CTA under the pipeline in the left column of "The platform and the process" */
-.abtalks-landing .keep__actions { margin-top: var(--lp-space-24); display: flex; flex-wrap: wrap; gap: var(--lp-space-12); }
-.abtalks-landing .pipeline__item {
+.klymb-landing .keep__actions { margin-top: var(--lp-space-24); display: flex; flex-wrap: wrap; gap: var(--lp-space-12); }
+.klymb-landing .pipeline__item {
   position: relative; padding-left: var(--lp-space-20);
   font-size: 14px; line-height: 21px; font-weight: 500;
   color: var(--lp-color-text-muted);
@@ -886,27 +886,27 @@
   transition: color var(--lp-dur) var(--lp-ease), transform var(--lp-dur) var(--lp-ease), opacity var(--lp-dur) var(--lp-ease);
   opacity: .6;
 }
-.abtalks-landing .pipeline__item > span { display: inline-block; }
-.abtalks-landing .pipeline__item::before {
+.klymb-landing .pipeline__item > span { display: inline-block; }
+.klymb-landing .pipeline__item::before {
   content: ""; position: absolute; left: 0; top: 9px;
   width: 10px; height: 2px; background: currentColor; border-radius: 2px;
   transition: width var(--lp-dur) var(--lp-ease);
 }
-.abtalks-landing .pipeline__item.is-done { opacity: .85; color: var(--lp-color-text-secondary); }
-.abtalks-landing .pipeline__item.is-active {
+.klymb-landing .pipeline__item.is-done { opacity: .85; color: var(--lp-color-text-secondary); }
+.klymb-landing .pipeline__item.is-active {
   color: var(--lp-color-primary);
   font-weight: 600;
   opacity: 1;
   transform: scale(1.06);
 }
-.abtalks-landing .pipeline__item.is-active::before { width: 14px; }
+.klymb-landing .pipeline__item.is-active::before { width: 14px; }
 
-.abtalks-landing .pipeline__note {
+.klymb-landing .pipeline__note {
   display: grid; grid-template-rows: 0fr;
   opacity: 0;
   transition: grid-template-rows var(--lp-dur) var(--lp-ease), opacity var(--lp-dur) var(--lp-ease);
 }
-.abtalks-landing .pipeline__note > p {
+.klymb-landing .pipeline__note > p {
   overflow: hidden;
   margin: 0;
   font-size: 14px; line-height: 21px; font-weight: 400;
@@ -915,14 +915,14 @@
   transform: translateY(6px);
   transition: transform var(--lp-dur) var(--lp-ease);
 }
-.abtalks-landing .pipeline__item.is-active .pipeline__note { grid-template-rows: 1fr; opacity: 1; }
-.abtalks-landing .pipeline__item.is-active .pipeline__note > p { transform: translateY(0); padding-top: var(--lp-space-8); }
+.klymb-landing .pipeline__item.is-active .pipeline__note { grid-template-rows: 1fr; opacity: 1; }
+.klymb-landing .pipeline__item.is-active .pipeline__note > p { transform: translateY(0); padding-top: var(--lp-space-8); }
 
-/* Dashboard mock — light ABTalks product UI ------------------------------
+/* Dashboard mock — light Klymb AI product UI ------------------------------
    White surfaces, dark text, light neutral borders and orange used only as an
    accent. Structure, markup, sizing and the stage-switching logic are
    untouched; this block is purely the colour treatment. */
-.abtalks-landing .dash {
+.klymb-landing .dash {
   background: #FFFFFF; border-radius: var(--lp-radius-lg);
   padding: var(--lp-space-20);
   border: 1px solid #E9E9E9;
@@ -931,18 +931,18 @@
   font-size: 12px; line-height: 18px;
   overflow: hidden;
 }
-.abtalks-landing .dash__bar { display: flex; align-items: center; gap: var(--lp-space-12); margin-bottom: var(--lp-space-16); }
-.abtalks-landing .dash__logo { font-family: var(--lp-font-display); font-weight: 700; font-size: 14px; letter-spacing: .02em; color: var(--lp-color-text-primary); }
-.abtalks-landing .dash__tag {
+.klymb-landing .dash__bar { display: flex; align-items: center; gap: var(--lp-space-12); margin-bottom: var(--lp-space-16); }
+.klymb-landing .dash__logo { font-family: var(--lp-font-display); font-weight: 700; font-size: 14px; letter-spacing: .02em; color: var(--lp-color-text-primary); }
+.klymb-landing .dash__tag {
   color: var(--lp-color-primary); font-weight: 600;
   background: var(--lp-color-primary-light);
   border-radius: var(--lp-radius-pill); padding-inline: 10px;
 }
-.abtalks-landing .dash__spacer { flex: 1; }
-.abtalks-landing .dash__mini { color: var(--lp-color-text-muted); }
+.klymb-landing .dash__spacer { flex: 1; }
+.klymb-landing .dash__mini { color: var(--lp-color-text-muted); }
 
-.abtalks-landing .dash__body { position: relative; min-height: 380px; }
-.abtalks-landing .dash__stage {
+.klymb-landing .dash__body { position: relative; min-height: 380px; }
+.klymb-landing .dash__stage {
   position: absolute; inset: 0;
   opacity: 0;
   transform: translateY(10px);
@@ -950,74 +950,74 @@
   transition: opacity .18s var(--lp-ease), transform .18s var(--lp-ease);
   pointer-events: none;
 }
-.abtalks-landing .dash__stage.is-current {
+.klymb-landing .dash__stage.is-current {
   opacity: 1; transform: none; pointer-events: auto;
   /* arriving: waits for the outgoing state to clear */
   transition: opacity .38s var(--lp-ease) .16s, transform .44s var(--lp-ease) .16s;
 }
 
-.abtalks-landing .dash__filters { display: grid; grid-template-columns: 2fr 1.6fr 1fr 1fr; gap: var(--lp-space-12); margin-bottom: var(--lp-space-16); }
-.abtalks-landing .dash__filters label { display: grid; gap: var(--lp-space-4); color: var(--lp-color-text-muted); font-size: 11px; }
-.abtalks-landing .dash__filters input {
+.klymb-landing .dash__filters { display: grid; grid-template-columns: 2fr 1.6fr 1fr 1fr; gap: var(--lp-space-12); margin-bottom: var(--lp-space-16); }
+.klymb-landing .dash__filters label { display: grid; gap: var(--lp-space-4); color: var(--lp-color-text-muted); font-size: 11px; }
+.klymb-landing .dash__filters input {
   height: 34px; border-radius: var(--lp-radius-sm);
   border: 1px solid var(--lp-color-border); background: #F4F4F4; color: var(--lp-color-text-primary);
   padding-inline: var(--lp-space-12); font-size: 12px; width: 100%;
 }
-.abtalks-landing .dash__filters input:focus { outline: none; border-color: var(--lp-color-primary); box-shadow: 0 0 0 2px var(--lp-color-primary-light); }
-.abtalks-landing .dash__meta { display: flex; align-items: center; justify-content: space-between; gap: var(--lp-space-12); color: var(--lp-color-text-secondary); margin-bottom: var(--lp-space-12); }
-.abtalks-landing .dash__pill { background: var(--lp-color-primary-light); color: var(--lp-color-primary-hover); border-radius: var(--lp-radius-pill); padding: 2px 10px; font-weight: 600; }
-.abtalks-landing .dash__pill--ok { background: var(--lp-color-primary); color: #FFFFFF; }
-.abtalks-landing .dash__when { color: var(--lp-color-text-muted); font-size: 11px; }
-.abtalks-landing .dash__card {
+.klymb-landing .dash__filters input:focus { outline: none; border-color: var(--lp-color-primary); box-shadow: 0 0 0 2px var(--lp-color-primary-light); }
+.klymb-landing .dash__meta { display: flex; align-items: center; justify-content: space-between; gap: var(--lp-space-12); color: var(--lp-color-text-secondary); margin-bottom: var(--lp-space-12); }
+.klymb-landing .dash__pill { background: var(--lp-color-primary-light); color: var(--lp-color-primary-hover); border-radius: var(--lp-radius-pill); padding: 2px 10px; font-weight: 600; }
+.klymb-landing .dash__pill--ok { background: var(--lp-color-primary); color: #FFFFFF; }
+.klymb-landing .dash__when { color: var(--lp-color-text-muted); font-size: 11px; }
+.klymb-landing .dash__card {
   background: #FFFFFF; border: 1px solid #E9E9E9; border-radius: var(--lp-radius-md);
   padding: var(--lp-space-16); margin-bottom: var(--lp-space-8);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
-.abtalks-landing .dash__card header { display: flex; align-items: center; justify-content: space-between; gap: var(--lp-space-12); }
-.abtalks-landing .dash__card h4 { margin: 0; font-size: 14px; font-weight: 600; color: var(--lp-color-text-primary); }
-.abtalks-landing .dash__card h4 em { font-style: normal; color: var(--lp-color-text-muted); font-weight: 400; font-size: 12px; }
-.abtalks-landing .dash__star {
+.klymb-landing .dash__card header { display: flex; align-items: center; justify-content: space-between; gap: var(--lp-space-12); }
+.klymb-landing .dash__card h4 { margin: 0; font-size: 14px; font-weight: 600; color: var(--lp-color-text-primary); }
+.klymb-landing .dash__card h4 em { font-style: normal; color: var(--lp-color-text-muted); font-weight: 400; font-size: 12px; }
+.klymb-landing .dash__star {
   width: 26px; height: 26px; border-radius: var(--lp-radius-sm);
   background: var(--lp-color-primary-light); color: var(--lp-color-primary); line-height: 26px; text-align: center;
   display: inline-block; font-size: 13px;
 }
-.abtalks-landing .dash__role { margin: var(--lp-space-4) 0 var(--lp-space-12); color: var(--lp-color-text-secondary); }
-.abtalks-landing .dash__chips { display: flex; flex-wrap: wrap; gap: var(--lp-space-4); margin-bottom: var(--lp-space-12); }
-.abtalks-landing .dash__chips span { border: 1px solid var(--lp-color-border); background: #F4F4F4; border-radius: var(--lp-radius-xs); padding: 2px 8px; color: var(--lp-color-text-secondary); font-size: 11px; }
-.abtalks-landing .dash__row { display: flex; align-items: center; justify-content: space-between; gap: var(--lp-space-16); }
-.abtalks-landing .dash__bars { flex: 1; display: grid; gap: var(--lp-space-8); }
-.abtalks-landing .dash__meter { height: 5px; background: #E9E9E9; border-radius: var(--lp-radius-pill); overflow: hidden; }
-.abtalks-landing .dash__meter i { display: block; height: 100%; background: linear-gradient(90deg, #03535F, #076573); border-radius: inherit; }
-.abtalks-landing .dash__score { text-align: right; }
-.abtalks-landing .dash__score strong { display: block; font-family: var(--lp-font-display); font-size: 24px; line-height: 30px; color: var(--lp-color-text-primary); }
-.abtalks-landing .dash__score span { color: var(--lp-color-text-muted); font-size: 11px; }
-.abtalks-landing .dash__card--fade { opacity: .5; }
+.klymb-landing .dash__role { margin: var(--lp-space-4) 0 var(--lp-space-12); color: var(--lp-color-text-secondary); }
+.klymb-landing .dash__chips { display: flex; flex-wrap: wrap; gap: var(--lp-space-4); margin-bottom: var(--lp-space-12); }
+.klymb-landing .dash__chips span { border: 1px solid var(--lp-color-border); background: #F4F4F4; border-radius: var(--lp-radius-xs); padding: 2px 8px; color: var(--lp-color-text-secondary); font-size: 11px; }
+.klymb-landing .dash__row { display: flex; align-items: center; justify-content: space-between; gap: var(--lp-space-16); }
+.klymb-landing .dash__bars { flex: 1; display: grid; gap: var(--lp-space-8); }
+.klymb-landing .dash__meter { height: 5px; background: #E9E9E9; border-radius: var(--lp-radius-pill); overflow: hidden; }
+.klymb-landing .dash__meter i { display: block; height: 100%; background: linear-gradient(90deg, #03535F, #076573); border-radius: inherit; }
+.klymb-landing .dash__score { text-align: right; }
+.klymb-landing .dash__score strong { display: block; font-family: var(--lp-font-display); font-size: 24px; line-height: 30px; color: var(--lp-color-text-primary); }
+.klymb-landing .dash__score span { color: var(--lp-color-text-muted); font-size: 11px; }
+.klymb-landing .dash__card--fade { opacity: .5; }
 
 /* Search "scanning" rows */
-.abtalks-landing .dash__scan { display: grid; gap: var(--lp-space-8); }
-.abtalks-landing .dash__scan i {
+.klymb-landing .dash__scan { display: grid; gap: var(--lp-space-8); }
+.klymb-landing .dash__scan i {
   display: block; height: 34px; border-radius: var(--lp-radius-sm);
   background: linear-gradient(90deg, #E7F2F3 0%, #E9E9E9 40%, #E7F2F3 80%);
   background-size: 220% 100%;
   animation: scanSweep 1.8s linear infinite;
 }
-.abtalks-landing .dash__scan i:nth-child(2) { animation-delay: .12s; }
-.abtalks-landing .dash__scan i:nth-child(3) { animation-delay: .24s; }
-.abtalks-landing .dash__scan i:nth-child(4) { animation-delay: .36s; }
-.abtalks-landing .dash__scan i:nth-child(5) { animation-delay: .48s; }
+.klymb-landing .dash__scan i:nth-child(2) { animation-delay: .12s; }
+.klymb-landing .dash__scan i:nth-child(3) { animation-delay: .24s; }
+.klymb-landing .dash__scan i:nth-child(4) { animation-delay: .36s; }
+.klymb-landing .dash__scan i:nth-child(5) { animation-delay: .48s; }
 @keyframes scanSweep { from { background-position: 120% 0; } to { background-position: -120% 0; } }
 
 /* =========================================================
    12. OPEN RIGHT NOW
    ========================================================= */
 /* -20px top and bottom versus the standard section rhythm */
-.abtalks-landing .section.open { padding-block: calc(var(--lp-section-gap) - 20px); }
-.abtalks-landing .open { background: #F4F4F4; }
-.abtalks-landing .open__grid {
+.klymb-landing .section.open { padding-block: calc(var(--lp-section-gap) - 20px); }
+.klymb-landing .open { background: #F4F4F4; }
+.klymb-landing .open__grid {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--lp-gutter);
   margin-top: var(--lp-space-32);
 }
-.abtalks-landing .challenge {
+.klymb-landing .challenge {
   position: relative; display: block;
   background: var(--lp-color-white);
   border: 1px solid var(--lp-color-border);
@@ -1035,15 +1035,15 @@
     box-shadow .95s var(--lp-ease) calc(var(--lp-order, 0) * .22s),
     border-color var(--lp-dur) var(--lp-ease);
 }
-.abtalks-landing .challenge:nth-child(even) { --lp-tilt: 3deg; }
-.abtalks-landing .open__grid.is-in .challenge {
+.klymb-landing .challenge:nth-child(even) { --lp-tilt: 3deg; }
+.klymb-landing .open__grid.is-in .challenge {
   opacity: 1;
   transform: translateY(0) scale(1) rotate(0deg);
   box-shadow: var(--lp-shadow-sm);
 }
-.abtalks-landing .challenge:hover { box-shadow: var(--lp-shadow-md); border-color: #A6D2D5; }
+.klymb-landing .challenge:hover { box-shadow: var(--lp-shadow-md); border-color: #A6D2D5; }
 
-.abtalks-landing .challenge__badge {
+.klymb-landing .challenge__badge {
   display: inline-block;
   font-size: 12px; line-height: 16px; font-weight: 600;
   color: #03535F;
@@ -1052,69 +1052,69 @@
   padding: 2px 10px;
   margin-bottom: var(--lp-space-16);
 }
-.abtalks-landing .challenge__arrow { position: absolute; top: var(--lp-space-20); right: var(--lp-space-20); color: var(--lp-color-text-muted); }
-.abtalks-landing .challenge__title {
+.klymb-landing .challenge__arrow { position: absolute; top: var(--lp-space-20); right: var(--lp-space-20); color: var(--lp-color-text-muted); }
+.klymb-landing .challenge__title {
   font-family: var(--lp-font-display);
   font-size: 16px; line-height: 22px; font-weight: 600;
   text-transform: uppercase; letter-spacing: .01em;
   color: var(--lp-color-text-primary);
   margin: 0 0 var(--lp-space-12);
 }
-.abtalks-landing .challenge__list { display: grid; gap: var(--lp-space-4); font-size: 14px; line-height: 20px; color: var(--lp-color-text-secondary); }
+.klymb-landing .challenge__list { display: grid; gap: var(--lp-space-4); font-size: 14px; line-height: 20px; color: var(--lp-color-text-secondary); }
 
 /* ---------- 13. TESTIMONIALS (unchanged) ---------- */
-.abtalks-landing .testimonials { background: var(--lp-color-background); overflow: hidden; }
+.klymb-landing .testimonials { background: var(--lp-color-background); overflow: hidden; }
 /* The cohort cards sat 128px clear of this heading (54px off .section.open
    plus 74px here). Trimmed to the top of this section only, so every other
    section keeps the shared --lp-section-gap rhythm. */
-.abtalks-landing .section.testimonials { padding-block-start: 36px; }
-.abtalks-landing .testimonials__head { text-align: center; margin-bottom: var(--lp-space-40); }
-.abtalks-landing .testimonials__head .h2 { text-transform: uppercase; letter-spacing: .01em; }
-.abtalks-landing .testimonials__head .p { margin-inline: auto; font-size: 14px; line-height: 21px; }
+.klymb-landing .section.testimonials { padding-block-start: 36px; }
+.klymb-landing .testimonials__head { text-align: center; margin-bottom: var(--lp-space-40); }
+.klymb-landing .testimonials__head .h2 { text-transform: uppercase; letter-spacing: .01em; }
+.klymb-landing .testimonials__head .p { margin-inline: auto; font-size: 14px; line-height: 21px; }
 
-.abtalks-landing .marquee { position: relative; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
-.abtalks-landing .marquee__track { display: flex; gap: var(--lp-gutter); width: max-content; animation: marquee 42s linear infinite; }
-.abtalks-landing .marquee:hover .marquee__track { animation-play-state: paused; }
+.klymb-landing .marquee { position: relative; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.klymb-landing .marquee__track { display: flex; gap: var(--lp-gutter); width: max-content; animation: marquee 42s linear infinite; }
+.klymb-landing .marquee:hover .marquee__track { animation-play-state: paused; }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-.abtalks-landing .quote {
+.klymb-landing .quote {
   width: 340px; flex: 0 0 340px;
   border-radius: var(--lp-radius-md);
   padding: var(--lp-space-24);
   border: 1px solid var(--lp-color-border);
   display: flex; flex-direction: column; justify-content: space-between; gap: var(--lp-space-24);
 }
-.abtalks-landing .quote p { margin: 0; font-size: 14px; line-height: 21px; color: var(--lp-color-dark-gray); }
-.abtalks-landing .quote footer { display: flex; align-items: center; gap: var(--lp-space-12); }
-.abtalks-landing .quote footer > span:last-child { display: grid; }
-.abtalks-landing .quote strong { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--lp-color-text-primary); }
-.abtalks-landing .quote small { font-size: 13px; line-height: 18px; color: var(--lp-color-text-muted); }
-.abtalks-landing .avatar {
+.klymb-landing .quote p { margin: 0; font-size: 14px; line-height: 21px; color: var(--lp-color-dark-gray); }
+.klymb-landing .quote footer { display: flex; align-items: center; gap: var(--lp-space-12); }
+.klymb-landing .quote footer > span:last-child { display: grid; }
+.klymb-landing .quote strong { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--lp-color-text-primary); }
+.klymb-landing .quote small { font-size: 13px; line-height: 18px; color: var(--lp-color-text-muted); }
+.klymb-landing .avatar {
   width: 40px; height: 40px; flex: 0 0 40px; border-radius: 50%;
   background: #DFE5E7; color: #FFFFFF;
   display: grid; place-items: center;
   overflow: hidden;
 }
-.abtalks-landing .avatar svg { width: 30px; height: 30px; display: block; fill: currentColor; }
+.klymb-landing .avatar svg { width: 30px; height: 30px; display: block; fill: currentColor; }
 /* Design System v2 — cool palette tints only (no warning yellow / red washes). */
-.abtalks-landing .quote--teal  { background: #E7F2F3; border-color: #D4EBEC; }
-.abtalks-landing .quote--white { background: #FFFFFF; border-color: #E0E0E0; }
-.abtalks-landing .quote--mist  { background: #EEF6F6; border-color: #A6D2D5; }
-.abtalks-landing .quote--mint  { background: #D6F7EC; border-color: #A6D2D5; }
+.klymb-landing .quote--teal  { background: #E7F2F3; border-color: #D4EBEC; }
+.klymb-landing .quote--white { background: #FFFFFF; border-color: #E0E0E0; }
+.klymb-landing .quote--mist  { background: #EEF6F6; border-color: #A6D2D5; }
+.klymb-landing .quote--mint  { background: #D6F7EC; border-color: #A6D2D5; }
 
 /* ---------- 14. FAQ (unchanged) ---------- */
-.abtalks-landing .section.faq { padding-block: calc(var(--lp-section-gap) - 20px); }
-.abtalks-landing .faq { background: linear-gradient(180deg, #F4F4F4 0%, #F4F4F4 100%); }
-.abtalks-landing .faq__grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: var(--lp-space-64); align-items: center; }
-.abtalks-landing .faq__list { display: grid; gap: var(--lp-space-8); }
-.abtalks-landing .faq__item {
+.klymb-landing .section.faq { padding-block: calc(var(--lp-section-gap) - 20px); }
+.klymb-landing .faq { background: linear-gradient(180deg, #F4F4F4 0%, #F4F4F4 100%); }
+.klymb-landing .faq__grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: var(--lp-space-64); align-items: center; }
+.klymb-landing .faq__list { display: grid; gap: var(--lp-space-8); }
+.klymb-landing .faq__item {
   background: #F4F4F4;
   border: 1px solid transparent;
   border-radius: var(--lp-radius-md);
   transition: background-color .2s ease, border-color .2s ease;
 }
-.abtalks-landing .faq__item.is-open { background: #E9E9E9; border-color: var(--lp-color-border); }
-.abtalks-landing .faq__q {
+.klymb-landing .faq__item.is-open { background: #E9E9E9; border-color: var(--lp-color-border); }
+.klymb-landing .faq__q {
   width: 100%; min-height: 56px;
   display: flex; align-items: center; justify-content: space-between; gap: var(--lp-space-12);
   padding: 16px 20px;
@@ -1122,43 +1122,43 @@
   font-size: 18px; line-height: 27px; font-weight: 600;
   color: var(--lp-color-text-primary);
 }
-.abtalks-landing .faq__q:focus-visible { outline: 2px solid var(--lp-color-primary); outline-offset: 4px; border-radius: var(--lp-radius-md); }
-.abtalks-landing .faq__icon {
+.klymb-landing .faq__q:focus-visible { outline: 2px solid var(--lp-color-primary); outline-offset: 4px; border-radius: var(--lp-radius-md); }
+.klymb-landing .faq__icon {
   position: relative; flex: 0 0 20px; width: 20px; height: 20px;
   border-radius: 50%; background: var(--lp-color-primary);
 }
-.abtalks-landing .faq__icon::before, .abtalks-landing .faq__icon::after {
+.klymb-landing .faq__icon::before, .klymb-landing .faq__icon::after {
   content: ""; position: absolute; left: 50%; top: 50%;
   background: #fff; border-radius: 2px; transform: translate(-50%, -50%);
   transition: transform .22s ease, opacity .22s ease;
 }
-.abtalks-landing .faq__icon::before { width: 10px; height: 2px; }
-.abtalks-landing .faq__icon::after  { width: 2px; height: 10px; }
-.abtalks-landing .faq__item.is-open .faq__icon::after { transform: translate(-50%, -50%) rotate(90deg); opacity: 0; }
-.abtalks-landing .faq__a { overflow: hidden; height: 0; transition: height .28s ease; }
-.abtalks-landing .faq__a p { margin: 0; padding: 0 20px 16px; font-size: 16px; line-height: 25px; color: var(--lp-color-text-secondary); }
+.klymb-landing .faq__icon::before { width: 10px; height: 2px; }
+.klymb-landing .faq__icon::after  { width: 2px; height: 10px; }
+.klymb-landing .faq__item.is-open .faq__icon::after { transform: translate(-50%, -50%) rotate(90deg); opacity: 0; }
+.klymb-landing .faq__a { overflow: hidden; height: 0; transition: height .28s ease; }
+.klymb-landing .faq__a p { margin: 0; padding: 0 20px 16px; font-size: 16px; line-height: 25px; color: var(--lp-color-text-secondary); }
 
 /* =========================================================
    15. COMMUNITY — film-reel gallery
    ========================================================= */
-.abtalks-landing .community {
+.klymb-landing .community {
   background: var(--lp-color-background);
   /* Lets a hovered tile grow sideways inside the section without ever
      widening the page. Vertical overflow stays visible for the badge. */
   overflow-x: clip;
 }
-.abtalks-landing .community__grid { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: var(--lp-space-48); align-items: center; }
-.abtalks-landing .community__text .h2 { text-transform: uppercase; }
-.abtalks-landing .ticks { display: grid; gap: var(--lp-space-12); margin: var(--lp-space-24) 0; }
-.abtalks-landing .ticks li { position: relative; padding-left: 26px; font-size: 14px; line-height: 21px; color: var(--lp-color-text-secondary); }
-.abtalks-landing .ticks li::before {
+.klymb-landing .community__grid { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: var(--lp-space-48); align-items: center; }
+.klymb-landing .community__text .h2 { text-transform: uppercase; }
+.klymb-landing .ticks { display: grid; gap: var(--lp-space-12); margin: var(--lp-space-24) 0; }
+.klymb-landing .ticks li { position: relative; padding-left: 26px; font-size: 14px; line-height: 21px; color: var(--lp-color-text-secondary); }
+.klymb-landing .ticks li::before {
   content: "✓"; position: absolute; left: 0; top: 0;
   color: #03535F; font-weight: 700; font-size: 13px;
 }
-.abtalks-landing .community__actions { display: flex; flex-wrap: wrap; gap: var(--lp-space-12); }
+.klymb-landing .community__actions { display: flex; flex-wrap: wrap; gap: var(--lp-space-12); }
 
-.abtalks-landing .community__gallery { position: relative; }
-.abtalks-landing .community__reel {
+.klymb-landing .community__gallery { position: relative; }
+.klymb-landing .community__reel {
   display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--lp-space-12);
   align-items: center;
   /* `clip` + clip-margin still hides the off-stage entrance frames, but lets a
@@ -1168,7 +1168,7 @@
   overflow-clip-margin: 56px;
   padding-block: var(--lp-space-8);
 }
-.abtalks-landing .tile {
+.klymb-landing .tile {
   display: block; border-radius: var(--lp-radius-md);
   background: linear-gradient(160deg, #787878, #353535);
   box-shadow: var(--lp-shadow-sm);
@@ -1183,12 +1183,12 @@
     transform .85s var(--lp-ease-soft) calc(var(--lp-frame, 0) * .15s),
     opacity .55s var(--lp-ease) calc(var(--lp-frame, 0) * .15s);
 }
-.abtalks-landing .community__gallery.is-rolling .tile { opacity: 1; transform: translateX(0) scale(1); }
+.klymb-landing .community__gallery.is-rolling .tile { opacity: 1; transform: translateX(0) scale(1); }
 
 /* The image fills whatever height the tile already has and carries no motion of
    its own — the tile stays the only animated / interactive element, so the reel
    entrance and the hover scale behave exactly as before. */
-.abtalks-landing .tile img {
+.klymb-landing .tile img {
   width: 100%; height: 100%;
   display: block;
   object-fit: cover;
@@ -1199,24 +1199,24 @@
 
 /* Hover enlargement — only armed once the reel entrance has finished, so the
    staggered entrance timing is never applied to a hover. */
-.abtalks-landing .community__gallery.reel-ready .tile {
+.klymb-landing .community__gallery.reel-ready .tile {
   transition:
     transform .38s var(--lp-ease-soft),
     box-shadow .38s var(--lp-ease),
     opacity .38s var(--lp-ease);
 }
-.abtalks-landing .community__gallery.reel-ready .tile:hover {
+.klymb-landing .community__gallery.reel-ready .tile:hover {
   transform: scale(1.4);       /* grows about its own centre — no positional shift */
   z-index: 5;
   box-shadow: var(--lp-shadow-lg);
 }
-.abtalks-landing .tile--1 { height: 210px; }
-.abtalks-landing .tile--2 { height: 250px; }
-.abtalks-landing .tile--3 { height: 210px; }
-.abtalks-landing .tile--4 { height: 250px; }
-.abtalks-landing .tile--5 { height: 210px; }
+.klymb-landing .tile--1 { height: 210px; }
+.klymb-landing .tile--2 { height: 250px; }
+.klymb-landing .tile--3 { height: 210px; }
+.klymb-landing .tile--4 { height: 250px; }
+.klymb-landing .tile--5 { height: 210px; }
 
-.abtalks-landing .community__badge {
+.klymb-landing .community__badge {
   position: absolute; right: -12px; bottom: -20px;
   background: #fff; border-radius: var(--lp-radius-md);
   box-shadow: var(--lp-shadow-lg);
@@ -1226,28 +1226,28 @@
   transform: translateX(40px) scale(.96);
   transition: transform .7s var(--lp-ease-soft) .95s, opacity .5s var(--lp-ease) .95s;
 }
-.abtalks-landing .community__gallery.is-rolling .community__badge { opacity: 1; transform: translateX(0) scale(1); }
-.abtalks-landing .community__badge strong { font-family: var(--lp-font-display); font-size: 20px; line-height: 26px; color: #03535F; }
-.abtalks-landing .community__badge small { font-size: 12px; line-height: 16px; color: var(--lp-color-text-muted); }
+.klymb-landing .community__gallery.is-rolling .community__badge { opacity: 1; transform: translateX(0) scale(1); }
+.klymb-landing .community__badge strong { font-family: var(--lp-font-display); font-size: 20px; line-height: 26px; color: #03535F; }
+.klymb-landing .community__badge small { font-size: 12px; line-height: 16px; color: var(--lp-color-text-muted); }
 
 /* ---------- 16. CONTACT ---------- */
-.abtalks-landing .section.contact { padding-block: calc(var(--lp-section-gap) - 20px); }
-.abtalks-landing .contact { background: var(--lp-color-background-alt); }
-.abtalks-landing .contact__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--lp-space-64); align-items: center; }
+.klymb-landing .section.contact { padding-block: calc(var(--lp-section-gap) - 20px); }
+.klymb-landing .contact { background: var(--lp-color-background-alt); }
+.klymb-landing .contact__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--lp-space-64); align-items: center; }
 
-.abtalks-landing .form {
+.klymb-landing .form {
   background: var(--lp-color-white);
   border-radius: var(--lp-radius-lg);
   padding: var(--lp-space-32);
   box-shadow: var(--lp-shadow-md);
 }
-.abtalks-landing .field { margin-bottom: var(--lp-space-24); }
-.abtalks-landing .label {
+.klymb-landing .field { margin-bottom: var(--lp-space-24); }
+.klymb-landing .label {
   display: block; margin-bottom: var(--lp-space-8);
   font-size: 14px; line-height: 20px; font-weight: 500;
   color: var(--lp-color-text-primary);
 }
-.abtalks-landing .input {
+.klymb-landing .input {
   width: 100%; height: 48px;
   padding: 0 16px;
   font-family: inherit; font-size: 16px; line-height: 24px;
@@ -1257,24 +1257,24 @@
   border-radius: var(--lp-radius-sm);
   transition: border-color var(--lp-dur-fast) var(--lp-ease), box-shadow var(--lp-dur-fast) var(--lp-ease);
 }
-.abtalks-landing .input::placeholder { color: var(--lp-color-text-muted); }
-.abtalks-landing .input:hover { border-color: #D2D2D2; }
-.abtalks-landing .input:focus { outline: none; border-color: var(--lp-color-primary); box-shadow: 0 0 0 2px var(--lp-color-primary); }
-.abtalks-landing .textarea { min-height: 120px; padding: 16px; resize: vertical; }
-.abtalks-landing .input.is-error { border-color: var(--lp-color-error); }
-.abtalks-landing .error { margin: var(--lp-space-8) 0 0; font-size: 12px; line-height: 16px; color: var(--lp-color-error); min-height: 0; }
-.abtalks-landing .form__success {
+.klymb-landing .input::placeholder { color: var(--lp-color-text-muted); }
+.klymb-landing .input:hover { border-color: #D2D2D2; }
+.klymb-landing .input:focus { outline: none; border-color: var(--lp-color-primary); box-shadow: 0 0 0 2px var(--lp-color-primary); }
+.klymb-landing .textarea { min-height: 120px; padding: 16px; resize: vertical; }
+.klymb-landing .input.is-error { border-color: var(--lp-color-error); }
+.klymb-landing .error { margin: var(--lp-space-8) 0 0; font-size: 12px; line-height: 16px; color: var(--lp-color-error); min-height: 0; }
+.klymb-landing .form__success {
   margin: var(--lp-space-16) 0 0; font-size: 14px; line-height: 21px;
   color: var(--lp-color-success); font-weight: 500;
 }
 
 /* ---------- 17. CTA BAND ---------- */
-.abtalks-landing .cta-band {
+.klymb-landing .cta-band {
   position: relative; overflow: hidden;
   background: linear-gradient(90deg, #076573 0%, #03535F 50%, #076573 100%);
   padding-block: var(--lp-space-80);
 }
-.abtalks-landing .cta-band__rings {
+.klymb-landing .cta-band__rings {
   position: absolute; left: -300px; top: 50%; transform: translateY(-50%);
   width: 760px; height: 760px;
   --lp-sphere-r: 380px;
@@ -1287,7 +1287,7 @@
 /* Rotating shell. The polar axis is tilted almost straight at the viewer, so
    the latitude rings project as nested arcs; the slow turn about that axis
    walks the dots continuously around every ring. */
-.abtalks-landing .globe {
+.klymb-landing .globe {
   position: absolute; inset: 0;
   transform-style: preserve-3d;
   animation: globeSpin 26s linear infinite;
@@ -1298,7 +1298,7 @@
 }
 /* Every ring is one SVG circle stroked as a fine, evenly spaced dot run —
    roughly 2px dots, no solid segments anywhere. */
-.abtalks-landing .globe__lat {
+.klymb-landing .globe__lat {
   position: absolute; left: 50%; top: 50%;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Ccircle cx='50' cy='50' r='49.5' fill='none' stroke='%23ffffff' stroke-width='0.5' stroke-dasharray='0.01 1.15' stroke-linecap='round'/%3E%3C/svg%3E");
   background-size: 100% 100%;
@@ -1307,7 +1307,7 @@
 }
 /* Latitudes: rings stacked along the polar axis. --r is sqrt(1 - h²), chosen so
    the projected radii step evenly and the arcs nest like the reference. */
-.abtalks-landing .globe__lat {
+.klymb-landing .globe__lat {
   width: calc(100% * var(--lp-r)); height: calc(100% * var(--lp-r));
   transform:
     translate(-50%, -50%)
@@ -1315,33 +1315,33 @@
     rotateX(90deg);
   opacity: calc(.98 - var(--lp-h) * .18);
 }
-.abtalks-landing .cta-band__inner { position: relative; text-align: right; }
-.abtalks-landing .cta-band__title {
+.klymb-landing .cta-band__inner { position: relative; text-align: right; }
+.klymb-landing .cta-band__title {
   font-family: var(--lp-font-display);
   font-size: 40px; line-height: 48px; font-weight: 700;
   color: #fff; margin: 0 0 var(--lp-space-24);
   letter-spacing: -0.01em;
 }
-.abtalks-landing .cta-band__actions { display: flex; gap: var(--lp-space-16); justify-content: flex-end; flex-wrap: wrap; }
+.klymb-landing .cta-band__actions { display: flex; gap: var(--lp-space-16); justify-content: flex-end; flex-wrap: wrap; }
 
 /* ---------- 18. FOOTER ---------- */
-.abtalks-landing .footer { background: var(--lp-color-background-alt); padding-block: var(--lp-space-64) var(--lp-space-32); }
-.abtalks-landing .footer__grid {
+.klymb-landing .footer { background: var(--lp-color-background-alt); padding-block: var(--lp-space-64) var(--lp-space-32); }
+.klymb-landing .footer__grid {
   display: grid; grid-template-columns: 1.2fr repeat(4, 1fr);
   gap: var(--lp-space-32);
 }
-.abtalks-landing .footer__logo { display: inline-flex; align-items: center; }
-.abtalks-landing .footer__logo img { height: 32px; width: auto; object-fit: contain; }
-.abtalks-landing .footer__head {
+.klymb-landing .footer__logo { display: inline-flex; align-items: center; }
+.klymb-landing .footer__logo img { height: 32px; width: auto; object-fit: contain; }
+.klymb-landing .footer__head {
   font-size: 12px; line-height: 16px; font-weight: 600;
   text-transform: uppercase; letter-spacing: .06em;
   color: var(--lp-color-text-primary);
   margin: 0 0 var(--lp-space-16);
 }
-.abtalks-landing .footer__col ul { display: grid; gap: var(--lp-space-12); }
-.abtalks-landing .footer__col a, .abtalks-landing .footer__col li { font-size: 14px; line-height: 20px; color: var(--lp-color-text-secondary); }
-.abtalks-landing .footer__col a:hover { color: var(--lp-color-primary); }
-.abtalks-landing .footer__legal {
+.klymb-landing .footer__col ul { display: grid; gap: var(--lp-space-12); }
+.klymb-landing .footer__col a, .klymb-landing .footer__col li { font-size: 14px; line-height: 20px; color: var(--lp-color-text-secondary); }
+.klymb-landing .footer__col a:hover { color: var(--lp-color-primary); }
+.klymb-landing .footer__legal {
   display: flex; justify-content: space-between; gap: var(--lp-space-16); flex-wrap: wrap;
   margin-top: var(--lp-space-48); padding-top: var(--lp-space-24);
   border-top: 1px solid rgba(0,0,0,.06);
@@ -1349,8 +1349,8 @@
 }
 
 /* ---------- 19. REVEAL ANIMATION ---------- */
-.abtalks-landing .reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s var(--lp-ease), transform .6s var(--lp-ease); }
-.abtalks-landing .reveal.is-visible { opacity: 1; transform: none; }
+.klymb-landing .reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s var(--lp-ease), transform .6s var(--lp-ease); }
+.klymb-landing .reveal.is-visible { opacity: 1; transform: none; }
 
 /* =========================================================
    20. RESPONSIVE
@@ -1359,40 +1359,40 @@
    so the desktop rendering (> 1080px) is bit-for-bit unchanged.
 
    Ranges:  DESKTOP > 1080px  |  TABLET 721–1080px  |  MOBILE <= 720px
-   Mobile values come from the ABTalks design system:
+   Mobile values come from the Klymb AI design system:
      container pad 20px · major section rhythm 64px · subsection 40px
      H1 40/44 · H2 32/36 · H3 22/28 · P 17/28 · small 14/21
      label 13/18 · button 16/20 · FAQ 18/27
    ========================================================= */
 @media (max-width: 1080px) {
-  .abtalks-landing { --lp-pad: 10px; --lp-section-gap: 58px; }
+  .klymb-landing { --lp-pad: 10px; --lp-section-gap: 58px; }
 
-  .abtalks-landing .bridge { --lp-bridge-track: 300vh; }
-  .abtalks-landing .how    { --lp-how-track: 280vh; --lp-face-h: 460px; }
-  .abtalks-landing .keep   { --lp-keep-track: 400vh; }
+  .klymb-landing .bridge { --lp-bridge-track: 300vh; }
+  .klymb-landing .how    { --lp-how-track: 280vh; --lp-face-h: 460px; }
+  .klymb-landing .keep   { --lp-keep-track: 400vh; }
 
   /* Single-column pins leave far less empty band below their content, so the
      junction overlap is scaled back to stay clear of it. */
-  .abtalks-landing .how, .abtalks-landing .keep { --lp-tighten-above: 24px; }
-  .abtalks-landing .companies { margin-bottom: 24px; }
+  .klymb-landing .how, .klymb-landing .keep { --lp-tighten-above: 24px; }
+  .klymb-landing .companies { margin-bottom: 24px; }
 
   /* Stack sits above the copy here, not beside it — no offset, no connectors */
-  .abtalks-landing .bridge__panels { --lp-stack-offset: 0px; }
-  .abtalks-landing .bridge__links { display: none; }
+  .klymb-landing .bridge__panels { --lp-stack-offset: 0px; }
+  .klymb-landing .bridge__links { display: none; }
 
-  .abtalks-landing .bridge__grid,
-  .abtalks-landing .keep__grid,
-  .abtalks-landing .faq__grid,
-  .abtalks-landing .contact__grid,
-  .abtalks-landing .community__grid { grid-template-columns: 1fr; gap: var(--lp-space-40); }
+  .klymb-landing .bridge__grid,
+  .klymb-landing .keep__grid,
+  .klymb-landing .faq__grid,
+  .klymb-landing .contact__grid,
+  .klymb-landing .community__grid { grid-template-columns: 1fr; gap: var(--lp-space-40); }
 
   /* Pinned content clears the fixed header on shorter viewports */
-  .abtalks-landing .bridge__pin, .abtalks-landing .how__pin, .abtalks-landing .keep__pin { align-items: center; padding-top: 88px; }
-  .abtalks-landing .bridge__visual { height: 330px; }
-  .abtalks-landing .slab { --lp-slab-w: 170px; --lp-slab-t: 13px; }
-  .abtalks-landing .slab__label { font-size: 16px; transform: scaleY(1.22); }
-  .abtalks-landing .slab--top { top: 18px; } .abtalks-landing .slab--middle { top: 100px; } .abtalks-landing .slab--bottom { top: 182px; }
-  .abtalks-landing .bridge__panels { min-height: 260px; }
+  .klymb-landing .bridge__pin, .klymb-landing .how__pin, .klymb-landing .keep__pin { align-items: center; padding-top: 88px; }
+  .klymb-landing .bridge__visual { height: 330px; }
+  .klymb-landing .slab { --lp-slab-w: 170px; --lp-slab-t: 13px; }
+  .klymb-landing .slab__label { font-size: 16px; transform: scaleY(1.22); }
+  .klymb-landing .slab--top { top: 18px; } .klymb-landing .slab--middle { top: 100px; } .klymb-landing .slab--bottom { top: 182px; }
+  .klymb-landing .bridge__panels { min-height: 260px; }
 
   /* A prism face sits at translateZ(face-h / 3.4641), so perspective scales it
      up by P / (P - z) — roughly 9-13%. On wide desktop the container is far
@@ -1400,14 +1400,14 @@
      container nearly fills the screen, so the face needs a proportional inset
      to keep its content off the edge. Percentage padding scales with the face,
      so one value holds at every width in this range. */
-  .abtalks-landing .roller__face { grid-template-columns: 1fr; gap: var(--lp-space-20); padding-inline: 6%; }
-  .abtalks-landing .how__media { height: 200px; }
+  .klymb-landing .roller__face { grid-template-columns: 1fr; gap: var(--lp-space-20); padding-inline: 6%; }
+  .klymb-landing .how__media { height: 200px; }
 
-  .abtalks-landing .open__grid { grid-template-columns: repeat(2, 1fr); }
-  .abtalks-landing .community__badge { right: 0; bottom: -12px; }
-  .abtalks-landing .footer__grid { grid-template-columns: 1fr 1fr 1fr; }
-  .abtalks-landing .hero__stamp { font-size: 64px; top: 8px; }
-  .abtalks-landing .dash__body { min-height: 340px; }
+  .klymb-landing .open__grid { grid-template-columns: repeat(2, 1fr); }
+  .klymb-landing .community__badge { right: 0; bottom: -12px; }
+  .klymb-landing .footer__grid { grid-template-columns: 1fr 1fr 1fr; }
+  .klymb-landing .hero__stamp { font-size: 64px; top: 8px; }
+  .klymb-landing .dash__body { min-height: 340px; }
 }
 
 /* ---------- Short tablet viewports ----------
@@ -1416,14 +1416,14 @@
    where the viewport is genuinely short, so tall tablets keep the full-size
    dashboard. Nothing above 1080px wide is touched. */
 @media (max-width: 1080px) and (max-height: 900px) {
-  .abtalks-landing .keep__pin { padding-top: 48px; }
-  .abtalks-landing .keep__actions { margin-top: var(--lp-space-16); }
-  .abtalks-landing .dash__body { min-height: 240px; }
+  .klymb-landing .keep__pin { padding-top: 48px; }
+  .klymb-landing .keep__actions { margin-top: var(--lp-space-16); }
+  .klymb-landing .dash__body { min-height: 240px; }
 }
 
 /* ---------- Burger menu range ---------- */
 @media (max-width: 860px) {
-  .abtalks-landing .nav__links {
+  .klymb-landing .nav__links {
     position: absolute; left: var(--lp-pad); right: var(--lp-pad); top: calc(100% + 8px);
     flex-direction: column; align-items: stretch; gap: var(--lp-space-4);
     background: rgba(255,255,255,.82);
@@ -1438,39 +1438,39 @@
     overflow-y: auto;
     max-width: 100%;
   }
-  .abtalks-landing .nav__links.is-open { display: flex; }
-  .abtalks-landing .nav__links-cta { display: block; margin-top: var(--lp-space-8); }
-  .abtalks-landing .nav__links-cta .btn { width: 100%; height: 44px; font-size: 16px; line-height: 20px; }
-  .abtalks-landing .nav__links-cta .nav__cta-menu { width: 100%; }
-  .abtalks-landing .nav__links-cta .nav__cta-dropdown {
+  .klymb-landing .nav__links.is-open { display: flex; }
+  .klymb-landing .nav__links-cta { display: block; margin-top: var(--lp-space-8); }
+  .klymb-landing .nav__links-cta .btn { width: 100%; height: 44px; font-size: 16px; line-height: 20px; }
+  .klymb-landing .nav__links-cta .nav__cta-menu { width: 100%; }
+  .klymb-landing .nav__links-cta .nav__cta-dropdown {
     position: static;
     width: 100%;
     border-top: 1px solid var(--lp-color-border);
     border-radius: var(--lp-radius-sm);
   }
-  .abtalks-landing .nav__links-cta .nav__cta-item {
+  .klymb-landing .nav__links-cta .nav__cta-item {
     min-height: 44px;
     font-size: 16px; line-height: 20px;
   }
   /* 44px minimum tap target, design-system body size */
-  .abtalks-landing .nav__link { padding: var(--lp-space-12) var(--lp-space-16); font-size: 16px; line-height: 20px; }
-  .abtalks-landing .nav__cta { display: none; }
-  .abtalks-landing .nav__burger { display: flex; margin-left: auto; }
-  .abtalks-landing .nav { position: relative; }
+  .klymb-landing .nav__link { padding: var(--lp-space-12) var(--lp-space-16); font-size: 16px; line-height: 20px; }
+  .klymb-landing .nav__cta { display: none; }
+  .klymb-landing .nav__burger { display: flex; margin-left: auto; }
+  .klymb-landing .nav { position: relative; }
 
   /* ---------- Mobile navbar: solid, square, edge-to-edge ----------
      Above this range the nav is a floating frosted pill that sits inside the
      hero. On a phone that pill is the only chrome at the top and the blur
      reads as a detached widget over the photo, so here it becomes a real
      navbar: no outer padding, no radius, no translucency, no blur. */
-  .abtalks-landing .nav-wrap,
-  .abtalks-landing .nav-wrap.is-stuck { padding-block: 0; }
-  .abtalks-landing .nav-wrap > .container {
+  .klymb-landing .nav-wrap,
+  .klymb-landing .nav-wrap.is-stuck { padding-block: 0; }
+  .klymb-landing .nav-wrap > .container {
     padding-inline: 0;
     max-width: none;
   }
-  .abtalks-landing .nav,
-  .abtalks-landing .nav-wrap.is-stuck .nav {
+  .klymb-landing .nav,
+  .klymb-landing .nav-wrap.is-stuck .nav {
     height: 56px;
     gap: var(--lp-space-12);
     padding-inline: var(--lp-pad);
@@ -1484,14 +1484,14 @@
   }
   /* The invert() exists only because the pill was 42% white over a dark hero.
      On an opaque white bar the mark is black-on-white and must not invert. */
-  .abtalks-landing .nav__logo img,
-  .abtalks-landing .nav-wrap.is-stuck .nav__logo img {
+  .klymb-landing .nav__logo img,
+  .klymb-landing .nav-wrap.is-stuck .nav__logo img {
     height: 26px;
     filter: none;
   }
   /* The drawer hangs off a full-bleed bar now, so it matches it: opaque,
      flush to the bar, square at the top. */
-  .abtalks-landing .nav__links {
+  .klymb-landing .nav__links {
     left: 0; right: 0; top: 100%;
     background: #ffffff;
     -webkit-backdrop-filter: none;
@@ -1504,11 +1504,11 @@
     max-height: calc(100svh - 56px);
   }
   /* The active pill is 78% white — invisible on an opaque white drawer. */
-  .abtalks-landing .nav__links .nav__link.is-active {
+  .klymb-landing .nav__links .nav__link.is-active {
     background: #F4F4F4;
     box-shadow: none;
   }
-  .abtalks-landing .nav__links .nav__link:hover { background: #F4F4F4; }
+  .klymb-landing .nav__links .nav__link:hover { background: #F4F4F4; }
 }
 
 /* =========================================================
@@ -1516,16 +1516,16 @@
    ========================================================= */
 @media (max-width: 720px) {
   /* Design-system mobile container padding and section rhythm */
-  .abtalks-landing { --lp-pad: 20px; --lp-gutter: 16px; --lp-section-gap: 64px; }
+  .klymb-landing { --lp-pad: 20px; --lp-gutter: 16px; --lp-section-gap: 64px; }
 
   /* Design-system mobile type scale, applied once and inherited everywhere */
-  .abtalks-landing .h2 { font-size: 32px; line-height: 36px; }
-  .abtalks-landing .h3 { font-size: 22px; line-height: 28px; }
-  .abtalks-landing .p  { font-size: 17px; line-height: 28px; }
+  .klymb-landing .h2 { font-size: 32px; line-height: 36px; }
+  .klymb-landing .h3 { font-size: 22px; line-height: 28px; }
+  .klymb-landing .p  { font-size: 17px; line-height: 28px; }
 
   /* The three sections that trim 20px off the desktop rhythm return to the
      flat 64px mobile major-section spacing. */
-  .abtalks-landing .section.open, .abtalks-landing .section.faq, .abtalks-landing .section.contact { padding-block: var(--lp-section-gap); }
+  .klymb-landing .section.open, .klymb-landing .section.faq, .klymb-landing .section.contact { padding-block: var(--lp-section-gap); }
 
   /* ---------- HERO ---------- */
   /* Content sits toward the TOP of the hero on mobile instead of the bottom.
@@ -1536,48 +1536,48 @@
      the fixed glass header (68px bar + 16px wrap padding) with breathing room.
      `stretch` lets the content column span the hero so the CTA group can be
      pushed to the bottom edge while everything above it stays top-aligned. */
-  .abtalks-landing .hero { min-height: 100vh; min-height: 100svh; align-items: stretch; padding-top: 112px; padding-bottom: var(--lp-space-48); }
-  .abtalks-landing .hero__inner { display: flex; }
-  .abtalks-landing .hero__content { display: flex; flex-direction: column; flex: 1 1 auto; }
+  .klymb-landing .hero { min-height: 100vh; min-height: 100svh; align-items: stretch; padding-top: 112px; padding-bottom: var(--lp-space-48); }
+  .klymb-landing .hero__inner { display: flex; }
+  .klymb-landing .hero__content { display: flex; flex-direction: column; flex: 1 1 auto; }
   /* Copy stays at the top; the buttons sink to the bottom of the hero. */
-  .abtalks-landing .hero__actions { margin-top: auto; }
+  .klymb-landing .hero__actions { margin-top: auto; }
   /* Single tuning point for the mobile video's crop — the mobile file has its
      own composition, so it is framed independently of the desktop one. */
-  .abtalks-landing .hero__video { object-fit: cover; object-position: center center; }
+  .klymb-landing .hero__video { object-fit: cover; object-position: center center; }
   /* Copy runs full width on mobile, so the scrim reads top-to-bottom instead
      of left-to-right and stays legible over any frame. */
-  .abtalks-landing .hero__scrim {
+  .klymb-landing .hero__scrim {
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.52) 42%, rgba(0, 0, 0, 0.84) 100%);
   }
-  .abtalks-landing .hero__content { max-width: 100%; }
-  .abtalks-landing .hero__title { font-size: 40px; line-height: 44px; }
-  .abtalks-landing .strike { font-size: 30px; line-height: 38px; }
-  .abtalks-landing .hero__desc { font-size: 17px; line-height: 28px; max-width: 100%; }
+  .klymb-landing .hero__content { max-width: 100%; }
+  .klymb-landing .hero__title { font-size: 40px; line-height: 44px; }
+  .klymb-landing .strike { font-size: 30px; line-height: 38px; }
+  .klymb-landing .hero__desc { font-size: 17px; line-height: 28px; max-width: 100%; }
   /* The two CTAs read as one group: a single row, sharing the width evenly.
      Tighter inline padding keeps "Post a requirement" on one line without
      touching the button height or the 16/20/600 label. */
-  .abtalks-landing .hero__actions { flex-direction: row; flex-wrap: nowrap; gap: var(--lp-space-12); }
+  .klymb-landing .hero__actions { flex-direction: row; flex-wrap: nowrap; gap: var(--lp-space-12); }
   /* flex-basis: auto so each button starts from its own label width and the
      longer "Post a requirement" keeps the room it needs — free space is then
      shared equally, so both end up the same height and neither label wraps. */
-  .abtalks-landing .hero__actions .btn { flex: 1 1 auto; min-width: 0; padding-inline: var(--lp-space-12); }
-  .abtalks-landing .hero__stamp { position: static; display: inline-block; margin-top: var(--lp-space-24); font-size: 40px; border-width: 4px; }
+  .klymb-landing .hero__actions .btn { flex: 1 1 auto; min-width: 0; padding-inline: var(--lp-space-12); }
+  .klymb-landing .hero__stamp { position: static; display: inline-block; margin-top: var(--lp-space-24); font-size: 40px; border-width: 4px; }
 
   /* ---------- STATS — centred vertical stack ---------- */
-  .abtalks-landing .stats__grid {
+  .klymb-landing .stats__grid {
     grid-template-columns: 1fr;
     gap: var(--lp-space-32);
     padding-block: var(--lp-space-40);
   }
-  .abtalks-landing .stat { max-width: 32ch; }
-  .abtalks-landing .stat__num { margin-bottom: var(--lp-space-8); }
-  .abtalks-landing .stat__label { max-width: 28ch; }
+  .klymb-landing .stat { max-width: 32ch; }
+  .klymb-landing .stat__num { margin-bottom: var(--lp-space-8); }
+  .klymb-landing .stat__label { max-width: 28ch; }
 
   /* ---------- BRIDGE — vertical mobile composition ----------
      Stack becomes the primary object, centred and sized against the viewport;
      the active platform's information sits clearly below it. Cuboids keep
      their perspective, side walls, shadows and pull-out labels. */
-  .abtalks-landing .bridge { --lp-bridge-track: 240vh; --lp-slab-mobile: clamp(112px, 33vw, 148px); }
+  .klymb-landing .bridge { --lp-bridge-track: 240vh; --lp-slab-mobile: clamp(112px, 33vw, 148px); }
   /* ---------- Pinned junctions ----------
      On mobile the pins were a full viewport tall with their content centred, so
      every junction had ~180px of dead band above the incoming section plus ~75px
@@ -1594,7 +1594,7 @@
 
      Track heights (scroll duration) are untouched, so the Bridge platforms, the
      How It Works roll and the Keep The Three pipeline all run exactly as before. */
-  .abtalks-landing .bridge__pin, .abtalks-landing .how__pin, .abtalks-landing .keep__pin {
+  .klymb-landing .bridge__pin, .klymb-landing .how__pin, .klymb-landing .keep__pin {
     top: 64px;                 /* + 32px padding = 96px clear of the header */
     height: auto;
     align-items: flex-start;
@@ -1608,118 +1608,118 @@
   }
   /* Applies to .how and .keep only, so exactly two junctions change:
      Bridge -> How It Works and How It Works -> Keep The Three. */
-  .abtalks-landing .how, .abtalks-landing .keep { --lp-tighten-above: 32px; }
-  .abtalks-landing .companies { margin-bottom: 32px; }
-  .abtalks-landing .bridge__grid { gap: var(--lp-space-24); }
+  .klymb-landing .how, .klymb-landing .keep { --lp-tighten-above: 32px; }
+  .klymb-landing .companies { margin-bottom: 32px; }
+  .klymb-landing .bridge__grid { gap: var(--lp-space-24); }
 
-  .abtalks-landing .bridge__visual { height: calc(var(--lp-slab-mobile) * 2 + var(--lp-space-48)); }
-  .abtalks-landing .slab {
+  .klymb-landing .bridge__visual { height: calc(var(--lp-slab-mobile) * 2 + var(--lp-space-48)); }
+  .klymb-landing .slab {
     --lp-slab-w: var(--lp-slab-mobile);
     --lp-slab-t: calc(var(--lp-slab-mobile) * .08);
   }
-  .abtalks-landing .slab__label { font-size: 13px; line-height: 18px; transform: scaleY(1.22); }
-  .abtalks-landing .slab--top    { top: 0; }
-  .abtalks-landing .slab--middle { top: calc(var(--lp-slab-mobile) * .5); }
-  .abtalks-landing .slab--bottom { top: calc(var(--lp-slab-mobile) * 1); }
+  .klymb-landing .slab__label { font-size: 13px; line-height: 18px; transform: scaleY(1.22); }
+  .klymb-landing .slab--top    { top: 0; }
+  .klymb-landing .slab--middle { top: calc(var(--lp-slab-mobile) * .5); }
+  .klymb-landing .slab--bottom { top: calc(var(--lp-slab-mobile) * 1); }
 
   /* Label + heading centre under the stack, matching the reference's compact
      centred header; paragraphs and bullet lists stay left-aligned inside a
      centred column so they remain readable. */
-  .abtalks-landing .bridge__panels { min-height: 250px; }
-  .abtalks-landing .bpanel { align-items: center; text-align: center; }
-  .abtalks-landing .bpanel .section-label,
-  .abtalks-landing .bpanel .h2 { width: 100%; }
-  .abtalks-landing .bpanel .h2 { font-size: 26px; line-height: 32px; margin-bottom: var(--lp-space-16); }
-  .abtalks-landing .bpanel .p,
-  .abtalks-landing .bpanel__list { text-align: left; max-width: 46ch; margin-inline: auto; }
+  .klymb-landing .bridge__panels { min-height: 250px; }
+  .klymb-landing .bpanel { align-items: center; text-align: center; }
+  .klymb-landing .bpanel .section-label,
+  .klymb-landing .bpanel .h2 { width: 100%; }
+  .klymb-landing .bpanel .h2 { font-size: 26px; line-height: 32px; margin-bottom: var(--lp-space-16); }
+  .klymb-landing .bpanel .p,
+  .klymb-landing .bpanel__list { text-align: left; max-width: 46ch; margin-inline: auto; }
 
   /* ---------- HOW IT WORKS — vertical face, responsive media ----------
      Face height is bounded by BOTH viewport width and height, so the whole
      composition (image → number → heading → paragraph) always fits inside the
      pin without clipping. The 3-face roll itself is untouched. */
-  .abtalks-landing .how {
+  .klymb-landing .how {
     --lp-how-track: 220vh;
     --lp-face-h: clamp(340px, min(116vw, 54vh), 500px);
   }
-  .abtalks-landing .roller__stage { perspective: 1200px; }
-  .abtalks-landing .roller__face { padding-inline: 7%; padding-block: 0; gap: var(--lp-space-16); align-content: center; }
-  .abtalks-landing .how__media { height: clamp(150px, min(46vw, 26vh), 240px); }
-  .abtalks-landing .how__num { font-size: 32px; line-height: 38px; }
-  .abtalks-landing .how__body .h3 { margin-bottom: var(--lp-space-16); }
-  .abtalks-landing .how__label { margin-bottom: var(--lp-space-20); }
-  .abtalks-landing .roller__dots { margin-top: var(--lp-space-20); }
+  .klymb-landing .roller__stage { perspective: 1200px; }
+  .klymb-landing .roller__face { padding-inline: 7%; padding-block: 0; gap: var(--lp-space-16); align-content: center; }
+  .klymb-landing .how__media { height: clamp(150px, min(46vw, 26vh), 240px); }
+  .klymb-landing .how__num { font-size: 32px; line-height: 38px; }
+  .klymb-landing .how__body .h3 { margin-bottom: var(--lp-space-16); }
+  .klymb-landing .how__label { margin-bottom: var(--lp-space-20); }
+  .klymb-landing .roller__dots { margin-top: var(--lp-space-20); }
 
   /* ---------- KEEP THE THREE ---------- */
-  .abtalks-landing .keep { --lp-keep-track: 320vh; }
-  .abtalks-landing .keep__grid { gap: var(--lp-space-24); }
-  .abtalks-landing .keep__text .h2 { margin-bottom: var(--lp-space-12); }
-  .abtalks-landing .pipeline { margin-top: var(--lp-space-16); gap: var(--lp-space-8); }
-  .abtalks-landing .keep__actions { margin-top: var(--lp-space-20); }
+  .klymb-landing .keep { --lp-keep-track: 320vh; }
+  .klymb-landing .keep__grid { gap: var(--lp-space-24); }
+  .klymb-landing .keep__text .h2 { margin-bottom: var(--lp-space-12); }
+  .klymb-landing .pipeline { margin-top: var(--lp-space-16); gap: var(--lp-space-8); }
+  .klymb-landing .keep__actions { margin-top: var(--lp-space-20); }
   /* Readable at the design-system paragraph size, not shrunk to fit */
-  .abtalks-landing .pipeline__item { font-size: 17px; line-height: 28px; padding-left: var(--lp-space-20); }
-  .abtalks-landing .pipeline__item::before { top: 13px; }
-  .abtalks-landing .pipeline__note > p { font-size: 14px; line-height: 21px; max-width: 100%; }
+  .klymb-landing .pipeline__item { font-size: 17px; line-height: 28px; padding-left: var(--lp-space-20); }
+  .klymb-landing .pipeline__item::before { top: 13px; }
+  .klymb-landing .pipeline__note > p { font-size: 14px; line-height: 21px; max-width: 100%; }
 
-  .abtalks-landing .dash { padding: var(--lp-space-12); }
-  .abtalks-landing .dash__body { min-height: clamp(190px, 30vh, 260px); }
-  .abtalks-landing .dash__stage { overflow: hidden; }
-  .abtalks-landing .dash__bar { flex-wrap: wrap; gap: var(--lp-space-8); }
-  .abtalks-landing .dash__filters { grid-template-columns: 1fr 1fr; gap: var(--lp-space-8); margin-bottom: var(--lp-space-12); }
-  .abtalks-landing .dash__card { padding: var(--lp-space-12); }
-  .abtalks-landing .dash__meta { flex-wrap: wrap; gap: var(--lp-space-8); }
-  .abtalks-landing .dash__chips { gap: 3px; }
-  .abtalks-landing .dash__row { gap: var(--lp-space-12); }
+  .klymb-landing .dash { padding: var(--lp-space-12); }
+  .klymb-landing .dash__body { min-height: clamp(190px, 30vh, 260px); }
+  .klymb-landing .dash__stage { overflow: hidden; }
+  .klymb-landing .dash__bar { flex-wrap: wrap; gap: var(--lp-space-8); }
+  .klymb-landing .dash__filters { grid-template-columns: 1fr 1fr; gap: var(--lp-space-8); margin-bottom: var(--lp-space-12); }
+  .klymb-landing .dash__card { padding: var(--lp-space-12); }
+  .klymb-landing .dash__meta { flex-wrap: wrap; gap: var(--lp-space-8); }
+  .klymb-landing .dash__chips { gap: 3px; }
+  .klymb-landing .dash__row { gap: var(--lp-space-12); }
 
   /* ---------- OPEN RIGHT NOW ---------- */
-  .abtalks-landing .open__grid { grid-template-columns: 1fr; gap: var(--lp-space-16); margin-top: var(--lp-space-24); }
+  .klymb-landing .open__grid { grid-template-columns: 1fr; gap: var(--lp-space-16); margin-top: var(--lp-space-24); }
 
   /* ---------- TESTIMONIALS ---------- */
-  .abtalks-landing .quote { width: min(280px, calc(100vw - var(--lp-pad) * 2)); flex-basis: auto; padding: var(--lp-space-20); gap: var(--lp-space-20); }
+  .klymb-landing .quote { width: min(280px, calc(100vw - var(--lp-pad) * 2)); flex-basis: auto; padding: var(--lp-space-20); gap: var(--lp-space-20); }
 
   /* ---------- FAQ — design-system sizes, full-width accordion ---------- */
-  .abtalks-landing .faq__q { font-size: 18px; line-height: 27px; padding: var(--lp-space-16) var(--lp-space-20); min-height: 56px; }
-  .abtalks-landing .faq__a p { font-size: 16px; line-height: 25px; padding: 0 var(--lp-space-20) var(--lp-space-16); }
+  .klymb-landing .faq__q { font-size: 18px; line-height: 27px; padding: var(--lp-space-16) var(--lp-space-20); min-height: 56px; }
+  .klymb-landing .faq__a p { font-size: 16px; line-height: 25px; padding: 0 var(--lp-space-20) var(--lp-space-16); }
 
   /* ---------- COMMUNITY — 2-up editorial reel ----------
      Fewer, larger tiles instead of five microscopic ones; the alternating
      heights of the desktop gallery are preserved, as is the reel entrance. */
-  .abtalks-landing .community__reel { grid-template-columns: repeat(2, 1fr); gap: var(--lp-space-12); overflow-clip-margin: 24px; }
-  .abtalks-landing .tile--1 { height: 200px; }
-  .abtalks-landing .tile--2 { height: 240px; }
-  .abtalks-landing .tile--3 { height: 240px; }
-  .abtalks-landing .tile--4 { height: 200px; }
-  .abtalks-landing .tile--5 { display: none; }
-  .abtalks-landing .community__badge { position: static; margin-top: var(--lp-space-16); justify-self: start; }
+  .klymb-landing .community__reel { grid-template-columns: repeat(2, 1fr); gap: var(--lp-space-12); overflow-clip-margin: 24px; }
+  .klymb-landing .tile--1 { height: 200px; }
+  .klymb-landing .tile--2 { height: 240px; }
+  .klymb-landing .tile--3 { height: 240px; }
+  .klymb-landing .tile--4 { height: 200px; }
+  .klymb-landing .tile--5 { display: none; }
+  .klymb-landing .community__badge { position: static; margin-top: var(--lp-space-16); justify-self: start; }
 
   /* ---------- CONTACT ---------- */
-  .abtalks-landing .form { padding: var(--lp-space-20); }
+  .klymb-landing .form { padding: var(--lp-space-20); }
 
   /* ---------- CTA BAND ---------- */
-  .abtalks-landing .cta-band { padding-block: var(--lp-space-48); }
+  .klymb-landing .cta-band { padding-block: var(--lp-space-48); }
   /* Pushed further off-edge and softened so it never competes with the
      left-aligned CTA copy on phones */
-  .abtalks-landing .cta-band__rings { left: -330px; width: 520px; height: 520px; --lp-sphere-r: 260px; opacity: .5; }
-  .abtalks-landing .cta-band__inner { text-align: left; }
-  .abtalks-landing .cta-band__title { font-size: 28px; line-height: 34px; }
-  .abtalks-landing .cta-band__actions { justify-content: flex-start; }
-  .abtalks-landing .cta-band__actions .btn { flex: 1 1 100%; }
+  .klymb-landing .cta-band__rings { left: -330px; width: 520px; height: 520px; --lp-sphere-r: 260px; opacity: .5; }
+  .klymb-landing .cta-band__inner { text-align: left; }
+  .klymb-landing .cta-band__title { font-size: 28px; line-height: 34px; }
+  .klymb-landing .cta-band__actions { justify-content: flex-start; }
+  .klymb-landing .cta-band__actions .btn { flex: 1 1 100%; }
 
   /* ---------- FOOTER ---------- */
-  .abtalks-landing .footer__grid { grid-template-columns: 1fr 1fr; gap: var(--lp-space-32); }
+  .klymb-landing .footer__grid { grid-template-columns: 1fr 1fr; gap: var(--lp-space-32); }
 }
 
 /* ---------- Touch devices: hover must never be load-bearing ---------- */
 @media (hover: none) {
-  .abtalks-landing .community__gallery.reel-ready .tile:hover { transform: translateX(0) scale(1); z-index: 0; box-shadow: var(--lp-shadow-sm); }
-  .abtalks-landing .marquee:hover .marquee__track { animation-play-state: running; }
+  .klymb-landing .community__gallery.reel-ready .tile:hover { transform: translateX(0) scale(1); z-index: 0; box-shadow: var(--lp-shadow-sm); }
+  .klymb-landing .marquee:hover .marquee__track { animation-play-state: running; }
 }
 
 /* ---------- Small phones ---------- */
 @media (max-width: 480px) {
-  .abtalks-landing .footer__grid { grid-template-columns: 1fr; gap: var(--lp-space-24); }
-  .abtalks-landing .footer__legal { margin-top: var(--lp-space-32); }
-  .abtalks-landing .community__reel { gap: var(--lp-space-8); }
-  .abtalks-landing .cta-band__rings { left: -300px; width: 440px; height: 440px; --lp-sphere-r: 220px; }
+  .klymb-landing .footer__grid { grid-template-columns: 1fr; gap: var(--lp-space-24); }
+  .klymb-landing .footer__legal { margin-top: var(--lp-space-32); }
+  .klymb-landing .community__reel { gap: var(--lp-space-8); }
+  .klymb-landing .cta-band__rings { left: -300px; width: 440px; height: 440px; --lp-sphere-r: 220px; }
 }
 
 /* ---------- Short viewports: keep every pin's content inside the fold ----------
@@ -1727,37 +1727,37 @@
    three pinned scenes tighten their internal rhythm rather than clipping.
    Every value here is still a design-system token or type step. */
 @media (max-width: 720px) and (max-height: 760px) {
-  .abtalks-landing .bridge__pin, .abtalks-landing .how__pin, .abtalks-landing .keep__pin { top: 64px; padding-block: var(--lp-space-24); }
-  .abtalks-landing .how, .abtalks-landing .keep { --lp-tighten-above: 24px; }   /* 24 + 24 - 24 = 24px junction */
-  .abtalks-landing .companies { margin-bottom: 24px; }
+  .klymb-landing .bridge__pin, .klymb-landing .how__pin, .klymb-landing .keep__pin { top: 64px; padding-block: var(--lp-space-24); }
+  .klymb-landing .how, .klymb-landing .keep { --lp-tighten-above: 24px; }   /* 24 + 24 - 24 = 24px junction */
+  .klymb-landing .companies { margin-bottom: 24px; }
 
-  .abtalks-landing .bridge__grid { gap: var(--lp-space-16); }
-  .abtalks-landing .bridge__visual { height: calc(var(--lp-slab-mobile) * 2 + var(--lp-space-24)); }
-  .abtalks-landing .bridge__panels { min-height: 176px; }
-  .abtalks-landing .bpanel .h2 { font-size: 22px; line-height: 28px; margin-bottom: var(--lp-space-12); }
-  .abtalks-landing .bpanel .p, .abtalks-landing .bpanel__list li { font-size: 14px; line-height: 21px; }
+  .klymb-landing .bridge__grid { gap: var(--lp-space-16); }
+  .klymb-landing .bridge__visual { height: calc(var(--lp-slab-mobile) * 2 + var(--lp-space-24)); }
+  .klymb-landing .bridge__panels { min-height: 176px; }
+  .klymb-landing .bpanel .h2 { font-size: 22px; line-height: 28px; margin-bottom: var(--lp-space-12); }
+  .klymb-landing .bpanel .p, .klymb-landing .bpanel__list li { font-size: 14px; line-height: 21px; }
 
-  .abtalks-landing .keep__grid { gap: var(--lp-space-16); }
-  .abtalks-landing .keep__text .h2 { font-size: 22px; line-height: 28px; margin-bottom: var(--lp-space-8); }
-  .abtalks-landing .pipeline { margin-top: var(--lp-space-12); gap: var(--lp-space-4); }
-  .abtalks-landing .keep__actions { margin-top: var(--lp-space-12); }
-  .abtalks-landing .pipeline__item { font-size: 14px; line-height: 21px; }
-  .abtalks-landing .pipeline__item::before { top: 9px; }
-  .abtalks-landing .pipeline__note > p { font-size: 12px; line-height: 16px; }
-  .abtalks-landing .pipeline__item.is-active .pipeline__note > p { padding-top: var(--lp-space-4); }
-  .abtalks-landing .dash { padding: var(--lp-space-8); }
-  .abtalks-landing .dash__bar { margin-bottom: var(--lp-space-8); }
-  .abtalks-landing .dash__body { min-height: 96px; }
-  .abtalks-landing .dash__filters { margin-bottom: var(--lp-space-8); }
-  .abtalks-landing .dash__card { padding: var(--lp-space-8); }
+  .klymb-landing .keep__grid { gap: var(--lp-space-16); }
+  .klymb-landing .keep__text .h2 { font-size: 22px; line-height: 28px; margin-bottom: var(--lp-space-8); }
+  .klymb-landing .pipeline { margin-top: var(--lp-space-12); gap: var(--lp-space-4); }
+  .klymb-landing .keep__actions { margin-top: var(--lp-space-12); }
+  .klymb-landing .pipeline__item { font-size: 14px; line-height: 21px; }
+  .klymb-landing .pipeline__item::before { top: 9px; }
+  .klymb-landing .pipeline__note > p { font-size: 12px; line-height: 16px; }
+  .klymb-landing .pipeline__item.is-active .pipeline__note > p { padding-top: var(--lp-space-4); }
+  .klymb-landing .dash { padding: var(--lp-space-8); }
+  .klymb-landing .dash__bar { margin-bottom: var(--lp-space-8); }
+  .klymb-landing .dash__body { min-height: 96px; }
+  .klymb-landing .dash__filters { margin-bottom: var(--lp-space-8); }
+  .klymb-landing .dash__card { padding: var(--lp-space-8); }
 }
 
 /* ---------- Narrow phones: keep the two CTAs on one row ----------
    Only the button's own inline padding and the group gap tighten; the 16/20/600
    label and the 48px button height are untouched. */
 @media (max-width: 374px) {
-  .abtalks-landing .hero__actions { gap: var(--lp-space-8); }
-  .abtalks-landing .hero__actions .btn { padding-inline: var(--lp-space-8); }
+  .klymb-landing .hero__actions { gap: var(--lp-space-8); }
+  .klymb-landing .hero__actions .btn { padding-inline: var(--lp-space-8); }
 }
 
 /* At 320px the two labels genuinely do not fit on one row at 16/20/600 without
@@ -1765,8 +1765,8 @@
    system. Both are worse than stacking, so the group falls back to full-width
    buttons at this one width. Every phone from 360px up keeps them side by side. */
 @media (max-width: 339px) {
-  .abtalks-landing .hero__actions { flex-wrap: wrap; }
-  .abtalks-landing .hero__actions .btn { flex: 1 1 100%; padding-inline: var(--lp-space-20); }
+  .klymb-landing .hero__actions { flex-wrap: wrap; }
+  .klymb-landing .hero__actions .btn { flex: 1 1 100%; padding-inline: var(--lp-space-20); }
 }
 
 /* =========================================================
@@ -1775,7 +1775,7 @@
    Self-contained: every selector is namespaced .gcom*, so no existing
    section is affected. Only design-system tokens are used.
    ========================================================= */
-.abtalks-landing .gcom {
+.klymb-landing .gcom {
   background: #FFFFFF;
   /* Vertical rhythm tracks the viewport so the whole section reads as one
      screen on a laptop instead of running past the fold. */
@@ -1784,29 +1784,29 @@
      internal scroll container, and nothing that can widen the page. */
   overflow-x: clip;
 }
-.abtalks-landing .gcom__stage, .abtalks-landing .gcom__map, .abtalks-landing .gcom__nodes, .abtalks-landing .gcom__routes, .abtalks-landing .gcom__land { overflow: visible; }
+.klymb-landing .gcom__stage, .klymb-landing .gcom__map, .klymb-landing .gcom__nodes, .klymb-landing .gcom__routes, .klymb-landing .gcom__land { overflow: visible; }
 /* The map is a picture, not a viewport: it cannot be dragged, selected or
    panned, and it owns no scroll of its own. */
-.abtalks-landing .gcom__stage, .abtalks-landing .gcom__map {
+.klymb-landing .gcom__stage, .klymb-landing .gcom__map {
   touch-action: pan-y;
   user-select: none; -webkit-user-select: none;
   -webkit-user-drag: none;
 }
-.abtalks-landing .gcom__land, .abtalks-landing .gcom__routes { pointer-events: none; }
+.klymb-landing .gcom__land, .klymb-landing .gcom__routes { pointer-events: none; }
 /* The map is the section: it runs the full page width, with a 30px margin
    on each side and nothing else. */
-.abtalks-landing .gcom > .container {
+.klymb-landing .gcom > .container {
   max-width: 100%;
   padding-inline: 30px;
 }
 /* One centred column: heading, then the globe across the full width. */
-.abtalks-landing .gcom__grid {
+.klymb-landing .gcom__grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--lp-space-32);
   justify-items: center;
 }
-.abtalks-landing .gcom__content { text-align: center; }
+.klymb-landing .gcom__content { text-align: center; }
 
 /* --- Stage: map box + the absolutely positioned pins/cards over it ---
    The map runs the full width (30px each side), except on screens that are
@@ -1815,32 +1815,32 @@
    and the heading are on screen at once: 2.6509 is the map's aspect, so
    capping its height in vh caps its width; 290px covers the header, the
    heading and the cards that sit above and below the map box. */
-.abtalks-landing .gcom__stage {
+.klymb-landing .gcom__stage {
   position: relative;
   width: min(100%, calc((100vh - 290px) * 2.6509));
   --lp-gcom-k: 1;                        /* set by layout(): pin/card scale vs map width */
 }
-.abtalks-landing .gcom__map {
+.klymb-landing .gcom__map {
   position: relative;
   width: 100%;
   /* Matches the projected map's bounding box */
   aspect-ratio: 1000 / 377;
 }
-.abtalks-landing .gcom__land,
-.abtalks-landing .gcom__routes { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.klymb-landing .gcom__land,
+.klymb-landing .gcom__routes { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 
 /* Land dots, banded by how far each one has turned away from the viewer.
    Together with the per-dot radius this is what makes the surface read as
    curved — one muted grey, three depths, no second hue. */
-.abtalks-landing .gcom__dots { fill: #8F8F8F; }
-.abtalks-landing .gcom__dots--mid { fill: #8F8F8F; }
-.abtalks-landing .gcom__dots--far { fill: #A5A5A5; }
+.klymb-landing .gcom__dots { fill: #8F8F8F; }
+.klymb-landing .gcom__dots--mid { fill: #8F8F8F; }
+.klymb-landing .gcom__dots--far { fill: #A5A5A5; }
 
 /* Route lines — a thin neon stroke of even weight, below the pins and cards.
    The colour is a light, saturated orange; the two drop-shadows are the glow
    (a tight core halo plus a wider bloom), which is what makes it read as neon
    rather than as a flat hairline. */
-.abtalks-landing .gcom__routeline {
+.klymb-landing .gcom__routeline {
   fill: none;
   stroke: #076573;
   stroke-linecap: round;
@@ -1852,11 +1852,11 @@
 }
 
 /* --- Location pins + cards --- */
-.abtalks-landing .gcom__nodes { position: absolute; inset: 0; list-style: none; margin: 0; padding: 0; }
-.abtalks-landing .gcom__node { position: absolute; inset: 0; pointer-events: none; }
+.klymb-landing .gcom__nodes { position: absolute; inset: 0; list-style: none; margin: 0; padding: 0; }
+.klymb-landing .gcom__node { position: absolute; inset: 0; pointer-events: none; }
 
 /* Pin: soft outer glow, halo ring, bright centre. */
-.abtalks-landing .gcom__pin {
+.klymb-landing .gcom__pin {
   position: absolute;
   width: calc(34px * var(--lp-gcom-k)); height: calc(34px * var(--lp-gcom-k));
   margin: calc(-17px * var(--lp-gcom-k)) 0 0 calc(-17px * var(--lp-gcom-k));  /* centre on the point */
@@ -1866,31 +1866,31 @@
   transform: scale(.55);
   transition: opacity .42s var(--lp-ease-soft), transform .52s var(--lp-ease-soft);
 }
-.abtalks-landing .gcom__pin::before,
-.abtalks-landing .gcom__pin::after { content: ""; position: absolute; border-radius: 50%; }
+.klymb-landing .gcom__pin::before,
+.klymb-landing .gcom__pin::after { content: ""; position: absolute; border-radius: 50%; }
 /* outer glow */
-.abtalks-landing .gcom__pin::before {
+.klymb-landing .gcom__pin::before {
   inset: 0;
   background: radial-gradient(circle, rgba(3, 83, 95, 0.26) 0%, rgba(3, 83, 95, 0.1) 45%, rgba(3, 83, 95, 0) 70%);
 }
 /* soft halo */
-.abtalks-landing .gcom__pin::after {
+.klymb-landing .gcom__pin::after {
   width: calc(15px * var(--lp-gcom-k)); height: calc(15px * var(--lp-gcom-k));
   background: rgba(3, 83, 95, 0.3);
   box-shadow: 0 0 0 1px rgba(3, 83, 95, 0.28);
 }
 /* bright central dot */
-.abtalks-landing .gcom__pin i {
+.klymb-landing .gcom__pin i {
   position: relative; z-index: 1;
   width: calc(7px * var(--lp-gcom-k)); height: calc(7px * var(--lp-gcom-k)); border-radius: 50%;
   background: var(--lp-color-primary);
   box-shadow: 0 0 0 2px #FFFFFF, 0 1px 3px rgba(3, 83, 95, 0.45);
 }
-.abtalks-landing .gcom__node.is-on .gcom__pin { opacity: 1; transform: scale(1); }
+.klymb-landing .gcom__node.is-on .gcom__pin { opacity: 1; transform: scale(1); }
 
 /* Leader: a hairline from the pin to its card, so a card is never ambiguous
    in the tight European cluster. Drawn with the same progressive reveal. */
-.abtalks-landing .gcom__leader {
+.klymb-landing .gcom__leader {
   position: absolute;
   height: 1px;
   background: rgba(3, 83, 95, 0.45);
@@ -1898,12 +1898,12 @@
   opacity: 0;
   transition: opacity .4s var(--lp-ease);
 }
-.abtalks-landing .gcom__node.is-on .gcom__leader { opacity: 1; }
+.klymb-landing .gcom__node.is-on .gcom__leader { opacity: 1; }
 
 /* Card — small floating data card. White, hairline border, soft shadow.
    display:block matters: the card is a <span>, and it drops to position:static
    in the mobile grid — without it, it would fall back to inline. */
-.abtalks-landing .gcom__card {
+.klymb-landing .gcom__card {
   position: absolute;
   display: block;
   width: calc(var(--lp-gcom-cw, 108) * 1px * var(--lp-gcom-k));
@@ -1917,9 +1917,9 @@
   transition: opacity .58s var(--lp-ease), transform .62s var(--lp-ease-soft);
   pointer-events: auto;
 }
-.abtalks-landing .gcom__node.is-lit .gcom__card { opacity: 1; transform: translateY(0); }
+.klymb-landing .gcom__node.is-lit .gcom__card { opacity: 1; transform: translateY(0); }
 
-.abtalks-landing .gcom__cardhead {
+.klymb-landing .gcom__cardhead {
   display: flex; align-items: center; gap: 5px;
   white-space: nowrap;
   font-family: var(--lp-font-display);
@@ -1928,7 +1928,7 @@
   color: var(--lp-color-text-primary);
 }
 /* Every flag is the same drawn box, so none can appear larger than another. */
-.abtalks-landing .gcom__flag {
+.klymb-landing .gcom__flag {
   flex: none;
   width: calc(18px * var(--lp-gcom-k));
   height: calc(12px * var(--lp-gcom-k));
@@ -1936,28 +1936,28 @@
   overflow: hidden;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
 }
-.abtalks-landing .gcom__flag svg { display: block; width: 100%; height: 100%; }
+.klymb-landing .gcom__flag svg { display: block; width: 100%; height: 100%; }
 /* Full country name for screen readers; the card face shows the short label. */
-.abtalks-landing .gcom__sr {
+.klymb-landing .gcom__sr {
   position: absolute; width: 1px; height: 1px;
   margin: -1px; padding: 0; border: 0;
   clip-path: inset(50%); overflow: hidden; white-space: nowrap;
 }
-.abtalks-landing .gcom__num {
+.klymb-landing .gcom__num {
   display: block;
   font-family: var(--lp-font-display);
   font-size: calc(22px * var(--lp-gcom-k)); line-height: calc(28px * var(--lp-gcom-k)); font-weight: 700;
   color: var(--lp-color-primary);
   margin-top: 2px;
 }
-.abtalks-landing .gcom__unit {
+.klymb-landing .gcom__unit {
   display: block;
   font-size: calc(12px * var(--lp-gcom-k)); line-height: calc(16px * var(--lp-gcom-k));
   color: var(--lp-color-text-muted);
 }
 
 /* --- Heading block --- */
-.abtalks-landing .gcom__title { margin-bottom: 0; }
+.klymb-landing .gcom__title { margin-bottom: 0; }
 
 /* =========================================================
    20c. GLOBAL COMMUNITY — responsive
@@ -1965,12 +1965,12 @@
 /* Short desktop screens (laptops): the heading and the globe together still
    have to land inside one viewport, so both tighten. */
 @media (min-width: 721px) and (max-height: 940px) {
-  .abtalks-landing .gcom { padding-block: clamp(30px, 4.6vh, var(--lp-section-gap)); }
-  .abtalks-landing .gcom__grid { gap: var(--lp-space-24); }
+  .klymb-landing .gcom { padding-block: clamp(30px, 4.6vh, var(--lp-section-gap)); }
+  .klymb-landing .gcom__grid { gap: var(--lp-space-24); }
 }
 @media (min-width: 721px) and (max-height: 800px) {
-  .abtalks-landing .gcom { padding-block: clamp(24px, 3.4vh, var(--lp-section-gap)); }
-  .abtalks-landing .gcom__grid { gap: var(--lp-space-16); }
+  .klymb-landing .gcom { padding-block: clamp(24px, 3.4vh, var(--lp-section-gap)); }
+  .klymb-landing .gcom__grid { gap: var(--lp-space-16); }
 }
 
 @media (max-width: 720px) {
@@ -1978,73 +1978,73 @@
      floating cards cannot fit a ~350px-wide map without burying it. Below
      720px the cards become a two-column grid under the map instead, still
      revealed one at a time in the same order as their pins. */
-  .abtalks-landing .gcom__stage { display: grid; gap: var(--lp-space-20); }
-  .abtalks-landing .gcom__nodes {
+  .klymb-landing .gcom__stage { display: grid; gap: var(--lp-space-20); }
+  .klymb-landing .gcom__nodes {
     position: static;
     display: grid; grid-template-columns: 1fr 1fr; gap: var(--lp-space-8);
   }
-  .abtalks-landing .gcom__node { position: static; }
-  .abtalks-landing .gcom__leader { display: none; }
-  .abtalks-landing .gcom__card {
+  .klymb-landing .gcom__node { position: static; }
+  .klymb-landing .gcom__leader { display: none; }
+  .klymb-landing .gcom__card {
     position: static;
     width: auto;
     padding: var(--lp-space-12) var(--lp-space-12) 10px;
     transform: translateY(22px);
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
   }
-  .abtalks-landing .gcom__num { font-size: 20px; line-height: 26px; }
+  .klymb-landing .gcom__num { font-size: 20px; line-height: 26px; }
 }
 
 /* =========================================================
    21. REDUCED MOTION — keep everything readable & static
    ========================================================= */
 @media (prefers-reduced-motion: reduce) {
-  .abtalks-landing { scroll-behavior: auto; }
-  .abtalks-landing .marquee__track { animation: none; }
-  .abtalks-landing .reveal { opacity: 1; transform: none; transition: none; }
+  .klymb-landing { scroll-behavior: auto; }
+  .klymb-landing .marquee__track { animation: none; }
+  .klymb-landing .reveal { opacity: 1; transform: none; transition: none; }
 
   /* Hero: no choreography, everything visible */
-  .abtalks-landing .strike__word, .abtalks-landing .hl__text, .abtalks-landing .hero__desc, .abtalks-landing .hero__actions .btn { opacity: 1 !important; transform: none !important; animation: none !important; }
-  .abtalks-landing .hl__ink { transform: scaleX(1) !important; animation: none !important; }
-  .abtalks-landing .strike__line path { stroke-dashoffset: 0 !important; animation: none !important; }
-  .abtalks-landing .hero__stamp { opacity: .95 !important; transform: rotate(-8deg) !important; animation: none !important; }
-  .abtalks-landing .hero__video { display: none; }
-  .abtalks-landing .hero__title { visibility: visible !important; }
+  .klymb-landing .strike__word, .klymb-landing .hl__text, .klymb-landing .hero__desc, .klymb-landing .hero__actions .btn { opacity: 1 !important; transform: none !important; animation: none !important; }
+  .klymb-landing .hl__ink { transform: scaleX(1) !important; animation: none !important; }
+  .klymb-landing .strike__line path { stroke-dashoffset: 0 !important; animation: none !important; }
+  .klymb-landing .hero__stamp { opacity: .95 !important; transform: rotate(-8deg) !important; animation: none !important; }
+  .klymb-landing .hero__video { display: none; }
+  .klymb-landing .hero__title { visibility: visible !important; }
 
   /* Pinned scroll scenes become plain stacked sections */
-  .abtalks-landing .bridge, .abtalks-landing .how, .abtalks-landing .keep { --lp-bridge-track: auto; --lp-how-track: auto; --lp-keep-track: auto; }
-  .abtalks-landing .how, .abtalks-landing .keep { margin-top: 0; }
-  .abtalks-landing .bridge__links { display: none; }
-  .abtalks-landing .bridge__panels { transform: none; }
-  .abtalks-landing .bridge__track, .abtalks-landing .how__track, .abtalks-landing .keep__track { height: auto; }
-  .abtalks-landing .bridge__pin, .abtalks-landing .how__pin, .abtalks-landing .keep__pin {
+  .klymb-landing .bridge, .klymb-landing .how, .klymb-landing .keep { --lp-bridge-track: auto; --lp-how-track: auto; --lp-keep-track: auto; }
+  .klymb-landing .how, .klymb-landing .keep { margin-top: 0; }
+  .klymb-landing .bridge__links { display: none; }
+  .klymb-landing .bridge__panels { transform: none; }
+  .klymb-landing .bridge__track, .klymb-landing .how__track, .klymb-landing .keep__track { height: auto; }
+  .klymb-landing .bridge__pin, .klymb-landing .how__pin, .klymb-landing .keep__pin {
     position: static; height: auto; overflow: visible;
     padding-block: var(--lp-section-gap);
   }
-  .abtalks-landing .bridge__panels { min-height: 0; display: grid; gap: var(--lp-space-40); }
-  .abtalks-landing .bpanel { position: static; opacity: 1; transform: none; pointer-events: auto; }
-  .abtalks-landing .slab { transform: translate(-50%, 0) rotateX(58deg) rotateZ(-45deg) !important; }
-  .abtalks-landing .slab__shadow { filter: blur(9px); }
-  .abtalks-landing .slab__label { opacity: 1 !important; }
+  .klymb-landing .bridge__panels { min-height: 0; display: grid; gap: var(--lp-space-40); }
+  .klymb-landing .bpanel { position: static; opacity: 1; transform: none; pointer-events: auto; }
+  .klymb-landing .slab { transform: translate(-50%, 0) rotateX(58deg) rotateZ(-45deg) !important; }
+  .klymb-landing .slab__shadow { filter: blur(9px); }
+  .klymb-landing .slab__label { opacity: 1 !important; }
 
-  .abtalks-landing .roller__stage { perspective: none; height: auto; }
-  .abtalks-landing .roller__cube { transform: none !important; transform-style: flat; display: grid; gap: var(--lp-space-32); }
-  .abtalks-landing .roller__face {
+  .klymb-landing .roller__stage { perspective: none; height: auto; }
+  .klymb-landing .roller__cube { transform: none !important; transform-style: flat; display: grid; gap: var(--lp-space-32); }
+  .klymb-landing .roller__face {
     position: static; transform: none !important; opacity: 1 !important;
     backface-visibility: visible;
   }
-  .abtalks-landing .how__media { height: 220px; }
-  .abtalks-landing .roller__dots { display: none; }
+  .klymb-landing .how__media { height: 220px; }
+  .klymb-landing .roller__dots { display: none; }
 
-  .abtalks-landing .pipeline__item { opacity: 1; transform: none !important; }
-  .abtalks-landing .pipeline__note { grid-template-rows: 1fr; opacity: 1; }
-  .abtalks-landing .pipeline__note > p { transform: none; padding-top: var(--lp-space-8); }
-  .abtalks-landing .dash__body { min-height: 0; display: grid; gap: var(--lp-space-16); }
-  .abtalks-landing .dash__stage { position: static; opacity: 1; transform: none; pointer-events: auto; }
-  .abtalks-landing .dash__scan i { animation: none; }
+  .klymb-landing .pipeline__item { opacity: 1; transform: none !important; }
+  .klymb-landing .pipeline__note { grid-template-rows: 1fr; opacity: 1; }
+  .klymb-landing .pipeline__note > p { transform: none; padding-top: var(--lp-space-8); }
+  .klymb-landing .dash__body { min-height: 0; display: grid; gap: var(--lp-space-16); }
+  .klymb-landing .dash__stage { position: static; opacity: 1; transform: none; pointer-events: auto; }
+  .klymb-landing .dash__scan i { animation: none; }
 
-  .abtalks-landing .challenge { opacity: 1 !important; transform: none !important; transition: none; }
-  .abtalks-landing .tile, .abtalks-landing .community__badge { opacity: 1 !important; transform: none !important; transition: none; }
+  .klymb-landing .challenge { opacity: 1 !important; transform: none !important; transition: none; }
+  .klymb-landing .tile, .klymb-landing .community__badge { opacity: 1 !important; transform: none !important; transition: none; }
 
-  .abtalks-landing * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  .klymb-landing * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }

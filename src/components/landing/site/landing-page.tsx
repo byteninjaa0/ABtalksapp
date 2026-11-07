@@ -80,7 +80,7 @@ export function LandingPage({
   });
 
   return (
-    <div className="abtalks-landing">
+    <div className="klymb-landing">
       <a className="skip-link" href="#main">
         Skip to content
       </a>

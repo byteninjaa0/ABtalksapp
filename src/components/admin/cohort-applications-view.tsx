@@ -106,7 +106,7 @@ export function CohortApplicationsView({
     }
     const csv = toCSV(filtered as unknown as Record<string, unknown>[]);
     const date = new Date().toISOString().split("T")[0];
-    downloadCSV(`abtalks-cohort-${region}-${date}.csv`, csv);
+    downloadCSV(`klymb-cohort-${region}-${date}.csv`, csv);
     toast.success(`Exported ${filtered.length} applications`);
   }
 

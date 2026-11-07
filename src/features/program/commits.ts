@@ -120,7 +120,7 @@ export async function fetchGithubCommitCount(
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/vnd.github+json",
-          "User-Agent": "abtalks-program",
+          "User-Agent": "klymb-program",
         },
         signal: AbortSignal.timeout(20000),
       },

@@ -92,7 +92,7 @@ async function fetchRepoFile(
   const token = process.env.GITHUB_API_TOKEN;
   const headers: Record<string, string> = {
     Accept: "application/vnd.github.raw",
-    "User-Agent": "abtalks-program",
+    "User-Agent": "klymb-program",
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 

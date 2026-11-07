@@ -179,7 +179,7 @@ export default async function RecruiterProfilePage({
     profile.assessmentDate ? `Assessment Date: ${profile.assessmentDate}` : null,
     profile.interviewerName ? `Interviewer: ${profile.interviewerName}` : null,
     profile.challengeRound ? `Challenge Round: ${profile.challengeRound}` : null,
-    `Klymb AI ID: ${profile.abtalksId}`,
+    `Klymb AI ID: ${profile.klymbId}`,
   ].filter((part): part is string => !!part);
 
   const scoreCards = hasFullAssessmentScores
@@ -215,7 +215,7 @@ export default async function RecruiterProfilePage({
   return (
     <div
       className={cn(
-        "report-light theme-abtalks-brand min-h-svh bg-muted/30 text-foreground print:min-h-0 print:bg-white",
+        "report-light theme-klymb-brand min-h-svh bg-muted/30 text-foreground print:min-h-0 print:bg-white",
         "[print-color-adjust:exact] [-webkit-print-color-adjust:exact]",
       )}
     >

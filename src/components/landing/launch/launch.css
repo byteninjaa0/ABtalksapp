@@ -2,12 +2,12 @@
    Klymb AI — Launch one-pager (plan 191, temporary)
 
    Layout only. Colour, type, spacing, radius, shadow and the .btn/.container
-   classes all come from ../site/landing.css via the .abtalks-landing wrapper,
+   classes all come from ../site/landing.css via the .klymb-landing wrapper,
    so this page cannot drift from the brand and nothing in that file had to
    change to put it up.
    ========================================================= */
 
-.abtalks-landing.launch {
+.klymb-landing.launch {
   display: flex;
   flex-direction: column;
   min-height: 100svh;
@@ -217,7 +217,7 @@
 }
 
 @media (max-width: 720px) {
-  .abtalks-landing.launch {
+  .klymb-landing.launch {
     min-height: 0;
   }
   .launch__hero {

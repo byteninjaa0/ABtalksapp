@@ -2,10 +2,10 @@
  * Curriculum → core skills, seeded into the EXISTING `ProgramSkill` join table.
  *
  * `ProgramSkill` (LearningProgram → Skill) shipped with plan 078 and has never
- * had a writer. It is exactly the association the profile's ABTalks Verified
+ * had a writer. It is exactly the association the profile's Klymb AI Verified
  * Skills need, so this seed fills it rather than adding a parallel table.
  *
- * Every ABTalks track already has a LearningProgram row: the four 60-day
+ * Every Klymb AI track already has a LearningProgram row: the four 60-day
  * challenges and the AI cohort were given theirs by the 078 migration
  * (migrate-2d-learning-content.ts), and the newer cohorts create theirs in
  * their own seed scripts. So one join table covers challenges AND cohorts.

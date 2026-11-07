@@ -13,7 +13,7 @@ import { COOKIE_POLICY_VERSION } from "@/lib/legal-constants";
 
 export type CookieChoice = "all" | "limited" | "essential";
 
-const CONSENT_COOKIE_NAME = "abtalks_consent";
+const CONSENT_COOKIE_NAME = "klymb_consent";
 
 type ConsentContextValue = {
   /** null while unread (SSR + first paint) or when no valid choice is stored. */

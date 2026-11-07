@@ -20,7 +20,7 @@ export async function acknowledgeClaimProfileAction(
   try {
     await acknowledgeClaimProfile(session.user.id);
     const cookieStore = await cookies();
-    cookieStore.set("abtalks_claim_ack", "1", {
+    cookieStore.set("klymb_claim_ack", "1", {
       path: "/",
       maxAge: 60 * 60 * 24 * 365,
       httpOnly: true,

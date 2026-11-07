@@ -3,7 +3,7 @@
  * (under ~200ms). Until then, `playClickSound` no-ops when the file is missing
  * or fails to decode (errors are swallowed).
  */
-export const SOUND_KEY = "abtalks_sound_enabled";
+export const SOUND_KEY = "klymb_sound_enabled";
 
 export function isSoundEnabled(): boolean {
   if (typeof window === "undefined") return false;

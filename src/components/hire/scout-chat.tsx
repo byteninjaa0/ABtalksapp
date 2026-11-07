@@ -1545,7 +1545,7 @@ export function ScoutChat({
     },
     {
       key: "Klymb AI Recommended",
-      on: (spec.evidencePriority?.length ?? 0) > 0 || spoken.abtalks,
+      on: (spec.evidencePriority?.length ?? 0) > 0 || spoken.klymb,
     },
   ] as const;
 

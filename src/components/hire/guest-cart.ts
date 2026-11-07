@@ -5,7 +5,7 @@ import {
 } from "@/features/hire/candidate-ref";
 import type { MatchCardData } from "@/components/hire/match-card";
 
-export const GUEST_CART_KEY = "abtalks-hire-cart";
+export const GUEST_CART_KEY = "klymb-hire-cart";
 
 export type GuestCartItem = {
   candidateRef: string;
@@ -160,7 +160,7 @@ export function readGuestCart(): GuestCartItem[] {
 export function writeGuestCart(items: GuestCartItem[]): void {
   if (!canUseStorage()) return;
   window.localStorage.setItem(GUEST_CART_KEY, JSON.stringify(items));
-  window.dispatchEvent(new Event("abtalks-hire-cart"));
+  window.dispatchEvent(new Event("klymb-hire-cart"));
 }
 
 export function guestCartHas(candidateRef: string): boolean {

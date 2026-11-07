@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 /**
  * Host shown in the issuer line, derived from `NEXT_PUBLIC_APP_URL` rather
  * than written out. A literal here is a promise this page cannot keep: it read
- * "abtalks.in" for every one of the 3,429 issued credentials, and plan 189
+ * the previous domain for every one of the 3,429 issued credentials, and plan 189
  * hands that domain to a different site — so a recruiter checking a
  * certificate was about to be pointed somewhere unrelated to it.
  */

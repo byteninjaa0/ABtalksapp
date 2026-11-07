@@ -81,7 +81,7 @@ export function CohortRegisterOnboardingFlow({
   }
 
   return (
-    <div className="theme-abtalks-brand relative flex min-h-svh flex-col overflow-hidden bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="theme-klymb-brand relative flex min-h-svh flex-col overflow-hidden bg-gradient-to-br from-background via-background to-primary/5">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-32 top-20 h-72 w-72 rounded-full bg-primary/15 blur-3xl" />
         <div className="absolute -right-32 top-60 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />

@@ -27,7 +27,7 @@ const PASSWORD = "hunter2-the-password";
 const TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NSJ9.QWxsWW91ckJhc2U";
 const EMAIL = "priya.sharma@example.com";
 const PHONE = "+91 98765 43210";
-const COOKIE = "abtalks_session=abc123def456";
+const COOKIE = "klymb_session=abc123def456";
 const REQUEST_ID = "0198f2c1-aaaa-bbbb-cccc-000000000009";
 const DELIVERY_ID = "0198f2c1-dddd-eeee-ffff-000000000009";
 

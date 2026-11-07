@@ -188,15 +188,15 @@ async function main() {
     // Referral capture needs a consent choice; without one nothing is set.
     const noConsent = await run("https://abtalks.in/?ref=priya");
     assert(
-      !noConsent.headers.get("set-cookie")?.includes("abtalks_ref"),
+      !noConsent.headers.get("set-cookie")?.includes("klymb_ref"),
       "a referral cookie must not be set before a consent decision",
     );
 
     const withConsent = await run("https://abtalks.in/?ref=priya", {
-      cookie: "abtalks_consent=all.2026-08-10",
+      cookie: "klymb_consent=all.2026-08-10",
     });
     assert(
-      withConsent.headers.get("set-cookie")?.includes("abtalks_ref=priya"),
+      withConsent.headers.get("set-cookie")?.includes("klymb_ref=priya"),
       "referral capture broke",
     );
     assert(

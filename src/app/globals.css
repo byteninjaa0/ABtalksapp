@@ -2,10 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark:not(:has(.theme-abtalks-light)) *));
+@custom-variant dark (&:is(.dark:not(:has(.theme-klymb-light)) *));
 
 /*
- * ABTalks UI Design System v2 — forest green.
+ * Klymb AI UI Design System v2 — forest green.
  *   Palette   #03535F #076573 #02434D #D4EBEC #E7F2F3 #EEF6F6 #18D39B
  *             success #27CA37 #197E23 #D6F7EC · semantic #D92D20 #FFEDB0 #AA821D
  *             neutrals #FFFFFF … #000000
@@ -125,14 +125,14 @@
 /*
  * One light token set. The design system defines no dark mode, so `.dark`
  * (still toggled on <html> by next-themes) resolves to the same values, and
- * every fixed light surface (`theme-abtalks-light`, the public report's
+ * every fixed light surface (`theme-klymb-light`, the public report's
  * `report-light`, and root-level portals via `:has`) shares it too.
  */
 :root,
 .dark,
-.theme-abtalks-light,
+.theme-klymb-light,
 .report-light,
-:root:has(.theme-abtalks-light),
+:root:has(.theme-klymb-light),
 :root:has(.report-light) {
   --background: 0 0% 96%; /* #F4F4F4 */
   --foreground: 0 0% 0%; /* #000000 */
@@ -178,11 +178,11 @@
 }
 
 /* The brand accent class: forest green (it was the orange override). */
-.theme-abtalks-brand,
-.theme-abtalks-light.theme-abtalks-brand,
-.report-light.theme-abtalks-brand,
-:root:has(.theme-abtalks-light.theme-abtalks-brand),
-:root:has(.report-light.theme-abtalks-brand) {
+.theme-klymb-brand,
+.theme-klymb-light.theme-klymb-brand,
+.report-light.theme-klymb-brand,
+:root:has(.theme-klymb-light.theme-klymb-brand),
+:root:has(.report-light.theme-klymb-brand) {
   --primary: 188 94% 19%;
   --primary-foreground: 0 0% 100%;
   --ring: 188 94% 19%;

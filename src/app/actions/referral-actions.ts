@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 
-const REF_COOKIE_NAME = "abtalks_ref";
+const REF_COOKIE_NAME = "klymb_ref";
 const REF_COOKIE_MAX_AGE = 10 * 60; // 10 minutes
 
 export async function setReferralCookie(code: string) {

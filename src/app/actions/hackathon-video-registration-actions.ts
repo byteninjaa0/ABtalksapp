@@ -19,7 +19,7 @@ import {
   type VideoRegistrationInput,
 } from "@/lib/validations/hackathon-video";
 
-const SRC_COOKIE_NAME = "abtalks_src";
+const SRC_COOKIE_NAME = "klymb_src";
 
 async function readSourceSlug(): Promise<string | null> {
   const raw = (await cookies()).get(SRC_COOKIE_NAME)?.value;

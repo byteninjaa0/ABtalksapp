@@ -667,7 +667,7 @@ function AssessmentPage({ profile }: { profile: RecruiterProfileView }) {
     profile.assessmentDate ? `Assessment Date: ${profile.assessmentDate}` : null,
     profile.interviewerName ? `Interviewer: ${profile.interviewerName}` : null,
     profile.challengeRound ? `Challenge Round: ${profile.challengeRound}` : null,
-    `Klymb AI ID: ${profile.abtalksId}`,
+    `Klymb AI ID: ${profile.klymbId}`,
   ].filter((part): part is string => !!part);
 
   const scoreCards = hasFullScores

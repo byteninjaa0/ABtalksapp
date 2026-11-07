@@ -28,7 +28,7 @@ export interface WorkshopAnalytics {
    * moment they signed in for their first workshop — i.e. the workshop funnel
    * acquired them.
    */
-  newToABTalks: number;
+  newToKlymb: number;
   /** People who already had an Klymb AI account before their first workshop. */
   existingMembers: number;
   /** Attendees who went on to enroll in a challenge — workshop → programme. */
@@ -94,14 +94,14 @@ export async function getWorkshopAnalytics(): Promise<WorkshopAnalytics> {
     accounts.map((a) => [a.email.toLowerCase(), a]),
   );
 
-  let newToABTalks = 0;
+  let newToKlymb = 0;
   let existingMembers = 0;
   let convertedToChallenge = 0;
   for (const email of timesSeen.keys()) {
     const account = accountByEmail.get(email);
     if (!account) {
       // No account at all — never joined Klymb AI beyond the workshop form.
-      newToABTalks += 1;
+      newToKlymb += 1;
       continue;
     }
     const firstSeen = firstSeenAtByEmail.get(email);
@@ -109,7 +109,7 @@ export async function getWorkshopAnalytics(): Promise<WorkshopAnalytics> {
       firstSeen !== undefined &&
       account.createdAt.getTime() < firstSeen.getTime() - NEW_ACCOUNT_TOLERANCE_MS;
     if (preExisting) existingMembers += 1;
-    else newToABTalks += 1;
+    else newToKlymb += 1;
     if (account.programEnrollments.length > 0) convertedToChallenge += 1;
   }
 
@@ -151,7 +151,7 @@ export async function getWorkshopAnalytics(): Promise<WorkshopAnalytics> {
       const a = accountByEmail.get(r.email);
       return a?.candidateProfile != null;
     }).length,
-    newToABTalks,
+    newToKlymb,
     existingMembers,
     convertedToChallenge,
     workshopCount: byEvent.size,

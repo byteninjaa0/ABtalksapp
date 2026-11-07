@@ -261,7 +261,7 @@ export async function needsClaimProfileAcknowledgement(userId: string): Promise<
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
-    if (cookieStore.get("abtalks_claim_ack")?.value === "1") {
+    if (cookieStore.get("klymb_claim_ack")?.value === "1") {
       return false;
     }
   } catch {

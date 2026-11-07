@@ -410,7 +410,7 @@ const CANDIDATES: CandidateSpec[] = [
         skill: "PyTorch",
         sourceType: EvidenceSourceType.CREDENTIAL,
         sourceKey: "demo-i-pytorch-credential",
-        sourceLabel: "ABTalks AI Challenge Certificate",
+        sourceLabel: "Klymb AI Challenge Certificate",
         weight: 2,
         dayOffset: 50,
       },
@@ -482,7 +482,7 @@ const CANDIDATES: CandidateSpec[] = [
         skill: "AWS",
         sourceType: EvidenceSourceType.CREDENTIAL,
         sourceKey: "demo-l-aws-credential",
-        sourceLabel: "ABTalks Cloud Architect Certificate",
+        sourceLabel: "Klymb AI Cloud Architect Certificate",
         weight: 3,
         dayOffset: 45,
       },
@@ -584,7 +584,7 @@ async function ensureChallenge(domain: Domain, days: number): Promise<string> {
         problemStatement: `Demo task for day ${day}.`,
         difficulty: "MEDIUM",
         estimatedMinutes: 60,
-        linkedinTemplate: `Day ${day} of the ABTalks challenge.`,
+        linkedinTemplate: `Day ${day} of the Klymb AI challenge.`,
       },
     });
   }
@@ -1327,7 +1327,7 @@ async function main(): Promise<void> {
   const doReset = process.argv.includes("--reset");
   const resetOnly = process.argv.includes("--reset-only");
 
-  console.log("\n─── ABTalks demo data (T-241 / T-242) ───");
+  console.log("\n─── Klymb AI demo data (T-241 / T-242) ───");
   console.log(`database: ${endpoint()}\n`);
 
   if (doReset || resetOnly) {

@@ -96,7 +96,7 @@ export default async function LoginPage({ searchParams }: Props) {
   const showEmail = isEmailLoginEnabled();
 
   return (
-    <div className="theme-abtalks-light theme-abtalks-brand flex min-h-svh flex-col bg-[#F4F4F4] text-foreground">
+    <div className="theme-klymb-light theme-klymb-brand flex min-h-svh flex-col bg-[#F4F4F4] text-foreground">
       <div className="flex flex-1 flex-col items-center justify-center p-6">
         <Card className="w-full max-w-md border-border/60 bg-card text-card-foreground shadow-md">
           <CardHeader className="space-y-2 text-center">

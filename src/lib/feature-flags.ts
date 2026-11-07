@@ -352,7 +352,7 @@ export function isGetHiredHidden(): boolean {
 }
 
 /**
- * Plan 196: learners ABTalks has trained who are not registered on the
+ * Plan 196: learners Klymb AI has trained who are not registered on the
  * platform yet. Added to the platform registration count ONLY for the
  * "Learners Trained" figure on /admin and /admin/students. Never add it to
  * candidate, filtered, exported or recruiter-facing counts — those stay live

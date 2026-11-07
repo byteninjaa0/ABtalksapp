@@ -2,7 +2,7 @@ import { refPublicId } from "@/features/hire/candidate-ref";
 import { readGuestMatchCollection } from "@/components/hire/guest-matches-store";
 import type { MatchCardData } from "@/components/hire/match-card";
 
-const KEY = "abtalks-hire-evidence";
+const KEY = "klymb-hire-evidence";
 
 export function evidenceResumeHref(candidateRef: string): string {
   return `/hire/evidence?ref=${encodeURIComponent(candidateRef)}`;
@@ -58,7 +58,7 @@ export function recallEvidence(key: string): MatchCardData | null {
   return null;
 }
 
-const SUMMARY_KEY = "abtalks-hire-ai-summary";
+const SUMMARY_KEY = "klymb-hire-ai-summary";
 const SUMMARY_MAX = 60;
 
 type StoredSummary = { key: string; summary: string };

@@ -20,7 +20,7 @@ export function ChatLauncher({ open, onToggle }: ChatLauncherProps) {
       aria-label={open ? "Close chat" : "Open chat"}
       aria-expanded={open}
       suppressHydrationWarning
-      className="theme-abtalks-brand fixed bottom-4 right-4 z-50 size-12 rounded-full shadow-lg"
+      className="theme-klymb-brand fixed bottom-4 right-4 z-50 size-12 rounded-full shadow-lg"
     >
       {open ? <X className="size-5" /> : <MessageCircle className="size-5" />}
     </Button>

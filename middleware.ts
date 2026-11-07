@@ -2,16 +2,16 @@ import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import authConfig, { OAUTH_CHECK_COOKIE_NAMES } from "@/auth.config";
 
-const REF_COOKIE_NAME = "abtalks_ref";
+const REF_COOKIE_NAME = "klymb_ref";
 const REF_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
-const SRC_COOKIE_NAME = "abtalks_src";
+const SRC_COOKIE_NAME = "klymb_src";
 const SRC_COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
 
 // Kept in sync by hand with `src/lib/legal.ts` (COOKIE_POLICY_VERSION) and
 // `src/lib/cookies.ts`. Middleware must not import from `@/lib/*` — doing so
 // blows the 1 MB Edge bundle limit. This duplication is deliberate.
-const CONSENT_COOKIE_NAME = "abtalks_consent";
+const CONSENT_COOKIE_NAME = "klymb_consent";
 const CONSENT_POLICY_VERSION = "2026-08-10";
 
 /** Returns the stored choice, or null if absent or from an older policy version. */
@@ -237,11 +237,11 @@ function applySourceCookie(
  * especially when switching accounts.
  *
  * HOST-ONLY, one Set-Cookie per name. This used to loop over
- * `[undefined, ".abtalks.in"]` to also clear the cookies `auth.config.ts`
+ * `[undefined, <the old shared cookie domain>]` to also clear the cookies `auth.config.ts`
  * widened — but `response.cookies.set` keys by NAME, so the second iteration
- * overwrote the first and only the `.abtalks.in` variant was ever emitted.
+ * overwrote the first and only the old-domain variant was ever emitted.
  * Measured on the live deploy: 12 names in, 12 Set-Cookie headers out, every
- * one carrying `Domain=.abtalks.in`. The sweep has therefore never cleared a
+ * one carrying the old shared `Domain=` attribute. The sweep has therefore never cleared a
  * host-only cookie — the exact case it exists for.
  *
  * `auth.config.ts` no longer sets a cookie domain at all (plan 189 §6-A), so

@@ -108,7 +108,7 @@ export function isDayContentRequest(input: string): boolean {
 }
 
 /**
- * Anything outside ABTalks itself: coding help, concept tutorials, homework,
+ * Anything outside Klymb AI itself: coding help, concept tutorials, homework,
  * general knowledge, and attempts to change the assistant's role.
  *
  * The confidence gate cannot catch these on its own. The corpus is full of
@@ -117,7 +117,7 @@ export function isDayContentRequest(input: string): boolean {
  * machine learning" score as answerable. Hence a scope rule before retrieval.
  *
  * Pasted code and role/jailbreak attempts are refused outright. Task and
- * concept questions are refused unless they name something ABTalks-specific,
+ * concept questions are refused unless they name something Klymb AI-specific,
  * so "can i use python in the coding challenge" still reaches retrieval.
  * Site and account words count as anchors too: "how do i fix the login
  * error" is a support question, not a debugging request.
@@ -135,14 +135,14 @@ const CONCEPT_QUESTION =
   /\b(?:what\s+is|what\s+are|whats|what's|explain|define|definition\s+of|difference\s+between|how\s+does|how\s+do\s+(?:i|you)\s+(?:use|write)|teach\s+me|meaning\s+of|tutorial|example\s+of)\b[^?.!]*\b(?:python|java|javascript|typescript|c\+\+|golang|rust|react|node\.?js|sql|html|css|recursion|algorithms?|data\s+structures?|linked\s*lists?|arrays?|pointers?|variables?|closures?|oop|object[\s-]oriented|inheritance|polymorphism|big[\s-]o|time\s+complexity|machine\s+learning|deep\s+learning|neural\s+networks?|transformers?|llms?|large\s+language\s+models?|embeddings?|vector\s+databases?|rag|fine[\s-]?tuning|regression|classification|overfitting|gradient\s+descent|pandas|numpy|tensorflow|pytorch|docker|kubernetes|blockchain|cloud\s+computing|operating\s+systems?|dbms|computer\s+networks?)\b/i;
 const GENERAL_TASK =
   /\b(?:capital\s+of|president\s+of|prime\s+minister\s+of|who\s+(?:won|invented|discovered)|translate|weather|horoscope|recipe)\b|\b(?:solve|calculate|integrate|differentiate|simplify)\b[^?.!]*\d|\d+\s*[-+*/^x]\s*\d+\s*=|\b(?:write|draft|compose|generate)\b[^?.!]*\b(?:essay|poem|story|song|speech|joke|caption|bio|paragraph|article|summary|cover\s+letter)\b/i;
-/** Naming something ABTalks-specific puts a task/concept question back in scope. */
-const ABTALKS_ANCHOR =
+/** Naming something Klymb AI-specific puts a task/concept question back in scope. */
+const PLATFORM_ANCHOR =
   /\b(?:abtalks|ab\s+talks|klymb|rudra|challenges?|cohort|hackathon|vicodathon|workshops?|webinar|bootcamp|certificates?|certs?|streak|submissions?|submit\w*|(?:your|abtalks|which|these|those|the)\s+programs?|leaderboard|dashboard|scout|recruiters?|voice\s+interview|anil|bajpai|enrol+(?:ment)?|register|registration|track|login|log\s+in|sign\s*in|sign\s*up|account|profile|website|site|page|portal)\b/i;
 
 export function isOutOfScopeRequest(input: string): boolean {
   const text = input.trim();
   if (PASTED_CODE.test(text) || ROLE_OVERRIDE.test(text)) return true;
-  if (ABTALKS_ANCHOR.test(text)) return false;
+  if (PLATFORM_ANCHOR.test(text)) return false;
   return CODING_TASK.test(text) || CONCEPT_QUESTION.test(text) || GENERAL_TASK.test(text);
 }
 

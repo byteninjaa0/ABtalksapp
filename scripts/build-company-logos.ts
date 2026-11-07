@@ -9,7 +9,7 @@
  * TWO SOURCES, in this order:
  *
  *   1. Simple Icons (CC0) — a clean monochrome vector in the brand's own
- *      colour. Preferred, but it covers almost none of what ABTalks
+ *      colour. Preferred, but it covers almost none of what Klymb AI
  *      candidates actually type: the project removed most enterprise marks at
  *      their owners' request, so Amazon, IBM, Oracle, Microsoft, Deloitte, EY
  *      and JPMorgan are gone and EXL, Cognizant, Capgemini, Nagarro, Genpact
@@ -50,7 +50,7 @@ type Brand = {
  * the next person can see which rows are worth arguing about.
  */
 const BRANDS: Brand[] = [
-  // --- The actual top of ABTalks' data --------------------------------------
+  // --- The actual top of Klymb AI's data --------------------------------------
   { slug: "exl", domain: "exlservice.com" },            // 109 rows
   { slug: "accenture", icon: "accenture" },             //  24
   { slug: "cognizant", domain: "cognizant.com" },       //  23

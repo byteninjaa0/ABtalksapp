@@ -33,33 +33,33 @@ export type LegalDocKind = "terms" | "privacy" | "cookies";
  */
 export const LEGAL_ENTITY = {
   /** Udyam / certificate: NAME OF ENTERPRISE */
-  name: "Klymb AI",
+  name: "Klymb.AI",
   /** Udyam: Owner Name */
-  proprietor: "Suman Shukla",
+  proprietor: "Tarun Kumar Singh",
   /** Type of Organisation — Proprietary */
   entityType: "Sole Proprietorship (Proprietary)",
   /** Public trading / brand name */
   tradingName: "Klymb AI",
   /** Unit name on Udyam certificate */
-  unitName: "Klymb AI",
+  unitName: "Klymb.AI",
   /** Micro / Small / Medium classification on Udyam */
   enterpriseScale: "Micro",
   /** MAJOR ACTIVITY */
   majorActivity: "Services",
   /**
    * National Industry Classification (NIC) as printed on the Udyam certificate.
-   * 62 → 6209 → 62099 (IT and computer service activities n.e.c.).
+   * 62 → 6201 → 62011 / 62012, and 62 → 6209 → 62091.
    */
   industryClassification:
-    "NIC 62099 — Other information technology and computer service activities n.e.c.",
+    "NIC 62011, 62012, 62091 — Computer programming (writing, modifying and testing programs; web-page designing) and software installation services",
   /** DATE OF UDYAM REGISTRATION (certificate) */
-  udyamRegistrationDate: "2026-08-01",
+  udyamRegistrationDate: "2026-11-03",
   /** DATE OF INCORPORATION / REGISTRATION OF ENTERPRISE */
-  incorporationDate: "2026-07-25",
+  incorporationDate: "2026-10-01",
   /** Official address of enterprise (public block only — no mobile) */
   address:
-    "Crossing Republic, Ghaziabad, Uttar Pradesh 201016, India",
-  registrationNumber: "UDYAM-UP-29-0250625",
+    "Crossing Republik, Ghaziabad, Uttar Pradesh 201016, India",
+  registrationNumber: "UDYAM-UP-29-0268341",
   registrationType: "Udyam Registration (MSME)",
   /**
    * Public contact for the Service. The Udyam certificate also lists a
@@ -68,7 +68,7 @@ export const LEGAL_ENTITY = {
    */
   email: "team@klymb.ai",
   grievanceOfficer: {
-    name: "Suman Shukla",
+    name: "Tarun Kumar Singh",
     designation: "Proprietor and Grievance Officer",
     email: "team@klymb.ai",
     acknowledgeWithin: "24 hours",

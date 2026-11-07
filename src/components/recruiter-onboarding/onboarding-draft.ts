@@ -80,9 +80,9 @@ export const EMPTY_DRAFT: OnboardingDraft = {
   registered: false,
 };
 
-const DRAFT_KEY = "abtalks-recruiter-onboarding.v2";
+const DRAFT_KEY = "klymb-recruiter-onboarding.v2";
 /** The sessionStorage key this replaced. Only ever removed, never read. */
-const LEGACY_DRAFT_KEY = "abtalks-recruiter-onboarding";
+const LEGACY_DRAFT_KEY = "klymb-recruiter-onboarding";
 /** Long enough to survive a distracted week; short enough not to be a record. */
 const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 

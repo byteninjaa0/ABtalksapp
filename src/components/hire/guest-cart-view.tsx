@@ -35,8 +35,8 @@ export function GuestCartView() {
   useEffect(() => {
     const sync = () => setRows(readGuestCart().map(toRow));
     sync();
-    window.addEventListener("abtalks-hire-cart", sync);
-    return () => window.removeEventListener("abtalks-hire-cart", sync);
+    window.addEventListener("klymb-hire-cart", sync);
+    return () => window.removeEventListener("klymb-hire-cart", sync);
   }, []);
 
   return <ShortlistCart rows={rows} />;
@@ -49,8 +49,8 @@ export function ApprovedCart({ rows }: { rows: CartRow[] }) {
   useEffect(() => {
     const sync = () => setExtra(guestCartNonProgram().map(toRow));
     sync();
-    window.addEventListener("abtalks-hire-cart", sync);
-    return () => window.removeEventListener("abtalks-hire-cart", sync);
+    window.addEventListener("klymb-hire-cart", sync);
+    return () => window.removeEventListener("klymb-hire-cart", sync);
   }, []);
 
   const seen = new Set(rows.map((r) => r.candidateRef));

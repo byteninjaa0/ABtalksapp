@@ -20,7 +20,7 @@ const STEPS = [
   },
 ];
 
-const TOUR_KEY = "abtalks_tour_done";
+const TOUR_KEY = "klymb_tour_done";
 const PAD = 10;
 const TOOLTIP_W = 264;
 

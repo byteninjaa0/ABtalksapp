@@ -128,7 +128,7 @@ const RECRUITERS: {
   {
     email: `${EMAIL_PREFIX}recruiter${TEST_EMAIL_SUFFIX}`,
     name: "Prog Recruiter",
-    company: "ABTalks Hiring Co",
+    company: "Klymb AI Hiring Co",
     approved: true,
   },
   {

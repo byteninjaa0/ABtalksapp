@@ -7,8 +7,8 @@ import { ArrowRight, Sparkles, X } from "lucide-react";
 import { HACKATHON } from "@/components/hackathon/hackathon-config";
 
 // Bump the version suffix to re-show the popup to everyone after a change.
-const DISMISS_KEY = "abtalks_vicodathon_promo_dismiss_v1";
-const CLOSE_COUNT_KEY = "abtalks_vicodathon_promo_close_v1";
+const DISMISS_KEY = "klymb_vicodathon_promo_dismiss_v1";
+const CLOSE_COUNT_KEY = "klymb_vicodathon_promo_close_v1";
 const MAX_CLOSE_COUNT = 3;
 // Show through 6 Aug 2026 IST (exclusive end = 7 Aug 00:00 IST).
 const PROMO_ENDS_AT = new Date("2026-08-06T18:30:00Z").getTime();

@@ -1,5 +1,5 @@
-export const PENDING_CHECKOUT_KEY = "abtalks-hire-pending-checkout";
-export const CHECKOUT_FLASH_KEY = "abtalks-hire-checkout-flash";
+export const PENDING_CHECKOUT_KEY = "klymb-hire-pending-checkout";
+export const CHECKOUT_FLASH_KEY = "klymb-hire-checkout-flash";
 
 /**
  * A request the recruiter pressed before they had an account.

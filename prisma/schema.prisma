@@ -468,7 +468,7 @@ model RecruiterReview {
   assessmentDate        DateTime?
   interviewerName       String?
   challengeRound        String?
-  abtalksId             String?
+  klymbId               String?              @map("abtalksId")
   logistics             Json?
   compensation          Json?
   adminNote             String?
@@ -1480,7 +1480,7 @@ model WorkshopEvent {
   @@index([publishedAt, archivedAt, date])
 }
 
-/// General AB Talks AI Interview — a standardized, comparable talent signal
+/// General Klymb AI Interview — a standardized, comparable talent signal
 /// built from a candidate's own verified challenge work. Separate from
 /// `ProgramInterview` (the 31-day AI Cohort exit interview), which is unrelated
 /// and must keep working independently.
@@ -3590,7 +3590,7 @@ enum AssessmentSource {
 /// recruiter who saved it: every read and write is scoped by organizationId +
 /// createdByUserId, both taken from requireRecruiterWorkspace(), exactly as
 /// RecruiterAssessment is. Never shared, never visible to admin, and unrelated
-/// to the static ABTalks presets in recruiter-assessments/presets.ts.
+/// to the static Klymb AI presets in recruiter-assessments/presets.ts.
 ///
 /// A separate table on purpose. A flag on RecruiterAssessment would have put
 /// templates in front of every existing reader of that table (admin console,
@@ -3634,7 +3634,7 @@ model AssessmentQuestion {
   /// PARAGRAPH only. Word cap enforced on the candidate screen.
   maxWords             Int?
   /// FILE_UPLOAD only. Where the recruiter expects the file to be uploaded.
-  /// ABTalks stores no files; the candidate answers with their own link.
+  /// Klymb AI stores no files; the candidate answers with their own link.
   uploadDestinationUrl String?
   /// RESERVED for a later sections ticket. Never written in v1 — always null.
   /// No relation and no FK on purpose: the AssessmentSection table does not
@@ -3721,7 +3721,7 @@ model RecruiterAssessmentAssignment {
 /// Written only while the assignment is STARTED: every save first takes the
 /// assignment row lock with a guarded no-op update, so no answer can land after
 /// a submission. Frozen once the assignment is SUBMITTED.
-/// ABTalks stores no files — FILE_UPLOAD answers are a link the candidate pasted.
+/// Klymb AI stores no files — FILE_UPLOAD answers are a link the candidate pasted.
 ///
 /// CASCADE on the assignment: answers go with the attempt they belong to.
 /// RESTRICT on the question: a PUBLISHED assessment's questions never change
@@ -4122,7 +4122,7 @@ model MigrationQuarantine {
 
 enum TalentEngagementStatus {
   DRAFT // sitting in the recruiter's shortlist, not sent
-  SUBMITTED // request placed, waiting on the ABTalks team
+  SUBMITTED // request placed, waiting on the Klymb AI team
   IN_REVIEW // team working it
   CONTACT_SHARED // contact released to this recruiter for this candidate
   DECLINED
@@ -4213,7 +4213,7 @@ enum OutreachEmailStatus {
 ///
 /// Keyed on the recruiter *user*, not the organization: every recruiter works
 /// alone (demo contract §2) and contact access is per user, so two recruiters on
-/// one company domain never share a thread. Replies happen on ABTalks — there is
+/// one company domain never share a thread. Replies happen on Klymb AI — there is
 /// no inbound email, and no shared inbox.
 model OutreachThread {
   id                  String         @id @default(cuid())
@@ -4264,7 +4264,7 @@ model OutreachMessage {
   @@index([threadId, createdAt])
 }
 
-/// Companies and seats ABTalks has verified out of band.
+/// Companies and seats Klymb AI has verified out of band.
 ///
 /// A recruiter account is only created with recruiter access when its email
 /// matches a live seat here. Role is decided by this lookup, never by anything

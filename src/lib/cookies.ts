@@ -1,13 +1,13 @@
 import { cookies } from "next/headers";
 import { COOKIE_POLICY_VERSION } from "@/lib/legal-constants";
 
-export const REF_COOKIE_NAME = "abtalks_ref";
+export const REF_COOKIE_NAME = "klymb_ref";
 const REF_COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
 
-export const SRC_COOKIE_NAME = "abtalks_src";
+export const SRC_COOKIE_NAME = "klymb_src";
 const SRC_COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
 
-export const CONSENT_COOKIE_NAME = "abtalks_consent";
+export const CONSENT_COOKIE_NAME = "klymb_consent";
 const CONSENT_COOKIE_MAX_AGE = 180 * 24 * 60 * 60; // 180 days
 
 /**

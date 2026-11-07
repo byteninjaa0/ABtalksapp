@@ -262,7 +262,7 @@ async function main() {
       body: "Thanks — interested!",
       clientRequestId: replyId,
     });
-    check("candidate can reply on ABTalks", reply.ok, reply.ok ? undefined : reply.message);
+    check("candidate can reply on Klymb AI", reply.ok, reply.ok ? undefined : reply.message);
     const replay = await sendCandidateReply({
       candidateUserId: s.candidate1,
       threadId,

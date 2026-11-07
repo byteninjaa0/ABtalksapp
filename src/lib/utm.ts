@@ -16,7 +16,7 @@ export const UTM_KEYS = [
 export type UtmKey = (typeof UTM_KEYS)[number];
 
 /** Cookie name for the first-touch record. */
-export const UTM_COOKIE = "abtalks_utm";
+export const UTM_COOKIE = "klymb_utm";
 
 /** 90-day first-touch window. */
 export const UTM_COOKIE_TTL_SECONDS = 90 * 24 * 60 * 60;

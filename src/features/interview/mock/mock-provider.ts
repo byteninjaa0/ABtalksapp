@@ -113,14 +113,14 @@ type MockStore = {
 };
 
 const globalForMock = globalThis as unknown as {
-  __abtalksInterviewMock?: MockStore;
+  __klymbInterviewMock?: MockStore;
 };
 
 function store(): MockStore {
-  if (!globalForMock.__abtalksInterviewMock) {
-    globalForMock.__abtalksInterviewMock = { attempts: new Map(), seq: 0 };
+  if (!globalForMock.__klymbInterviewMock) {
+    globalForMock.__klymbInterviewMock = { attempts: new Map(), seq: 0 };
   }
-  return globalForMock.__abtalksInterviewMock;
+  return globalForMock.__klymbInterviewMock;
 }
 
 function attemptsFor(candidateId: string): MockAttempt[] {

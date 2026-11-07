@@ -14,7 +14,7 @@ name: Chatbot knowledge refresh
 #   secrets.OPENAI_API_KEY   embeddings (text-embedding-3-small; a typical
 #                            night re-embeds a handful of chunks, fractions of
 #                            a cent)
-#   vars.CHATBOT_SITE_URL    optional, defaults to https://www.abtalks.in
+#   vars.CHATBOT_SITE_URL    optional, defaults to https://app.klymb.ai
 #   Settings -> Actions -> "Allow GitHub Actions to create and approve pull
 #   requests" must be on, or the last step cannot open the PR.
 
@@ -39,7 +39,7 @@ jobs:
       # Prisma's client is constructed at import time; nothing connects.
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
       DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
-      SITE_BASE_URL: ${{ vars.CHATBOT_SITE_URL || 'https://www.abtalks.in' }}
+      SITE_BASE_URL: ${{ vars.CHATBOT_SITE_URL || 'https://app.klymb.ai' }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - uses: actions/checkout@v4

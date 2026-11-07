@@ -64,14 +64,14 @@ export type RecruiterProfileView = {
   assessmentDate: string | null;
   interviewerName: string | null;
   challengeRound: string | null;
-  abtalksId: string;
+  klymbId: string;
   logistics: Logistics;
   compensation: Compensation;
   assessmentComposite: number | null;
   assessmentMax: number;
 };
 
-function deriveAbtalksId(userId: string, override: string | null | undefined) {
+function deriveKlymbId(userId: string, override: string | null | undefined) {
   if (override?.trim()) return override.trim();
   return `AB-${userId.slice(0, 8).toUpperCase()}`;
 }
@@ -126,7 +126,7 @@ export async function getRecruiterProfileByToken(
       assessmentDate: true,
       interviewerName: true,
       challengeRound: true,
-      abtalksId: true,
+      klymbId: true,
       logistics: true,
       compensation: true,
       user: {
@@ -199,7 +199,7 @@ export async function getRecruiterProfileByToken(
     assessmentDate: formatAssessmentDate(review.assessmentDate),
     interviewerName: review.interviewerName,
     challengeRound: review.challengeRound,
-    abtalksId: deriveAbtalksId(review.user.id, review.abtalksId),
+    klymbId: deriveKlymbId(review.user.id, review.klymbId),
     logistics: parseLogistics(review.logistics),
     compensation: parseCompensation(review.compensation),
     assessmentComposite: computeAssessmentComposite(

@@ -197,7 +197,7 @@ function main() {
   suite("the money log is structured JSON, one object per line", () => {
     assert(notFound.lines.length >= 2, "expected at least two JSON log lines");
     for (const l of notFound.lines) {
-      assert(l.service === "abtalks-web", "every line must name the service");
+      assert(l.service === "klymb-web", "every line must name the service");
       assert(typeof l.env === "string", "every line must name the environment");
       assert(
         typeof l.time === "string" && l.time.includes("T"),

@@ -54,7 +54,7 @@ async function main() {
     ).map((v) => v.userId),
   );
 
-  console.log("\n  ABTalks hire pool\n");
+  console.log("\n  Klymb AI hire pool\n");
   console.log(
     `  ${"track".padEnd(26)} ${"total".padStart(6)} ${"eligible".padStart(10)} ${"searchable".padStart(11)} ${"openToWork".padStart(11)}`,
   );

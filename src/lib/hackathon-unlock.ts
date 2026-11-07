@@ -10,4 +10,4 @@
  */
 export const HACKATHON_UNLOCK_CODE = "VC20";
 export const HACKATHON_UNLOCK_STORAGE_KEY =
-  "abtalks:hackathon:vicodathon-2-2026:unlocked";
+  "klymb:hackathon:vicodathon-2-2026:unlocked";

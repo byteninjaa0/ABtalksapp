@@ -1,8 +1,8 @@
 import type { CandidateSource } from "@/features/hire/candidate-ref";
 import type { MatchCardData } from "@/components/hire/match-card";
 
-export const DESK_SHORTLIST_KEY = "abtalks-hire-star";
-export const DESK_SHORTLIST_EVENT = "abtalks-hire-star";
+export const DESK_SHORTLIST_KEY = "klymb-hire-star";
+export const DESK_SHORTLIST_EVENT = "klymb-hire-star";
 
 export type DeskShortlistItem = {
   candidateRef: string;

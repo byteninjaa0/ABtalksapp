@@ -115,7 +115,7 @@ export async function POST(req: Request) {
   }
 
   // Same reasoning for the content of a specific day or task, and for anything
-  // outside ABTalks (coding help, concept tutorials, general knowledge, role
+  // outside Klymb AI (coding help, concept tutorials, general knowledge, role
   // changes). The corpus speaks the vocabulary of all of these, so the
   // confidence gate would let them through. See lib/chatbot-matcher.ts.
   if (isDayContentRequest(last.content)) {

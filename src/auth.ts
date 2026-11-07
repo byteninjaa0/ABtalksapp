@@ -370,7 +370,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 /**
  * Consent + newsletter preference for an OAuth arrival — the earliest point we
  * hold their data. The login page carries the matching notice and writes
- * abtalks_newsletter_pref before OAuth starts. Never throws.
+ * klymb_newsletter_pref before OAuth starts. Never throws.
  */
 async function recordOAuthConsent(
   userId: string,
@@ -382,7 +382,7 @@ async function recordOAuthConsent(
     // Default true if the cookie is missing (e.g. old clients).
     let newsletterOptIn = true;
     try {
-      const pref = (await cookies()).get("abtalks_newsletter_pref")?.value;
+      const pref = (await cookies()).get("klymb_newsletter_pref")?.value;
       if (pref === "0") newsletterOptIn = false;
       if (pref === "1") newsletterOptIn = true;
     } catch {

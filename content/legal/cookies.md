@@ -23,7 +23,7 @@ The first time you visit Klymb AI, we present our cookie banner with three strai
 
 Strictly necessary cookies cannot be switched off - they are required to authenticate your sign-in and keep your session secure. Choosing **Necessary only** does not reduce your access to any core learning track, submission, or challenge feature; it only means we cannot credit referral invites or measure aggregated platform usage.
 
-Your choice is stored in a cookie (`abtalks_consent`) so we don't prompt you on every page visit. If we make material updates to this Policy, we will prompt you again.
+Your choice is stored in a cookie (`klymb_consent`) so we don't prompt you on every page visit. If we make material updates to this Policy, we will prompt you again.
 
 ## 3. Cookie categories
 
@@ -32,7 +32,7 @@ Your choice is stored in a cookie (`abtalks_consent`) so we don't prompt you on 
 These cookies are essential for the website to function securely and cannot be switched off:
 
 - **Auth.js session cookie**: Keeps you securely signed in to your account (`httpOnly`, inaccessible to client scripts).
-- **`abtalks_consent`**: Remembers your cookie preferences and policy version (~180 days).
+- **`klymb_consent`**: Remembers your cookie preferences and policy version (~180 days).
 
 ### Optional: Analytics & Performance
 
@@ -40,8 +40,8 @@ These cookies are essential for the website to function securely and cannot be s
 
 ### Optional: Referral Attribution & Media
 
-- **`abtalks_ref`**: Remembers referral codes from `?ref=` links so members who invited you receive credit (~7 days).
-- **`abtalks_src`**: First-touch attribution from `?s=` links to understand which educational partner brought you here (~30 days).
+- **`klymb_ref`**: Remembers referral codes from `?ref=` links so members who invited you receive credit (~7 days).
+- **`klymb_src`**: First-touch attribution from `?s=` links to understand which educational partner brought you here (~30 days).
 - **YouTube Media Previews**: Enables preview thumbnails from `youtube-nocookie.com` on program video libraries.
 
 ## 4. Third-party scripts and embeds

@@ -1,6 +1,6 @@
 import { jobSpecSchema, type JobSpec } from "@/lib/validations/hire";
 
-export const GUEST_SESSION_KEY = "abtalks-hire-guest-session";
+export const GUEST_SESSION_KEY = "klymb-hire-guest-session";
 
 export type GuestSessionMessage = {
   role: "user" | "assistant";

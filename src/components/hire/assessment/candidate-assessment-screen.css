@@ -6,7 +6,7 @@
  * /hire and on candidate pages. These rules used to live in hire-scout.css,
  * which only /hire loads.
  *
- * Colours are the ABTalks site tokens (globals.css): teal #03535F / #076573,
+ * Colours are the Klymb AI site tokens (globals.css): teal #03535F / #076573,
  * tints #EEF6F6 / #E7F2F3 / #D4EBEC, ink #F4F4F4 … #353535, success
  * #D6F7EC / #197E23. Inside the hire desk the --h-* tokens apply; everywhere
  * else the fallbacks do. Dark mode on /assessments follows T-203's design.
@@ -759,8 +759,8 @@
    selectors follow its markup (dashboard-hub/dashboard-shell.tsx), so keep
    them in step if that changes. They vanish again once the attempt closes,
    because the guard unmounts. */
-.theme-abtalks-brand:has(.hire-cand-assess-guard) > aside,
-.theme-abtalks-brand:has(.hire-cand-assess-guard) > button,
+.theme-klymb-brand:has(.hire-cand-assess-guard) > aside,
+.theme-klymb-brand:has(.hire-cand-assess-guard) > button,
 .abt-content-scroll:has(.hire-cand-assess-guard) .abt-header,
 .abt-content-scroll:has(.hire-cand-assess-guard) footer {
   display: none !important;

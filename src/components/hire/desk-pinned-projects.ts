@@ -3,8 +3,8 @@
 import { useEffect, useState, useTransition, useCallback } from "react";
 import { togglePinTalentProjectAction } from "@/app/actions/talent-project-actions";
 
-export const PINNED_PROJECTS_EVENT = "abtalks-hire-pinned-changed";
-const STORAGE_KEY = "abtalks-hire-pinned-projects";
+export const PINNED_PROJECTS_EVENT = "klymb-hire-pinned-changed";
+const STORAGE_KEY = "klymb-hire-pinned-projects";
 
 function canUseStorage(): boolean {
   return typeof window !== "undefined";

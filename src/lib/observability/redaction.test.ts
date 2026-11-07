@@ -65,7 +65,7 @@ const SECRETS = [
   "xkeysib-0123456789abcdef0123456789abcdef",
   "priya.sharma@gmail.com",
   "+91 98765 43210",
-  "abtalks_session=abc123def456",
+  "klymb_session=abc123def456",
 ];
 
 function assertClean(haystack: string, where: string) {

@@ -21,7 +21,7 @@ export type SpokenBriefFlags = {
   skills: boolean;
   availability: boolean;
   compensation: boolean;
-  abtalks: boolean;
+  klymb: boolean;
 };
 
 // ─── Role ────────────────────────────────────────────────────────────────────
@@ -189,7 +189,7 @@ const AVAILABILITY_RE =
   /\b(remote|remotely|hybrid|onsite|on-site|wfh|immediate|notice|available|full[-\s]?time|contract|intern(ship)?|part[-\s]?time)\b/;
 const COMPENSATION_RE =
   /\b(\d+(\.\d+)?\s*(-\s*\d+(\.\d+)?)?\s*(lpa|lakh|ctc)|salary|budget|₹|inr|compensation|stipend)\b/;
-const ABTALKS_RE =
+const PLATFORM_VERIFIED_RE =
   /\b(ab\s?talks?.{0,40}(recommend|verif|rank|approv|vett|certif|score)|platform[-\s]verified)\b/;
 
 // ─── Detector ────────────────────────────────────────────────────────────────
@@ -239,6 +239,6 @@ export function detectSpokenBrief(raw: string): SpokenBriefFlags {
     skills,
     availability: AVAILABILITY_RE.test(text),
     compensation: COMPENSATION_RE.test(text),
-    abtalks: ABTALKS_RE.test(text),
+    klymb: PLATFORM_VERIFIED_RE.test(text),
   };
 }

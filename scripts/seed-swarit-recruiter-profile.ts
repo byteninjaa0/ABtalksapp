@@ -31,9 +31,9 @@ async function main() {
     create: {
       userId: user.id,
       targetRole: "Full-Stack Software Engineer",
-      headline: "Consistent ABTalks performer with strong full-stack delivery",
+      headline: "Consistent Klymb AI performer with strong full-stack delivery",
       summary:
-        "Swarit is a motivated computer science student with hands-on experience building production-style web applications. Through the ABTalks 60-day challenge, he has demonstrated disciplined daily execution, clear communication, and the ability to ship end-to-end features under time constraints. He combines solid fundamentals in JavaScript/TypeScript with practical exposure to modern React and Node.js stacks.",
+        "Swarit is a motivated computer science student with hands-on experience building production-style web applications. Through the Klymb AI 60-day challenge, he has demonstrated disciplined daily execution, clear communication, and the ability to ship end-to-end features under time constraints. He combines solid fundamentals in JavaScript/TypeScript with practical exposure to modern React and Node.js stacks.",
       skillGroups: [
         {
           category: "Languages",
@@ -73,7 +73,7 @@ async function main() {
         "Hindi — Native",
       ],
       achievements: [
-        "Completed 45+ days of the ABTalks SE challenge with consistent on-time submissions",
+        "Completed 45+ days of the Klymb AI SE challenge with consistent on-time submissions",
         "Built and deployed a task-management SaaS as a capstone project",
         "Campus hackathon finalist — built a real-time collaboration tool in 24 hours",
       ],
@@ -143,9 +143,9 @@ async function main() {
       ],
       recommendation: "STRONGLY_RECOMMEND",
       assessmentDate: new Date("2026-06-01T00:00:00.000Z"),
-      interviewerName: "Admin ABTalks",
+      interviewerName: "Admin Klymb AI",
       challengeRound: "Technical + Behavioral",
-      abtalksId: null,
+      klymbId: null,
       logistics: {
         openToRelocation: "Yes",
         preferredLocations: "Bangalore, Hyderabad, Pune, Remote (India)",
@@ -171,9 +171,9 @@ async function main() {
     },
     update: {
       targetRole: "Full-Stack Software Engineer",
-      headline: "Consistent ABTalks performer with strong full-stack delivery",
+      headline: "Consistent Klymb AI performer with strong full-stack delivery",
       summary:
-        "Swarit is a motivated computer science student with hands-on experience building production-style web applications. Through the ABTalks 60-day challenge, he has demonstrated disciplined daily execution, clear communication, and the ability to ship end-to-end features under time constraints. He combines solid fundamentals in JavaScript/TypeScript with practical exposure to modern React and Node.js stacks.",
+        "Swarit is a motivated computer science student with hands-on experience building production-style web applications. Through the Klymb AI 60-day challenge, he has demonstrated disciplined daily execution, clear communication, and the ability to ship end-to-end features under time constraints. He combines solid fundamentals in JavaScript/TypeScript with practical exposure to modern React and Node.js stacks.",
       skillGroups: [
         {
           category: "Languages",
@@ -213,7 +213,7 @@ async function main() {
         "Hindi — Native",
       ],
       achievements: [
-        "Completed 45+ days of the ABTalks SE challenge with consistent on-time submissions",
+        "Completed 45+ days of the Klymb AI SE challenge with consistent on-time submissions",
         "Built and deployed a task-management SaaS as a capstone project",
         "Campus hackathon finalist — built a real-time collaboration tool in 24 hours",
       ],
@@ -283,7 +283,7 @@ async function main() {
       ],
       recommendation: "STRONGLY_RECOMMEND",
       assessmentDate: new Date("2026-06-01T00:00:00.000Z"),
-      interviewerName: "Admin ABTalks",
+      interviewerName: "Admin Klymb AI",
       challengeRound: "Technical + Behavioral",
       logistics: {
         openToRelocation: "Yes",
