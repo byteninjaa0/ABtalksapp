@@ -47,8 +47,20 @@ export function EcosystemPageHeader({ className }: Props) {
             title="Back to previous page"
           >
             <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
-            <span className="hidden sm:inline">Back to dashboard</span>
-            <span className="sm:hidden">Back</span>
+            {/* "Back", not "Back to dashboard". The handler is `router.back()`
+                — it returns to whatever page you came from and has never gone
+                to the dashboard, so the old label was wrong for a student
+                arriving from /jobs as much as for a recruiter, who has no
+                student dashboard to be sent to at all.
+
+                It also disagreed with this button's own `aria-label` and
+                `title`, both of which already said "previous page": a visible
+                label that is not contained in the accessible name is what
+                WCAG 2.5.3 is about, and it breaks voice control — saying
+                "click Back to dashboard" matched nothing.
+
+                One span now, because both breakpoints say the same word. */}
+            <span>Back</span>
           </button>
 
           <span
