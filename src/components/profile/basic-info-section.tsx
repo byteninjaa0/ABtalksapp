@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { CandidateGender, CandidatePersona } from "@prisma/client";
 import { saveBasicInfoAction } from "@/app/actions/candidate-profile-actions";
 import { PhoneVerifyField } from "@/components/shared/phone-verify-field";
@@ -30,7 +30,7 @@ import {
   PwField,
   PwInput,
   PwRow,
-  PwSelect,
+  PwMenuSelect,
   PwSuggest,
   PwTextarea,
 } from "./wizard-fields";
@@ -113,6 +113,7 @@ export function BasicInfoSection({
     },
   });
   const {
+    control,
     register,
     handleSubmit,
     watch,
@@ -229,13 +230,21 @@ export function BasicInfoSection({
 
       <PwRow cols={3}>
         <PwField label="I am a" htmlFor="bi-persona">
-          <PwSelect id="bi-persona" {...register("primaryPersona")}>
-            {Object.values(CandidatePersona).map((p) => (
-              <option key={p} value={p}>
-                {PERSONA_LABELS[p] ?? p}
-              </option>
-            ))}
-          </PwSelect>
+          <Controller
+            control={control}
+            name="primaryPersona"
+            render={({ field }) => (
+              <PwMenuSelect
+                id="bi-persona"
+                aria-label="I am a"
+                placeholder="Select"
+                value={field.value ?? ""}
+                options={Object.values(CandidatePersona)}
+                labels={PERSONA_LABELS}
+                onChange={(v) => field.onChange(v as CandidatePersona)}
+              />
+            )}
+          />
         </PwField>
         <PwField
           label="City"
@@ -308,14 +317,21 @@ export function BasicInfoSection({
           />
         </PwField>
         <PwField label="Gender" htmlFor="bi-gender" required>
-          <PwSelect id="bi-gender" {...register("gender")}>
-            <option value="">Select</option>
-            {Object.values(CandidateGender).map((g) => (
-              <option key={g} value={g}>
-                {GENDER_LABELS[g] ?? g}
-              </option>
-            ))}
-          </PwSelect>
+          <Controller
+            control={control}
+            name="gender"
+            render={({ field }) => (
+              <PwMenuSelect
+                id="bi-gender"
+                aria-label="Gender"
+                placeholder="Select"
+                value={field.value ?? ""}
+                options={Object.values(CandidateGender)}
+                labels={GENDER_LABELS}
+                onChange={(v) => field.onChange(v as CandidateGender)}
+              />
+            )}
+          />
         </PwField>
       </PwRow>
 

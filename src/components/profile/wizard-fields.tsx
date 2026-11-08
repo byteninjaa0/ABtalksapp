@@ -11,7 +11,6 @@ import {
   type InputHTMLAttributes,
   type ReactNode,
   type RefObject,
-  type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from "react";
 import { createPortal } from "react-dom";
@@ -110,6 +109,14 @@ const MENU_MIN_H = 160;
 function useAnchoredMenu<T extends HTMLElement>(
   open: boolean,
   anchorRef: RefObject<HTMLElement | null>,
+  /**
+   * Distance between the field and the menu. The suggestion list floats a few
+   * pixels clear, but a select's menu is meant to read as the field opening,
+   * so it passes `-1` and the two borders land on the same line.
+   */
+  gap: number = MENU_GAP,
+  /** Told which way the menu went, so the caller can square the joined edge. */
+  onPlace?: (flipUp: boolean) => void,
 ) {
   const menuRef = useRef<T | null>(null);
 
@@ -118,21 +125,23 @@ function useAnchoredMenu<T extends HTMLElement>(
     const anchor = anchorRef.current;
     if (!menu || !anchor) return;
     const rect = anchor.getBoundingClientRect();
-    const below = window.innerHeight - rect.bottom - MENU_GAP - MENU_EDGE;
-    const above = rect.top - MENU_GAP - MENU_EDGE;
+    const below = window.innerHeight - rect.bottom - gap - MENU_EDGE;
+    const above = rect.top - gap - MENU_EDGE;
     const flipUp = below < Math.min(MENU_MAX_H, MENU_MIN_H) && above > below;
     const room = Math.max(120, Math.min(MENU_MAX_H, flipUp ? above : below));
     menu.style.left = `${rect.left}px`;
     menu.style.width = `${rect.width}px`;
     menu.style.maxHeight = `${room}px`;
+    menu.dataset.placement = flipUp ? "up" : "down";
     if (flipUp) {
       menu.style.top = "auto";
-      menu.style.bottom = `${window.innerHeight - rect.top + MENU_GAP}px`;
+      menu.style.bottom = `${window.innerHeight - rect.top + gap}px`;
     } else {
       menu.style.bottom = "auto";
-      menu.style.top = `${rect.bottom + MENU_GAP}px`;
+      menu.style.top = `${rect.bottom + gap}px`;
     }
-  }, [anchorRef]);
+    onPlace?.(flipUp);
+  }, [anchorRef, gap, onPlace]);
 
   const setMenu = useCallback(
     (node: T | null) => {
@@ -432,24 +441,11 @@ export const PwTextarea = forwardRef<
   );
 });
 
-export const PwSelect = forwardRef<
-  HTMLSelectElement,
-  SelectHTMLAttributes<HTMLSelectElement>
->(function PwSelect({ className, onChange, children, ...props }, ref) {
-  return (
-    <select
-      {...props}
-      ref={ref}
-      className={className}
-      onChange={(e) => {
-        markFilled(e.currentTarget);
-        onChange?.(e);
-      }}
-    >
-      {children}
-    </select>
-  );
-});
+/* `PwSelect`, a thin wrapper over a native <select>, used to live here. It
+   rendered the operating system's own menu inside a form that styles every
+   other control itself, so the wizard looked different on macOS, Windows and
+   Android. `PwMenuSelect` below replaced it at all five call sites and the
+   wrapper is gone rather than left to be picked up again by the next field. */
 
 /** Custom select that always opens downward (native `<select>` may flip up). */
 export function PwMenuSelect({
@@ -479,9 +475,15 @@ export function PwMenuSelect({
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const [flipUp, setFlipUp] = useState(false);
+  // `-1` overlaps the field's bottom border with the menu's top border, so the
+  // two read as one edge rather than as a panel floating under the field.
+  const onPlace = useCallback((up: boolean) => setFlipUp(up), []);
   const { setMenu, menuRef } = useAnchoredMenu<HTMLUListElement>(
     open,
     triggerRef,
+    -1,
+    onPlace,
   );
 
   useEffect(() => {
@@ -511,7 +513,9 @@ export function PwMenuSelect({
   return (
     <div
       ref={rootRef}
-      className={`pw-menu-select${open ? " pw-open" : ""}${value ? " pw-filled" : ""}`}
+      className={`pw-menu-select${open ? " pw-open" : ""}${
+        open ? (flipUp ? " pw-open-up" : " pw-open-down") : ""
+      }${value ? " pw-filled" : ""}`}
     >
       <button
         type="button"

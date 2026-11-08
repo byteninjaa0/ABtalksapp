@@ -14,7 +14,7 @@ import {
   PwField,
   PwInput,
   PwRow,
-  PwSelect,
+  PwMenuSelect,
 } from "./wizard-fields";
 
 export type ExtraLinkFormRow = {
@@ -187,10 +187,14 @@ export function LinksSection({ initial }: { initial: LinksFormValues }) {
                       control={control}
                       name={`extra.${index}.type`}
                       render={({ field: f }) => (
-                        <PwSelect
+                        <PwMenuSelect
+                          aria-label="Link type"
+                          placeholder="Select"
                           value={f.value}
-                          onChange={(e) => {
-                            const next = e.target.value as CandidateLinkType;
+                          options={EXTRA_LINK_TYPES}
+                          labels={LINK_TYPE_LABELS}
+                          onChange={(v) => {
+                            const next = v as CandidateLinkType;
                             f.onChange(next);
                             if (next !== CandidateLinkType.OTHER) {
                               setValue(`extra.${index}.label`, "", {
@@ -198,13 +202,7 @@ export function LinksSection({ initial }: { initial: LinksFormValues }) {
                               });
                             }
                           }}
-                        >
-                          {EXTRA_LINK_TYPES.map((t) => (
-                            <option key={t} value={t}>
-                              {LINK_TYPE_LABELS[t] ?? t}
-                            </option>
-                          ))}
-                        </PwSelect>
+                        />
                       )}
                     />
                   </PwField>

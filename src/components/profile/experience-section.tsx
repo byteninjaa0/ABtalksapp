@@ -17,7 +17,7 @@ import {
   CURRENT_YEAR,
   PwMonthYear,
   PwRow,
-  PwSelect,
+  PwMenuSelect,
   PwSuggest,
   PwTextarea,
 } from "./wizard-fields";
@@ -177,20 +177,27 @@ export function ExperienceSection({
                   required
                   htmlFor={`exp-type-${index}`}
                 >
-                  <PwSelect
-                    id={`exp-type-${index}`}
-                    {...register(`rows.${index}.employmentType`)}
-                  >
-                    <option value="">Select</option>
-                    {extraType ? (
-                      <option value={extraType}>{extraType}</option>
-                    ) : null}
-                    {EMPLOYMENT_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </PwSelect>
+                  <Controller
+                    control={control}
+                    name={`rows.${index}.employmentType`}
+                    render={({ field }) => (
+                      <PwMenuSelect
+                        id={`exp-type-${index}`}
+                        aria-label="Employment type"
+                        placeholder="Select"
+                        value={field.value ?? ""}
+                        // `extraType` is a stored value that predates the
+                        // current list; it stays first so an older row can
+                        // still show and keep what it has.
+                        options={
+                          extraType
+                            ? [extraType, ...EMPLOYMENT_TYPES]
+                            : EMPLOYMENT_TYPES
+                        }
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
                 </PwField>
                 <PwField label="Location" required htmlFor={`exp-loc-${index}`}>
                   {/* The same city vocabulary the profile's own location uses,
