@@ -10,34 +10,35 @@ import { PipelineCard } from "./pipeline-card";
 import { STAGE_EMPTY_HINT, STAGE_LABEL, STAGE_ORDER } from "./stage-labels";
 
 /**
- * The rail's colour ramp, dark to pale along the nine stages, so the sequence
- * is readable at a glance and not just nine identical arrows. Indexed by
- * position in `STAGE_ORDER`.
+ * The rail's colour ramp, dark to mid along the nine stages, so the sequence is
+ * readable at a glance and not just nine identical arrows. Indexed by position
+ * in `STAGE_ORDER`.
+ *
+ * The ramp used to run all the way out to near-white (#cddcde), which forced a
+ * second ink colour for the pale half — and two inks on one row of chevrons
+ * read as two different font weights rather than as one label set. The ramp now
+ * stops at #3a747c, the lightest teal that still carries white text at 5.3:1, so
+ * every step can share one ink (issue #551).
  */
 const STAGE_FILL = [
-  "#0b555f",
-  "#1a636c",
-  "#2c727a",
-  "#448289",
-  "#5d9299",
-  "#78a4aa",
-  "#94b6bb",
-  "#b1c8cc",
-  "#cddcde",
+  "#063f47",
+  "#0d464e",
+  "#134c54",
+  "#1a535b",
+  "#205a62",
+  "#276068",
+  "#2d676f",
+  "#346d75",
+  "#3a747c",
 ] as const;
 
-/** White on the dark half, near-black on the pale half — contrast, not taste. */
-const STAGE_INK = [
-  "#ffffff",
-  "#ffffff",
-  "#ffffff",
-  "#ffffff",
-  "#0f2b31",
-  "#0f2b31",
-  "#0f2b31",
-  "#0f2b31",
-  "#0f2b31",
-] as const;
+/**
+ * The selected step, lifted out of the ramp with the DS clay recipe — the same
+ * `--clay-lift` → `--clay` gradient the recruiter CTAs use — so selection is a
+ * change of material, not a 4px bar most fills swallowed. Paired with the inset
+ * moulding and the bright underline in `hire-scout.css`.
+ */
+const STAGE_FILL_ACTIVE = "linear-gradient(155deg, #0a6b78 0%, #03535f 72%)";
 
 /** Row shape as the server component sends it. Dates are ISO strings so the
  *  Server→Client props boundary carries only plain data. */
@@ -169,7 +170,7 @@ export function PipelineBoard({ rows, companyName }: PipelineBoardProps) {
               aria-current={isCurrent ? "true" : undefined}
               onClick={() => setSelected(stage)}
               className="hire-pipe-step"
-              style={{ background: STAGE_FILL[i], color: STAGE_INK[i] }}
+              style={{ background: isCurrent ? STAGE_FILL_ACTIVE : STAGE_FILL[i] }}
             >
               <span>{STAGE_LABEL[stage]}</span>
               {n > 0 && <span className="hire-pipe-step__n">{n}</span>}
