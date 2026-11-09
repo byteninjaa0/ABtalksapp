@@ -10,6 +10,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Wordmark } from "@/components/shared/wordmark";
 import { LoginClient } from "./login-client";
 import { isEmailLoginEnabled } from "@/lib/feature-flags";
 import {
@@ -100,8 +101,8 @@ export default async function LoginPage({ searchParams }: Props) {
       <div className="flex flex-1 flex-col items-center justify-center p-6">
         <Card className="w-full max-w-md border-border/60 bg-card text-card-foreground shadow-md">
           <CardHeader className="space-y-2 text-center">
-            <CardTitle className="font-display text-3xl font-bold tracking-tight">
-              <span className="text-primary">A</span>BTalks
+            <CardTitle className="tracking-tight">
+              <Wordmark size="lg" className="font-display text-3xl font-bold" />
             </CardTitle>
             <CardDescription className="text-base text-muted-foreground">
               Build your coding habit. Get discovered.

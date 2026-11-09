@@ -23,7 +23,7 @@ function safePdfFilename(
   const placement = cert.hackathonVariant
     ? `-${HACKATHON_VARIANT_FILE_SLUGS[cert.hackathonVariant]}`
     : "";
-  return `ABTalks-${CERTIFICATE_TYPES[cert.type].fileSlug}${placement}-${namePart}-${cert.certificateId}.pdf`;
+  return `Klymb-AI-${CERTIFICATE_TYPES[cert.type].fileSlug}${placement}-${namePart}-${cert.certificateId}.pdf`;
 }
 
 export async function GET(
