@@ -76,7 +76,7 @@ export const VIDEOTHON = {
   // Recruiter sign-up refuses personal mailboxes (lib/validations/work-email).
   tempMailUrl: "https://temp-mail.org",
   // Served from public/hackathon-v2/. The file name carries spaces.
-  guidePdf: "/hackathon-v2/VideoThon%20Demo%20Guide%20-%20ABTalks.pdf",
+  guidePdf: "/hackathon-v2/VideoThon%20Demo%20Guide%20-%20Klymb%20AI.pdf",
   guidePdfFileName: "VideoThon Demo Guide - Klymb AI.pdf",
   // TODO(organizer): sponsor slot. Set `enabled: false` to hide the panel.
   sponsor: {
